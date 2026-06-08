@@ -1,0 +1,19 @@
+node_modules/
+.env
+dist/
+.next/
+*.log
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+coverage/
+.vercel
+
+# Backend uploads & OCR data
+backend/uploads/
+backend/eng.traineddata
+
+# Vite cache
+frontend/vite.config.js.timestamp-*
+frontend/dist/

@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Sample: Process Scheduling — FCFS",
+    "subjectCode": "OS",
+    "topicName": "CPU Scheduling",
+    "year": 2022,
+    "difficulty": "medium",
+    "marks": 2,
+    "questionType": "MCQ",
+    "questionText": "In FCFS scheduling, which property holds for non-preemptive systems?",
+    "optionA": "Shortest job first",
+    "optionB": "Convoy effect may occur",
+    "optionC": "Starvation is impossible for I/O bound jobs",
+    "optionD": "Priority inversion always happens",
+    "correctAnswer": "B",
+    "explanation": "FCFS can cause the convoy effect when a long CPU-bound process blocks shorter jobs.",
+    "tags": "scheduling,fcfs",
+    "source": "Original sample — replace with your licensed PYQ content"
+  }
+]

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PrepFlow — GATE 2027 Intelligence</title>
+  <meta name="description" content="Premium GATE CSE 2027 preparation workspace — track progress, analyze trends, stay exam-ready." />
+  <meta name="theme-color" content="#7C3AED" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>
+    (function(){
+      var mode=localStorage.getItem('gate2027_theme_mode')||localStorage.getItem('gate2027_theme')||'dark';
+      var dark=mode==='dark'||(mode==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches)||(mode!=='light'&&mode!=='system');
+      document.documentElement.classList.toggle('dark',dark);
+      var preset=localStorage.getItem('gate2027_color_preset')||'violet';
+      var presets={violet:{p:'#7C3AED',s:'#4F46E5',a:'#F59E0B'},rose:{p:'#E11D48',s:'#BE185D',a:'#F59E0B'},teal:{p:'#0D9488',s:'#0891B2',a:'#FBBF24'},slate:{p:'#64748B',s:'#475569',a:'#F59E0B'}};
+      var c=presets[preset]||presets.violet;
+      document.documentElement.style.setProperty('--color-primary',c.p);
+      document.documentElement.style.setProperty('--color-secondary',c.s);
+      document.documentElement.style.setProperty('--color-accent',c.a);
+    })();
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
