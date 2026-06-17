@@ -5,8 +5,10 @@ import { getStreakHeatmap } from '../../utils/gateUtils';
 
 export default function StreakTracker({ days = 28, compact = false }) {
   const { gateFeatures } = useProgress();
-  const heatmap = useMemo(() => getStreakHeatmap(gateFeatures.streak.activityLog, days), [gateFeatures.streak.activityLog, days]);
-  const { current, longest } = gateFeatures.streak;
+  const activityLog = gateFeatures?.streak?.activityLog || {};
+  const heatmap = useMemo(() => getStreakHeatmap(activityLog, days), [activityLog, days]);
+  const current = gateFeatures?.streak?.current || 0;
+  const longest = gateFeatures?.streak?.longest || 0;
 
   if (compact) {
     return (

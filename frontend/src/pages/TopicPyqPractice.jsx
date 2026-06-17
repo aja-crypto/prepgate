@@ -280,7 +280,7 @@ export default function TopicPyqPractice() {
             <div className="text-sm text-text3">Loading questions...</div>
           </div>
         </div>
-      ) : filtered.length ===  наш && (
+      ) : filtered.length === 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(groupedByTopic).map(([topic, data]) => {
             const accuracy = data.total ? (data.solved / data.total) * 100 : 0;
