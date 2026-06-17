@@ -314,7 +314,7 @@ export default function Layout() {
           {/* Right Side: Controls */}
           <div className="flex items-center gap-2 md:gap-4 ml-auto">
             {/* Profile Dropdown */}
-            <div className="relative">
+            <div className="relative profile-dropdown">
               <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                 className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/5 transition-all"
