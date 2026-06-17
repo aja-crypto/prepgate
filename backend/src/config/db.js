@@ -1,4 +1,5 @@
 // MongoDB connection + local-dev fallback
+require('./loadEnv');
 const mongoose = require('mongoose');
 const { enableMockAuth, isMockAuthEnabled } = require('./devMode');
 const { seedDemoUser } = require('../store/mockStore');

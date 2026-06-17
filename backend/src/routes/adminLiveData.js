@@ -1,13 +1,13 @@
 // Admin routes for live data management and verification
 const router = require('express').Router();
-const { protect, adminOnly } = require('../middleware/auth');
+const { adminProtect } = require('../middleware/adminAuth');
 const {
   LiveUpdate, ExamSchedule, FetchJobLog,
 } = require('../models/LiveData');
 const { runJob, runAllJobs, getJobList } = require('../services/fetchOrchestrator');
 
 // GET pending updates for admin review
-router.get('/live/pending', protect, adminOnly, async (req, res, next) => {
+router.get('/live/pending', adminProtect, async (req, res, next) => {
   try {
     const { type, limit = 50 } = req.query;
     const filter = { status: 'pending' };
@@ -19,7 +19,7 @@ router.get('/live/pending', protect, adminOnly, async (req, res, next) => {
 });
 
 // GET all live updates (any status)
-router.get('/live/updates', protect, adminOnly, async (req, res, next) => {
+router.get('/live/updates', adminProtect, async (req, res, next) => {
   try {
     const { status, type, limit = 50, page = 1 } = req.query;
     const filter = {};
@@ -36,7 +36,7 @@ router.get('/live/updates', protect, adminOnly, async (req, res, next) => {
 });
 
 // PUT verify/publish/reject an update
-router.put('/live/updates/:id/status', protect, adminOnly, async (req, res, next) => {
+router.put('/live/updates/:id/status', adminProtect, async (req, res, next) => {
   try {
     const { status } = req.body;
     if (!['verified', 'published', 'rejected', 'pending'].includes(status)) {
@@ -56,7 +56,7 @@ router.put('/live/updates/:id/status', protect, adminOnly, async (req, res, next
 });
 
 // POST bulk publish verified items
-router.post('/live/publish-verified', protect, adminOnly, async (req, res, next) => {
+router.post('/live/publish-verified', adminProtect, async (req, res, next) => {
   try {
     const result = await LiveUpdate.updateMany(
       { status: 'verified' },
@@ -67,7 +67,7 @@ router.post('/live/publish-verified', protect, adminOnly, async (req, res, next)
 });
 
 // POST create manual update
-router.post('/live/updates', protect, adminOnly, async (req, res, next) => {
+router.post('/live/updates', adminProtect, async (req, res, next) => {
   try {
     const item = await LiveUpdate.create({
       ...req.body,
@@ -82,7 +82,7 @@ router.post('/live/updates', protect, adminOnly, async (req, res, next) => {
 });
 
 // DELETE an update
-router.delete('/live/updates/:id', protect, adminOnly, async (req, res, next) => {
+router.delete('/live/updates/:id', adminProtect, async (req, res, next) => {
   try {
     await LiveUpdate.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: 'Update deleted' });
@@ -90,7 +90,7 @@ router.delete('/live/updates/:id', protect, adminOnly, async (req, res, next) =>
 });
 
 // PUT update exam schedule entry
-router.put('/live/schedule/:id', protect, adminOnly, async (req, res, next) => {
+router.put('/live/schedule/:id', adminProtect, async (req, res, next) => {
   try {
     const item = await ExamSchedule.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json({ success: true, data: item });
@@ -98,7 +98,7 @@ router.put('/live/schedule/:id', protect, adminOnly, async (req, res, next) => {
 });
 
 // GET fetch job logs
-router.get('/live/jobs', protect, adminOnly, async (req, res, next) => {
+router.get('/live/jobs', adminProtect, async (req, res, next) => {
   try {
     const logs = await FetchJobLog.find().sort('-startedAt').limit(30).lean();
     res.json({ success: true, data: logs, jobs: getJobList() });
@@ -106,7 +106,7 @@ router.get('/live/jobs', protect, adminOnly, async (req, res, next) => {
 });
 
 // POST trigger fetch job manually
-router.post('/live/fetch', protect, adminOnly, async (req, res, next) => {
+router.post('/live/fetch', adminProtect, async (req, res, next) => {
   try {
     const { jobName } = req.body;
     if (jobName) {

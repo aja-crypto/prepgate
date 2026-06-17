@@ -447,7 +447,7 @@ exports.refreshToken = async (req, res, next) => {
     }
 
     const jwt = require('jsonwebtoken');
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, { algorithms: ['HS256'] });
 
     if (isMockAuthEnabled()) {
       const user = mockStore.findById(decoded.id);

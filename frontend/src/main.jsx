@@ -4,9 +4,11 @@ import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
+import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { DashboardProvider } from './context/DashboardContext';
 import { ProgressProvider, useProgress } from './context/ProgressContext';
+import { FocusProvider } from './context/FocusContext';
 import { checkReminders } from './utils/reminderUtils';
 import { initFirebasePush, isFirebaseConfigured } from './utils/firebase';
 import './styles/globals.css';
@@ -41,9 +43,11 @@ function ProgressProviderWrapper() {
   return (
     <ProgressProvider>
       <DashboardProvider>
-        <PwaSetup />
-        <ReminderScheduler />
-        <App />
+        <FocusProvider>
+          <PwaSetup />
+          <ReminderScheduler />
+          <App />
+        </FocusProvider>
       </DashboardProvider>
     </ProgressProvider>
   );
@@ -53,9 +57,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <ProgressProviderWrapper />
-          <Toaster position="top-right" />
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <AdminAuthProvider>
+            <ProgressProviderWrapper />
+            <Toaster position="top-right" />
+          </AdminAuthProvider>
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>

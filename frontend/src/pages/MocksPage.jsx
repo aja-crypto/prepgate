@@ -13,6 +13,43 @@ Chart.register(...registerables);
 
 const TABS = ['Interactive Mocks', 'Score Tracker'];
 
+const HowItWorks = () => {
+  const [expanded, setExpanded] = useState(true);
+  return (
+    <div className="mb-6">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full text-left mb-4 px-4 py-3 rounded-xl border border-purple-500/30 bg-purple-500/10"
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-purple-400">📊 How Mock Tests Work</span>
+          <span className="text-gray-400 text-xs">{expanded ? 'Hide' : 'Show'}</span>
+        </div>
+      </button>
+      {expanded && (
+        <div className="grid md:grid-cols-3 gap-4 text-sm">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <div className="text-purple-400 font-bold mb-2">Take Full-Length Mock</div>
+            <p className="text-gray-400">Experience real GATE exam conditions</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <div className="text-purple-400 font-bold mb-2">Analyze Mistakes</div>
+            <p className="text-gray-400">Review your mistakes and learn from them</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <div className="text-purple-400 font-bold mb-2">View Subject-wise Score</div>
+            <p className="text-gray-400">See your performance per subject</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <div className="text-purple-400 font-bold mb-2">Improve Weak Topics</div>
+            <p className="text-gray-400">Focus on areas that need more attention</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function MocksPage() {
   const location = useLocation();
   const { mocks, updateMocks } = useProgress();
@@ -80,6 +117,7 @@ export default function MocksPage() {
 
   return (
     <div>
+      <HowItWorks />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-text">Mock Tests</h1>
@@ -122,7 +160,16 @@ export default function MocksPage() {
                     )}
                   </div>
                 )) : (
-                  <p className="text-xs text-text3">No mocks yet. Generate one to start practicing.</p>
+                  <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12), rgba(99,102,241,0.08))', border: '1px solid rgba(168,85,247,0.15)' }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 text-primary">
+                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                      </svg>
+                    </div>
+                    <h3 className="text-base font-semibold text-text mb-2">No Mock Scores Yet</h3>
+                    <p className="text-sm text-text3 max-w-xs leading-relaxed mb-6">Track your external mock test scores and see your progress over time.</p>
+                    <span className="text-sm bg-gradient-to-r from-purple-600 to-indigo-500 text-white px-5 py-2 rounded-lg font-medium opacity-60 cursor-not-allowed">Add Your First Score</span>
+                  </div>
                 )}
               </div>
             </div>

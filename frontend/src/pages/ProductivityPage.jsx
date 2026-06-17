@@ -1,68 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useProgress } from '../context/ProgressContext';
-
-const DURATIONS = [
-  { label: '25 min', value: 25 * 60 },
-  { label: '30 min', value: 30 * 60 },
-  { label: '45 min', value: 45 * 60 },
-  { label: '60 min', value: 60 * 60 },
-  { label: '90 min', value: 90 * 60 },
-];
-
-const POMODORO_BREAK = 5 * 60;
-
-function formatTime(secs) {
-  const m = Math.floor(secs / 60);
-  const s = secs % 60;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-}
+import { useFocus } from '../context/FocusContext';
 
 export default function ProductivityPage() {
   const { productivity, updateProductivity } = useProgress();
-  const [workDuration, setWorkDuration] = useState(25 * 60);
-  const [pomoSecs, setPomoSecs] = useState(workDuration);
-  const [pomoRunning, setPomoRunning] = useState(false);
-  const [pomoPhase, setPomoPhase] = useState('work');
+  const {
+    isActive, timeRemaining, mode, sessionsCompleted, dailyStreak,
+    sessionDuration, DURATIONS, formatTime, startSession, selectDuration,
+  } = useFocus();
   const [journalText, setJournalText] = useState('');
   const [newTask, setNewTask] = useState('');
-  const intervalRef = useRef(null);
-
-  useEffect(() => {
-    if (!pomoRunning) return;
-    intervalRef.current = setInterval(() => {
-      setPomoSecs((s) => {
-        if (s <= 1) {
-          if (pomoPhase === 'work') {
-            setPomoPhase('break');
-            updateProductivity((p) => ({ ...p, pomodoroSessions: (p.pomodoroSessions || 0) + 1 }));
-            return POMODORO_BREAK;
-          }
-          setPomoPhase('work');
-          return workDuration;
-        }
-        return s - 1;
-      });
-    }, 1000);
-    return () => clearInterval(intervalRef.current);
-  }, [pomoRunning, pomoPhase, workDuration, updateProductivity]);
-
-  const [distractionFree, setDistractionFree] = useState(false);
-
-  const toggleFocus = () => {
-    updateProductivity((p) => ({ ...p, focusModeEnabled: !p.focusModeEnabled }));
-  };
-
-  const toggleDistractionFree = () => {
-    setDistractionFree((d) => !d);
-    if (!distractionFree) setPomoRunning(true);
-  };
-
-  const selectDuration = (dur) => {
-    setPomoRunning(false);
-    setWorkDuration(dur);
-    setPomoSecs(dur);
-    setPomoPhase('work');
-  };
 
   const addJournal = () => {
     if (!journalText.trim()) return;
@@ -92,99 +39,58 @@ export default function ProductivityPage() {
 
   const PRIORITY_COLOR = { high: 'text-red-400', medium: 'text-orange-400', low: 'text-text3' };
 
-  if (distractionFree) {
-    return (
-      <div className="fixed inset-0 z-50 bg-bg flex flex-col items-center justify-center select-none">
-        <div className="text-[10px] text-text3 uppercase tracking-widest mb-4">Deep Work Mode</div>
-        <div className="text-8xl font-bold font-mono text-primary mb-6">{formatTime(pomoSecs)}</div>
-        <div className="text-sm text-text3 mb-2">
-          {pomoPhase === 'work' ? '🔴 Focus session' : '☕ Break time'}
-        </div>
-        <div className="flex items-center gap-2 mb-8">
-          {DURATIONS.map((d) => (
-            <button
-              key={d.value}
-              onClick={() => selectDuration(d.value)}
-              className={`text-xs px-2 py-1 rounded border ${
-                workDuration === d.value ? 'bg-primary/20 border-primary/40 text-primary' : 'border-border text-text3'
-              }`}
-            >
-              {d.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-3">
-          <button onClick={() => setPomoRunning(!pomoRunning)} className="bg-primary text-white px-8 py-3 rounded-lg font-semibold text-lg min-w-[120px]">
-            {pomoRunning ? '⏸ Pause' : '▶ Start'}
-          </button>
-          <button onClick={toggleDistractionFree} className="bg-bg-2 border border-border text-text2 px-6 py-3 rounded-lg">Exit</button>
-        </div>
-        {pomoPhase === 'work' && (
-          <div className="mt-8 text-[10px] text-text3 text-center max-w-md leading-relaxed">
-            Stay focused. No distractions. When the session ends, take a 5-minute break.
-          </div>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className={productivity.focusModeEnabled ? 'focus-mode-active' : ''}>
+    <div>
       <div className="mb-6 flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-xl font-bold text-text">Productivity Hub</h1>
-          <p className="text-sm text-text3 mt-0.5">Pomodoro timer, focus mode, daily journal & task checklist</p>
+          <p className="text-sm text-text3 mt-0.5">Focus sessions, daily journal & task checklist</p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={toggleDistractionFree} className="text-xs px-4 py-2 rounded-lg border bg-bg-2 border-border text-text3 hover:border-white/15">
-            🧘 Deep Work
-          </button>
-          <button
-            onClick={toggleFocus}
-            className={`text-xs px-4 py-2 rounded-lg border transition-all ${
-              productivity.focusModeEnabled ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/15'
-            }`}
-          >
-            {productivity.focusModeEnabled ? '🎯 Focus ON' : 'Focus Mode'}
-          </button>
+        <div className="flex items-center gap-2 text-xs text-text3">
+          {dailyStreak > 0 && <span className="text-orange-400 font-medium">{dailyStreak}d streak</span>}
+          <span>{sessionsCompleted} sessions today</span>
         </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4 mb-5">
-        {/* Pomodoro */}
-        <div className="bg-surface border border-border rounded-xl p-6 text-center">
+        {/* Focus Session Info */}
+        <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 text-center">
           <div className="text-[10px] text-text3 uppercase tracking-wider mb-2">
-            {pomoPhase === 'work' ? '🍅 Focus Session' : '☕ Break Time'}
+            {isActive ? (mode === 'work' ? 'Focus Session' : 'Break Time') : 'Focus Timer'}
           </div>
-          <div className="text-5xl font-bold font-mono text-primary mb-4">{formatTime(pomoSecs)}</div>
-          <div className="flex gap-2 justify-center mb-3">
-            {DURATIONS.map((d) => (
+          <div className={`font-bold font-mono text-primary mb-4 ${isActive ? 'text-5xl' : 'text-4xl'}`}>
+            {isActive ? formatTime(timeRemaining) : formatTime(sessionDuration)}
+          </div>
+          {!isActive && (
+            <>
+              <div className="flex gap-2 justify-center mb-3 flex-wrap">
+                {DURATIONS.map((d) => (
+                  <button
+                    key={d.value}
+                    onClick={() => selectDuration(d.value)}
+                    className={`text-[10px] px-2 py-1 rounded border ${
+                      sessionDuration === d.value ? 'bg-primary/20 border-primary/40 text-primary' : 'border-border text-text3 hover:border-primary/30'
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
               <button
-                key={d.value}
-                onClick={() => selectDuration(d.value)}
-                className={`text-[10px] px-2 py-1 rounded border ${
-                  workDuration === d.value ? 'bg-primary/20 border-primary/40 text-primary' : 'border-border text-text3 hover:border-primary/30'
-                }`}
+                onClick={() => startSession(sessionDuration, null)}
+                className="bg-primary text-white text-sm font-semibold px-6 py-2.5 rounded-lg hover:opacity-90"
               >
-                {d.label}
+                Start Focus Session
               </button>
-            ))}
-          </div>
-          <div className="flex gap-2 justify-center">
-            <button
-              onClick={() => setPomoRunning(!pomoRunning)}
-              className="bg-primary text-white text-sm font-semibold px-6 py-2.5 rounded-lg hover:opacity-90"
-            >
-              {pomoRunning ? 'Pause' : 'Start'}
-            </button>
-            <button
-              onClick={() => { setPomoRunning(false); setPomoSecs(workDuration); setPomoPhase('work'); }}
-              className="bg-bg-2 border border-border text-text2 text-sm px-4 py-2.5 rounded-lg hover:border-white/15"
-            >
-              Reset
-            </button>
-          </div>
-          <div className="text-[10px] text-text3 mt-3">Sessions today: {productivity.pomodoroSessions || 0}</div>
+            </>
+          )}
+          {isActive && (
+            <div className="text-xs text-text3 mt-2">
+              Session running — use the floating widget to control
+            </div>
+          )}
+          <div className="text-[10px] text-text3 mt-3">Sessions today: {sessionsCompleted}</div>
+          {dailyStreak > 0 && <div className="text-[10px] text-orange-400 mt-0.5">Focus streak: {dailyStreak} days</div>}
         </div>
 
         {/* Task Checklist */}

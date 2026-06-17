@@ -66,8 +66,9 @@ api.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refreshToken');
         const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken });
-        const { accessToken } = res.data.data;
+        const { accessToken, refreshToken: newRefreshToken } = res.data.data;
         localStorage.setItem('accessToken', accessToken);
+        if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken);
         api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
         processQueue(null, accessToken);
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
@@ -140,6 +141,8 @@ export const aiService = {
   generatePlan: (payload) => api.post('/ai/planner', payload),
   getRecommendations: (payload) => api.post('/ai/recommendations', payload),
   askCoach: (message, context) => api.post('/ai/chat', { message, context }),
+  doubtSolve: (payload) => api.post('/ai/doubt-solver', payload),
+  getDoubtSubjects: () => api.get('/ai/doubt-subjects'),
 };
 
 export const adminService = {
@@ -218,6 +221,59 @@ export const liveDataService = {
   getDaily: () => api.get('/live/daily'),
   getAnalysis: (params) => api.get('/live/analysis', { params }),
   getTrending: () => api.get('/live/trending'),
+};
+
+export const shortNoteService = {
+  getAll: () => api.get('/short-notes'),
+  upload: (folder, formData) => api.post(`/short-notes/upload/${folder}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 60000,
+  }),
+};
+
+export const mockTestService = {
+  getAll: (params) => api.get('/mock-tests', { params }),
+  getSubjectCounts: () => api.get('/mock-tests/subjects'),
+  getAnalytics: () => api.get('/mock-tests/analytics'),
+  getProgress: () => api.get('/mock-tests/progress'),
+  getRecommended: () => api.get('/mock-tests/recommended'),
+  getById: (id) => api.get(`/mock-tests/${id}`),
+  getQuestions: (id) => api.get(`/mock-tests/${id}/questions`),
+  submit: (id, data) => api.post(`/mock-tests/${id}/submit`, data),
+  getResult: (id) => api.get(`/mock-tests/${id}/result`),
+};
+
+export const mistakeService = {
+  getAll: (params) => api.get('/mistakes', { params }),
+  getAggregates: () => api.get('/mistakes/aggregates'),
+  create: (data) => api.post('/mistakes', data),
+  delete: (id) => api.delete(`/mistakes/${id}`),
+};
+
+export const studyPlanService = {
+  get: () => api.get('/study-plan'),
+};
+
+export const weeklyTestService = {
+  getAll: (params) => api.get('/weekly-tests', { params }),
+  getSubjectCounts: () => api.get('/weekly-tests/subjects'),
+  getProgress: () => api.get('/weekly-tests/progress'),
+  getById: (id) => api.get(`/weekly-tests/${id}`),
+  complete: (id, data) => api.post(`/weekly-tests/${id}/complete`, data),
+  uploadPdf: (id, formData) => api.post(`/weekly-tests/upload/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 60000,
+  }),
+  create: (data) => api.post('/weekly-tests', data),
+  delete: (id) => api.delete(`/weekly-tests/${id}`),
+};
+
+export const feedbackService = {
+  get: () => api.get('/feedback'),
+  submit: (data) => api.post('/feedback', data),
+  getAdminStats: () => api.get('/feedback/admin/stats'),
+  getAdminAll: (params) => api.get('/feedback/admin/all', { params }),
+  getPolls: () => api.get('/feedback/polls'),
 };
 
 export const adminLiveService = {

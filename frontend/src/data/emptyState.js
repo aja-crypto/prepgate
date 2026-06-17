@@ -4,16 +4,140 @@ import { BADGE_DEFINITIONS, DEFAULT_RESOURCES } from './defaults';
 export const DEMO_EMAIL = 'demo@gate2027.in';
 
 export const SYLLABUS_TOPICS = [
-  { id: 1, name: 'Linear Algebra', subject: 'Engineering Mathematics', done: false },
-  { id: 2, name: 'Calculus & Differential Equations', subject: 'Engineering Mathematics', done: false },
-  { id: 3, name: 'Boolean Algebra', subject: 'Digital Logic', done: false },
-  { id: 4, name: 'Pipelining & Hazards', subject: 'Computer Organization', done: false },
-  { id: 5, name: 'Dynamic Programming', subject: 'Algorithms', done: false },
-  { id: 6, name: 'Process Scheduling', subject: 'Operating Systems', done: false },
-  { id: 7, name: 'SQL Joins & Subqueries', subject: 'DBMS', done: false },
-  { id: 8, name: 'TCP/IP Stack', subject: 'Computer Networks', done: false },
-  { id: 9, name: 'Turing Machines', subject: 'TOC', done: false },
-  { id: 10, name: 'LL & LR Parsing', subject: 'Compiler Design', done: false },
+  { 
+    id: 1, 
+    name: 'Linear Algebra', 
+    subject: 'Engineering Mathematics', 
+    done: false,
+    weightage: 5,
+    pyqFrequency: '1-2/year',
+    priority: 'High',
+    resources: {
+      lecture: true, notes: true, formulaSheet: true, pyqs: true, topicTest: true, shortNotes: true
+    },
+    progress: {
+      lecture: false, notes: false, revision1: false, revision2: false, revision3: false, revision4: false, pyqs: false, topicTest: false
+    },
+    lastRevised: null,
+    revisionSchedule: [3, 7, 15, 30]
+  },
+  { 
+    id: 2, 
+    name: 'Calculus & Differential Equations', 
+    subject: 'Engineering Mathematics', 
+    done: false,
+    weightage: 5,
+    pyqFrequency: '1-2/year',
+    priority: 'High',
+    resources: { lecture: true, notes: true, formulaSheet: true, pyqs: true, topicTest: true, shortNotes: true },
+    progress: { lecture: false, notes: false, revision1: false, revision2: false, revision3: false, revision4: false, pyqs: false, topicTest: false },
+    lastRevised: null,
+    revisionSchedule: [3, 7, 15, 30]
+  },
+  { 
+    id: 3, 
+    name: 'Boolean Algebra', 
+    subject: 'Digital Logic', 
+    done: false,
+    weightage: 4,
+    pyqFrequency: '1/year',
+    priority: 'Medium',
+    resources: { lecture: true, notes: true, formulaSheet: true, pyqs: true, topicTest: true, shortNotes: true },
+    progress: { lecture: false, notes: false, revision1: false, revision2: false, revision3: false, revision4: false, pyqs: false, topicTest: false },
+    lastRevised: null,
+    revisionSchedule: [3, 7, 15, 30]
+  },
+  { 
+    id: 4, 
+    name: 'Pipelining & Hazards', 
+    subject: 'Computer Organization', 
+    done: false,
+    weightage: 5,
+    pyqFrequency: '1-2/year',
+    priority: 'High',
+    resources: { lecture: true, notes: true, formulaSheet: true, pyqs: true, topicTest: true, shortNotes: true },
+    progress: { lecture: false, notes: false, revision1: false, revision2: false, revision3: false, revision4: false, pyqs: false, topicTest: false },
+    lastRevised: null,
+    revisionSchedule: [3, 7, 15, 30]
+  },
+  { 
+    id: 5, 
+    name: 'Dynamic Programming', 
+    subject: 'Algorithms', 
+    done: false,
+    weightage: 5,
+    pyqFrequency: '2-3/year',
+    priority: 'High',
+    resources: { lecture: true, notes: true, formulaSheet: true, pyqs: true, topicTest: true, shortNotes: true },
+    progress: { lecture: false, notes: false, revision1: false, revision2: false, revision3: false, revision4: false, pyqs: false, topicTest: false },
+    lastRevised: null,
+    revisionSchedule: [3, 7, 15, 30]
+  },
+  { 
+    id: 6, 
+    name: 'Process Scheduling', 
+    subject: 'Operating Systems', 
+    done: false,
+    weightage: 5,
+    pyqFrequency: '1-2/year',
+    priority: 'High',
+    resources: { lecture: true, notes: true, formulaSheet: true, pyqs: true, topicTest: true, shortNotes: true },
+    progress: { lecture: false, notes: false, revision1: false, revision2: false, revision3: false, revision4: false, pyqs: false, topicTest: false },
+    lastRevised: null,
+    revisionSchedule: [3, 7, 15, 30]
+  },
+  { 
+    id: 7, 
+    name: 'SQL Joins & Subqueries', 
+    subject: 'DBMS', 
+    done: false,
+    weightage: 5,
+    pyqFrequency: '1-2/year',
+    priority: 'High',
+    resources: { lecture: true, notes: true, formulaSheet: true, pyqs: true, topicTest: true, shortNotes: true },
+    progress: { lecture: false, notes: false, revision1: false, revision2: false, revision3: false, revision4: false, pyqs: false, topicTest: false },
+    lastRevised: null,
+    revisionSchedule: [3, 7, 15, 30]
+  },
+  { 
+    id: 8, 
+    name: 'TCP/IP Stack', 
+    subject: 'Computer Networks', 
+    done: false,
+    weightage: 4,
+    pyqFrequency: '1/year',
+    priority: 'Medium',
+    resources: { lecture: true, notes: true, formulaSheet: true, pyqs: true, topicTest: true, shortNotes: true },
+    progress: { lecture: false, notes: false, revision1: false, revision2: false, revision3: false, revision4: false, pyqs: false, topicTest: false },
+    lastRevised: null,
+    revisionSchedule: [3, 7, 15, 30]
+  },
+  { 
+    id: 9, 
+    name: 'Turing Machines', 
+    subject: 'TOC', 
+    done: false,
+    weightage: 5,
+    pyqFrequency: '1/year',
+    priority: 'High',
+    resources: { lecture: true, notes: true, formulaSheet: true, pyqs: true, topicTest: true, shortNotes: true },
+    progress: { lecture: false, notes: false, revision1: false, revision2: false, revision3: false, revision4: false, pyqs: false, topicTest: false },
+    lastRevised: null,
+    revisionSchedule: [3, 7, 15, 30]
+  },
+  { 
+    id: 10, 
+    name: 'LL & LR Parsing', 
+    subject: 'Compiler Design', 
+    done: false,
+    weightage: 4,
+    pyqFrequency: '1/year',
+    priority: 'Medium',
+    resources: { lecture: true, notes: true, formulaSheet: true, pyqs: true, topicTest: true, shortNotes: true },
+    progress: { lecture: false, notes: false, revision1: false, revision2: false, revision3: false, revision4: false, pyqs: false, topicTest: false },
+    lastRevised: null,
+    revisionSchedule: [3, 7, 15, 30]
+  },
 ];
 
 export const GATE_SUBJECTS = [

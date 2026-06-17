@@ -10,11 +10,11 @@ const { Note } = require('../models');
 const { getLocalNotes, saveLocalNote, updateLocalNote, deleteLocalNote } = require('../store/localDataStore');
 
 // Configure Multer for local uploads
+const uploadsNotesDir = path.join(__dirname, '../..', 'uploads', 'notes');
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = './uploads/notes';
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
+    if (!fs.existsSync(uploadsNotesDir)) fs.mkdirSync(uploadsNotesDir, { recursive: true });
+    cb(null, uploadsNotesDir);
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`);
@@ -127,16 +127,31 @@ router.post('/', protect, upload.single('file'), async (req, res, next) => {
     }
 
     res.status(201).json({ success: true, data: note });
-  } catch (e) { 
-    console.error('Note Creation Error:', e);
-    res.status(400).json({ success: false, message: e.message, errors: e.errors });
+  } catch (e) {
+    next(e);
   }
 });
 
 router.put('/:id', protect, upload.single('file'), async (req, res, next) => {
   try {
-    const updateData = { ...req.body };
+    const updateData = {
+      ...req.body,
+      isPinned: req.body.isPinned === 'true',
+      isFavorite: req.body.isFavorite === 'true',
+    };
     if (req.file) {
+      // Delete old file before replacing
+      let oldNote;
+      if (isMongoConnected()) {
+        oldNote = await Note.findOne({ _id: req.params.id, user: req.user._id });
+      } else {
+        const allLocal = getLocalNotes({ user: req.user._id });
+        oldNote = allLocal.find(n => n._id === req.params.id);
+      }
+      if (oldNote && oldNote.fileUrl) {
+        const oldFilePath = path.join(__dirname, '../..', oldNote.fileUrl);
+        if (fs.existsSync(oldFilePath)) fs.unlinkSync(oldFilePath);
+      }
       updateData.fileUrl = `/uploads/notes/${req.file.filename}`;
       updateData.fileType = req.file.mimetype;
       updateData.fileSize = req.file.size;

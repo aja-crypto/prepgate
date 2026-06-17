@@ -1,13 +1,13 @@
 // Admin panel — users, subjects, PYQs, resources with API CRUD
 import { useState, useEffect } from 'react';
 import { useProgress } from '../context/ProgressContext';
-import { adminService, subjectService } from '../services/api';
+import { adminService, subjectService, weeklyTestService, shortNoteService } from '../services/api';
 import Modal from '../components/common/Modal';
 import AdminLiveDataTab from '../components/admin/AdminLiveDataTab';
 import AdminPYQTab from '../components/admin/AdminPYQTab';
 import toast from 'react-hot-toast';
 
-const TABS = ['Overview', 'Users', 'Subjects', 'PYQs', 'Resources', 'Live Updates'];
+const TABS = ['Overview', 'Users', 'Subjects', 'PYQs', 'Weekly Tests', 'Short Notes', 'Resources', 'Live Updates'];
 
 export default function AdminPage() {
   const { topics, pyqs, notes, mocks, resources, studyStats, mongoAvailable } = useProgress();
@@ -183,6 +183,10 @@ export default function AdminPage() {
 
       {tab === 'PYQs' && <AdminPYQTab />}
 
+      {tab === 'Weekly Tests' && <AdminWeeklyTestsUpload />}
+
+      {tab === 'Short Notes' && <AdminShortNotesUpload />}
+
       {tab === 'Resources' && (
         <div className="bg-surface border border-border rounded-xl p-5">
           <div className="text-sm font-semibold text-text mb-4">Resource Management</div>
@@ -210,6 +214,145 @@ export default function AdminPage() {
           <button onClick={saveSubject} className="w-full bg-primary text-white py-2.5 rounded-lg text-sm font-semibold">{editSubjectId ? 'Update' : 'Create'}</button>
         </div>
       </Modal>
+    </div>
+  );
+}
+
+function AdminWeeklyTestsUpload() {
+  const [tests, setTests] = useState([]);
+  const [uploading, setUploading] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [subjectFilter, setSubjectFilter] = useState('All');
+
+  useEffect(() => {
+    setLoading(true);
+    weeklyTestService.getAll().then(r => setTests(r.data.data)).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const subjects = [...new Set(tests.map(t => t.subject))].sort();
+  const filtered = subjectFilter === 'All' ? tests : tests.filter(t => t.subject === subjectFilter);
+
+  const handleUpload = async (testId) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const form = new FormData();
+      form.append('pdf', file);
+      setUploading(prev => ({ ...prev, [testId]: true }));
+      try {
+        await weeklyTestService.uploadPdf(testId, form);
+        toast.success('PDF uploaded');
+      } catch {
+        toast.error('Upload failed');
+      } finally {
+        setUploading(prev => ({ ...prev, [testId]: false }));
+      }
+    };
+    input.click();
+  };
+
+  if (loading) return <div className="text-xs text-text3 p-5">Loading tests...</div>;
+
+  return (
+    <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="text-sm font-semibold text-text mb-4">Weekly Tests — Upload PDFs</div>
+      <div className="flex gap-2 mb-4 flex-wrap">
+        <button onClick={() => setSubjectFilter('All')} className={`text-xs px-3 py-1.5 rounded-lg border ${subjectFilter === 'All' ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3'}`}>All</button>
+        {subjects.map(s => (
+          <button key={s} onClick={() => setSubjectFilter(s)} className={`text-xs px-3 py-1.5 rounded-lg border ${subjectFilter === s ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3'}`}>{s}</button>
+        ))}
+      </div>
+      <div className="space-y-2 max-h-[500px] overflow-y-auto">
+        {filtered.map(test => (
+          <div key={test._id} className="flex items-center justify-between bg-bg-2 border border-border rounded-lg p-3">
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-text truncate">
+                <span className="font-mono text-text3 text-xs mr-2">{test.subject}·T{test.testNumber}</span>
+                {test.title}
+              </div>
+              <div className="text-[10px] text-text3 mt-0.5">
+                {test.pdfUrl ? <span className="text-green-400">✓ PDF: {test.pdfUrl.split('/').pop()}</span> : <span className="text-orange-400">No PDF uploaded</span>}
+              </div>
+            </div>
+            <button
+              onClick={() => handleUpload(test._id)}
+              disabled={uploading[test._id]}
+              className="text-xs px-3 py-1.5 rounded-lg border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all disabled:opacity-50 shrink-0"
+            >
+              {uploading[test._id] ? 'Uploading...' : 'Upload PDF'}
+            </button>
+          </div>
+        ))}
+        {filtered.length === 0 && <div className="text-xs text-text3 py-8 text-center">No tests found</div>}
+      </div>
+    </div>
+  );
+}
+
+function AdminShortNotesUpload() {
+  const [subjects, setSubjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState({});
+
+  const load = () => {
+    setLoading(true);
+    shortNoteService.getAll().then(r => setSubjects(r.data.data)).catch(() => {}).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleUpload = (folder) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.png,.jpg,.jpeg,.webp';
+    input.multiple = true;
+    input.onchange = async (e) => {
+      const files = Array.from(e.target.files);
+      for (const file of files) {
+        setUploading(prev => ({ ...prev, [folder + file.name]: true }));
+        const form = new FormData();
+        form.append('file', file);
+        try {
+          await shortNoteService.upload(folder, form);
+          toast.success(`Uploaded ${file.name}`);
+        } catch { toast.error(`Failed: ${file.name}`); }
+        setUploading(prev => ({ ...prev, [folder + file.name]: false }));
+      }
+      load();
+    };
+    input.click();
+  };
+
+  if (loading) return <div className="text-xs text-text3 p-5">Loading...</div>;
+
+  return (
+    <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="text-sm font-semibold text-text mb-4">Short Notes — Upload Files</div>
+      <div className="grid sm:grid-cols-2 gap-3">
+        {subjects.map(sub => (
+          <div key={sub.folder} className="bg-bg-2 border border-border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span>{sub.icon}</span>
+                <span className="text-sm font-medium text-text">{sub.name}</span>
+                <span className="text-[10px] text-text3">({sub.files.length})</span>
+              </div>
+              <button onClick={() => handleUpload(sub.folder)} className="text-[10px] px-2.5 py-1.5 rounded-lg border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all">+ Add</button>
+            </div>
+            <div className="space-y-1">
+              {sub.files.map(f => (
+                <div key={f.name} className="flex items-center justify-between text-[11px]">
+                  <span className="text-text3 truncate">📄 {f.name}</span>
+                  <span className="text-text4 shrink-0">{(f.size / 1024).toFixed(0)}KB</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

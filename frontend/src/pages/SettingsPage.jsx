@@ -245,7 +245,7 @@ export default function SettingsPage() {
     },
     {
       title: '📱 Install as App (PWA)',
-      desc: 'Install PrepFlow on your phone or desktop for offline access.',
+      desc: 'Install PrepGate on your phone or desktop for offline access.',
       action: (
         <button onClick={installPwa} className="btn-ghost text-xs">Install App</button>
       ),

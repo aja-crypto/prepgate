@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 export default function PasswordInput({
   id,
+  name,
   value,
   onChange,
   placeholder = '••••••••',
@@ -14,6 +15,7 @@ export default function PasswordInput({
     <div className="relative">
       <input
         id={id}
+        name={name}
         type={visible ? 'text' : 'password'}
         value={value}
         onChange={onChange}

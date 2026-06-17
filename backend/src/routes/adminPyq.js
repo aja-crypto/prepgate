@@ -1,13 +1,13 @@
 // Admin PYQ management — bulk import (CSV/JSON), CRUD
 const router = require('express').Router();
-const { protect, adminOnly } = require('../middleware/auth');
+const { adminProtect } = require('../middleware/adminAuth');
 const { isMongoConnected } = require('../config/db');
 const { PYQ } = require('../models');
 const {
   parseCsv, validateRows, importRows, getImportTemplate,
 } = require('../services/pyqImportService');
 
-router.use(protect, adminOnly);
+router.use(adminProtect);
 
 router.get('/import-template', (req, res) => {
   res.json({ success: true, data: getImportTemplate() });

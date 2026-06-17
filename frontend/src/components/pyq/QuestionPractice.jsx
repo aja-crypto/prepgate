@@ -1,6 +1,6 @@
 // Single PYQ practice with attempt, solution, and stats
 import { useState, useEffect } from 'react';
-import { pyqService, getApiErrorMessage } from '../../services/api';
+import { pyqService, mistakeService, getApiErrorMessage } from '../../services/api';
 import toast from 'react-hot-toast';
 
 const DIFF_STYLE = {
@@ -9,14 +9,25 @@ const DIFF_STYLE = {
   hard: 'bg-red-500/10 border-red-500/20 text-red-400',
 };
 
+const MISTAKE_CATEGORIES = [
+  { key: 'concept_error', label: 'Concept Error', icon: '💡' },
+  { key: 'formula_error', label: 'Formula Error', icon: '📐' },
+  { key: 'silly_mistake', label: 'Silly Mistake', icon: '😅' },
+  { key: 'time_pressure', label: 'Time Pressure', icon: '⏱' },
+  { key: 'guess', label: 'Guess', icon: '🎲' },
+];
+
 export default function QuestionPractice({ pyqId, onClose, onAttempt }) {
   const [question, setQuestion] = useState(null);
   const [selected, setSelected] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [loggingMistake, setLoggingMistake] = useState(false);
   const [startTime] = useState(Date.now());
   const [elapsed, setElapsed] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState('concept_error');
+  const [mistakeLogged, setMistakeLogged] = useState(false);
 
   useEffect(() => {
     if (result) return;
@@ -60,6 +71,32 @@ export default function QuestionPractice({ pyqId, onClose, onAttempt }) {
       toast.error(getApiErrorMessage(err, 'Submit failed'));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const logMistake = async () => {
+    if (!question || mistakeLogged) return;
+    setLoggingMistake(true);
+    try {
+      const subjectName = question.subject?.name || question.subject || 'Unknown';
+      const subjectCode = subjectName.split(' ').slice(-1)[0].substring(0, 3).toUpperCase();
+      
+      await mistakeService.create({
+        questionText: question.questionText || question.title || 'PYQ Question',
+        subject: subjectCode,
+        topic: question.topic?.name || question.topic || '',
+        yourAnswer: selected,
+        correctAnswer: Array.isArray(result.correctAnswer) ? result.correctAnswer.join(', ') : String(result.correctAnswer),
+        category: selectedCategory,
+        sourceTest: `PYQ GATE ${question.year}`,
+      });
+      setMistakeLogged(true);
+      toast.success('Mistake logged to Mistake Notebook!');
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message;
+      toast.error(`Failed to log mistake: ${msg}`);
+    } finally {
+      setLoggingMistake(false);
     }
   };
 
@@ -145,6 +182,40 @@ export default function QuestionPractice({ pyqId, onClose, onAttempt }) {
               <span className="font-mono font-semibold text-primary">
                 {Array.isArray(result.correctAnswer) ? result.correctAnswer.join(', ') : result.correctAnswer}
               </span>
+            </div>
+          )}
+
+          {result.status === 'incorrect' && (
+            <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-4">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-red-400 mb-2">Log to Mistake Notebook</div>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {MISTAKE_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.key)}
+                    className={`text-[10px] px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1 ${
+                      selectedCategory === cat.key
+                        ? 'bg-primary/15 border-primary/30 text-primary'
+                        : 'bg-bg-2 border-border text-text3 hover:border-white/15'
+                    }`}
+                  >
+                    {cat.icon} {cat.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={logMistake}
+                disabled={loggingMistake || mistakeLogged}
+                className={`w-full text-xs font-bold py-2 rounded-lg transition-all ${
+                  mistakeLogged
+                    ? 'bg-green-500/10 border border-green-500/20 text-green-400'
+                    : 'bg-primary text-white hover:opacity-90'
+                }`}
+              >
+                {loggingMistake ? 'Logging...' : mistakeLogged ? '✓ Logged!' : 'Log Mistake'}
+              </button>
             </div>
           )}
 

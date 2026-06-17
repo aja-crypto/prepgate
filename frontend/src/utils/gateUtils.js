@@ -31,16 +31,143 @@ export function predictAIR(score) {
 
 /** Compute subject completion % from topics + PYQs */
 export function computeSubjectCompletion(subjects, topics, pyqs) {
-  return subjects.map((sub) => {
-    const subTopics = topics.filter((t) => t.subject === sub.name || sub.name.includes(t.subject) || t.subject.includes(sub.name.split(' ')[0]));
-    const subPyqs = pyqs.filter((p) => p.subject === sub.name || sub.name.includes(p.subject) || p.subject.includes(sub.name.split(' ')[0]));
+  const safeSubjects = subjects || [];
+  const safeTopics = topics || [];
+  const safePyqs = pyqs || [];
+  return safeSubjects.map((sub) => {
+    const subTopics = safeTopics.filter((t) => t.subject === sub.name || sub.name.includes(t.subject) || t.subject.includes(sub.name.split(' ')[0]));
+    const subPyqs = safePyqs.filter((p) => p.subject === sub.name || sub.name.includes(p.subject) || p.subject.includes(sub.name.split(' ')[0]));
 
-    const topicPct = subTopics.length ? (subTopics.filter((t) => t.done).length / subTopics.length) * 100 : sub.progress;
-    const pyqPct = subPyqs.length ? (subPyqs.filter((p) => p.solved).length / subPyqs.length) * 100 : sub.progress;
+    const topicPct = subTopics.length ? (subTopics.filter((t) => t.done).length / subTopics.length) * 100 : sub.progress || 0;
+    const pyqPct = subPyqs.length ? (subPyqs.filter((p) => p.solved).length / subPyqs.length) * 100 : sub.progress || 0;
     const progress = Math.round((topicPct * 0.6 + pyqPct * 0.4));
 
     return { ...sub, progress, topicPct: Math.round(topicPct), pyqPct: Math.round(pyqPct) };
   });
+}
+
+export const REVISION_STEPS = [
+  { stage: 1, label: 'Revision 1', intervalDays: 3 },
+  { stage: 2, label: 'Revision 2', intervalDays: 7 },
+  { stage: 3, label: 'Revision 3', intervalDays: 15 },
+  { stage: 4, label: 'Revision 4', intervalDays: 30 },
+];
+
+export function getRevisionStageMeta(stage = 1) {
+  return REVISION_STEPS.find((s) => s.stage === stage) || REVISION_STEPS[0];
+}
+
+export function getNextRevisionStage(stage = 1) {
+  return REVISION_STEPS.find((s) => s.stage === stage + 1) || null;
+}
+
+export function computeRevisionHealth(revisionSchedule = []) {
+  if (!revisionSchedule.length) return { label: 'Poor', score: 0, missed: 0, today: 0, upcoming: 0 };
+  const counts = revisionSchedule.reduce((acc, item) => {
+    const status = item.status === 'done' ? 'done' : getRevisionStatus(item.dueDate);
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {});
+  const missed = counts.missed || 0;
+  const today = counts.today || 0;
+  const done = counts.done || 0;
+  const score = Math.max(0, Math.min(100, Math.round(((done + today * 0.5) / revisionSchedule.length) * 100) - missed * 10));
+  return {
+    label: score >= 75 ? 'Good' : score >= 45 ? 'Average' : 'Poor',
+    score,
+    missed,
+    today,
+    upcoming: counts.upcoming || 0,
+  };
+}
+
+export function computeConsistencyScore(studyStats = {}, gateFeatures = {}) {
+  const weeklyHours = Array.isArray(studyStats.weeklyHours) ? studyStats.weeklyHours : [];
+  const activeDays = weeklyHours.filter((h) => h > 0).length;
+  const weeklyTarget = gateFeatures.weeklyGoal?.hours || 50;
+  const totalHours = weeklyHours.reduce((s, h) => s + h, 0);
+  const hourScore = Math.min(60, Math.round((totalHours / weeklyTarget) * 60));
+  const dayScore = Math.min(40, Math.round((activeDays / 7) * 40));
+  return Math.min(100, hourScore + dayScore);
+}
+
+export function predictRankRange(score) {
+  const { air } = predictAIR(score);
+  const low = Math.max(1, Math.round(air * 0.8 / 50) * 50);
+  const high = Math.max(low + 50, Math.round(air * 1.2 / 50) * 50);
+  return { low, high, label: `${low.toLocaleString()}-${high.toLocaleString()}` };
+}
+
+export function computeStudyPace(studyStats = {}, topics = [], gateFeatures = {}) {
+  const weeklyHours = Array.isArray(studyStats.weeklyHours) ? studyStats.weeklyHours : [];
+  const activeDays = Math.max(1, weeklyHours.filter((h) => h > 0).length || Object.keys(gateFeatures.streak?.activityLog || {}).length || 1);
+  const totalHours = weeklyHours.reduce((s, h) => s + h, 0) || studyStats.weekHours || 0;
+  const hoursPerDay = Math.round((totalHours / activeDays) * 10) / 10;
+  const completed = topics.filter((t) => t.done).length;
+  const remaining = topics.length - completed;
+  const topicRate = Math.max(0.2, completed / activeDays);
+  const daysNeeded = Math.ceil(remaining / topicRate);
+  const completionDate = remaining > 0 ? new Date(Date.now() + daysNeeded * 86400000) : new Date();
+  return {
+    hoursPerDay,
+    completionDate: completionDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }),
+    daysNeeded,
+  };
+}
+
+export function getMistakePatternSummary(pyqs = []) {
+  const mistakes = pyqs.filter((p) => p.mistakeType || p.status === 'incorrect' || p.markedDifficult);
+  const counts = mistakes.reduce((acc, p) => {
+    const key = p.mistakeType || 'Unclassified';
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+  return {
+    total: mistakes.length,
+    counts,
+    dominant: top ? top[0] : 'None',
+  };
+}
+
+export function buildWeakRecoveryPlans(subjects = [], topics = [], pyqs = []) {
+  const bySubjectAccuracy = subjects.map((subject) => {
+    const subjectPyqs = pyqs.filter((p) => p.subject === subject.name || subject.name.includes(p.subject));
+    const solved = subjectPyqs.filter((p) => p.solved).length;
+    const accuracy = subjectPyqs.length ? Math.round((solved / subjectPyqs.length) * 100) : subject.progress || 0;
+    const incomplete = topics.find((t) => t.subject === subject.name && !t.done);
+    return {
+      topic: incomplete?.name || subject.name,
+      subject: subject.name,
+      accuracy,
+      plan: ['20 PYQs', '2 Revisions', '1 Mock'],
+    };
+  });
+  return bySubjectAccuracy.sort((a, b) => a.accuracy - b.accuracy).slice(0, 5);
+}
+
+export function buildDailyActions({ topics = [], pyqs = [], mocks = [], revisionSchedule = [], studyStats = {} }) {
+  const today = todayKey();
+  const dueRevision = revisionSchedule.find((r) => r.status !== 'done' && r.dueDate <= today);
+  const weakSubject = [...(studyStats.subjects || [])].sort((a, b) => (a.progress || 0) - (b.progress || 0))[0];
+  const weakTopic = topics.find((t) => !t.done && (!weakSubject || t.subject === weakSubject.name)) || topics.find((t) => !t.done);
+  const revisionPyq = pyqs.find((p) => p.revisionNeeded) || pyqs.find((p) => !p.solved);
+  const lastMock = mocks[mocks.length - 1];
+  return {
+    task: weakTopic ? `Complete ${weakTopic.name}` : 'Revise one completed topic',
+    revision: dueRevision ? `Revise ${dueRevision.topicName}` : 'Do one 15-minute formula revision',
+    pyq: revisionPyq ? `Solve PYQs from ${revisionPyq.subject}` : 'Solve 10 mixed PYQs',
+    mock: !lastMock ? 'Take a 30-minute diagnostic quiz' : 'Analyze last mock mistakes',
+  };
+}
+
+export function buildFinalModePlans() {
+  return [
+    { label: '100 Day Plan', focus: 'Finish syllabus + weekly mocks', split: '60% learning, 25% PYQs, 15% revision' },
+    { label: '60 Day Plan', focus: 'PYQ-heavy consolidation', split: '35% learning, 40% PYQs, 25% revision' },
+    { label: '30 Day Plan', focus: 'Mocks + weak topic recovery', split: '20% learning, 45% mocks/PYQs, 35% revision' },
+    { label: '7 Day Revision', focus: 'Formula book + mistakes only', split: '10% new, 50% revision, 40% mock analysis' },
+  ];
 }
 
 /** Detect weak topics from mock notes, incomplete topics, unsolved PYQs */
@@ -165,11 +292,10 @@ export function computePyqStats(pyqs) {
   const byTopic = {};
   const byYear = {};
   const byDifficulty = { easy: 0, medium: 0, hard: 0 };
-  let solved = 0, bookmarked = 0, revisionNeeded = 0, difficult = 0;
+  let solved = 0, revisionNeeded = 0, difficult = 0;
 
   pyqs.forEach((p) => {
     if (p.solved) solved++;
-    if (p.bookmarked) bookmarked++;
     if (p.revisionNeeded) revisionNeeded++;
     if (p.markedDifficult) difficult++;
     byDifficulty[p.difficulty] = (byDifficulty[p.difficulty] || 0) + 1;
@@ -185,7 +311,7 @@ export function computePyqStats(pyqs) {
     if (p.solved) byYear[p.year].solved++;
   });
 
-  return { total: pyqs.length, solved, bookmarked, revisionNeeded, difficult, bySubject, byTopic, byYear, byDifficulty };
+  return { total: pyqs.length, solved, revisionNeeded, difficult, bySubject, byTopic, byYear, byDifficulty };
 }
 
 /** Subject-wise accuracy for charts */
@@ -257,9 +383,9 @@ export function generateWeeklyPlan(topics, pyqs, subjects, dailyHours = 8) {
 
 /** Readiness score (0–100) from topics, PYQs, mocks, streak */
 export function computeReadinessScore(topics, pyqs, mocks, streak) {
-  const topicPct = topics.length ? (topics.filter((t) => t.done).length / topics.length) * 100 : 0;
-  const pyqPct = pyqs.length ? (pyqs.filter((p) => p.solved).length / pyqs.length) * 100 : 0;
-  const mockScores = mocks.map((m) => m.score);
+  const topicPct = (topics?.length || 0) ? ((topics.filter((t) => t.done).length / topics.length) * 100) : 0;
+  const pyqPct = (pyqs?.length || 0) ? ((pyqs.filter((p) => p.solved).length / pyqs.length) * 100) : 0;
+  const mockScores = (mocks || []).map((m) => m.score);
   const mockPct = mockScores.length ? (mockScores.reduce((a, b) => a + b, 0) / mockScores.length) : 0;
   const streakBonus = Math.min(10, (streak?.current || 0) * 0.5);
   return Math.round(topicPct * 0.3 + pyqPct * 0.25 + mockPct * 0.35 + streakBonus);
@@ -267,8 +393,9 @@ export function computeReadinessScore(topics, pyqs, mocks, streak) {
 
 /** Forecast days to complete all topics at current pace */
 export function computeCompletionForecast(topics, gateFeatures) {
-  const remaining = topics.filter((t) => !t.done).length;
-  const completed = topics.filter((t) => t.done).length;
+  const safeTopics = topics || [];
+  const remaining = safeTopics.filter((t) => !t.done).length;
+  const completed = safeTopics.filter((t) => t.done).length;
   const daysActive = Object.keys(gateFeatures?.streak?.activityLog || {}).length || 1;
   const rate = completed / Math.max(daysActive, 1);
   const daysNeeded = rate > 0 ? Math.ceil(remaining / rate) : null;
@@ -278,7 +405,8 @@ export function computeCompletionForecast(topics, gateFeatures) {
 
 /** Subject priority suggestions — lowest completion first */
 export function getSubjectPriorities(subjects, topics, pyqs) {
-  return computeSubjectCompletion(subjects, topics, pyqs)
+  const completion = computeSubjectCompletion(subjects, topics, pyqs);
+  return (completion || [])
     .sort((a, b) => a.progress - b.progress)
     .slice(0, 5)
     .map((s, i) => ({
@@ -331,4 +459,82 @@ export function getRevisionStatus(dueDate) {
   if (dueDate < today) return 'missed';
   if (dueDate === today) return 'today';
   return 'upcoming';
+}
+
+/** GATE subject weightage (approx marks distribution for CSE) */
+export const SUBJECT_WEIGHTAGE = {
+  'Operating Systems': 8,
+  'Computer Networks': 8,
+  'DBMS': 7,
+  'Computer Organization': 6,
+  'Data Structures': 6,
+  'Algorithms': 6,
+  'Theory of Computation': 5,
+  'Compiler Design': 4,
+  'Digital Logic': 4,
+  'Discrete Mathematics': 10,
+  'Engineering Mathematics': 10,
+  'General Aptitude': 15,
+};
+
+/** Compute next best topic recommendation with confidence & expected gain */
+export function getNextTopicRecommendation(topics, pyqs, subjects, studyStats = {}) {
+  if (!topics?.length) {
+    return { topicName: 'Start with Discrete Mathematics', confidence: 75, expectedGain: '+12 marks', subject: 'Discrete Mathematics', reason: 'Highest weightage subject' };
+  }
+
+  const subjectProgress = computeSubjectCompletion(subjects || [], topics, pyqs || []);
+  const incompleteTopics = topics.filter(t => !t.done);
+  
+  if (!incompleteTopics.length) {
+    return { topicName: 'All topics complete — Begin Revision', confidence: 90, expectedGain: '+8 marks', subject: 'Revision', reason: 'Syllabus completed' };
+  }
+
+  // Score each incomplete topic: weightage * (1 - progress) * PYQ frequency
+  const topicScores = incompleteTopics.map(topic => {
+    const sub = subjectProgress.find(s => s.name === topic.subject);
+    const progress = sub?.progress || 0;
+    const weightage = SUBJECT_WEIGHTAGE[topic.subject] || 5;
+    const subjectPyqs = (pyqs || []).filter(p => p.subject === topic.subject);
+    const pyqCount = subjectPyqs.length;
+    const pyqSolved = subjectPyqs.filter(p => p.solved).length;
+    const pyqAccuracy = pyqCount > 0 ? pyqSolved / pyqCount : 0;
+    const gap = 1 - progress / 100;
+    const pyqGap = 1 - pyqAccuracy;
+    // Score combines: subject weightage, progress gap, PYQ gap
+    const score = weightage * gap * (1 + pyqGap);
+    
+    // Expected marks gain based on weightage and gap
+    const expectedGain = Math.round(weightage * gap * 1.5);
+    
+    return {
+      topic,
+      subject: topic.subject,
+      score,
+      expectedGain,
+      weightage,
+      progress,
+      pyqAccuracy,
+    };
+  });
+
+  // Sort by score descending
+  topicScores.sort((a, b) => b.score - a.score);
+  
+  const best = topicScores[0];
+  if (!best) {
+    return { topicName: 'Complete Remaining Topics', confidence: 70, expectedGain: '+10 marks', subject: 'Mixed', reason: 'Multiple topics remaining' };
+  }
+
+  // Confidence based on how clear the winner is
+  const secondBest = topicScores[1];
+  const confidence = secondBest ? Math.min(95, Math.round(70 + (best.score - secondBest.score) / Math.max(best.score, 1) * 25)) : 90;
+  
+  return {
+    topicName: best.topic.name,
+    subject: best.subject,
+    confidence,
+    expectedGain: `+${best.expectedGain} marks`,
+    reason: `${best.subject} has ${best.weightage} marks weightage, ${Math.round(best.progress)}% done`,
+  };
 }

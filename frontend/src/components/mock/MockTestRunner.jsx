@@ -1,7 +1,15 @@
 // Interactive mock test runner with timer and solution review
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { mockSessionService, getApiErrorMessage } from '../../services/api';
+import { mockSessionService, mistakeService, getApiErrorMessage } from '../../services/api';
 import toast from 'react-hot-toast';
+
+const MISTAKE_CATEGORIES = [
+  { key: 'concept_error', label: 'Concept Error', icon: '💡' },
+  { key: 'formula_error', label: 'Formula Error', icon: '📐' },
+  { key: 'silly_mistake', label: 'Silly Mistake', icon: '😅' },
+  { key: 'time_pressure', label: 'Time Pressure', icon: '⏱' },
+  { key: 'guess', label: 'Guess', icon: '🎲' },
+];
 
 export default function MockTestRunner({ sessionId, onComplete, onCancel }) {
   const [session, setSession] = useState(null);
@@ -11,6 +19,9 @@ export default function MockTestRunner({ sessionId, onComplete, onCancel }) {
   const [timeLeft, setTimeLeft] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState(null);
+  const [selectedCategories, setSelectedCategories] = useState({});
+  const [loggedMistakes, setLoggedMistakes] = useState({});
+  const [loggingMistakes, setLoggingMistakes] = useState({});
   const qStart = useRef(Date.now());
   const timerRef = useRef(null);
 
@@ -91,6 +102,33 @@ export default function MockTestRunner({ sessionId, onComplete, onCancel }) {
     }
   };
 
+  const logMistake = async (sol, idx) => {
+    if (!session || loggedMistakes[sol.pyqId]) return;
+    setLoggingMistakes((prev) => ({ ...prev, [sol.pyqId]: true }));
+    try {
+      const question = session.questions.find((q) => q.pyq._id === sol.pyqId)?.pyq;
+      const subjectName = question?.subject?.name || 'Unknown';
+      const subjectCode = subjectName.split(' ').slice(-1)[0].substring(0, 3).toUpperCase();
+      
+      await mistakeService.create({
+        questionText: question?.questionText || sol.title || 'PYQ Question',
+        subject: subjectCode,
+        topic: question?.topic?.name || '',
+        yourAnswer: sol.selectedAnswer,
+        correctAnswer: Array.isArray(sol.correctAnswer) ? sol.correctAnswer.join(', ') : String(sol.correctAnswer),
+        category: selectedCategories[sol.pyqId] || 'concept_error',
+        sourceTest: session.name || 'Mock Test',
+      });
+      setLoggedMistakes((prev) => ({ ...prev, [sol.pyqId]: true }));
+      toast.success('Mistake logged to Mistake Notebook!');
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message;
+      toast.error(`Failed to log mistake: ${msg}`);
+    } finally {
+      setLoggingMistakes((prev) => ({ ...prev, [sol.pyqId]: false }));
+    }
+  };
+
   const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
   if (!session) return <div className="text-sm text-text3 p-8 text-center">Loading mock test...</div>;
@@ -144,6 +182,39 @@ export default function MockTestRunner({ sessionId, onComplete, onCancel }) {
                   <span className="text-green-400">✓ {sol.questionStats.correctPct}%</span>
                   <span className="text-red-400">✗ {sol.questionStats.incorrectPct}%</span>
                   <span className="text-orange-400">— {sol.questionStats.skipPct}%</span>
+                </div>
+              )}
+              {sol.status === 'incorrect' && (
+                <div className="mt-3 bg-red-500/5 border border-red-500/10 rounded-lg p-3">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-red-400 mb-2">Log to Mistake Notebook</div>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {MISTAKE_CATEGORIES.map((cat) => (
+                      <button
+                        key={cat.key}
+                        type="button"
+                        onClick={() => setSelectedCategories((prev) => ({ ...prev, [sol.pyqId]: cat.key }))}
+                        className={`text-[9px] px-2 py-1 rounded border transition-all flex items-center gap-1 ${
+                          selectedCategories[sol.pyqId] === cat.key
+                            ? 'bg-primary/15 border-primary/30 text-primary'
+                            : 'bg-bg-2 border-border text-text3 hover:border-white/15'
+                        }`}
+                      >
+                        {cat.icon} {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => logMistake(sol, i)}
+                    disabled={loggingMistakes[sol.pyqId] || loggedMistakes[sol.pyqId]}
+                    className={`w-full text-[10px] font-bold py-1.5 rounded-lg transition-all ${
+                      loggedMistakes[sol.pyqId]
+                        ? 'bg-green-500/10 border border-green-500/20 text-green-400'
+                        : 'bg-primary text-white hover:opacity-90'
+                    }`}
+                  >
+                    {loggingMistakes[sol.pyqId] ? 'Logging...' : loggedMistakes[sol.pyqId] ? '✓ Logged!' : 'Log Mistake'}
+                  </button>
                 </div>
               )}
             </div>

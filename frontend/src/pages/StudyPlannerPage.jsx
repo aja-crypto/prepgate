@@ -66,10 +66,10 @@ export default function StudyPlannerPage() {
   const generateAiPlan = async () => {
     try {
       const res = await aiService.generatePlan({
-        subjects: studyStats.subjects,
-        topics,
-        pyqs,
-        mocks,
+        subjects: studyStats.subjects || [],
+        topics: topics || [],
+        pyqs: pyqs || [],
+        mocks: mocks || [],
         dailyHours: gateFeatures.dailyTarget?.hours || 8,
         period: 'week',
       });
@@ -96,12 +96,13 @@ export default function StudyPlannerPage() {
       const date = new Date(start);
       date.setDate(date.getDate() + i);
       const key = format(date, 'yyyy-MM-dd');
+      const tasks = Array.isArray(day.tasks) ? day.tasks : [];
       newPlans[key] = [{
         id: Date.now() + i,
         subject: day.subject,
         topic: day.topic,
         hours: day.hours,
-        notes: day.tasks.join(' · '),
+        notes: tasks.join(' · '),
       }];
     });
     updateGateFeatures((gf) => ({ ...gf, studyPlans: newPlans }));
@@ -151,7 +152,7 @@ export default function StudyPlannerPage() {
           <h1 className="text-xl font-bold text-text">📅 Study Planner</h1>
           <p className="text-sm text-text3 mt-0.5">Plan study sessions by subject and date</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <button onClick={generateAiPlan} className="text-xs px-3 py-1.5 rounded-lg border bg-primary/10 border-primary/20 text-primary hover:bg-primary/15">🤖 AI Planner</button>
           <button onClick={() => setView('month')} className={`text-xs px-3 py-1.5 rounded-lg border ${view === 'month' ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3'}`}>Month</button>
           <button onClick={() => setView('week')} className={`text-xs px-3 py-1.5 rounded-lg border ${view === 'week' ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3'}`}>Week</button>
@@ -165,12 +166,12 @@ export default function StudyPlannerPage() {
             <h2 className="text-sm font-semibold text-text">{format(currentMonth, 'MMMM yyyy')}</h2>
             <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="text-text3 hover:text-text px-2">→</button>
           </div>
-          <div className="grid grid-cols-7 gap-1 mb-1">
+          <div className="grid grid-cols-7 gap-[2px] sm:gap-1 mb-1">
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
-              <div key={d} className="text-[10px] text-text3 text-center uppercase tracking-wider py-1">{d}</div>
+              <div key={d} className="text-[9px] sm:text-[10px] text-text3 text-center uppercase tracking-wider py-1">{d}</div>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-[2px] sm:gap-1">
             {days.map((date) => (
               <DayCell key={date.toISOString()} date={date} inMonth={isSameMonth(date, currentMonth)} />
             ))}
@@ -190,7 +191,15 @@ export default function StudyPlannerPage() {
                   <button onClick={() => openAdd(date)} className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-lg border border-primary/20 hover:bg-primary/15">+ Add</button>
                 </div>
                 {plans.length === 0 ? (
-                  <p className="text-xs text-text3">No plans — click Add to schedule</p>
+                  <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12), rgba(99,102,241,0.08))', border: '1px solid rgba(168,85,247,0.15)' }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 text-primary">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                    </div>
+                    <h3 className="text-base font-semibold text-text mb-2">No Study Plans Yet</h3>
+                    <p className="text-sm text-text3 max-w-xs leading-relaxed">Plan your day by adding study sessions. Click a time slot to get started.</p>
+                  </div>
                 ) : (
                   <div className="space-y-2">
                     {plans.map((p) => (
@@ -219,7 +228,7 @@ export default function StudyPlannerPage() {
             <div key={day.day} className="bg-bg-2 border border-border rounded-lg p-3">
               <div className="text-xs font-semibold text-primary">{day.day}</div>
               <div className="text-sm text-text">{day.topic} — {day.subject}</div>
-              <div className="text-[10px] text-text3">{day.hours}h · {day.tasks.join(' · ')}</div>
+              <div className="text-[10px] text-text3">{day.hours}h · {(Array.isArray(day.tasks) ? day.tasks : []).join(' · ')}</div>
             </div>
           ))}
         </div>

@@ -1,8 +1,8 @@
-// PYQ Practice — topic/subject/year-wise browse, practice, bookmarks, revision
+// PYQ Practice — topic/subject/year-wise browse, practice, revision
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useProgress } from '../context/ProgressContext';
 import { pyqService } from '../services/api';
-import { computePyqStats } from '../utils/gateUtils';
+import { computePyqStats, getMistakePatternSummary } from '../utils/gateUtils';
 import QuestionPractice from '../components/pyq/QuestionPractice';
 import Modal from '../components/common/Modal';
 import toast from 'react-hot-toast';
@@ -12,7 +12,49 @@ const DIFF_STYLE = {
   medium: 'bg-orange-500/10 border-orange-500/20 text-orange-400',
   hard: 'bg-red-500/10 border-red-500/20 text-red-400',
 };
-const STATUS_FILTERS = ['All', 'Solved', 'Unsolved', 'Revision Needed', 'Bookmarked', 'Difficult'];
+const STATUS_FILTERS = ['All', 'Solved', 'Unsolved', 'Revision Needed', 'Difficult'];
+const MISTAKE_TYPES = ['Concept Mistake', 'Formula Mistake', 'Silly Mistake', 'Time Management', 'Guess'];
+
+const HowItWorks = () => {
+  const [expanded, setExpanded] = useState(true);
+  return (
+    <div className="mb-6">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full text-left mb-4 px-4 py-3 rounded-xl border border-purple-500/30 bg-purple-500/10"
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-purple-400">🎯 How PYQ Practice Works</span>
+          <span className="text-gray-400 text-xs">{expanded ? 'Hide' : 'Show'}</span>
+        </div>
+      </button>
+      {expanded && (
+        <div className="grid md:grid-cols-3 gap-4 text-sm">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <div className="text-purple-400 font-bold mb-2">Choose Year</div>
+            <p className="text-gray-400">Select from previous year GATE questions</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <div className="text-purple-400 font-bold mb-2">Solve Questions</div>
+            <p className="text-gray-400">Practice questions topic-wise or year-wise</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <div className="text-purple-400 font-bold mb-2">View Explanations</div>
+            <p className="text-gray-400">Check detailed solutions and explanations</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <div className="text-purple-400 font-bold mb-2">Track Accuracy</div>
+            <p className="text-gray-400">Monitor your solving accuracy over time</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <div className="text-purple-400 font-bold mb-2">Identify Weak Areas</div>
+            <p className="text-gray-400">Find topics where you need more practice</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function PYQPage() {
   const { pyqs, updatePyqs, refreshPyqs, mongoAvailable } = useProgress();
@@ -40,6 +82,7 @@ export default function PYQPage() {
   const topics = useMemo(() => ['All', ...new Set(pyqs.map((q) => q.topic).filter(Boolean))], [pyqs]);
   const years = useMemo(() => ['All', ...new Set(pyqs.map((q) => q.year))].sort((a, b) => (b === 'All' ? 1 : a === 'All' ? -1 : b - a)), [pyqs]);
   const stats = useMemo(() => computePyqStats(pyqs), [pyqs]);
+  const mistakeSummary = useMemo(() => getMistakePatternSummary(pyqs), [pyqs]);
 
   const filtered = pyqs.filter((q) => {
     if (filter !== 'All' && q.subject !== filter) return false;
@@ -49,7 +92,6 @@ export default function PYQPage() {
     if (statusFilter === 'Solved' && !q.solved) return false;
     if (statusFilter === 'Unsolved' && q.solved) return false;
     if (statusFilter === 'Revision Needed' && !q.revisionNeeded) return false;
-    if (statusFilter === 'Bookmarked' && !q.bookmarked) return false;
     if (statusFilter === 'Difficult' && !q.markedDifficult) return false;
     return true;
   });
@@ -61,9 +103,7 @@ export default function PYQPage() {
     if (!q.mongoId || !mongoAvailable) return;
 
     try {
-      if (field === 'bookmarked') {
-        await pyqService.toggleBookmark(q.mongoId, next);
-      } else if (field === 'revisionNeeded' || field === 'markedDifficult') {
+      if (field === 'revisionNeeded' || field === 'markedDifficult') {
         await pyqService.updateFlags(q.mongoId, { [field]: next });
       } else if (field === 'solved') {
         await pyqService.toggleSolved(q.mongoId, next);
@@ -78,13 +118,28 @@ export default function PYQPage() {
     setPracticeId(null);
   };
 
+  const setMistakeType = async (q, mistakeType) => {
+    updatePyqs((d) => d.map((item) => (
+      item.id === q.id ? { ...item, mistakeType, revisionNeeded: true, markedDifficult: true } : item
+    )));
+    toast.success(`Tagged as ${mistakeType}`);
+    if (q.mongoId && mongoAvailable) {
+      try {
+        await pyqService.updateFlags(q.mongoId, { mistakeType, revisionNeeded: true, markedDifficult: true });
+      } catch {
+        toast.error('Sync failed — saved locally');
+      }
+    }
+  };
+
   return (
     <div>
+      <HowItWorks />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-text">PYQ Practice</h1>
           <p className="text-sm text-text3 mt-0.5">
-            {stats.solved}/{stats.total} solved · {stats.bookmarked} bookmarked · {stats.revisionNeeded} need revision
+            {stats.solved}/{stats.total} solved · {stats.revisionNeeded} need revision
             {mongoAvailable ? ' · API synced' : ' · Local mode'}
           </p>
         </div>
@@ -149,6 +204,24 @@ export default function PYQPage() {
         </div>
       )}
 
+      <div className="bg-surface border border-border rounded-xl p-4 mb-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold text-text">Mistake Notebook</div>
+            <div className="text-[11px] text-text3 mt-0.5">
+              {mistakeSummary.total} tagged/weak PYQs · Dominant pattern: <span className="text-primary">{mistakeSummary.dominant}</span>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(mistakeSummary.counts).slice(0, 5).map(([type, count]) => (
+              <span key={type} className="text-[10px] px-2 py-1 rounded border bg-bg-2 border-border text-text3">
+                {type}: {count}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {browse && !pyqs.length && !loading && (
         <div className="bg-surface border border-border rounded-xl p-6 mb-5 text-center">
           <p className="text-sm text-text2 mb-2">No PYQs loaded yet.</p>
@@ -195,7 +268,6 @@ export default function PYQPage() {
           <div key={q.id} className="bg-surface border border-border rounded-xl p-4 hover:border-white/10 transition-colors">
             <div className="flex items-start justify-between gap-2 mb-2">
               <div className="text-sm font-medium text-text flex items-center gap-1">
-                {q.bookmarked && <span className="text-yellow-400">★</span>}
                 {q.title}
               </div>
               <span className={`text-[10px] px-2 py-1 rounded border whitespace-nowrap flex-shrink-0 capitalize ${DIFF_STYLE[q.difficulty]}`}>{q.difficulty}</span>
@@ -206,7 +278,25 @@ export default function PYQPage() {
               {q.revisionNeeded && <span className="text-[9px] px-2 py-0.5 rounded bg-orange-500/10 border border-orange-500/20 text-orange-400">Revision</span>}
               {q.markedDifficult && <span className="text-[9px] px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400">Difficult</span>}
               {q.solved && <span className="text-[9px] px-2 py-0.5 rounded bg-green-500/10 border border-green-500/20 text-green-400">Solved</span>}
+              {q.mistakeType && <span className="text-[9px] px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary">{q.mistakeType}</span>}
             </div>
+            {(!q.solved || q.markedDifficult || q.mistakeType) && (
+              <div className="mb-3">
+                <div className="text-[9px] uppercase tracking-wider text-text3 mb-1.5">Mistake Type</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {MISTAKE_TYPES.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setMistakeType(q, type)}
+                      className={`text-[9px] px-2 py-1 rounded border transition-all ${q.mistakeType === type ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/15'}`}
+                    >
+                      {type.replace(' Mistake', '')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="flex gap-1.5">
               {q.mongoId && q.questionText ? (
                 <button type="button" onClick={() => setPracticeId(q.mongoId)} className="flex-1 text-[10px] px-2 py-1.5 rounded-lg border bg-primary/10 border-primary/20 text-primary">
@@ -217,7 +307,6 @@ export default function PYQPage() {
                   {q.solved ? '✓ Solved' : 'Mark Solved'}
                 </button>
               )}
-              <button type="button" onClick={() => toggle(q, 'bookmarked')} className={`text-[10px] px-2 py-1.5 rounded-lg border transition-all ${q.bookmarked ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' : 'bg-bg-2 border-border text-text3'}`}>★</button>
               <button type="button" onClick={() => toggle(q, 'revisionNeeded')} className={`text-[10px] px-2 py-1.5 rounded-lg border transition-all ${q.revisionNeeded ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' : 'bg-bg-2 border-border text-text3'}`}>↻</button>
               <button type="button" onClick={() => toggle(q, 'markedDifficult')} className={`text-[10px] px-2 py-1.5 rounded-lg border transition-all ${q.markedDifficult ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-bg-2 border-border text-text3'}`}>!</button>
             </div>

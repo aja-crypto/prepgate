@@ -38,7 +38,7 @@ exports.protect = async (req, res, next) => {
 
   try {
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
     if (isMockAuthEnabled()) {
       const user = mockStore.findById(decoded.id);
@@ -53,8 +53,19 @@ exports.protect = async (req, res, next) => {
       req.user = { ...user };
       delete req.user.password;
       req.user._id = user._id;
-      // Ensure save and updateStreak reference the original user object
-      req.user.save = user.save.bind(user);
+      // Fix: save syncs mutations back to the original mock user before persisting
+      // Without this, progressBackup/streak changes on the spread copy are lost on save
+      req.user.save = async function () {
+        user.progressBackup = this.progressBackup;
+        user.streak = this.streak;
+        user.preferences = this.preferences;
+        user.fcmToken = this.fcmToken;
+        user.isVerified = this.isVerified;
+        user.name = this.name;
+        user.targetYear = this.targetYear;
+        user.studyGoalHours = this.studyGoalHours;
+        return await user.save();
+      };
       req.user.updateStreak = user.updateStreak.bind(user);
       req.user.comparePassword = user.comparePassword.bind(user);
       return next();
@@ -90,6 +101,12 @@ exports.protect = async (req, res, next) => {
  * Admin only middleware – must come after protect
  */
 exports.adminOnly = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: 'Not authorized. Please login.',
+    });
+  }
   if (req.user.role !== 'admin') {
     return res.status(403).json({
       success: false,

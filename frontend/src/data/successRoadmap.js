@@ -1,0 +1,117 @@
+export const ROADMAP_PHASES = [
+  {
+    id: 'jul-oct',
+    title: 'July — October',
+    subtitle: 'Syllabus Completion Phase',
+    icon: '📖',
+    color: '#6366F1',
+    focus: 'Complete syllabus systematically — 2 subjects per month (1 Hard + 1 Easy)',
+    tasks: [
+      'Complete theory for each subject',
+      'Solve all PYQs for completed subjects',
+      'Take subject-wise tests after each subject',
+      'Maintain short notes for every subject',
+      'Spend 1 hour daily revising previously completed subjects',
+    ],
+    mindset: 'Consistency over intensity. Cover ground steadily without burnout.',
+    misc: { subjectsPerMonth: 2, dailyStudyHours: 6, revisionHours: 1 },
+  },
+  {
+    id: 'nov',
+    title: 'November',
+    subtitle: 'Weak Area Attack Phase',
+    icon: '🎯',
+    color: '#F59E0B',
+    focus: 'Weak areas, revision, and mock analysis',
+    tasks: [
+      'Take 4 full-length mock tests (one every Sunday)',
+      'Analyze every mistake from mocks',
+      'Complete pending subject tests',
+      'Re-solve marked/difficult PYQs',
+      'Revise weak topics identified in mocks',
+    ],
+    mindset: 'Mistakes are gold. Each error is an opportunity to fix a gap before the real exam.',
+    misc: { fullLengthTests: 4, testsPerWeek: 1 },
+  },
+  {
+    id: 'dec',
+    title: 'December',
+    subtitle: 'Exam Simulation Phase',
+    icon: '⚡',
+    color: '#EC4899',
+    focus: 'Intensive mock tests and rapid revision',
+    tasks: [
+      'Take 10+ full-length mock tests',
+      'Revise formula sheets daily',
+      'Review error log before each test',
+      'Simulate exact exam conditions (timing, breaks)',
+      'Analyze score trends and adjust strategy',
+    ],
+    mindset: 'Your body and mind should treat every mock as the real exam day.',
+    misc: { fullLengthTests: 10, formulaRevisionDaily: true },
+  },
+  {
+    id: 'jan',
+    title: 'January',
+    subtitle: 'Confidence & Accuracy Phase',
+    icon: '🏆',
+    color: '#34D399',
+    focus: 'Confidence, health, and accuracy over speed',
+    tasks: [
+      'Solve previous year GATE papers as full-length tests',
+      'Take 2–3 light mock tests',
+      'Light revision — only short notes and formula sheets',
+      'Prioritize sleep and health management',
+      'Believe in your preparation',
+    ],
+    mindset: 'You have done the work. Now trust the process. Confidence is the final differentiator.',
+    misc: { fullLengthPapers: 3, lightRevision: true, focusOnHealth: true },
+  },
+];
+
+export const AIR_ROADMAPS = [
+  {
+    rank: 'AIR < 100',
+    icon: '🥇',
+    color: '#F59E0B',
+    gradient: 'from-yellow-500 to-orange-500',
+    description: 'Complete syllabus by August. 15+ mocks. 3+ revisions. Zero weak areas.',
+    stats: { syllabusComplete: 'August', mocks: '15+', revisions: '3+', dailyHours: '8–10' },
+  },
+  {
+    rank: 'AIR < 500',
+    icon: '🥈',
+    color: '#94A3B8',
+    gradient: 'from-slate-400 to-slate-500',
+    description: 'Complete syllabus by September. 10+ mocks. Strong PYQ mastery. No major weak areas.',
+    stats: { syllabusComplete: 'September', mocks: '10+', revisions: '3', dailyHours: '6–8' },
+  },
+  {
+    rank: 'AIR < 2000',
+    icon: '🥉',
+    color: '#B45309',
+    gradient: 'from-amber-600 to-amber-700',
+    description: 'Complete syllabus by October. 8+ mocks. Core subjects strong. PYQs done twice.',
+    stats: { syllabusComplete: 'October', mocks: '8+', revisions: '2–3', dailyHours: '5–7' },
+  },
+];
+
+export const TOP_RANKER_PRINCIPLES = [
+  'Complete syllabus early — do not leave topics for the last month',
+  'Revise daily — even 30 minutes of review prevents forgetting',
+  'Solve PYQs repeatedly — patterns repeat every year',
+  'Take mock tests seriously — they expose real gaps',
+  'Analyze every mistake — wrong answers teach more than correct ones',
+  'Focus on accuracy before speed — speed follows precision',
+  'Do not change resources frequently — stick with 1–2 trusted sources',
+  'Trust the process — consistency beats last-minute cramming',
+  'Stay healthy — sleep, exercise, and breaks improve retention',
+  'Stay consistent — 5 hours daily beats 10 hours on alternate days',
+];
+
+export const STATS = [
+  { label: 'Notes Organized', value: '500+' },
+  { label: 'PYQs Categorized', value: '1000+' },
+  { label: 'Formula Sheets', value: '50+' },
+  { label: 'Resource Collections', value: '20+' },
+];

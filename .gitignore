@@ -1,5 +1,7 @@
 node_modules/
 .env
+.env.local
+backend/.env
 dist/
 .next/
 *.log
@@ -10,10 +12,30 @@ Thumbs.db
 coverage/
 .vercel
 
-# Backend uploads & OCR data
+# Backend data & uploads
 backend/uploads/
+backend/data/
 backend/eng.traineddata
 
 # Vite cache
 frontend/vite.config.js.timestamp-*
 frontend/dist/
+
+# Screenshots & debug files
+*.png
+*.jpeg
+*.jpg
+!frontend/public/images/*.png
+!frontend/public/images/*.jpg
+!frontend/public/images/*.jpeg
+screenshot_*
+mentor-debug.png
+tunnel_url.txt
+AGENTS.md
+AUDIT_REPORT.md
+DEPLOY.md
+resources/
+
+# Test files
+backend/test-*.js
+backend/src/config/test-dir.js

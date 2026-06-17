@@ -11,6 +11,7 @@ const TYPE_META = {
 };
 
 function TextbookCard({ resource }) {
+  const googleBooksUrl = `https://books.google.com/books?q=${encodeURIComponent(`${resource.title} ${resource.author || ''}`.trim())}`;
   return (
     <div className="bg-surface border border-border rounded-xl p-4 hover:border-primary/30 transition-all group">
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -29,9 +30,17 @@ function TextbookCard({ resource }) {
           <a href={resource.url} target="_blank" rel="noopener noreferrer"
             className="text-xs font-medium text-primary bg-primary/10 hover:bg-primary/15 px-3 py-1.5 rounded-lg border border-primary/20 transition-colors"
           >
-            Buy on Amazon
+            Open Books
           </a>
         )}
+        <a
+          href={googleBooksUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs font-medium text-text2 bg-bg-2 hover:bg-bg-3 px-3 py-1.5 rounded-lg border border-border transition-colors"
+        >
+          Search
+        </a>
       </div>
     </div>
   );

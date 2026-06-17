@@ -95,6 +95,7 @@ const progressSchema = new mongoose.Schema({
     lecture: { type: Boolean, default: false },
     notes: { type: Boolean, default: false },
     pyqs: { type: Boolean, default: false },
+    revision: { type: Boolean, default: false },
     test: { type: Boolean, default: false },
   },
   completionPercentage: {

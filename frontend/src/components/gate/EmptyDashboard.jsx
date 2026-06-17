@@ -18,7 +18,7 @@ export default function EmptyDashboard({ userName }) {
         <div className="relative">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary mb-2">Getting started</p>
           <h2 className="text-2xl md:text-3xl font-bold text-text tracking-tight mb-2">
-            {userName ? `Welcome, ${userName}` : 'Welcome aboard'}
+            Welcome, {userName || 'Aspirant'} 👋
           </h2>
           <p className="text-sm text-text2 max-w-lg leading-relaxed mb-8">
             Your workspace starts at <span className="text-primary font-semibold">0% progress</span>.

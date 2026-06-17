@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { topicService, mockSessionService, getApiErrorMessage } from '../services/api';
+import { PageLoading } from '../components/common/GateLoadingScreen';
 import QuestionPractice from '../components/pyq/QuestionPractice';
 import Modal from '../components/common/Modal';
 import toast from 'react-hot-toast';
@@ -15,6 +16,16 @@ const DIFF_STYLE = {
 };
 
 const STRENGTH_STYLE = { strong: 'text-green-400', moderate: 'text-orange-400', weak: 'text-red-400' };
+const COMPLETION_TASKS = [
+  { key: 'lecture', label: '🎥 Lecture', icon: '🎥' },
+  { key: 'notes', label: '📝 Notes', icon: '📝' },
+  { key: 'revision1', label: '🔄 Revision 1', icon: '🔄' },
+  { key: 'revision2', label: '🔄 Revision 2', icon: '🔄' },
+  { key: 'revision3', label: '🔄 Revision 3', icon: '🔄' },
+  { key: 'revision4', label: '🔄 Revision 4', icon: '🔄' },
+  { key: 'pyqs', label: '📚 PYQs', icon: '📚' },
+  { key: 'topicTest', label: '🧪 Topic Test', icon: '🧪' },
+];
 
 export default function TopicDetailPage() {
   const { topicId } = useParams();
@@ -60,13 +71,20 @@ export default function TopicDetailPage() {
       setData((d) => {
         const nextProgress = { ...d.progress, [field]: value };
         
-        // Auto-calculate percentage if tasks changed
         if (field === 'completionTasks') {
-          const doneCount = Object.values(value).filter(Boolean).length;
-          nextProgress.completionPercentage = Math.round((doneCount / 4) * 100);
+          const doneCount = COMPLETION_TASKS.filter((task) => value[task.key]).length;
+          nextProgress.completionPercentage = Math.round((doneCount / COMPLETION_TASKS.length) * 100);
           if (nextProgress.completionPercentage === 100 && !nextProgress.isCompleted) {
             nextProgress.isCompleted = true;
+            nextProgress.lastCompleted = new Date().toISOString();
           }
+          const now = new Date().toISOString();
+          const lastRev = value.revision1 ? now : null;
+          if (lastRev) nextProgress.lastRevised1 = now;
+          if (value.revision2) nextProgress.lastRevised2 = now;
+          if (value.revision3) nextProgress.lastRevised3 = now;
+          if (value.revision4) nextProgress.lastRevised4 = now;
+          if (lastRev) nextProgress.lastRevised = now;
         }
         
         return { ...d, progress: nextProgress };
@@ -77,9 +95,12 @@ export default function TopicDetailPage() {
   };
 
   const toggleTask = (taskKey) => {
+    const current = progress.completionTasks || {};
+    const defaults = COMPLETION_TASKS.reduce((acc, t) => ({ ...acc, [t.key]: false }), {});
     const nextTasks = {
-      ...(progress.completionTasks || { lecture: false, notes: false, pyqs: false, test: false }),
-      [taskKey]: !(progress.completionTasks?.[taskKey])
+      ...defaults,
+      ...current,
+      [taskKey]: !(current[taskKey])
     };
     updateFlag('completionTasks', nextTasks);
   };
@@ -104,8 +125,26 @@ export default function TopicDetailPage() {
     }
   };
 
-  if (loading) return <div className="text-sm text-text3 py-16 text-center">Loading topic...</div>;
-  if (!data) return <div className="text-sm text-text3 py-16 text-center">Topic not found</div>;
+  if (loading) return <PageLoading title="Loading Topic" />;
+  if (!data) return (
+    <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
+      <div className="w-24 h-24 rounded-2xl flex items-center justify-center mb-8" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.15), rgba(99,102,241,0.1))', border: '1px solid rgba(168,85,247,0.2)', boxShadow: '0 0 30px rgba(168,85,247,0.1)' }}>
+        <span className="text-5xl">📚</span>
+      </div>
+      <h2 className="text-2xl font-bold text-text mb-3">Topic Not Available</h2>
+      <p className="text-sm text-text3 max-w-md mb-8 leading-relaxed">This topic may have been removed or is still being prepared. Browse all topics or ask PrepGate AI for guidance.</p>
+      <div className="flex flex-wrap gap-3 justify-center">
+        <Link to="/topics" className="inline-flex items-center gap-2 text-sm px-6 py-3 rounded-xl font-semibold transition-all hover:scale-[1.02]" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', color: 'white', boxShadow: '0 0 20px rgba(168,85,247,0.3)' }}>
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11a1 1 0 11-2 0V9a1 1 0 112 0v4zm-1-6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /></svg>
+          Browse Topics
+        </Link>
+        <button onClick={() => navigate('/prepgate-ai')} className="inline-flex items-center gap-2 text-sm px-6 py-3 rounded-xl font-semibold transition-all hover:scale-[1.02]" style={{ background: 'rgba(168,85,247,0.1)', color: '#A78BFA', border: '1px solid rgba(168,85,247,0.3)', boxShadow: '0 0 15px rgba(168,85,247,0.1)' }}>
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
+          Ask AI Mentor
+        </button>
+      </div>
+    </div>
+  );
 
   const { topic, progress, relatedPyqs, analytics } = data;
   const content = topic.content || {};
@@ -181,37 +220,43 @@ export default function TopicDetailPage() {
           <Section title="Common Mistakes">
             <ul className="space-y-1">{(content.commonMistakes || []).map((m, i) => <li key={i} className="text-sm text-red-400/80">⚠ {m}</li>)}</ul>
           </Section>
-          <Section title="Topic Completion Tracker">
+          <Section title="Smart Topic Progress">
             <div className="space-y-3">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-text3">Sub-Tasks</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-text3">8 Tasks</div>
                 <div className="text-xs font-mono text-primary">{progress.completionPercentage || 0}%</div>
               </div>
-              <div className="w-full bg-bg-2 rounded-full h-1.5 mb-4">
+              <div className="w-full bg-bg-2 rounded-full h-2 mb-4">
                 <div 
-                  className="bg-primary h-full rounded-full transition-all duration-500" 
+                  className="bg-gradient-to-r from-primary to-secondary h-full rounded-full transition-all duration-500" 
                   style={{ width: `${progress.completionPercentage || 0}%` }}
                 />
               </div>
-              {[
-                { key: 'lecture', label: 'Video Lecture' },
-                { key: 'notes', label: 'Theory Notes' },
-                { key: 'pyqs', label: 'PYQ Practice' },
-                { key: 'test', label: 'Topic Test' },
-              ].map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => toggleTask(t.key)}
-                  className="flex items-center justify-between w-full group"
-                >
-                  <span className={`text-sm ${progress.completionTasks?.[t.key] ? 'text-green-400' : 'text-text2'}`}>
-                    {progress.completionTasks?.[t.key] ? '✓' : '○'} {t.label}
-                  </span>
-                  <div className={`w-8 h-4 rounded-full border border-border relative transition-colors ${progress.completionTasks?.[t.key] ? 'bg-green-500/20 border-green-500/30' : 'bg-bg-3'}`}>
-                    <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full transition-all ${progress.completionTasks?.[t.key] ? 'right-0.5 bg-green-400' : 'left-0.5 bg-text3'}`} />
-                  </div>
-                </button>
-              ))}
+              <div className="grid grid-cols-2 gap-2">
+                {COMPLETION_TASKS.map((t) => {
+                  const done = progress.completionTasks?.[t.key];
+                  return (
+                    <button
+                      key={t.key}
+                      onClick={() => toggleTask(t.key)}
+                      className={`flex items-center gap-2 p-3 rounded-xl border text-left transition-all ${
+                        done
+                          ? 'bg-green-500/10 border-green-500/20'
+                          : 'bg-bg-2 border-border hover:border-white/20'
+                      }`}
+                    >
+                      <span className={`text-base ${done ? '' : 'opacity-50'}`}>{t.icon}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className={`text-xs font-medium ${done ? 'text-green-400 line-through' : 'text-text'}`}>
+                          {t.label}
+                        </div>
+                        <div className="text-[9px] text-text3">{done ? 'Done' : 'Not done'}</div>
+                      </div>
+                      {done && <span className="text-green-400 text-sm">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </Section>
         </div>
@@ -282,18 +327,21 @@ export default function TopicDetailPage() {
       {tab === 'Revision' && (
         <Section title="Revision Notes">
           <p className="text-sm text-text2 whitespace-pre-wrap mb-4">{content.revisionNotes}</p>
-          <button
-            type="button"
-            onClick={async () => {
-              const next = (progress.revisionCount || 0) + 1;
-              await topicService.updateProgress(topicId, { revisionCount: next });
-              setData((d) => ({ ...d, progress: { ...d.progress, revisionCount: next } }));
-              toast.success('Revision counted');
-            }}
-            className="btn-ghost text-xs"
-          >
-            +1 Revision Count
-          </button>
+          <div className="flex gap-2">
+            {[1, 2, 3, 4].map((n) => {
+              const done = progress.completionTasks?.[`revision${n}`];
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => toggleTask(`revision${n}`)}
+                  className={`text-xs px-3 py-2 rounded-lg border ${done ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-bg-2 border-border text-text2'}`}
+                >
+                  {done ? '✓' : '○'} Revision {n}
+                </button>
+              );
+            })}
+          </div>
         </Section>
       )}
 
@@ -328,6 +376,18 @@ export default function TopicDetailPage() {
 
       {tab === 'Resources' && (
         <div className="space-y-3">
+          <h4 className="text-xs font-semibold text-text3 uppercase">Topic Discussion & Courses</h4>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {[
+              { title: `${topic.name} — GateOverflow Discussions`, url: `https://gateoverflow.in/?q=${encodeURIComponent(topic.name)}`, icon: '💬' },
+              { title: `${topic.name} — NPTEL Search`, url: `https://www.youtube.com/results?search_query=${encodeURIComponent(`NPTEL ${subject?.name || ''} ${topic.name}`)}`, icon: '🎓' },
+            ].map((r) => (
+              <a key={r.title} href={r.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-surface border border-border rounded-xl p-4 hover:border-white/15">
+                <span className="text-lg">{r.icon}</span>
+                <span className="text-sm text-text">{r.title}</span>
+              </a>
+            ))}
+          </div>
           <h4 className="text-xs font-semibold text-text3 uppercase">Video Resources</h4>
           {(topic.resources || []).filter((r) => r.type === 'video').map((r, i) => (
             <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-surface border border-border rounded-xl p-4 hover:border-white/15">
@@ -342,6 +402,21 @@ export default function TopicDetailPage() {
               <span className="text-text3"> — {b.author}, {b.chapter}</span>
             </div>
           ))}
+          <h4 className="text-xs font-semibold text-text3 uppercase mt-4">Important PYQs & Asked Concepts</h4>
+          <div className="grid md:grid-cols-2 gap-3">
+            <div className="bg-bg-2 border border-border rounded-lg p-3">
+              <div className="text-xs font-semibold text-text mb-2">Frequently Asked</div>
+              <ul className="space-y-1">
+                {(content.frequentlyAskedConcepts || []).slice(0, 5).map((c, i) => <li key={i} className="text-xs text-text2">• {c}</li>)}
+              </ul>
+            </div>
+            <div className="bg-bg-2 border border-border rounded-lg p-3">
+              <div className="text-xs font-semibold text-text mb-2">Expected PYQ Patterns</div>
+              <ul className="space-y-1">
+                {(content.expectedQuestions2027 || []).slice(0, 5).map((q, i) => <li key={i} className="text-xs text-text2">• {q}</li>)}
+              </ul>
+            </div>
+          </div>
         </div>
       )}
 

@@ -2,7 +2,19 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { Chart, registerables } from 'chart.js';
 import { useProgress } from '../context/ProgressContext';
-import { computeSubjectCompletion, computeReadinessScore, computeCompletionForecast, getSubjectPriorities, getSubjectAccuracy } from '../utils/gateUtils';
+import {
+  buildFinalModePlans,
+  buildWeakRecoveryPlans,
+  computeConsistencyScore,
+  computeRevisionHealth,
+  computeStudyPace,
+  computeSubjectCompletion,
+  computeReadinessScore,
+  computeCompletionForecast,
+  getSubjectPriorities,
+  getSubjectAccuracy,
+  predictRankRange,
+} from '../utils/gateUtils';
 import SubjectCompletionBars from '../components/gate/SubjectCompletionBars';
 import StreakTracker from '../components/gate/StreakTracker';
 import WeakTopicsPanel from '../components/gate/WeakTopicsPanel';
@@ -14,7 +26,7 @@ const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
 export default function AnalyticsPage() {
-  const { studyStats, topics, pyqs, mocks, gateFeatures } = useProgress();
+  const { studyStats, topics, pyqs, mocks, gateFeatures, revisionSchedule } = useProgress();
   const radarRef = useRef(null);
   const pieRef = useRef(null);
   const barRef = useRef(null);
@@ -34,6 +46,13 @@ export default function AnalyticsPage() {
   const readiness = computeReadinessScore(topics, pyqs, mocks, gateFeatures.streak);
   const forecast = computeCompletionForecast(topics, gateFeatures);
   const priorities = getSubjectPriorities(studyStats.subjects, topics, pyqs);
+  const recentScore = mocks.length ? mocks.slice(-3).reduce((sum, m) => sum + (m.score || 0), 0) / Math.min(3, mocks.length) : 0;
+  const rankRange = predictRankRange(recentScore || readiness);
+  const revisionHealth = computeRevisionHealth(revisionSchedule);
+  const consistencyScore = computeConsistencyScore(studyStats, gateFeatures);
+  const pace = computeStudyPace(studyStats, topics, gateFeatures);
+  const recoveryPlans = buildWeakRecoveryPlans(subjects, topics, pyqs);
+  const finalPlans = buildFinalModePlans();
 
   useEffect(() => {
     const chartOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
@@ -136,15 +155,81 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
         {[
           { label: 'Readiness Score', value: `${readiness}/100`, color: '#4f8dff' },
-          { label: 'Week Hours', value: `${studyStats.weekHours}h`, color: '#06d6a0' },
-          { label: 'Topics Left', value: forecast.remaining, color: '#ff9f43' },
-          { label: 'Completion ETA', value: forecast.forecastDate, color: '#a855f7' },
+          { label: 'Expected Score', value: Math.round(recentScore || readiness), color: '#06d6a0' },
+          { label: 'Expected Rank', value: rankRange.label, color: '#ff9f43' },
+          { label: 'Consistency', value: `${consistencyScore}/100`, color: '#a855f7' },
         ].map((s) => (
           <div key={s.label} className="bg-surface border border-border rounded-xl p-4">
             <div className="text-lg font-bold font-mono truncate" style={{ color: s.color }}>{s.value}</div>
             <div className="text-[10px] text-text3 uppercase tracking-wider mt-1">{s.label}</div>
           </div>
         ))}
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4 mb-4">
+        <div className="bg-surface border border-border rounded-xl p-5">
+          <div className="text-sm font-semibold text-text mb-3">Subject Strength Chart</div>
+          <div className="space-y-2">
+            {subjects.slice().sort((a, b) => b.progress - a.progress).map((s) => (
+              <div key={s.name}>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-text2">{s.name}</span>
+                  <span className="font-mono text-primary">{s.progress}%</span>
+                </div>
+                <div className="h-1.5 bg-bg-3 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${s.progress}%`, background: s.color }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="bg-surface border border-border rounded-xl p-5">
+          <div className="text-sm font-semibold text-text mb-3">Revision Health</div>
+          <div className="text-3xl font-bold text-primary mb-1">{revisionHealth.label}</div>
+          <div className="text-xs text-text3 mb-4">Score: {revisionHealth.score}/100</div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="bg-bg-2 rounded-lg p-2"><div className="text-red-400 font-mono">{revisionHealth.missed}</div><div className="text-[9px] text-text3">Missed</div></div>
+            <div className="bg-bg-2 rounded-lg p-2"><div className="text-orange-400 font-mono">{revisionHealth.today}</div><div className="text-[9px] text-text3">Today</div></div>
+            <div className="bg-bg-2 rounded-lg p-2"><div className="text-blue-400 font-mono">{revisionHealth.upcoming}</div><div className="text-[9px] text-text3">Upcoming</div></div>
+          </div>
+        </div>
+        <div className="bg-surface border border-border rounded-xl p-5">
+          <div className="text-sm font-semibold text-text mb-3">Study Pace Predictor</div>
+          <div className="text-3xl font-bold text-primary mb-1">{pace.hoursPerDay} hrs/day</div>
+          <div className="text-xs text-text3">Syllabus completion: <span className="text-text">{pace.completionDate}</span></div>
+          <div className="text-xs text-text3 mt-1">Topics left: {forecast.remaining}</div>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4 mb-4">
+        <div className="bg-surface border border-border rounded-xl p-5">
+          <div className="text-sm font-semibold text-text mb-3">Weak Topic Recovery Plan</div>
+          <div className="space-y-3">
+            {recoveryPlans.map((item) => (
+              <div key={`${item.subject}-${item.topic}`} className="bg-bg-2 border border-border rounded-lg p-3">
+                <div className="flex justify-between gap-3">
+                  <div className="text-sm font-medium text-text">{item.topic}</div>
+                  <div className="text-xs font-mono text-orange-400">Accuracy {item.accuracy}%</div>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {item.plan.map((step) => <span key={step} className="text-[10px] px-2 py-1 rounded bg-primary/10 text-primary border border-primary/20">{step}</span>)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="bg-surface border border-border rounded-xl p-5">
+          <div className="text-sm font-semibold text-text mb-3">Final 100-Day Mode</div>
+          <div className="space-y-2">
+            {finalPlans.map((plan) => (
+              <div key={plan.label} className="bg-bg-2 border border-border rounded-lg p-3">
+                <div className="text-sm font-medium text-text">{plan.label}</div>
+                <div className="text-xs text-text3 mt-1">{plan.focus}</div>
+                <div className="text-[10px] text-primary mt-1">{plan.split}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4 mb-4">

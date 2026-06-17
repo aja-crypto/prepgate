@@ -198,7 +198,7 @@ export function generateDetailedReport(payload) {
   addLine(`XP Earned: ${payload.gamification?.xp ?? 0} (Level ${payload.gamification?.level ?? 1})`);
 
   addLine('PYQ Analysis', 14, true, [79, 141, 255]);
-  addLine(`Total: ${pyqStats.total} · Solved: ${pyqStats.solved} · Bookmarked: ${pyqStats.bookmarked}`);
+  addLine(`Total: ${pyqStats.total} · Solved: ${pyqStats.solved} · Revision Needed: ${pyqStats.revisionNeeded}`);
   addLine(`Revision Needed: ${pyqStats.revisionNeeded} · Marked Difficult: ${pyqStats.difficult}`);
   Object.entries(pyqStats.bySubject).forEach(([sub, s]) => {
     addLine(`${sub}: ${s.solved}/${s.total} solved (${Math.round((s.solved / s.total) * 100)}%)`);

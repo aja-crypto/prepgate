@@ -1,6 +1,7 @@
 // Premium customizable dashboard with drag-and-drop widgets
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useProgress } from '../context/ProgressContext';
 import { useDashboard } from '../context/DashboardContext';
@@ -49,6 +50,23 @@ export default function DashboardPage() {
 
   const widgetContent = {
     welcome: isEmptyProgress ? <EmptyDashboard userName={user?.name?.split(' ')[0]} /> : null,
+    "daily-ai": (
+      <GlassCard className="p-4 hover:scale-[1.02] transition-transform cursor-pointer" onClick={() => {
+        const target = document.getElementById('topic-practice');
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      }}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}>
+              💡
+            </div>
+            <div className="flex-1">
+              <h3 className="text-base font-bold text-text mb-0.5">What should I study today</h3>
+              <p className="text-xs text-text2">Get personalized AI recommendation based on your progress</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-text3" />
+          </div>
+      </GlassCard>
+    ),
     countdown: (
       <OfficialCountdown
         examDate={liveData?.examDate || gateFeatures.examDate}

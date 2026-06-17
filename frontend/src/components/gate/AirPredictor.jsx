@@ -1,7 +1,7 @@
 // AIR rank predictor from mock scores
 import { useMemo } from 'react';
 import { useProgress } from '../../context/ProgressContext';
-import { predictAIR } from '../../utils/gateUtils';
+import { predictAIR, predictRankRange } from '../../utils/gateUtils';
 
 export default function AirPredictor({ score: overrideScore, compact = false }) {
   const { mocks } = useProgress();
@@ -14,12 +14,13 @@ export default function AirPredictor({ score: overrideScore, compact = false }) 
   }, [mocks, overrideScore]);
 
   const prediction = predictAIR(score);
+  const range = predictRankRange(score);
 
   if (compact) {
     return (
-      <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4">
         <div className="text-center">
-          <div className="text-2xl font-bold font-mono text-primary">~{prediction.air.toLocaleString()}</div>
+          <div className="text-2xl font-bold font-mono text-primary">{range.label}</div>
           <div className="text-[10px] text-text3">Est. AIR</div>
         </div>
         <div className="text-xs text-text3">
@@ -42,7 +43,7 @@ export default function AirPredictor({ score: overrideScore, compact = false }) 
 
       <div className="grid grid-cols-3 gap-3 mb-4">
         {[
-          { label: 'Est. AIR', value: `~${prediction.air.toLocaleString()}`, color: '#4f8dff' },
+          { label: 'Est. AIR', value: range.label, color: '#4f8dff' },
           { label: 'Percentile', value: `${prediction.percentile}%`, color: '#06d6a0' },
           { label: 'Mock Score', value: score.toFixed(1), color: '#ff9f43' },
         ].map((s) => (

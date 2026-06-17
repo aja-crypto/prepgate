@@ -6,7 +6,7 @@ import Icon from '../ui/Icon';
 import GlassCard from '../ui/GlassCard';
 
 const STEPS = [
-  { id: 'welcome', title: 'Welcome to PrepFlow' },
+  { id: 'welcome', title: 'Welcome to PrepGate' },
   { id: 'theme', title: 'Choose your theme' },
   { id: 'colors', title: 'Pick your accent' },
   { id: 'ready', title: 'You\'re all set' },
@@ -35,15 +35,15 @@ export default function OnboardingFlow() {
   const current = STEPS[step];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 mesh-bg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 mesh-bg">
       <div className="absolute inset-0 bg-bg/80 backdrop-blur-md" />
       <GlassCard className="relative w-full max-w-lg animate-scale-in" padding="p-0" hover={false}>
         <div className="p-8 pb-6">
           <div className="flex items-center gap-3 mb-8">
-            <Icon name="logo" />
+            <img src="/images/logo.png" alt="" className="w-10 h-10 object-contain" />
             <div>
-              <div className="font-display font-bold text-text tracking-tight">{BRAND.name}</div>
-              <div className="text-[11px] text-text3">{BRAND.tagline}</div>
+              <div className="font-bold text-text tracking-tight" style={{ fontSize: '20px', lineHeight: '1.1' }}>PrepGate</div>
+              <div style={{ color: '#A855F7', fontSize: '10px', fontWeight: 600, letterSpacing: '1px' }}>GATE 2027</div>
             </div>
           </div>
 
@@ -58,9 +58,9 @@ export default function OnboardingFlow() {
 
           {current.id === 'welcome' && (
             <div className="animate-fade-in">
-              <h2 className="text-2xl font-bold text-text tracking-tight mb-2">Your GATE command center</h2>
+              <h2 className="text-2xl font-bold text-text tracking-tight mb-2">Your GATE Preparation Hub</h2>
               <p className="text-sm text-text2 leading-relaxed mb-6">
-                PrepFlow is a premium preparation workspace for GATE CSE 2027. Track progress, analyze trends, and stay exam-ready — with a design built for focus, not distraction.
+                PrepGate is a premium preparation platform for GATE 2027. Track progress, analyze trends, and stay exam-ready — built for focus, not distraction.
               </p>
               <div className="grid grid-cols-3 gap-3">
                 {[
@@ -80,7 +80,7 @@ export default function OnboardingFlow() {
           {current.id === 'theme' && (
             <div className="animate-fade-in">
               <h2 className="text-xl font-bold text-text mb-2">Appearance</h2>
-              <p className="text-sm text-text2 mb-5">Choose how PrepFlow looks. You can change this anytime in Settings.</p>
+              <p className="text-sm text-text2 mb-5">Choose how PrepGate looks. You can change this anytime in Settings.</p>
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { id: 'dark', label: 'Dark', preview: 'bg-[#0F172A] border-primary/30' },
@@ -125,7 +125,7 @@ export default function OnboardingFlow() {
 
           {current.id === 'ready' && (
             <div className="animate-fade-in text-center py-4">
-              <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center stat-glow glass-card" padding="p-0" hover={false}>
+              <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center stat-glow glass-card">
                 <Icon name="logo" className="scale-150" />
               </div>
               <h2 className="text-xl font-bold text-text mb-2">Ready to prepare</h2>
@@ -135,12 +135,20 @@ export default function OnboardingFlow() {
         </div>
 
         <div className="flex items-center justify-between px-8 py-5 border-t border-border bg-bg-2/40 rounded-b-2xl">
-          <button
-            onClick={() => setStep((s) => Math.max(0, s - 1))}
-            className={`text-sm text-text3 hover:text-text transition-colors ${step === 0 ? 'invisible' : ''}`}
-          >
-            Back
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setStep((s) => Math.max(0, s - 1))}
+              className={`text-sm text-text3 hover:text-text transition-colors ${step === 0 ? 'invisible' : ''}`}
+            >
+              Back
+            </button>
+            <button
+              onClick={finish}
+              className="text-xs text-text4 hover:text-text3 transition-colors underline underline-offset-2"
+            >
+              Skip
+            </button>
+          </div>
           {step < STEPS.length - 1 ? (
             <button onClick={() => setStep((s) => s + 1)} className="btn-primary">
               Continue

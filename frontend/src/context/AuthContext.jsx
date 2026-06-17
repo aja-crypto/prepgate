@@ -21,6 +21,7 @@ export const AuthProvider = ({ children }) => {
         .catch(() => {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
+          delete api.defaults.headers.common['Authorization'];
         })
         .finally(() => setLoading(false));
     } else if (isGuest) {
@@ -33,6 +34,7 @@ export const AuthProvider = ({ children }) => {
       });
       setLoading(false);
     } else {
+      delete api.defaults.headers.common['Authorization'];
       setLoading(false);
     }
   }, []);
@@ -40,6 +42,7 @@ export const AuthProvider = ({ children }) => {
   const storeSession = useCallback((userData, accessToken, refreshToken) => {
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
+    localStorage.removeItem('isGuest');
     api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
     setUser(userData);
   }, []);
@@ -72,6 +75,9 @@ export const AuthProvider = ({ children }) => {
   }, [storeSession]);
 
   const loginAsGuest = useCallback(() => {
+     localStorage.removeItem('accessToken');
+     localStorage.removeItem('refreshToken');
+     delete api.defaults.headers.common['Authorization'];
      const guestUser = {
        id: 'demo_user_id',
        name: 'GATE Aspirant (Demo)',

@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { liveDataService } from '../services/api';
 
-export function useLiveData(refreshInterval = 900000) { // Default to 15 mins
+export function useLiveData(refreshInterval = 1800000) { // Default to 30 mins
   const [data, setData] = useState(() => {
     const cached = localStorage.getItem('cachedLiveData');
     return cached ? JSON.parse(cached) : null;
@@ -40,9 +40,9 @@ export function useLiveData(refreshInterval = 900000) { // Default to 15 mins
 
   useEffect(() => {
     fetchData(true);
-    const interval = setInterval(() => fetchData(false), 15 * 60 * 1000); // Auto-refresh every 15 mins
+    const interval = setInterval(() => fetchData(false), refreshInterval); // Auto-refresh every 30 mins
     return () => clearInterval(interval);
-  }, [fetchData]);
+  }, [fetchData, refreshInterval]);
 
   return { data, loading, error, refresh: () => fetchData(true) };
 }

@@ -28,13 +28,23 @@ function loadUsersFromDisk() {
     if (fs.existsSync(USERS_FILE)) {
       const data = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
       data.forEach(u => {
-        // Re-attach comparePassword and save methods
         u.comparePassword = async (entered) => bcrypt.compare(entered, u.password);
+        u.updateStreak = function () {
+          const today = new Date().setHours(0, 0, 0, 0);
+          const lastDate = this.streak.lastStudyDate
+            ? new Date(this.streak.lastStudyDate).setHours(0, 0, 0, 0)
+            : null;
+          if (lastDate === today) return;
+          const yesterday = today - 86400000;
+          this.streak.current = lastDate === yesterday ? this.streak.current + 1 : 1;
+          if (this.streak.current > this.streak.longest) this.streak.longest = this.streak.current;
+          this.streak.lastStudyDate = new Date();
+        };
         u.save = async function () { return this; };
         usersByEmail.set(u.email, u);
         usersById.set(u._id, u);
       });
-      console.log(`--- Mock Store: Loaded ${usersById.size} users from disk ---`);
+      // Loaded silently
     }
   } catch (err) {
     console.error('Failed to load mock users:', err.message);
@@ -116,8 +126,9 @@ const seedDemoUser = async () => {
     name: 'Demo Student',
     email: 'demo@gate2027.in',
     password: 'password123',
+    role: 'admin',
   });
-  console.log('🔑 Mock auth: demo user ready (demo@gate2027.in / password123)');
+  // Demo user ready silently
 };
 
 const findByEmail = (email) => usersByEmail.get(email.toLowerCase()) || null;

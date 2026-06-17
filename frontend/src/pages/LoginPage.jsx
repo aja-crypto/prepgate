@@ -38,11 +38,13 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen login-wallpaper-bg flex items-center justify-center p-4">
       <div className="w-full max-w-[420px] animate-slide-up relative z-10">
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <Icon name="logo" />
-          <div>
-            <h1 className="font-bold text-lg text-text tracking-tight">{BRAND.name}</h1>
-            <p className="text-[11px] text-text3">{BRAND.tagline}</p>
+        <div className="flex flex-col items-center mb-8">
+          <div className="flex items-center gap-3">
+            <img src="/images/logo.png" alt="" className="w-10 h-10 object-contain" />
+            <div>
+              <div className="font-bold text-text tracking-tight" style={{ fontSize: '20px', lineHeight: '1.1' }}>PrepGate</div>
+              <div style={{ color: '#A855F7', fontSize: '10px', fontWeight: 600, letterSpacing: '1px' }}>GATE 2027</div>
+            </div>
           </div>
         </div>
 

@@ -65,8 +65,6 @@ const BOOK_REFS = {
 
 const PRACTICE_RESOURCES = [
   { title: 'GeeksforGeeks – Topic-wise Practice', url: 'https://practice.geeksforgeeks.org/explore?page=1&sortBy=submissions', type: 'practice' },
-  { title: 'GateOverflow – Previous Year Questions', url: 'https://gateoverflow.in/', type: 'gateoverflow' },
-  { title: 'PracticePaper – GATE CSE Tests', url: 'https://practicepaper.in/gate-cse', type: 'practice' },
   { title: 'NPTEL – Computer Science Courses', url: 'https://nptel.ac.in/', type: 'nptel' },
   { title: 'CP Handbook – Competitive Programming', url: 'https://cses.fi/book/book.pdf', type: 'practice' },
 ];

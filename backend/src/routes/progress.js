@@ -265,6 +265,9 @@ router.put('/sync', protect, async (req, res, next) => {
     req.user.progressBackup = { data, updatedAt: new Date() };
 
     if (isMockAuthEnabled()) {
+      if (typeof req.user.save === 'function') {
+        await req.user.save({ validateBeforeSave: false });
+      }
       return res.json({
         success: true,
         data: { updatedAt: req.user.progressBackup.updatedAt, mocks: data.mocks, notes: data.notes, mongoAvailable: false },

@@ -19,12 +19,12 @@ async function enrichProgressMongo(topics, userId) {
         nextRevisionDate: p.nextRevisionDate, isBookmarked: p.isBookmarked,
         revisionNeeded: p.revisionNeeded, markedDifficult: p.markedDifficult,
         accuracy: p.accuracy, lastStudiedAt: p.lastStudiedAt,
-        completionTasks: p.completionTasks || { lecture: false, notes: false, pyqs: false, test: false },
+        completionTasks: p.completionTasks || { lecture: false, notes: false, pyqs: false, revision: false, test: false },
         completionPercentage: p.completionPercentage || 0,
       } : {
         isCompleted: false, isBookmarked: false, revisionNeeded: false,
         markedDifficult: false, studyTimeMinutes: 0, revisionCount: 0, accuracy: 0,
-        completionTasks: { lecture: false, notes: false, pyqs: false, test: false },
+        completionTasks: { lecture: false, notes: false, pyqs: false, revision: false, test: false },
         completionPercentage: 0,
       },
     };
@@ -161,8 +161,8 @@ router.patch('/:id/progress', protect, async (req, res, next) => {
       updates.completionTasks = req.body.completionTasks;
       // Auto-calculate percentage
       const tasks = req.body.completionTasks;
-      const doneCount = Object.values(tasks).filter(Boolean).length;
-      updates.completionPercentage = Math.round((doneCount / 4) * 100);
+      const doneCount = ['lecture', 'notes', 'pyqs', 'revision', 'test'].filter((key) => tasks[key]).length;
+      updates.completionPercentage = Math.round((doneCount / 5) * 100);
       // Auto-mark completed if 100%
       if (updates.completionPercentage === 100 && !updates.isCompleted) {
         updates.isCompleted = true;

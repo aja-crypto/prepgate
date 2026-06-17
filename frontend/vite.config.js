@@ -14,7 +14,9 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: true, // Allow tunnel hosts
     hmr: {
-      clientPort: 443, // Important for tunnels
+      host: '127.0.0.1',
+      port: 5173,
+      protocol: 'ws',
     },
     proxy: {
       '/api': {
@@ -25,6 +27,10 @@ export default defineConfig({
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
       },
+      '/health': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true,
+      },
     },
   },
   build: {
@@ -32,9 +38,12 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          charts: ['chart.js', 'react-chartjs-2'],
+        manualChunks(id) {
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) return 'vendor';
+          if (id.includes('node_modules/chart.js') || id.includes('node_modules/react-chartjs-2')) return 'charts';
+          if (id.includes('node_modules/three')) return 'three';
+          if (id.includes('node_modules/jspdf') || id.includes('node_modules/xlsx') || id.includes('node_modules/html2canvas')) return 'export';
+          if (id.includes('node_modules')) return null;
         },
       },
     },

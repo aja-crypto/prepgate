@@ -1,5 +1,6 @@
 // src/pages/NotesPage.jsx
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useProgress } from '../context/ProgressContext';
 import { noteService } from '../services/api';
 import Modal from '../components/common/Modal';
@@ -24,11 +25,18 @@ const NOTE_TYPES = [
   { id: 'image', label: 'Image/Diagram', icon: 'note' }
 ];
 
+const resolveMediaUrl = (url) => {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  return url.startsWith('/') ? url : `/${url}`;
+};
+
 export default function NotesPage() {
   const { mongoAvailable } = useProgress();
   const [notes, setNotes] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [typeFilter, setTypeFilter] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [viewingMedia, setViewingMedia] = useState(null);
   const [zoom, setZoom] = useState(1);
@@ -134,6 +142,37 @@ export default function NotesPage() {
 
   const recentNotes = useMemo(() => notes.slice(0, 4), [notes]);
 
+  const navigate = useNavigate();
+
+  const HUB_ITEMS = [
+    { label: 'AIR 1 Short Notes', icon: '📚', desc: 'Concise topper-curated revision notes', color: '#8B5CF6', to: '/short-notes' },
+    { label: 'Formula Sheets', icon: '📷', desc: 'Quick-reference formula collection', color: '#06B6D4', to: '/formulas' },
+    { label: 'Revision Notes', icon: '⭐', desc: 'Flagged topics needing review', color: '#F59E0B', to: '/revision' },
+    { label: 'Final Revision Mode', icon: '🚀', desc: 'One-click access to all short notes', color: '#22C55E', to: '/final-revision' },
+  ];
+
+  const NotesHub = () => (
+    <section className="mb-8">
+      <div className="flex items-center gap-2 mb-4">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-primary"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" /></svg>
+        <h2 className="text-xs font-bold uppercase tracking-widest text-text2">Notes Hub</h2>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {HUB_ITEMS.map(item => (
+          <button key={item.label} type="button" onClick={() => navigate(item.to)}
+            className="bg-surface border border-border rounded-xl p-4 text-left hover:border-white/15 transition-all hover:-translate-y-0.5 group"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-lg">{item.icon}</span>
+              <span className="text-sm font-semibold text-text group-hover:text-primary transition-colors">{item.label}</span>
+            </div>
+            <p className="text-[11px] text-text3">{item.desc}</p>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -149,7 +188,7 @@ export default function NotesPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search notes, formulas..." 
-              className="bg-surface border border-border rounded-xl pl-10 pr-4 py-2 text-sm text-text focus:outline-none focus:border-primary/50 w-64"
+              className="bg-surface border border-border rounded-xl pl-10 pr-4 py-2 text-sm text-text focus:outline-none focus:border-primary/50 w-full sm:w-64"
             />
           </div>
           <button 
@@ -160,6 +199,8 @@ export default function NotesPage() {
           </button>
         </div>
       </div>
+
+      <NotesHub />
 
       {/* Quick Access / Pinned Formulas */}
       {pinnedFormulas.length > 0 && (
@@ -196,8 +237,8 @@ export default function NotesPage() {
                         <span className="text-[10px] font-bold">VIEW PDF</span>
                       </div>
                     ) : (
-                      <img 
-                        src={f.imageUrl || f.fileUrl} 
+                        <img 
+                        src={resolveMediaUrl(f.imageUrl || f.fileUrl)} 
                         alt={f.title} 
                         className="w-full h-full object-cover group-hover/img:scale-105 transition-transform"
                         onError={(e) => {
@@ -264,7 +305,11 @@ export default function NotesPage() {
             <h2 className="text-lg font-bold text-text">{selectedSubject} Resources</h2>
             <div className="flex gap-2">
               {NOTE_TYPES.map(t => (
-                <button key={t.id} title={t.label} className="p-2 rounded-lg border border-border bg-surface text-text3 hover:text-primary transition-colors">
+                <button key={t.id} type="button" title={t.label}
+                  onClick={() => setTypeFilter(typeFilter === t.id ? null : t.id)}
+                  className={`p-2 rounded-lg border transition-colors ${
+                    typeFilter === t.id ? 'bg-primary/15 border-primary/30 text-primary' : 'border-border bg-surface text-text3 hover:text-primary'
+                  }`}>
                   <Icon name={t.icon} className="w-4 h-4" />
                 </button>
               ))}
@@ -283,7 +328,7 @@ export default function NotesPage() {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
-              {notes.map(n => (
+              {notes.filter(n => !typeFilter || n.type === typeFilter).map(n => (
                 <GlassCard key={n._id} className="group flex flex-col h-full" padding="p-5">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
@@ -303,7 +348,7 @@ export default function NotesPage() {
                       <button onClick={() => togglePin(n)} className={`p-1.5 rounded-lg hover:bg-bg-3 ${n.isPinned ? 'text-yellow-500' : 'text-text3'}`}>
                         <Icon name="star" className={`w-3.5 h-3.5 ${n.isPinned ? 'fill-current' : ''}`} />
                       </button>
-                      <button onClick={() => deleteNote(n._id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-text3 hover:text-red-400">
+                      <button onClick={() => deleteNote(n._id)} className="p-2.5 rounded-lg hover:bg-red-500/10 text-text3 hover:text-red-400">
                         <Icon name="close" className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -321,11 +366,11 @@ export default function NotesPage() {
                         </div>
                       ) : (
                         <img 
-                          src={n.imageUrl || n.fileUrl} 
+                          src={resolveMediaUrl(n.imageUrl || n.fileUrl)} 
                           alt={n.title} 
                           className="w-full h-full object-cover group-hover/media:scale-105 transition-transform" 
                           onError={(e) => {
-                            console.error(`Failed to load image for note: ${n.title}`, n.imageUrl || n.fileUrl);
+                            console.error(`Failed to load image for note: ${n.title}`, resolveMediaUrl(n.imageUrl || n.fileUrl));
                             e.target.src = 'https://placehold.co/600x400/1a1a1a/4f8dff?text=Image+Not+Found';
                             e.target.onerror = null; // Prevent infinite loop
                           }}
@@ -383,17 +428,17 @@ export default function NotesPage() {
                 <span className="text-xs text-white font-mono w-12 text-center">{Math.round(zoom * 100)}%</span>
                 <button onClick={() => setZoom(z => Math.min(3, z + 0.25))} className="p-2 text-white hover:bg-white/10 rounded-lg"><Icon name="plus" className="w-4 h-4" /></button>
               </div>
-              <a href={viewingMedia.fileUrl} download className="p-2.5 bg-primary text-white rounded-xl hover:opacity-90 transition-all">
-                <Icon name="download" className="w-5 h-5" />
-              </a>
+                <a href={resolveMediaUrl(viewingMedia.fileUrl)} download className="p-2.5 bg-primary text-white rounded-xl hover:opacity-90 transition-all">
+                  <Icon name="download" className="w-5 h-5" />
+                </a>
             </div>
           </div>
           <div className="flex-1 overflow-auto p-8 flex items-center justify-center custom-scrollbar">
             {viewingMedia.fileType?.includes('pdf') ? (
-              <iframe src={viewingMedia.imageUrl || viewingMedia.fileUrl} className="w-full h-full max-w-5xl rounded-xl shadow-2xl bg-white" title="PDF Viewer" />
+              <iframe src={resolveMediaUrl(viewingMedia.imageUrl || viewingMedia.fileUrl)} className="w-full h-full max-w-5xl rounded-xl shadow-2xl bg-white" title="PDF Viewer" />
             ) : (
               <img 
-                src={viewingMedia.imageUrl || viewingMedia.fileUrl} 
+                src={resolveMediaUrl(viewingMedia.imageUrl || viewingMedia.fileUrl)} 
                 alt={viewingMedia.title} 
                 style={{ transform: `scale(${zoom})`, transition: 'transform 0.2s' }}
                 className="max-w-full max-h-full shadow-2xl rounded-lg cursor-zoom-in"

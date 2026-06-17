@@ -276,7 +276,7 @@ export default function VirtualCalculator({ isOpen, onClose }) {
       
       <div 
         ref={calculatorRef}
-        className="w-[520px] bg-[#cccccc] border-2 border-[#666666] shadow-2xl rounded-sm flex flex-col overflow-hidden"
+        className="w-full max-w-[520px] sm:w-[520px] bg-[#cccccc] border-2 border-[#666666] shadow-2xl rounded-sm flex flex-col overflow-hidden"
         style={{ 
           pointerEvents: 'auto', 
           position: 'relative',
