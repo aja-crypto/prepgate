@@ -23,6 +23,7 @@ const StudyPlannerPage = lazy(() => import('./pages/StudyPlannerPage'));
 const FormulaSheetPage = lazy(() => import('./pages/FormulaSheetPage'));
 // const AdminPage = lazy(() => import('./pages/AdminPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const HelpPage = lazy(() => import('./pages/HelpPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'));
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
@@ -144,6 +145,7 @@ export default function App() {
         <Route path="success-hub" element={<SuccessHubPage />} />
         <Route path="insights" element={<InsightsPage />} />
         <Route path="feedback" element={<FeedbackPage />} />
+        <Route path="help" element={<HelpPage />} />
         <Route path="mistakes" element={<MistakeNotebookPage />} />
         <Route path="weekly-tests" element={<WeeklyTestsPage />} />
         <Route path="weekly-tests/:testId" element={<WeeklyTestDetailPage />} />
