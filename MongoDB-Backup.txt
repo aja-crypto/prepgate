@@ -1,0 +1,69 @@
+# PrepGate — MongoDB Atlas Backup Info
+# Date: June 19, 2026
+# DO NOT UPLOAD TO GITHUB
+
+================================================================================
+# MONGODB ATLAS CONNECTION
+================================================================================
+
+Atlas Login URL:
+https://cloud.mongodb.com
+
+Atlas Email:
+[Check your MongoDB account email]
+
+Project Name:
+PrepGate-GATE2027
+
+Cluster Name:
+Cluster0
+
+Cluster Connection Strings:
+Primary:   ac-pmpdzxm-shard-00-00.sa6kujd.mongodb.net:27017
+Secondary: ac-pmpdzxm-shard-00-01.sa6kujd.mongodb.net:27017
+Secondary: ac-pmpdzxm-shard-00-02.sa6kujd.mongodb.net:27017
+
+Full Connection String (from backend/.env):
+mongodb://monkeydajay0911_db_user:prepgate0911@ac-pmpdzxm-shard-00-00.sa6kujd.mongodb.net:27017,ac-pmpdzxm-shard-00-01.sa6kujd.mongodb.net:27017,ac-pmpdzxm-shard-00-02.sa6kujd.mongodb.net:27017/gate2027?ssl=true&replicaSet=atlas-1nod4h-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Cluster0
+
+================================================================================
+# DATABASE CREDENTIALS
+================================================================================
+
+Database Name: gate2027
+Database User: monkeydajay0911_db_user
+Database Password: prepgate0911
+
+Connection Type: Replica Set (3 shards)
+Auth Source: admin
+SSL: Required
+
+================================================================================
+# QUICK CONNECT (MongoDB Compass)
+================================================================================
+
+Connection String:
+mongodb://monkeydajay0911_db_user:prepgate0911@ac-pmpdzxm-shard-00-00.sa6kujd.mongodb.net:27017,ac-pmpdzxm-shard-00-01.sa6kujd.mongodb.net:27017,ac-pmpdzxm-shard-00-02.sa6kujd.mongodb.net:27017/gate2027?ssl=true&replicaSet=atlas-1nod4h-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Cluster0
+
+================================================================================
+# BACKUP STATUS
+================================================================================
+
+Last Verified: June 19, 2026
+Server Uptime: 12,347 seconds (~3.4 hours)
+Database Status: Connected
+Memory Used: 48 MB / 53 MB heap, 115 MB RSS
+
+================================================================================
+# IMPORTANT NOTES
+================================================================================
+
+- Cluster is active and accepting connections
+- All data is stored in the 'gate2027' database
+- This cluster is used by the PrepGate application
+- Admin credentials for Atlas should be in your personal records
+- Database user 'monkeydajay0911_db_user' has read-write access
+- Replica set: atlas-1nod4h-shard-0 (3 nodes)
+- SSL required for all connections
+
+================================================================================
