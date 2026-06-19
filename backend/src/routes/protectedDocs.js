@@ -97,38 +97,4 @@ router.get('/pdf/:id/info', protect, async (req, res, next) => {
   }
 });
 
-// Fallback: serve raw PDF with signed time-limited URL (if image conversion fails)
-router.get('/pdf/:id/raw', protect, requireCloudinary, async (req, res, next) => {
-  try {
-    const pdf = await AdminPdf.findById(req.params.id);
-    if (!pdf || !pdf.isPublished) {
-      return res.status(404).json({ success: false, message: 'Document not found.' });
-    }
-
-    const cloudinary = require('cloudinary').v2;
-    const expiresAt = Math.floor(Date.now() / 1000) + 300; // 5 minutes
-    const signedUrl = cloudinary.utils.private_download_url(pdf.publicId, 'pdf', {
-      resource_type: 'raw',
-      type: 'upload',
-      expires_at: expiresAt,
-    });
-
-    const userId = req.user._id?.toString() || req.user.id?.toString() || 'unknown';
-    const userIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
-    const userAgent = req.headers['user-agent'] || '';
-    logAccess('view_raw', userId, pdf._id.toString(), userIp, userAgent);
-
-    res.json({
-      success: true,
-      data: {
-        title: pdf.title,
-        url: signedUrl,
-        expiresAt,
-      },
-    });
-  } catch (e) {
-    next(e);
-  }
-});
-
 module.exports = router;

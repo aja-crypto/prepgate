@@ -1,6 +1,7 @@
 // Generate topic/subject/full/custom mocks from PYQ bank
 import { useState, useEffect } from 'react';
 import { mockSessionService, subjectService, topicService, getApiErrorMessage } from '../../services/api';
+import { silentCatch } from '../../utils/errorHandler';
 import toast from 'react-hot-toast';
 
 const MOCK_TYPES = [
@@ -23,7 +24,7 @@ export default function MockTestBuilder({ onStart }) {
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    subjectService.getAll().then((res) => setSubjects(res.data.data || [])).catch(() => {});
+    subjectService.getAll().then((res) => setSubjects(res.data.data || [])).catch(silentCatch('Load subjects'));
   }, []);
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function MockTestBuilder({ onStart }) {
         const all = results.flatMap((r) => r.data.data || []);
         setTopics(all);
       })
-      .catch(() => {});
+      .catch(silentCatch('Load topics by subject'));
   }, [selectedSubjects]);
 
   const toggleSubject = (id) => {

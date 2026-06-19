@@ -14,6 +14,9 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('accessToken');
     const isGuest = localStorage.getItem('isGuest') === 'true';
 
+    // Timeout: stop showing loading after 15s to prevent permanent blank screen
+    const timeoutId = setTimeout(() => setLoading(false), 15000);
+
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       authService.getMe()
@@ -23,8 +26,12 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem('refreshToken');
           delete api.defaults.headers.common['Authorization'];
         })
-        .finally(() => setLoading(false));
+        .finally(() => {
+          clearTimeout(timeoutId);
+          setLoading(false);
+        });
     } else if (isGuest) {
+      clearTimeout(timeoutId);
       setUser({
         id: 'guest_123',
         name: 'GATE Aspirant (Demo)',
@@ -34,6 +41,7 @@ export const AuthProvider = ({ children }) => {
       });
       setLoading(false);
     } else {
+      clearTimeout(timeoutId);
       delete api.defaults.headers.common['Authorization'];
       setLoading(false);
     }

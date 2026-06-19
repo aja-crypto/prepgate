@@ -11,15 +11,10 @@ import { getApiErrorMessage } from '../services/api';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
-  const { login, googleLogin, loginAsGuest } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
-
-  const handleDemoMode = () => {
-    loginAsGuest();
-    navigate('/dashboard');
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,22 +74,10 @@ export default function LoginPage() {
             onError={() => toast.error('Google sign-in failed')}
           />
 
-          <button 
-            onClick={handleDemoMode}
-            className="w-full mt-3 py-2 px-4 rounded-xl border border-primary/30 text-primary text-xs font-bold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
-          >
-            <Icon name="zap" className="w-3.5 h-3.5" />
-            Explore Demo Mode (No Setup Required)
-          </button>
-
           <p className="text-center text-sm text-text3 mt-6">
             No account? <Link to="/register" className="text-primary font-medium hover:opacity-80">Create one</Link>
           </p>
         </GlassCard>
-
-        <p className="text-center text-[10px] text-text3 mt-4">
-          Demo (sample data): demo@gate2027.in / password123
-        </p>
       </div>
     </div>
   );

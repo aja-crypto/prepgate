@@ -2,11 +2,12 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import {
-  getEmptyProgressData, mergeProgressData, isEmptyProgress, DEMO_EMAIL, BADGE_DEFINITIONS,
+  getEmptyProgressData, mergeProgressData, isEmptyProgress, BADGE_DEFINITIONS,
 } from '../data/emptyState';
-import { getDemoProgressData, getDefaultGateFeatures } from '../data/defaults';
+import { getDefaultGateFeatures } from '../data/defaults';
 import { checkNewBadges } from '../utils/gateUtils';
 import { progressService, pyqService } from '../services/api';
+import { silentCatch, warn } from '../utils/errorHandler';
 import { pullFromServer, pushToServer, checkMongoAvailable } from '../services/syncService';
 import { mergePyqLists } from '../utils/pyqMapper';
 import toast from 'react-hot-toast';
@@ -16,26 +17,24 @@ const storageKey = (userId) => `gate2027_progress_${userId || 'guest'}`;
 const BACKUP_INTERVAL_MS = 5 * 60 * 1000;
 const PUSH_DEBOUNCE_MS = 2000;
 
-function getInitialData(user) {
-  const email = user?.email;
-  if (email === DEMO_EMAIL) return getDemoProgressData();
+function getInitialData() {
   return getEmptyProgressData();
 }
 
-function loadFromStorage(userId, user) {
+function loadFromStorage(userId) {
   try {
     const raw = localStorage.getItem(storageKey(userId));
-    if (!raw) return getInitialData(user);
+    if (!raw) return getInitialData();
     return mergeProgressData(JSON.parse(raw));
   } catch {
-    return getInitialData(user);
+    return getInitialData();
   }
 }
 
 export const ProgressProvider = ({ children }) => {
   const { user } = useAuth();
   const userId = user?.id || user?._id || 'guest';
-  const [data, setData] = useState(() => loadFromStorage(userId, user));
+  const [data, setData] = useState(() => loadFromStorage(userId));
   const [backupStatus, setBackupStatus] = useState('saved');
   const [cloudBackupStatus, setCloudBackupStatus] = useState('idle');
   const [mongoAvailable, setMongoAvailable] = useState(false);
@@ -46,6 +45,8 @@ export const ProgressProvider = ({ children }) => {
   const cloudTimer = useRef(null);
   const pushTimer = useRef(null);
   const lastPulledUserId = useRef(null);
+  const syncInProgress = useRef(false);
+  const wakeSyncTimer = useRef(null);
   const dataRef = useRef(data);
   dataRef.current = data;
 
@@ -69,11 +70,16 @@ export const ProgressProvider = ({ children }) => {
     if (lastPulledUserId.current === userId) return;
     lastPulledUserId.current = userId;
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+
     (async () => {
       const mongo = await checkMongoAvailable();
       setMongoAvailable(mongo);
       const local = loadFromStorage(userId, user);
       const { data: merged, updatedAt, mongoAvailable: ma, fromCloud } = await pullFromServer(local, user);
+
+      if (controller.signal.aborted) return;
 
       setData(merged);
       setLastBackupAt(merged.lastSaved);
@@ -85,11 +91,9 @@ export const ProgressProvider = ({ children }) => {
       if (fromCloud && ma) {
         toast.success('Progress restored from cloud', { duration: 2000 });
       } else if (isEmptyProgress(merged)) {
-        // Push empty state to cloud for new accounts
         await pushToServer(merged);
       }
 
-      // Load PYQ bank from API when MongoDB is available
       if (ma ?? mongo) {
         try {
           const pyqRes = await pyqService.getAll({ limit: 500 });
@@ -102,6 +106,8 @@ export const ProgressProvider = ({ children }) => {
         } catch { /* PYQ API optional */ }
       }
     })();
+
+    return () => { clearTimeout(timeout); controller.abort(); };
   }, [user, userId]);
 
   // Auto-save to localStorage on every change
@@ -126,15 +132,21 @@ export const ProgressProvider = ({ children }) => {
 
   const syncToCloud = useCallback(async () => {
     if (!user || userId === 'guest') return;
+    if (syncInProgress.current) return;
+    syncInProgress.current = true;
     setCloudBackupStatus('syncing');
-    const result = await pushToServer(dataRef.current);
-    if (result.error) {
-      setCloudBackupStatus('offline');
-    } else {
-      if (result.data) setData(result.data);
-      setLastCloudBackupAt(result.data?.lastSaved || new Date().toISOString());
-      setCloudBackupStatus('synced');
-      setMongoAvailable(result.mongoAvailable);
+    try {
+      const result = await pushToServer(dataRef.current);
+      if (result.error) {
+        setCloudBackupStatus('offline');
+      } else {
+        if (result.data) setData(result.data);
+        setLastCloudBackupAt(result.data?.lastSaved || new Date().toISOString());
+        setCloudBackupStatus('synced');
+        setMongoAvailable(result.mongoAvailable);
+      }
+    } finally {
+      syncInProgress.current = false;
     }
   }, [user, userId]);
 
@@ -153,11 +165,27 @@ export const ProgressProvider = ({ children }) => {
     return () => clearInterval(cloudTimer.current);
   }, [user, userId, syncToCloud]);
 
+  // Wake-from-sleep detection — re-sync when page becomes visible after being hidden
+  useEffect(() => {
+    if (!user || userId === 'guest') return;
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        if (wakeSyncTimer.current) clearTimeout(wakeSyncTimer.current);
+        wakeSyncTimer.current = setTimeout(syncToCloud, 1000);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (wakeSyncTimer.current) clearTimeout(wakeSyncTimer.current);
+    };
+  }, [user, userId, syncToCloud]);
+
   const syncPyqToServer = useCallback((pyq) => {
     if (!pyq.mongoId || !mongoAvailable) return;
-    pyqService.toggleSolved(pyq.mongoId, pyq.solved).catch(() => {});
+    pyqService.toggleSolved(pyq.mongoId, pyq.solved).catch(silentCatch('Sync PYQ solved'));
     if (pyq.bookmarked !== undefined) {
-      pyqService.toggleBookmark(pyq.mongoId, pyq.bookmarked).catch(() => {});
+      pyqService.toggleBookmark(pyq.mongoId, pyq.bookmarked).catch(silentCatch('Sync PYQ bookmark'));
     }
   }, [mongoAvailable]);
 
@@ -172,7 +200,9 @@ export const ProgressProvider = ({ children }) => {
         }));
         setMongoAvailable(true);
       }
-    } catch { /* offline — keep local data */ }
+    } catch {
+      warn('Refresh PYQs — using local data');
+    }
   }, []);
 
   const updateTopics = useCallback((fn) => setData((d) => ({ ...d, topics: typeof fn === 'function' ? fn(d.topics) : fn })), []);
@@ -192,16 +222,16 @@ export const ProgressProvider = ({ children }) => {
         });
         if (changed?.mongoId) {
           if (changed.solved !== d.pyqs.find((x) => x.id === changed.id)?.solved) {
-            pyqService.toggleSolved(changed.mongoId, changed.solved).catch(() => {});
+            pyqService.toggleSolved(changed.mongoId, changed.solved).catch(silentCatch('Toggle solved'));
           }
           if (changed.bookmarked !== d.pyqs.find((x) => x.id === changed.id)?.bookmarked) {
-            pyqService.toggleBookmark(changed.mongoId, changed.bookmarked).catch(() => {});
+            pyqService.toggleBookmark(changed.mongoId, changed.bookmarked).catch(silentCatch('Toggle bookmark'));
           }
           const flags = {};
           const prev = d.pyqs.find((x) => x.id === changed.id);
           if (prev && changed.revisionNeeded !== prev.revisionNeeded) flags.revisionNeeded = changed.revisionNeeded;
           if (prev && changed.markedDifficult !== prev.markedDifficult) flags.markedDifficult = changed.markedDifficult;
-          if (Object.keys(flags).length) pyqService.updateFlags(changed.mongoId, flags).catch(() => {});
+          if (Object.keys(flags).length) pyqService.updateFlags(changed.mongoId, flags).catch(silentCatch('Update flags'));
         }
       }
       return { ...d, pyqs: next };
@@ -304,17 +334,6 @@ export const ProgressProvider = ({ children }) => {
     }
   }, [userId, syncToCloud]);
 
-  const downloadJsonBackup = useCallback(() => {
-    const blob = new Blob([JSON.stringify({ ...data, exportedAt: new Date().toISOString(), userId }, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `gate2027-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('JSON backup downloaded');
-  }, [data, userId]);
-
   const getSearchIndex = useCallback(() => {
     const items = [];
     data.topics.forEach((t) => items.push({ type: 'topic', id: t.id, title: t.name, subtitle: t.subject, path: '/topics', done: t.done }));
@@ -385,7 +404,6 @@ export const ProgressProvider = ({ children }) => {
       resetTopicProgress,
       restoreFromSnapshot,
       importUserData,
-      downloadJsonBackup,
       getSearchIndex,
       getExportPayload,
       backupIntervalMs: BACKUP_INTERVAL_MS,

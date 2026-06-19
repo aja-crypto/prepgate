@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useProgress } from '../context/ProgressContext';
 import { adminService, subjectService, weeklyTestService, shortNoteService } from '../services/api';
+import { silentCatch } from '../utils/errorHandler';
 import Modal from '../components/common/Modal';
 import AdminLiveDataTab from '../components/admin/AdminLiveDataTab';
 import AdminPYQTab from '../components/admin/AdminPYQTab';
@@ -226,7 +227,7 @@ function AdminWeeklyTestsUpload() {
 
   useEffect(() => {
     setLoading(true);
-    weeklyTestService.getAll().then(r => setTests(r.data.data)).catch(() => {}).finally(() => setLoading(false));
+    weeklyTestService.getAll().then(r => setTests(r.data.data)).catch(silentCatch('Load weekly tests')).finally(() => setLoading(false));
   }, []);
 
   const subjects = [...new Set(tests.map(t => t.subject))].sort();
@@ -299,7 +300,7 @@ function AdminShortNotesUpload() {
 
   const load = () => {
     setLoading(true);
-    shortNoteService.getAll().then(r => setSubjects(r.data.data)).catch(() => {}).finally(() => setLoading(false));
+    shortNoteService.getAll().then(r => setSubjects(r.data.data)).catch(silentCatch('Load short notes')).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);

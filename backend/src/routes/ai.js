@@ -2,6 +2,7 @@
 const router = require('express').Router();
 const { protect } = require('../middleware/auth');
 const { validateFields } = require('../middleware/validateInput');
+const aiUsage = require('../services/aiUsageTracker');
 
 /**
  * Generic AI API caller supporting OpenAI and DashScope (Aliyun)
@@ -257,6 +258,7 @@ Return ONLY valid JSON array, 7 items for a week.`;
 router.post('/planner', protect, validateFields([
   { name: 'hoursPerDay', type: 'number', required: true, min: 1, max: 24 },
 ]), async (req, res, next) => {
+  const planStart = Date.now();
   try {
     let plan;
     let source = 'heuristic';
@@ -283,8 +285,10 @@ router.post('/planner', protect, validateFields([
       plan = buildHeuristicPlan(req.body);
     }
 
+    aiUsage.increment(true, Date.now() - planStart);
     res.json({ success: true, data: { plan, source, aiError } });
   } catch (e) {
+    aiUsage.increment(false, Date.now() - planStart);
     next(e);
   }
 });
@@ -457,6 +461,7 @@ router.post('/recommendations', protect, validateFields([
   { name: 'mocks', type: 'array', required: false },
   { name: 'pyqs', type: 'array', required: false },
 ]), async (req, res, next) => {
+  const recStart = Date.now();
   try {
     let recommendations;
     let analysis;
@@ -486,8 +491,10 @@ router.post('/recommendations', protect, validateFields([
       analysis = buildHeuristicAnalysis(req.body);
     }
 
+    aiUsage.increment(true, Date.now() - recStart);
     res.json({ success: true, data: { recommendations, analysis, source, aiError } });
   } catch (e) {
+    aiUsage.increment(false, Date.now() - recStart);
     next(e);
   }
 });
@@ -495,14 +502,17 @@ router.post('/recommendations', protect, validateFields([
 router.post('/chat', protect, validateFields([
   { name: 'message', type: 'string', required: true, min: 1, max: 5000 },
 ]), async (req, res, next) => {
+  const chatStart = Date.now();
   try {
     const { message, context } = req.body;
     if (!message || typeof message !== 'string' || !message.trim()) {
       return res.status(400).json({ success: false, message: 'Message cannot be empty.' });
     }
     const response = await getAiCoachResponse(message.trim(), context, req.user);
+    aiUsage.increment(true, Date.now() - chatStart);
     res.json({ success: true, data: response });
   } catch (e) {
+    aiUsage.increment(false, Date.now() - chatStart);
     console.error('[AI Coach] Unhandled error:', e.message);
     console.error('[AI Coach] Stack:', e.stack);
     res.json({ 
@@ -552,28 +562,48 @@ function buildHeuristicAnalysis(data) {
 }
 
 // ─── Local GATE Coach (no API key needed) ──────────────────────
-const GROUP = {
-  STUDY:   /study today|plan|schedule|today/,
-  WEAK:    /weak|weakness|struggling|difficult/,
-  REVISE:  /revision|revise|review|spaced/,
-  MOCK:    /mock|test|practice|score|marks/,
-  MOTIVE:  /motivat|inspire|tired|burnout|bored/,
-  TIME:    /time|manage|hours|routine|daily/,
-  SUBJECT: /subject|topic|syllabus|priority/,
-  PYQ:     /pyq|previous year|question bank/,
-  FORMULA: /formula|short note|crib/,
-  MISTAKE: /mistake|error|accuracy|wrong/,
-  RANK:    /rank|air|score predict|college/,
-  RESOURCE:/resource|book|reference|channel|course/,
-  MATH:    /math|mathematics|aptitude|quant/,
-  DSA:     /dsa|data structure|algorithm|sorting/,
-  OS:      /os|operating system|process|memory/,
-  DBMS:    /dbms|sql|normalization|transaction/,
-  CN:      /cn|network|tcp|ip|routing/,
-  TOC:     /toc|automata|regular|context-free/,
-  COA:     /coa|computer organiz|architecture|pipeline/,
-  TRACK:   /on track|progress|behind|pace/,
-};
+// Scoring system: each group has specific keywords. The group with the most
+// keyword matches wins, avoiding the ordering bug where a generic group
+// (e.g., STUDY) catches queries meant for a more specific group.
+const GROUPS = [
+  { name: 'HELLO', keywords: ['hello', 'hi ', 'hey'], priority: 100 },
+  { name: 'DSA', keywords: ['dsa', 'data structure', 'algorithm', 'sorting', 'graph', 'tree', 'dp'], priority: 90 },
+  { name: 'OS', keywords: ['os', 'operating system', 'process', 'memory', 'scheduling', 'deadlock', 'sync'], priority: 90 },
+  { name: 'DBMS', keywords: ['dbms', 'sql', 'normalization', 'transaction', 'b+ tree', 'indexing'], priority: 90 },
+  { name: 'CN', keywords: ['cn', 'network', 'tcp', 'ip', 'routing', 'osi', 'http', 'dns'], priority: 90 },
+  { name: 'TOC', keywords: ['toc', 'automata', 'regular', 'context-free', 'turing', 'pda', 'cfg'], priority: 90 },
+  { name: 'COA', keywords: ['coa', 'computer organiz', 'architecture', 'pipeline', 'cache', 'hazard'], priority: 90 },
+  { name: 'MATH', keywords: ['math', 'mathematics', 'aptitude', 'quant', 'discrete', 'probability'], priority: 90 },
+  { name: 'MISTAKE', keywords: ['mistake', 'error', 'accuracy', 'wrong', 'incorrect', 'silly'], priority: 85 },
+  { name: 'TRACK', keywords: ['on track', 'progress', 'behind', 'pace', 'ahead'], priority: 85 },
+  { name: 'REVISE', keywords: ['revision', 'revise', 'review', 'spaced', 'recall', 'forgot'], priority: 80 },
+  { name: 'WEAK', keywords: ['weak', 'weakness', 'struggling', 'difficult', 'improve'], priority: 80 },
+  { name: 'MOCK', keywords: ['mock', 'test', 'practice', 'score', 'marks', 'exam'], priority: 80 },
+  { name: 'PYQ', keywords: ['pyq', 'previous year', 'question bank', 'gate paper'], priority: 80 },
+  { name: 'RANK', keywords: ['rank', 'air', 'college', 'iit', 'nit', 'admission'], priority: 75 },
+  { name: 'FORMULA', keywords: ['formula', 'short note', 'crib', 'cheat sheet'], priority: 75 },
+  { name: 'RESOURCE', keywords: ['resource', 'book', 'reference', 'channel', 'course', 'lecture'], priority: 75 },
+  { name: 'MOTIVE', keywords: ['motivat', 'inspire', 'tired', 'burnout', 'bored', 'give up'], priority: 75 },
+  { name: 'TIME', keywords: ['time', 'manage', 'hours', 'routine', 'daily', 'pomodoro'], priority: 70 },
+  { name: 'SUBJECT', keywords: ['subject', 'topic', 'syllabus', 'priority', 'weightage'], priority: 70 },
+  { name: 'STUDY', keywords: ['plan', 'schedule', 'today', 'daily', 'week'], priority: 60 },
+];
+
+function findBestGroup(msg) {
+  const lower = msg.toLowerCase();
+  let best = { name: 'GENERIC', score: 0, priority: 0 };
+
+  for (const group of GROUPS) {
+    let score = 0;
+    for (const kw of group.keywords) {
+      if (lower.includes(kw)) score++;
+    }
+    if (score > 0 && (score > best.score || (score === best.score && group.priority > best.priority))) {
+      best = { name: group.name, score, priority: group.priority };
+    }
+  }
+  return best.name;
+}
 
 function localCoachResponse(message, context) {
   const msg = message.toLowerCase();
@@ -586,73 +616,73 @@ function localCoachResponse(message, context) {
   let text = '';
   let suggestions = ["What should I study today?", "Am I on track?", "Which subject should I prioritize?"];
 
-  const match = (re) => re.test(msg);
+  const bestGroup = findBestGroup(msg);
 
-  if (msg.includes('hello') || msg.includes('hi') || msg.includes('hey')) {
+  if (bestGroup === 'HELLO') {
     text = `Hey there, GATE warrior! 👋 Ready to crush it today. ${
       streak > 0 ? `You're on a ${streak}-day streak — that's solid discipline!` : 'Consistency is key — let\'s build that streak.'
     } I'm here to help with study plans, topic advice, revision tips, or anything GATE-related. What do you need?`;
     suggestions = ["Plan my study day", "Show my weak topics", "How should I revise?"];
-  } else if (match(GROUP.STUDY)) {
+  } else if (bestGroup === 'STUDY') {
     text = `Here's your daily focus plan:\n\n${progress > 50 ? '📗 You\'re past halfway — great momentum!' : '📘 Starting strong — every hour counts!'}\n\n**Morning (2h):** ${weakSub} — focus on concept clarity + 5 PYQs\n**Afternoon (1.5h):** ${strongSub} — reinforce your strength area\n**Evening (1h):** Revision of last week's topics\n**Night (30m):** Formula sheet review + plan tomorrow\n\nStay consistent, and you'll see results every week! 🚀`;
     suggestions = ["Which topics in " + weakSub + " should I focus?", "How many PYQs should I solve daily?", "Give me a weekly study plan"];
-  } else if (match(GROUP.WEAK)) {
+  } else if (bestGroup === 'WEAK') {
     text = `Your current weak areas are: **${weakSub}** (${context.weakTopics?.slice(0,3)?.join(', ') || 'core topics'}).\n\nHere's a targeted attack plan:\n1. **Watch 1 good NPTEL/YouTube lecture** on the foundational concepts\n2. **Solve 10 PYQs** from the last 5 years on this subject\n3. **Create a one-page formula sheet** for quick revision\n\nDedicate 2 hours daily to ${weakSub} for the next 5 days and you'll see a clear improvement!`;
     suggestions = ["Show subject-wise progress", "Which PYQs should I solve first?", "Create a weekly plan for " + weakSub];
-  } else if (match(GROUP.REVISE)) {
+  } else if (bestGroup === 'REVISE') {
     text = `Spaced repetition is your secret weapon! 🧠\n\n${context.overdueTopics > 0 ? `⚠️ You have **${context.overdueTopics} topics** overdue for revision. Let's fix that!` : '✅ You\'re up to date on revisions — great habit!'}\n\n**Quick revision plan:**\n1. Revise **3 old topics** daily (30 min each)\n2. Use your short notes + formula sheets\n3. Solve **5 PYQs** from each topic to test retention\n4. Mark topics as done in the revision scheduler\n\nStart with the oldest unreviewed topic first!`;
     suggestions = ["Show my revision schedule", "Which topics are due today?", "How does spaced repetition work?"];
-  } else if (match(GROUP.MOCK)) {
+  } else if (bestGroup === 'MOCK') {
     text = avg === 0 
       ? `You haven't taken any mock tests yet! 🧪\n\nMocks are **critical** for GATE success. Start with:\n1. **Subject-wise mock** for your strongest subject (to build confidence)\n2. **Full-length mock** every Sunday\n3. **Analyze every mistake** — create an error log\n\nWant me to suggest a mock test plan?`
       : `Your average mock score is **${avg}%**. ${avg >= 60 ? '✅ Solid! Focus on converting 60s to 80s.' : avg >= 40 ? '📈 Improving — analyze your mistake patterns.' : '🎯 Early stage — focus on concept clarity first.'}\n\n**Mock strategy:**\n- Take 1 full-length mock every week\n- Spend **equal time analyzing** as taking the test\n- Track your per-subject accuracy to find patterns\n- Re-solve mistakes after 3 days`;
     suggestions = ["Suggest a mock test", "How to analyze mock results?", "What's a good GATE score?"];
-  } else if (match(GROUP.MOTIVE)) {
+  } else if (bestGroup === 'MOTIVE') {
     text = `Stay strong, GATE aspirant! 💪\n\nRemember why you started. Every hour you put in is an investment in your future. **Small daily wins compound into extraordinary results.**\n\nQuick reset tips:\n1. Take a 15-min break — walk, stretch, breathe\n2. Review your "why" — IIT, PSU, or your dream role\n3. Set **one small goal** for the next 30 minutes\n4. Celebrate small wins — completed a topic? Mark it!\n\nYou're not alone in this journey. Keep going! 🔥`;
     suggestions = ["Plan a lighter study day", "How to avoid burnout?", "Celebrate my progress so far"];
-  } else if (match(GROUP.TIME)) {
+  } else if (bestGroup === 'TIME') {
     text = `Quality > Quantity. Here's an optimized routine:\n\n🌅 **Morning (2h):** Deep focus — new concepts (highest concentration)\n🌤️ **Afternoon (1.5h):** PYQ practice + problem solving\n🌆 **Evening (1.5h):** Revision + weak area attack\n🌙 **Night (30m):** Formula review + plan next day\n\n💡 **Pro tip:** Use Pomodoro: 50 min study + 10 min break. Track your hours in the Productivity page!`;
     suggestions = ["How many hours should I study?", "Best study techniques for GATE", "How to avoid distractions?"];
-  } else if (match(GROUP.SUBJECT)) {
+  } else if (bestGroup === 'SUBJECT') {
     text = `**Priority order for GATE CSE:**\n\n🥇 **High weightage:** DSA, Algorithms, OS, DBMS, CN\n🥈 **Medium weightage:** COA, TOC, Discrete Math\n🥉 **Foundation:** Mathematics, Aptitude\n\nYour current order should be:\n1. Cover **Mathematics + Aptitude** early (they boost scores)\n2. **DSA + OS + DBMS** — most questions come from here\n3. **CN + TOC + COA** — moderate weightage, don't skip\n4. **Revision + Mocks** — keep revisiting completed subjects\n\nFocus on **completing one subject at a time** rather than jumping between them.`;
     suggestions = ["Subject-wise weightage breakdown", "Which subject to start first?", "How much time per subject?"];
-  } else if (match(GROUP.PYQ)) {
+  } else if (bestGroup === 'PYQ') {
     text = `PYQs are the **gold mine** of GATE preparation! 🏆\n\n**Strategy:**\n1. Solve PYQs **subject-wise** first (after completing each subject)\n2. Then solve **year-wise** as full-length tests\n3. **Revise your mistakes** after 3 days and again after 7 days\n4. Aim for **90%+ accuracy** on 2020-2024 papers\n\n💡 **Tip:** PYQs from 2015-2024 cover almost all important concepts. Solve them at least twice!`;
     suggestions = ["Show PYQ browser", "Most repeated PYQ topics", "How to analyze PYQ mistakes?"];
-  } else if (match(GROUP.FORMULA)) {
+  } else if (bestGroup === 'FORMULA') {
     text = `Short notes + Formula sheets = **Revision superpower** 📝\n\n**How to create effective formula sheets:**\n1. One page per subject — only formulas, definitions, key points\n2. Use colors for different categories (green = easy, yellow = moderate, red = tricky)\n3. Keep updating as you learn new topics\n4. Review them **daily** — 5 minutes before starting study\n\n✅ Already have notes? Great! Just opening them daily reinforces memory.`;
     suggestions = ["Show my formula sheets", "How to make effective notes?", "Show revision notes for OS"];
-  } else if (match(GROUP.MISTAKE)) {
+  } else if (bestGroup === 'MISTAKE') {
     text = `Mistakes are **learning opportunities** in disguise! 🔍\n\n${context.recentAccuracy > 0 ? `Your current accuracy is **${context.recentAccuracy}%**.` : ''}\n\n**Mistake analysis framework:**\n1. **Categorize** each mistake: Silly / Concept Gap / Reading Error\n2. **Fix concept gaps** by re-watching lectures or reading textbooks\n3. **Re-solve** the question after 3 days (spaced repetition!)\n4. **Track patterns** — if you keep making the same type of error, drill it\n\nYour Mistake Notebook is the best tool — use it after every practice session!`;
     suggestions = ["Open Mistake Notebook", "How to avoid silly mistakes?", "Analyze my mistake patterns"];
-  } else if (match(GROUP.RANK)) {
+  } else if (bestGroup === 'RANK') {
     text = `**GATE Score → Rank estimates (general category):**\n\n🏆 **AIR < 100:** 75+ marks (IIT Bombay/Delhi CSE)\n🥇 **AIR < 500:** 65+ marks (Top IITs)\n🥈 **AIR < 2000:** 55+ marks (IITs, NITs)\n🥉 **AIR < 5000:** 45+ marks (Good NITs, IIITs)\n\n**Your current path:** ${progress > 70 ? 'You\'re on track for a strong rank!' : progress > 40 ? 'Good progress — keep building!' : 'Early stage — focus on learning, not ranks yet!'}\n\nYou can track your predicted rank in the Analytics page!`;
     suggestions = ["Predict my AIR", "Show college cutoffs", "What score for IIT Madras?"];
-  } else if (match(GROUP.RESOURCE)) {
+  } else if (bestGroup === 'RESOURCE') {
     text = `**Best free resources for GATE CSE:**\n\n📺 **YouTube:** NPTEL (IIT professors), Gate Smashers, Knowledge Gate\n📘 **Books:** CLRS (Algorithms), Tanenbaum (OS/CN), Korth (DBMS), Ullman (TOC)\n🧠 **Practice:** PrepGate PYQ browser + Mock tests\n📝 **Notes:** Create your own short notes (10-15 pages per subject)\n\n💡 **Rule:** Stick to **1-2 resources per subject**. Hoarding resources wastes time!`;
     suggestions = ["Best YouTube channels", "Recommended textbooks", "Free mock test sources"];
-  } else if (match(GROUP.MATH)) {
+  } else if (bestGroup === 'MATH') {
     text = `**Mathematics for GATE CSE — Priority order:**\n\n1. **Discrete Mathematics** — Graph Theory, Combinatorics, Set Theory (highest weightage)\n2. **Linear Algebra** — Matrices, Vector Spaces, Eigenvalues\n3. **Probability & Statistics** — Random Variables, Distributions\n4. **Calculus** — Limits, Continuity, Differentiation\n\n📈 **Strategy:** Solve **5 math problems daily** — consistency matters more than intensity. Most math questions in GATE are moderate difficulty but need practice.`;
     suggestions = ["Discrete Math topics", "Probability PYQs", "Linear Algebra weightage"];
-  } else if (match(GROUP.DSA)) {
+  } else if (bestGroup === 'DSA') {
     text = `**DSA for GATE — high weightage subject!** ⚡\n\nKey topics: Arrays, Linked Lists, Trees, Graphs, Sorting & Searching, Hashing, Dynamic Programming, Greedy Algorithms.\n\n**Study plan:**\n1. Master **arrays + linked lists** first (building blocks)\n2. **Trees + Graphs** — most GATE questions come from these\n3. **Sorting + Searching** — know time/space complexities cold\n4. **DP + Greedy** — practice 5+ problems per concept\n\nSolve **10 DSA PYQs weekly** and track your accuracy!`;
     suggestions = ["DSA PYQs by topic", "Graph algorithms weightage", "How to master DP for GATE?"];
-  } else if (match(GROUP.OS)) {
+  } else if (bestGroup === 'OS') {
     text = `**Operating Systems — core subject for GATE!** 💻\n\nKey topics: Processes & Threads, CPU Scheduling, Synchronization, Deadlocks, Memory Management, File Systems, I/O.\n\n**Study plan:**\n1. **Process management + Scheduling** — most numericals come from here\n2. **Memory management** — paging, segmentation, virtual memory\n3. **Synchronization + Deadlocks** — critical for GATE\n4. **File systems + I/O** — moderate weightage\n\nSolve **OS PYQs from the last 10 years** — patterns repeat frequently!`;
     suggestions = ["OS scheduling numericals", "Memory management PYQs", "Deadlock practice questions"];
-  } else if (match(GROUP.DBMS)) {
+  } else if (bestGroup === 'DBMS') {
     text = `**DBMS — high-weightage, high-reward subject!** 🗄️\n\nKey topics: ER Model, Relational Model, SQL, Normalization, Transactions, Concurrency Control, Indexing.\n\n**Study plan:**\n1. **SQL + Relational Algebra** — practice writing queries daily\n2. **Normalization** — know 1NF through BCNF with examples\n3. **Transactions + Concurrency** — ACID, schedules, locking protocols\n4. **Indexing** — B+ trees, hash-based indexing\n\nSQL questions are free marks — practice until perfect!`;
     suggestions = ["SQL practice questions", "Normalization exercises", "Transaction PYQs"];
-  } else if (match(GROUP.CN)) {
+  } else if (bestGroup === 'CN') {
     text = `**Computer Networks — moderate weightage, manageable scope!** 🌐\n\nKey topics: OSI/TCP-IP Model, Application Layer (HTTP, DNS), Transport Layer (TCP, UDP), Network Layer (IP, Routing), Data Link Layer.\n\n**Study plan:**\n1. **TCP/IP model + layers** — know what each layer does\n2. **TCP + UDP** — congestion control, flow control\n3. **IP addressing + Routing** — subnetting, CIDR, routing algorithms\n4. **Application layer** — HTTP, DNS, SMTP basics\n\nFocus on **numericals** — IP addressing and TCP flow control are GATE favorites!`;
     suggestions = ["IP addressing numericals", "TCP congestion control", "Routing algorithm PYQs"];
-  } else if (match(GROUP.TOC)) {
+  } else if (bestGroup === 'TOC') {
     text = `**Theory of Computation — conceptual but scoring!** 🔤\n\nKey topics: Regular Languages, DFA/NFA, Regular Expressions, Context-Free Grammars, Pushdown Automata, Turing Machines, Undecidability.\n\n**Study plan:**\n1. **DFA/NFA design** — practice constructing automata for languages\n2. **Regular expressions** — conversion to/from automata\n3. **CFG + PDA** — derivations, parse trees, pushdown automata\n4. **Turing Machines + Undecidability** — understand concepts, not memorize\n\nTOC is a **high-confidence scoring subject** — consistent practice yields full marks!`;
     suggestions = ["DFA practice problems", "CFG to PDA conversion", "Turing machine basics"];
-  } else if (match(GROUP.COA)) {
+  } else if (bestGroup === 'COA') {
     text = `**Computer Organization & Architecture — must-know!** ⚙️\n\nKey topics: Number Systems, Boolean Algebra, Combinational/Sequential Circuits, CPU Architecture, Pipelining, Memory Hierarchy, Cache, I/O.\n\n**Study plan:**\n1. **Digital Logic (Number systems + Boolean)** — foundation for COA\n2. **CPU Architecture + Pipelining** — most numericals here\n3. **Cache + Memory Hierarchy** — know mapping techniques\n4. **I/O + DMA** — basic understanding enough\n\nCOA numericals (cache, pipeline) are **free marks** with enough practice!`;
     suggestions = ["Pipeline numericals", "Cache mapping techniques", "COA PYQs by topic"];
-  } else if (match(GROUP.TRACK)) {
+  } else if (bestGroup === 'TRACK') {
     text = `**Am I on track? Let's check!** 📊\n\n${progress > 70 ? '✅ **Excellent progress!** You\'re well ahead. Focus on revision + mock tests.' : progress > 50 ? '✅ **Good progress!** Keep up the momentum. Start PYQs for completed subjects.' : progress > 30 ? '⚠️ **On track, but can accelerate!** Increase daily study hours and prioritize weak subjects.' : '🔴 **Early stage — this is okay!** Focus on covering core subjects (DSA, OS, DBMS) first.'}\n\n🎯 **Suggested daily targets:**\n- ${progress < 30 ? '4-5 hours: 2h new content + 2h practice + 1h revision' : progress < 60 ? '5-6 hours: 2h new + 2h PYQs + 1.5h revision + 0.5h planning' : '5-6 hours: 3h PYQs/mocks + 2h revision + 1h weak area attack'}\n\n🔥 ${streak > 0 ? `Your ${streak}-day streak is solid!` : 'Start a streak today!'}`;
     suggestions = ["Weekly study plan", "How many hours should I study?", "Adjust my preparation strategy"];
   } else {
@@ -901,6 +931,7 @@ Make it highly specific to the student's doubt and GATE CSE. Include concrete ex
 router.post('/doubt-solver', protect, validateFields([
   { name: 'doubt', type: 'string', required: true, min: 3, max: 2000 },
 ]), async (req, res, next) => {
+  const doubtStart = Date.now();
   try {
     const { doubt, subject, topic } = req.body;
 
@@ -928,8 +959,10 @@ router.post('/doubt-solver', protect, validateFields([
       response = buildHeuristicDoubtResponse(doubt.trim(), subject, topic);
     }
 
+    aiUsage.increment(true, Date.now() - doubtStart);
     res.json({ success: true, data: { ...response, source, aiError, doubt } });
   } catch (e) {
+    aiUsage.increment(false, Date.now() - doubtStart);
     next(e);
   }
 });

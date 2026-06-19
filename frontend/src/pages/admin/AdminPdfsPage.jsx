@@ -56,7 +56,6 @@ export default function AdminPdfsPage() {
     clearMsg();
     setUploading(true);
     setUploadProgress(0);
-
     const formData = new FormData();
     formData.append('file', file);
     formData.append('title', file.name.replace(/\.pdf$/i, ''));
@@ -162,7 +161,12 @@ export default function AdminPdfsPage() {
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
         className="border-2 border-dashed border-border hover:border-primary/40 rounded-xl p-6 text-center transition-colors cursor-pointer"
-        onClick={() => fileInputRef.current?.click()}
+        onClick={(e) => {
+          if (!e.target.closest('select') && !e.target.closest('input')) {
+            if (!editingId) setEditForm({ title: '', description: '', category: 'pyq', subject: '', year: '' });
+            fileInputRef.current?.click();
+          }
+        }}
       >
         <input
           ref={fileInputRef}

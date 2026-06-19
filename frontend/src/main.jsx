@@ -11,6 +11,7 @@ import { ProgressProvider, useProgress } from './context/ProgressContext';
 import { FocusProvider } from './context/FocusContext';
 import { checkReminders } from './utils/reminderUtils';
 import { initFirebasePush, isFirebaseConfigured } from './utils/firebase';
+import { silentCatch } from './utils/errorHandler';
 import './styles/globals.css';
 
 function ReminderScheduler() {
@@ -26,14 +27,14 @@ function ReminderScheduler() {
 function PwaSetup() {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.register('/sw.js').catch(silentCatch('Service worker registration'));
     }
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       window.deferredPrompt = e;
     });
     if (isFirebaseConfigured()) {
-      initFirebasePush().catch(() => {});
+      initFirebasePush().catch(silentCatch('Firebase push init'));
     }
   }, []);
   return null;

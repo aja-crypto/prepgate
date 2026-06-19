@@ -1,5 +1,5 @@
 // Seed MongoDB with complete GATE CSE syllabus + learning content
-require('./src/config/loadEnv');
+require('../config/loadEnv');
 const mongoose = require('mongoose');
 const connectDB = require('../config/db');
 const Subject = require('../models/Subject');

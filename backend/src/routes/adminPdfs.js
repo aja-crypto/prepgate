@@ -27,7 +27,7 @@ function requireCloudinary(req, res, next) {
 }
 
 // GET /api/admin/pdfs
-router.get('/pdfs', adminProtect, requirePermission('content.manage'), async (req, res, next) => {
+router.get('/', adminProtect, requirePermission('content.manage'), async (req, res, next) => {
   try {
     if (!isMongoConnected()) {
       return res.json({ success: true, count: 0, data: [], message: 'MongoDB required. Set MONGO_URI in .env to manage PDFs.' });
@@ -46,7 +46,7 @@ router.get('/pdfs', adminProtect, requirePermission('content.manage'), async (re
 });
 
 // POST /api/admin/pdfs
-router.post('/pdfs', adminProtect, requirePermission('content.manage'), requireCloudinary, upload.single('file'), async (req, res, next) => {
+router.post('/', adminProtect, requirePermission('content.manage'), requireCloudinary, upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No PDF file uploaded.' });
@@ -78,7 +78,7 @@ router.post('/pdfs', adminProtect, requirePermission('content.manage'), requireC
 });
 
 // PUT /api/admin/pdfs/:id — update metadata
-router.put('/pdfs/:id', adminProtect, requirePermission('content.manage'), async (req, res, next) => {
+router.put('/:id', adminProtect, requirePermission('content.manage'), async (req, res, next) => {
   try {
     const { title, description, category, subject, year } = req.body;
     const updates = {};
@@ -98,7 +98,7 @@ router.put('/pdfs/:id', adminProtect, requirePermission('content.manage'), async
 });
 
 // PUT /api/admin/pdfs/:id/file — replace file
-router.put('/pdfs/:id/file', adminProtect, requirePermission('content.manage'), requireCloudinary, upload.single('file'), async (req, res, next) => {
+router.put('/:id/file', adminProtect, requirePermission('content.manage'), requireCloudinary, upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No PDF file uploaded.' });
@@ -108,7 +108,7 @@ router.put('/pdfs/:id/file', adminProtect, requirePermission('content.manage'), 
     if (!pdf) return res.status(404).json({ success: false, message: 'PDF not found.' });
 
     // Delete old file from Cloudinary
-    await deletePdf(pdf.publicId).catch(() => {});
+    await deletePdf(pdf.publicId).catch((e) => console.warn('[AdminPdfs] Delete old PDF failed:', e.message));
 
     // Upload new file
     const result = await uploadPdf(req.file.buffer, req.file.originalname);
@@ -125,13 +125,13 @@ router.put('/pdfs/:id/file', adminProtect, requirePermission('content.manage'), 
 });
 
 // DELETE /api/admin/pdfs/:id
-router.delete('/pdfs/:id', adminProtect, requirePermission('content.manage'), async (req, res, next) => {
+router.delete('/:id', adminProtect, requirePermission('content.manage'), async (req, res, next) => {
   try {
     const pdf = await AdminPdf.findById(req.params.id);
     if (!pdf) return res.status(404).json({ success: false, message: 'PDF not found.' });
 
     if (isCloudinaryConfigured()) {
-      await deletePdf(pdf.publicId).catch(() => {});
+      await deletePdf(pdf.publicId).catch((e) => console.warn('[AdminPdfs] Delete PDF failed:', e.message));
     }
 
     await AdminPdf.findByIdAndDelete(req.params.id);
@@ -142,7 +142,7 @@ router.delete('/pdfs/:id', adminProtect, requirePermission('content.manage'), as
 });
 
 // PATCH /api/admin/pdfs/:id/publish
-router.patch('/pdfs/:id/publish', adminProtect, requirePermission('content.manage'), async (req, res, next) => {
+router.patch('/:id/publish', adminProtect, requirePermission('content.manage'), async (req, res, next) => {
   try {
     const { isPublished } = req.body;
     if (isPublished === undefined) {

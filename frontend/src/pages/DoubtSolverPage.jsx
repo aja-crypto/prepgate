@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import GlassCard from '../components/ui/GlassCard';
 import Icon from '../components/ui/Icon';
 import { aiService } from '../services/api';
+import { silentCatch } from '../utils/errorHandler';
 import toast from 'react-hot-toast';
 
 const SUBJECT_MAP = {
@@ -31,7 +32,7 @@ export default function DoubtSolverPage() {
   useEffect(() => {
     aiService.getDoubtSubjects().then((res) => {
       if (res.data?.success) setSubjects(res.data.data || []);
-    }).catch(() => {});
+    }).catch(silentCatch('Load doubt subjects'));
   }, []);
 
   useEffect(() => {

@@ -5,6 +5,7 @@ const { isMongoConnected } = require('../config/db');
 const User = require('../models/User');
 const Subject = require('../models/Subject');
 const AdminPdf = require('../models/AdminPdf');
+const aiUsage = require('../services/aiUsageTracker');
 const { Topic, Note, MockTest, PYQ } = require('../models');
 
 // Local user helpers (mock store)
@@ -45,7 +46,7 @@ router.get('/stats', adminProtect, async (req, res, next) => {
       const weekAgo = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
       const monthAgo = new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000);
       const localMockSessions = require('../store/localDataStore');
-      const allAttempts = localMockSessions.getAllLocalMockAttempts ? [] : [];
+      const completedAttempts = localMockSessions.getAllLocalMockAttempts ? localMockSessions.getAllLocalMockAttempts() : [];
 
       return res.json({
         success: true,
@@ -66,22 +67,21 @@ router.get('/stats', adminProtect, async (req, res, next) => {
             }).length || 0,
           },
           subjects: 11,
-          topics: 0,
+          topics: 74,
           notes: 0,
           tests: 55,
-          pyqs: 0,
+          pyqs: 15,
           mockTests: {
-            totalAttempts: 0,
-            completed: 0,
-            averageScore: 0,
-            topPerformers: [],
+            totalAttempts: completedAttempts.length,
+            completed: completedAttempts.filter(a => a.completed).length,
+            averageScore: completedAttempts.length ? (completedAttempts.reduce((sum, a) => sum + (a.score || 0), 0) / completedAttempts.length).toFixed(1) : 0,
+            topPerformers: completedAttempts
+              .filter(a => a.completed)
+              .sort((a, b) => (b.score || 0) - (a.score || 0))
+              .slice(0, 3)
+              .map(a => a.userName || 'Demo User'),
           },
-          aiMentor: {
-            totalRequests: 0,
-            requestsToday: 0,
-            failed: 0,
-            avgResponseTime: 0,
-          },
+          aiMentor: aiUsage.getStats(),
           pdfs: {
             total: 0,
             published: 0,
@@ -101,20 +101,7 @@ router.get('/stats', adminProtect, async (req, res, next) => {
     const weekAgo = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthAgo = new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const [
-      totalUsers,
-      activeToday,
-      newThisWeek,
-      newThisMonth,
-      subjectCount,
-      topicCount,
-      noteCount,
-      mockTestCount,
-      pyqCount,
-      totalPdfs,
-      publishedPdfs,
-      draftPdfs,
-    ] = await Promise.all([
+    const queries = [
       User.countDocuments(),
       User.countDocuments({ lastLogin: { $gte: todayStart } }),
       User.countDocuments({ createdAt: { $gte: weekAgo } }),
@@ -127,37 +114,69 @@ router.get('/stats', adminProtect, async (req, res, next) => {
       AdminPdf.countDocuments(),
       AdminPdf.countDocuments({ isPublished: true }),
       AdminPdf.countDocuments({ isPublished: false }),
-    ]);
+    ];
 
-    res.json({
-      success: true,
-      data: {
-        users: {
-          total: totalUsers,
-          activeToday: activeToday,
-          newThisWeek: newThisWeek,
-          newThisMonth: newThisMonth,
-        },
-        subjects: subjectCount,
-        topics: topicCount,
-        notes: noteCount,
-        mockTests: {
-          total: mockTestCount,
-        },
-        pyqs: pyqCount,
-        pdfs: {
-          total: totalPdfs,
-          published: publishedPdfs,
-          drafts: draftPdfs,
-        },
-        system: {
-          databaseConnected: true,
-          apiStatus: 'healthy',
-          storageUsage: `${(totalPdfs * 2.5 + 15).toFixed(0)} MB`,
-        },
-      }
-    });
-  } catch (e) { next(e); }
+    try {
+      const [
+        totalUsers,
+        activeToday,
+        newThisWeek,
+        newThisMonth,
+        subjectCount,
+        topicCount,
+        noteCount,
+        mockTestCount,
+        pyqCount,
+        totalPdfs,
+        publishedPdfs,
+        draftPdfs,
+      ] = await Promise.all(queries);
+
+      return res.json({
+        success: true,
+        data: {
+          users: {
+            total: totalUsers,
+            activeToday: activeToday,
+            newThisWeek: newThisWeek,
+            newThisMonth: newThisMonth,
+          },
+          subjects: subjectCount,
+          topics: topicCount,
+          notes: noteCount,
+          tests: mockTestCount,
+          pyqs: pyqCount,
+          pdfs: {
+            total: totalPdfs,
+            published: publishedPdfs,
+            drafts: draftPdfs,
+          },
+          system: {
+            databaseConnected: true,
+            apiStatus: 'healthy',
+            storageUsage: `${(totalPdfs * 2.5 + 15).toFixed(0)} MB`,
+          },
+          mockTests: {
+            totalAttempts: 0,
+            completed: 0,
+            averageScore: 0,
+            topPerformers: [],
+          },
+          aiMentor: aiUsage.getStats(),
+        }
+      });
+    } catch (queryError) {
+      console.error('Database query failed:', queryError);
+      return res.status(500).json({
+        success: false,
+        message: 'Database query failed while fetching admin stats',
+        error: queryError.message
+      });
+    }
+  } catch (e) {
+    console.error('Admin stats error:', e);
+    next(e);
+  }
 });
 
 // GET all users (admin) — with pagination & search

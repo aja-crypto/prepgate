@@ -211,7 +211,7 @@ router.post('/generate', protect, (req, res) => {
 });
 
 // GET /api/notifications/ranker-quote — daily ranker wisdom
-router.get('/ranker-quote', (req, res) => {
+router.get('/ranker-quote', protect, (req, res) => {
   const quote = RANKER_QUOTES[todayIndex(RANKER_QUOTES)];
   res.json({ success: true, data: quote });
 });

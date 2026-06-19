@@ -13,7 +13,7 @@ function generateToken(admin) {
 }
 
 // POST /api/admin/auth/login
-router.post('/auth/login', async (req, res, next) => {
+router.post('/login', async (req, res, next) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -69,7 +69,7 @@ router.post('/auth/login', async (req, res, next) => {
 });
 
 // GET /api/admin/auth/me
-router.get('/auth/me', adminProtect, async (req, res) => {
+router.get('/me', adminProtect, async (req, res) => {
   res.json({ success: true, data: req.admin });
 });
 

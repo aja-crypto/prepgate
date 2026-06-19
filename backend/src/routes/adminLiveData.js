@@ -45,7 +45,7 @@ router.put('/live/updates/:id/status', adminProtect, async (req, res, next) => {
 
     const update = { status };
     if (status === 'verified' || status === 'published') {
-      update.verifiedBy = req.user._id;
+      update.verifiedBy = req.admin._id;
       update.verifiedAt = new Date();
     }
 
@@ -72,7 +72,7 @@ router.post('/live/updates', adminProtect, async (req, res, next) => {
     const item = await LiveUpdate.create({
       ...req.body,
       status: req.body.status || 'published',
-      verifiedBy: req.user._id,
+      verifiedBy: req.admin._id,
       verifiedAt: new Date(),
       fetchedAt: new Date(),
       publishedAt: req.body.publishedAt || new Date(),

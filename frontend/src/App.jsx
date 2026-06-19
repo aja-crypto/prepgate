@@ -7,6 +7,7 @@ import Layout from './components/common/Layout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import LandingPage from './pages/LandingPage';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
@@ -56,6 +57,7 @@ const WeeklyTestDetailPage = lazy(() => import('./pages/WeeklyTestDetailPage'));
 const ShortNotesPage = lazy(() => import('./pages/ShortNotesPage'));
 const FinalRevisionHubPage = lazy(() => import('./pages/FinalRevisionHubPage'));
 const DoubtSolverPage = lazy(() => import('./pages/DoubtSolverPage'));
+const DeepFocusPage = lazy(() => import('./pages/DeepFocusPage'));
 const SubjectMocksPage = lazy(() => import('./pages/SubjectMocksPage'));
 const MockTestsPage = lazy(() => import('./pages/MockTestsPage'));
 const MockTestTakingPage = lazy(() => import('./pages/MockTestTakingPage'));
@@ -64,6 +66,11 @@ const SubjectDetailPage = lazy(() => import('./pages/SubjectDetailPage'));
 const PrepGateAIPage = lazy(() => import('./pages/PrepGateAIPage'));
 const StudyHubPage = lazy(() => import('./pages/StudyHubPage'));
 const AirPredictorPage = lazy(() => import('./pages/AirPredictorPage'));
+const GateVaultPage = lazy(() => import('./pages/GateVaultPage'));
+const GateVaultPracticePage = lazy(() => import('./pages/GateVaultPracticePage'));
+const AdminGateVaultPage = lazy(() => import('./pages/admin/AdminGateVaultPage'));
+const AdminCmsPage = lazy(() => import('./pages/admin/AdminCmsPage'));
+const AdminQuestionBankPage = lazy(() => import('./pages/admin/AdminQuestionBankPage'));
 
 // Protected route wrapper
 const PrivateRoute = ({ children }) => {
@@ -84,13 +91,31 @@ const PrivateRoute = ({ children }) => {
 // Admin route wrapper
 const AdminPrivateRoute = ({ children }) => {
   const { admin, loading } = useAdminAuth();
-  if (loading) return null;
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen bg-bg mesh-bg">
+      <div className="text-center animate-fade-in">
+        <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}>
+          <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </div>
+        <div className="text-text2 text-sm font-medium">Loading Admin...</div>
+      </div>
+    </div>
+  );
   return admin ? children : <Navigate to="/admin/login" replace />;
 };
 
 const AdminPublicRoute = ({ children }) => {
   const { admin, loading } = useAdminAuth();
-  if (loading) return null;
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen bg-bg mesh-bg">
+      <div className="text-center animate-fade-in">
+        <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}>
+          <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </div>
+        <div className="text-text2 text-sm font-medium">Loading...</div>
+      </div>
+    </div>
+  );
   return admin ? <Navigate to="/admin/dashboard" replace /> : children;
 };
 
@@ -101,17 +126,18 @@ const HomePageWrapper = () => {
 
 export default function App() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center h-screen bg-bg mesh-bg">
-        <div className="text-center animate-fade-in">
-          <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}>
-            <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    <ErrorBoundary>
+      <Suspense fallback={
+        <div className="flex items-center justify-center h-screen bg-bg mesh-bg">
+          <div className="text-center animate-fade-in">
+            <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}>
+              <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </div>
+            <div className="text-text2 text-sm font-medium">Loading...</div>
           </div>
-          <div className="text-text2 text-sm font-medium">Loading...</div>
         </div>
-      </div>
-    }>
-    <Routes>
+      }>
+      <Routes>
       {/* Public routes */}
       <Route path="/" element={<HomePageWrapper />} />
       <Route path="/login" element={<LoginPage />} />
@@ -158,6 +184,8 @@ export default function App() {
         <Route path="mock-tests/:testId/result" element={<MockTestResultPage />} />
         <Route path="subjects/:subjectId/mocks" element={<SubjectMocksPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="gate-vault" element={<GateVaultPage />} />
+        <Route path="gate-vault/practice" element={<GateVaultPracticePage />} />
         <Route path="admin" element={<Navigate to="/admin/dashboard" replace />} />
       </Route>
 
@@ -169,6 +197,9 @@ export default function App() {
         <Route path="mock-tests" element={<AdminMockTestsPage />} />
         <Route path="mock-tests/:testId/questions" element={<AdminMockQuestionsPage />} />
         <Route path="pyq" element={<AdminPyqPage />} />
+        <Route path="gate-vault" element={<AdminGateVaultPage />} />
+        <Route path="cms" element={<AdminCmsPage />} />
+        <Route path="question-bank" element={<AdminQuestionBankPage />} />
         <Route path="users" element={<AdminUsersPage />} />
         <Route path="analytics" element={<AdminAnalyticsPage />} />
         <Route path="ai-analytics" element={<AdminAiAnalyticsPage />} />
@@ -182,10 +213,12 @@ export default function App() {
       {/* Standalone routes (no sidebar) */}
       <Route path="/about" element={<PrivateRoute><AboutPage /></PrivateRoute>} />
       <Route path="/protected/view/:id" element={<PrivateRoute><ProtectedViewPage /></PrivateRoute>} />
+      <Route path="/deep-focus" element={<PrivateRoute><DeepFocusPage /></PrivateRoute>} />
 
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </Suspense>
+    </ErrorBoundary>
   );
 }

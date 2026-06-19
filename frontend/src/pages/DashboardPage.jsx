@@ -31,6 +31,13 @@ import SmartRecommendations from '../components/gate/SmartRecommendations';
 import AIMentorWidget from '../components/gate/AIMentorWidget';
 import PinnedNotesWidget from '../components/gate/PinnedNotesWidget';
 import EmptyDashboard from '../components/gate/EmptyDashboard';
+import DashboardMotivation from '../components/gate/DashboardMotivation';
+import AnnouncementBar from '../components/gate/AnnouncementBar';
+import PrepGateAIWidget from '../components/gate/PrepGateAIWidget';
+import GateVaultWidget from '../components/gate/GateVaultWidget';
+import NotesHubWidget from '../components/gate/NotesHubWidget';
+import RecommendationEngine from '../components/gate/RecommendationEngine';
+import ExamTimeline from '../components/gate/ExamTimeline';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -39,17 +46,30 @@ export default function DashboardPage() {
   const { visibleWidgets, editMode, setEditMode } = useDashboard();
   const [customizerOpen, setCustomizerOpen] = useState(false);
 
+  const safeSS = studyStats || {};
+  const safeGF = gateFeatures || {};
+  const safeTopics = topics || [];
+  const safePyqs = pyqs || [];
+  const safeMocks = mocks || [];
+
   const subjects = useMemo(
-    () => computeSubjectCompletion(studyStats.subjects, topics, pyqs),
-    [studyStats.subjects, topics, pyqs]
+    () => computeSubjectCompletion(safeSS.subjects || [], safeTopics, safePyqs),
+    [safeSS.subjects, safeTopics, safePyqs]
   );
   const overall = Math.round(subjects.reduce((s, x) => s + x.progress, 0) / (subjects.length || 1));
-  const dailyProgress = getDailyTargetProgress(gateFeatures.dailyTarget, gateFeatures.todayProgress);
-  const { current: streakCurrent } = gateFeatures.streak;
-  const readiness = computeReadinessScore(topics, pyqs, mocks, gateFeatures.streak);
+  const dailyProgress = getDailyTargetProgress(safeGF.dailyTarget, safeGF.todayProgress);
+  const { current: streakCurrent } = safeGF.streak || {};
+  const readiness = computeReadinessScore(safeTopics, safePyqs, safeMocks, safeGF.streak);
 
   const widgetContent = {
     welcome: isEmptyProgress ? <EmptyDashboard userName={user?.name?.split(' ')[0]} /> : null,
+    motivation: <DashboardMotivation />,
+    announcements: <AnnouncementBar />,
+    "prepgate-ai": <PrepGateAIWidget />,
+    "gate-vault": <GateVaultWidget />,
+    "notes-hub": <NotesHubWidget />,
+    "recommendation-engine": <RecommendationEngine />,
+    "exam-timeline": <ExamTimeline />,
     "daily-ai": (
       <GlassCard className="p-4 hover:scale-[1.02] transition-transform cursor-pointer" onClick={() => {
         const target = document.getElementById('topic-practice');
@@ -77,9 +97,9 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Readiness', value: readiness, sub: `${overall}% overall`, color: 'var(--color-primary)' },
-          { label: 'Study Today', value: Math.min(100, (dailyProgress.hours / (gateFeatures.dailyTarget.hours || 8)) * 100), sub: `${dailyProgress.hours}h / ${gateFeatures.dailyTarget.hours}h`, color: 'var(--color-success)', display: `${dailyProgress.hours}h` },
+          { label: 'Study Today', value: Math.min(100, (dailyProgress.hours / (safeGF.dailyTarget?.hours || 8)) * 100), sub: `${dailyProgress.hours}h / ${safeGF.dailyTarget?.hours || 8}h`, color: 'var(--color-success)', display: `${dailyProgress.hours}h` },
           { label: 'Daily Target', value: dailyProgress.overall, sub: `${dailyProgress.topicsCompleted} topics`, color: 'var(--color-accent)' },
-          { label: 'Streak', value: Math.min(100, streakCurrent * 5), sub: `Best ${gateFeatures.streak.longest}d`, color: 'var(--color-secondary)', display: streakCurrent },
+          { label: 'Streak', value: Math.min(100, streakCurrent * 5), sub: `Best ${(safeGF.streak?.longest || 0)}d`, color: 'var(--color-secondary)', display: streakCurrent },
         ].map((s) => (
           <GlassCard key={s.label} className="flex items-center gap-4" glow>
             <ProgressRing value={s.value} size={72} stroke={5} color={s.color} />
@@ -132,8 +152,9 @@ export default function DashboardPage() {
         <div className="text-[11px] text-text3 mb-4">Daily distribution this week</div>
         <div className="flex items-end gap-2 h-32">
           {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => {
-            const h = studyStats.weeklyHours[i] || 0;
-            const maxH = Math.max(...studyStats.weeklyHours, 1);
+            const weeklyHours = safeSS.weeklyHours || [];
+            const h = weeklyHours[i] || 0;
+            const maxH = Math.max(...weeklyHours, 1);
             return (
               <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
                 <span className="text-[10px] font-mono text-text2">{h}h</span>
@@ -172,6 +193,12 @@ export default function DashboardPage() {
 
   const spanMap = {
     welcome: 'col-span-full',
+    motivation: 'col-span-full',
+    announcements: 'col-span-full',
+    'prepgate-ai': 'col-span-full',
+    'gate-vault': 'col-span-full',
+    'notes-hub': 'col-span-full',
+    'recommendation-engine': 'col-span-full',
     countdown: 'col-span-full',
     stats: 'col-span-full',
     'daily-content': 'col-span-full',
@@ -184,13 +211,14 @@ export default function DashboardPage() {
     predictions: 'col-span-full',
     'live-news': 'md:col-span-1',
     'exam-schedule': 'md:col-span-1',
+    'exam-timeline': 'md:col-span-1',
     recruitment: 'md:col-span-1',
     trending: 'md:col-span-1',
     analysis: 'md:col-span-1',
     resources: 'md:col-span-1',
   };
 
-  const pairedRow = ['live-news', 'exam-schedule', 'recruitment', 'trending', 'analysis', 'resources'];
+  const pairedRow = ['live-news', 'exam-schedule', 'exam-timeline', 'recruitment', 'trending', 'analysis', 'resources'];
 
   const rendered = [];
   let i = 0;

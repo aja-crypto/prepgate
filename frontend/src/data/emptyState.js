@@ -1,7 +1,7 @@
 // Zero-state progress for brand-new user accounts — no demo/sample data
 import { BADGE_DEFINITIONS, DEFAULT_RESOURCES } from './defaults';
 
-export const DEMO_EMAIL = 'demo@gate2027.in';
+
 
 export const SYLLABUS_TOPICS = [
   { 

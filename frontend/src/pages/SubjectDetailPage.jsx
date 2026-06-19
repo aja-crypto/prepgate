@@ -46,7 +46,8 @@ const DIFF_BADGE = {
 };
 
 export default function SubjectDetailPage() {
-  const { subjectCode } = useParams();
+  const { subjectId } = useParams();
+  const subjectCode = subjectId;
   const navigate = useNavigate();
   const { user } = useAuth();
   const { topics: localTopics } = useProgress();
@@ -58,6 +59,7 @@ export default function SubjectDetailPage() {
   const [weeklyTests, setWeeklyTests] = useState([]);
   const [mockTests, setMockTests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [viewerFile, setViewerFile] = useState(null);
 
   const meta = SUBJECT_MAP[subjectCode?.toUpperCase()] || {};
 
@@ -72,8 +74,14 @@ export default function SubjectDetailPage() {
         );
         if (found) setSubject(found);
 
+        const subjectId = found?._id;
+        if (!subjectId) {
+          toast.error('Subject not found');
+          setLoading(false);
+          return;
+        }
         const [topicsRes, notesRes, weeklyRes, mockRes] = await Promise.all([
-          topicService.getAll({ subject: found?._id || subjectCode }),
+          topicService.getAll({ subject: subjectId }),
           shortNoteService.getAll(),
           weeklyTestService.getAll({ subject: subjectCode }),
           mockTestService.getAll({ subject: subjectCode }),
@@ -234,18 +242,11 @@ export default function SubjectDetailPage() {
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         type="button"
-                        onClick={() => window.open(file.fileUrl, '_blank')}
+                        onClick={() => setViewerFile(file)}
                         className="text-[10px] px-2 py-1 rounded border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all"
                       >
                         View
                       </button>
-                      <a
-                        href={file.fileUrl}
-                        download={file.name}
-                        className="text-[10px] px-2 py-1 rounded border bg-bg-2 border-border text-text3 hover:text-secondary hover:border-secondary/30 transition-all"
-                      >
-                        Download
-                      </a>
                     </div>
                   </div>
                 ))}
@@ -392,6 +393,24 @@ export default function SubjectDetailPage() {
               </div>
             ));
           })()}
+        </div>
+      )}
+
+      {viewerFile && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => setViewerFile(null)}>
+          <div className="max-w-4xl max-h-[90vh] w-full bg-surface rounded-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <div className="text-sm font-semibold text-text truncate">{viewerFile.name}</div>
+              <button onClick={() => setViewerFile(null)} className="text-text3 hover:text-text p-1">&times;</button>
+            </div>
+            <div className="p-2">
+              {viewerFile.type === 'pdf' ? (
+                <iframe src={viewerFile.fileUrl} className="w-full h-[75vh] rounded" title={viewerFile.name} />
+              ) : (
+                <img src={viewerFile.fileUrl} alt={viewerFile.name} className="max-w-full max-h-[75vh] mx-auto object-contain" />
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs');
+const mkdirp = require('mkdirp');
 const multer = require('multer');
 const { protect } = require('../middleware/auth');
 
@@ -23,6 +24,36 @@ const FOLDER_TO_SUBJECT = {
   DL: { code: 'DL', name: 'Digital Logic', icon: '💻', color: '#7c5cfc' },
 };
 
+const ALLOWED_EXTENSIONS = ['.pdf', '.png', '.jpg', '.jpeg', '.webp'];
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const SAFE_FOLDER_NAMES = Object.keys(FOLDER_TO_SUBJECT);
+
+function sanitizeFilename(filename) {
+  return filename.replace(/[^\w\-\.]/g, '_').replace(/_{2,}/g, '_');
+}
+
+function validateFileUpload(req, file, cb) {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    return cb(new Error(`Invalid file type: ${ext}. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}`), false);
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    return cb(new Error(`File size ${file.size} exceeds limit of ${MAX_FILE_SIZE} bytes`), false);
+  }
+
+  file.originalname = sanitizeFilename(file.originalname);
+  cb(null, true);
+}
+
+function ensureDirectoryExists(dirPath) {
+  return mkdirp.sync(dirPath);
+}
+
+function isSafeFolder(folderName) {
+  return SAFE_FOLDER_NAMES.includes(folderName);
+}
+
 function scanNotesDir() {
   if (!fs.existsSync(NOTES_DIR)) return [];
   const subjects = [];
@@ -33,11 +64,11 @@ function scanNotesDir() {
     const subjectMeta = FOLDER_TO_SUBJECT[folderName] || { code: folderName, name: folderName, icon: '📄', color: '#64748b' };
     const folderPath = path.join(NOTES_DIR, folderName);
     const files = fs.readdirSync(folderPath)
-      .filter(f => /\.(pdf|png|jpg|jpeg|webp)$/i.test(f))
+      .filter(f => ALLOWED_EXTENSIONS.includes(path.extname(f).toLowerCase()))
       .map(f => ({
         name: f,
         fileUrl: `/resources/short-notes/${folderName}/${f}`,
-        type: f.endsWith('.pdf') ? 'pdf' : 'image',
+        type: path.extname(f).toLowerCase() === '.pdf' ? 'pdf' : 'image',
         size: fs.statSync(path.join(folderPath, f)).size,
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -64,28 +95,71 @@ router.get('/', protect, (req, res, next) => {
   }
 });
 
-// Multer for admin upload
 const uploadStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const { folder } = req.params;
+    if (!isSafeFolder(folder)) {
+      return cb(new Error(`Invalid folder: ${folder}`), false);
+    }
     const dir = path.join(NOTES_DIR, folder);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    ensureDirectoryExists(dir);
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    cb(null, file.originalname.replace(/\s+/g, '_'));
+    const safeFilename = sanitizeFilename(file.originalname);
+    cb(null, safeFilename);
   },
 });
-const uploadNote = multer({ storage: uploadStorage, limits: { fileSize: 50 * 1024 * 1024 } });
+
+const fileFilter = (req, file, cb) => {
+  validateFileUpload(req, file, cb);
+};
+
+const uploadNote = multer({
+  storage: uploadStorage,
+  limits: { fileSize: MAX_FILE_SIZE },
+  fileFilter,
+});
 
 // POST /api/short-notes/upload/:folder — admin upload note file
-router.post('/upload/:folder', protect, uploadNote.single('file'), (req, res, next) => {
+router.post('/upload/:folder', protect, uploadNote.single('file'), async (req, res, next) => {
   try {
-    if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Admin only' });
-    if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
-    res.json({ success: true, data: { fileUrl: `/resources/short-notes/${req.params.folder}/${req.file.filename}`, filename: req.file.filename } });
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Admin only' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    // Verify the file actually exists on disk
+    const filePath = path.join(NOTES_DIR, req.params.folder, req.file.filename);
+    if (!fs.existsSync(filePath)) {
+      return res.status(500).json({ success: false, message: 'Uploaded file not found on disk' });
+    }
+
+    // Get file size and type
+    const stats = fs.statSync(filePath);
+    const ext = path.extname(req.file.filename).toLowerCase();
+    const isPdf = ext === '.pdf';
+
+    res.json({
+      success: true,
+      data: {
+        fileUrl: `/resources/short-notes/${req.params.folder}/${req.file.filename}`,
+        filename: req.file.filename,
+        size: stats.size,
+        type: isPdf ? 'pdf' : 'image',
+        uploadedAt: new Date().toISOString(),
+      },
+    });
   } catch (err) {
-    next(err);
+    console.error('[ShortNotes Upload] Error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'File upload failed',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    });
   }
 });
 

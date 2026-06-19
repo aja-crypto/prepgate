@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { mockTestService, mistakeService } from '../services/api';
+import { silentCatch } from '../utils/errorHandler';
 import { PageLoading } from '../components/common/GateLoadingScreen';
 import GlassCard from '../components/ui/GlassCard';
 import Icon from '../components/ui/Icon';
@@ -159,7 +160,7 @@ export default function MockTestResultPage() {
             category: q.mistakeCategory || 'concept_error',
             sourceTest: 'mock-test',
             subject: q.subject || '',
-          }).catch(() => {});
+          }).catch(silentCatch('Create mistake entry', { toast: true }));
         }
       }
       toast.success('Mistakes added to notebook!');

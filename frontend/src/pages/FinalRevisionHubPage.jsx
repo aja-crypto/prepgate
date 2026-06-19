@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { shortNoteService } from '../services/api';
+import { silentCatch } from '../utils/errorHandler';
 import { PageLoading } from '../components/common/GateLoadingScreen';
 
 export default function FinalRevisionHubPage() {
@@ -8,7 +9,7 @@ export default function FinalRevisionHubPage() {
 
   useEffect(() => {
     setLoading(true);
-    shortNoteService.getAll().then(r => setSubjects(r.data.data)).catch(() => {}).finally(() => setLoading(false));
+    shortNoteService.getAll().then(r => setSubjects(r.data.data)).catch(silentCatch('Load short notes')).finally(() => setLoading(false));
   }, []);
 
   if (loading) {

@@ -15,9 +15,9 @@
     --color-bg: #F8FAFC;
     --color-bg-2: #FFFFFF;
     --color-bg-3: #F1F5F9;
-    --color-surface: rgba(255, 255, 255, 0.72);
-    --color-surface-2: rgba(255, 255, 255, 0.9);
-    --color-glass: rgba(255, 255, 255, 0.55);
+    --color-surface: rgba(255, 255, 255, 0.65);
+    --color-surface-2: rgba(255, 255, 255, 0.85);
+    --color-glass: rgba(255, 255, 255, 0.45);
     --color-text: #0F172A;
     --color-text2: #475569;
     --color-text3: #94A3B8;
@@ -35,9 +35,9 @@
     --color-bg: #050816;
     --color-bg-2: #0C0F23;
     --color-bg-3: #111633;
-    --color-surface: rgba(12, 15, 35, 0.78);
-    --color-surface-2: rgba(12, 15, 35, 0.92);
-    --color-glass: rgba(12, 15, 35, 0.6);
+    --color-surface: rgba(12, 15, 35, 0.7);
+    --color-surface-2: rgba(12, 15, 35, 0.88);
+    --color-glass: rgba(12, 15, 35, 0.5);
     --color-text: #F8FAFC;
     --color-text2: #CBD5E1;
     --color-text3: #64748B;
@@ -93,28 +93,89 @@
 
 @layer components {
   .glass-card {
-    @apply rounded-2xl border backdrop-blur-2xl transition-all duration-300 ease-out;
+    @apply rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden;
     border-color: var(--color-border);
     background: var(--color-glass);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
     box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.03) inset,
-      0 4px 24px -4px rgba(0, 0, 0, 0.15),
-      0 0 40px -16px rgba(0, 0, 0, 0.06);
+      0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+      0 8px 32px -8px rgba(0, 0, 0, 0.2),
+      0 0 0 0.5px rgba(255, 255, 255, 0.04) inset,
+      0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    will-change: transform, box-shadow;
+  }
+
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+    pointer-events: none;
   }
 
   .glass-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px) scale(1.01);
     box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.05) inset,
-      0 12px 40px -8px rgba(0, 0, 0, 0.2),
-      0 0 32px -6px var(--color-glow),
-      0 0 64px -16px rgba(139, 92, 246, 0.06);
-    border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+      0 16px 48px -12px rgba(0, 0, 0, 0.25),
+      0 0 0 0.5px rgba(255, 255, 255, 0.06) inset,
+      0 0 32px -8px var(--color-glow),
+      0 0 64px -16px rgba(139, 92, 246, 0.08);
+    border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+  }
+
+  .glass-card:hover::before {
+    background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.15), transparent);
   }
 
   .glass-sidebar {
-    @apply backdrop-blur-2xl border-r border-border;
-    background: var(--color-surface);
+    @apply backdrop-blur-2xl border-r;
+    border-color: var(--color-border);
+    background: linear-gradient(180deg, rgba(12,15,35,0.85), rgba(12,15,35,0.92));
+    backdrop-filter: blur(24px) saturate(1.3);
+    -webkit-backdrop-filter: blur(24px) saturate(1.3);
+    box-shadow: 4px 0 24px -8px rgba(0,0,0,0.2);
+  }
+
+  .glass-sidebar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, rgba(167,139,250,0.08), transparent);
+    pointer-events: none;
+  }
+
+  .nav-item-active {
+    position: relative;
+    background: linear-gradient(90deg, rgba(139,92,246,0.1), transparent) !important;
+    border-left: 2px solid var(--color-primary);
+    box-shadow: inset 0 0 12px -4px rgba(139,92,246,0.08);
+  }
+
+  .nav-item-active::after {
+    content: '';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    box-shadow: 0 0 8px rgba(139,92,246,0.5);
+    animation: nav-indicator-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes nav-indicator-pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(139,92,246,0.3); opacity: 0.7; }
+    50% { box-shadow: 0 0 16px rgba(139,92,246,0.6); opacity: 1; }
   }
 
   .btn-primary {

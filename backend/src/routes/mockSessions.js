@@ -117,6 +117,10 @@ router.post('/:id/submit', protect, async (req, res, next) => {
     const gradedAnswers = [];
     const solutions = [];
 
+    // Collect bulk operations
+    const userPyqOps = [];
+    const pyqStatsOps = [];
+
     for (const ans of answers) {
       const pyq = pyqMap[ans.pyqId || ans.pyq];
       if (!pyq) continue;
@@ -146,30 +150,44 @@ router.post('/:id/submit', protect, async (req, res, next) => {
         questionStats: pyq.stats,
       });
 
-      // Update global + user stats
+      // Update global + user stats (collect for bulk)
       const inc = { attempts: 1 };
       if (status === 'correct') inc.correctCount = 1;
       else if (status === 'incorrect') inc.incorrectCount = 1;
       else inc.skipCount = 1;
 
-      const { UserPYQ } = require('../models');
-      await UserPYQ.findOneAndUpdate(
-        { user: req.user._id, pyq: pyq._id },
-        {
-          $set: { lastStatus: status, isSolved: status === 'correct', revisionNeeded: status === 'incorrect' },
-          $inc: inc,
-        },
-        { upsert: true }
-      );
-
-      await PYQ.findByIdAndUpdate(pyq._id, {
-        $inc: {
-          'stats.totalAttempts': 1,
-          ...(status === 'correct' ? { 'stats.correctAttempts': 1 } : {}),
-          ...(status === 'incorrect' ? { 'stats.incorrectAttempts': 1 } : {}),
-          ...(status === 'skipped' ? { 'stats.skipAttempts': 1 } : {}),
+      userPyqOps.push({
+        updateOne: {
+          filter: { user: req.user._id, pyq: pyq._id },
+          update: {
+            $set: { lastStatus: status, isSolved: status === 'correct', revisionNeeded: status === 'incorrect' },
+            $inc: inc,
+          },
+          upsert: true,
         },
       });
+
+      const pyqStatsInc = {
+        'stats.totalAttempts': 1,
+        ...(status === 'correct' ? { 'stats.correctAttempts': 1 } : {}),
+        ...(status === 'incorrect' ? { 'stats.incorrectAttempts': 1 } : {}),
+        ...(status === 'skipped' ? { 'stats.skipAttempts': 1 } : {}),
+      };
+      pyqStatsOps.push({
+        updateOne: {
+          filter: { _id: pyq._id },
+          update: { $inc: pyqStatsInc },
+        },
+      });
+    }
+
+    // Execute bulk operations in parallel
+    if (userPyqOps.length) {
+      const { UserPYQ } = require('../models');
+      await UserPYQ.bulkWrite(userPyqOps, { ordered: false });
+    }
+    if (pyqStatsOps.length) {
+      await PYQ.bulkWrite(pyqStatsOps, { ordered: false });
     }
 
     const totalAnswered = resultStats.correct + resultStats.incorrect;

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { topicService, mockSessionService, getApiErrorMessage } from '../services/api';
+import { silentCatch } from '../utils/errorHandler';
 import { PageLoading } from '../components/common/GateLoadingScreen';
 import QuestionPractice from '../components/pyq/QuestionPractice';
 import Modal from '../components/common/Modal';
@@ -42,7 +43,16 @@ export default function TopicDetailPage() {
       const res = await topicService.getLearn(topicId);
       setData(res.data.data);
     } catch (err) {
-      toast.error(getApiErrorMessage(err, 'Failed to load topic'));
+      const status = err.response?.status;
+      if (status === 404) {
+        setData(null); // Will show "Topic Not Available" with specific message
+        toast.error('Topic not found');
+      } else if (status === 401) {
+        navigate('/login');
+      } else {
+        toast.error(getApiErrorMessage(err, 'Failed to load topic'));
+        setData(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -53,7 +63,7 @@ export default function TopicDetailPage() {
     startTime.current = Date.now();
     return () => {
       const mins = Math.round((Date.now() - startTime.current) / 60000);
-      if (mins > 0) topicService.updateProgress(topicId, { studyTimeMinutes: mins }).catch(() => {});
+      if (mins > 0) topicService.updateProgress(topicId, { studyTimeMinutes: mins }).catch(silentCatch('Update study time'));
     };
   }, [topicId]); // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { studyPlanService } from '../../services/api';
+import { silentCatch } from '../../utils/errorHandler';
 import { useAuth } from '../../context/AuthContext';
 import { useProgress } from '../../context/ProgressContext';
 import GlassCard from '../ui/GlassCard';
@@ -28,7 +29,7 @@ export default function TodayPlan() {
   useEffect(() => {
     studyPlanService.get()
       .then(r => setPlan(r.data.data))
-      .catch(() => {})
+      .catch(silentCatch('Load today plan'))
       .finally(() => setLoading(false));
   }, []);
 

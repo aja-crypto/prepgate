@@ -58,9 +58,11 @@ export default function TopicsPage() {
   const [filter, setFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   const load = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const [topRes, subRes] = await Promise.all([
         topicService.getAll({ withProgress: 'true' }),
@@ -68,7 +70,8 @@ export default function TopicsPage() {
       ]);
       setTopics(topRes.data.data || []);
       setSubjects(subRes.data.data || []);
-    } catch {
+    } catch (err) {
+      setLoadError(err);
       const fallbackSubjects = studyStats?.subjects || [];
       setSubjects(fallbackSubjects);
       const subMap = new Map(fallbackSubjects.map(s => [s.name, s]));
@@ -145,8 +148,30 @@ export default function TopicsPage() {
 
   if (loading) return <PageLoading title="Loading Topics" />;
 
+  if (loadError && topics.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.15)' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 text-red-400"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" strokeLinecap="round" /><line x1="9" y1="9" x2="15" y2="15" strokeLinecap="round" /></svg>
+        </div>
+        <h4 className="text-base font-semibold text-text mb-1">Unable to Load Topics</h4>
+        <p className="text-sm text-text3 max-w-xs mx-auto leading-relaxed mb-5">{getApiErrorMessage(loadError, 'Could not connect to the server.')}</p>
+        <button type="button" onClick={load} className="text-xs px-5 py-2.5 rounded-lg font-semibold transition-all hover:scale-[1.02]" style={{ background: 'rgba(168,85,247,0.12)', color: '#A855F7', border: '1px solid rgba(168,85,247,0.25)' }}>Retry</button>
+      </div>
+    );
+  }
+
   return (
     <div>
+      {loadError && topics.length > 0 && (
+        <div className="mb-4 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-yellow-400 text-sm">⚠</span>
+            <span className="text-xs text-yellow-300">Using offline data — server unreachable.</span>
+          </div>
+          <button type="button" onClick={load} className="text-[10px] px-2.5 py-1 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 hover:bg-yellow-500/20">Retry</button>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-text">Smart Topic Tracker</h1>

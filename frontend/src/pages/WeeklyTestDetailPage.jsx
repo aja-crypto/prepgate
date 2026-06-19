@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { weeklyTestService } from '../services/api';
+import { silentCatch } from '../utils/errorHandler';
 import { PageLoading } from '../components/common/GateLoadingScreen';
 import toast from 'react-hot-toast';
 
@@ -34,14 +35,15 @@ export default function WeeklyTestDetailPage() {
   const [scoreInput, setScoreInput] = useState({});
   const [submitting, setSubmitting] = useState({});
   const [loading, setLoading] = useState(true);
+  const [viewerPdfUrl, setViewerPdfUrl] = useState(null);
 
   const meta = SUBJECT_META[subjectCode] || { icon: '📝', color: 'var(--color-primary)', name: subjectCode };
 
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      weeklyTestService.getAll({ subject: subjectCode }).then(r => setTests(r.data.data)).catch(() => {}),
-      weeklyTestService.getProgress().then(r => setProgress(r.data.data || [])).catch(() => {}),
+      weeklyTestService.getAll({ subject: subjectCode }).then(r => setTests(r.data.data)).catch(silentCatch('Load weekly tests by subject')),
+      weeklyTestService.getProgress().then(r => setProgress(r.data.data || [])).catch(silentCatch('Load weekly test progress')),
     ]).finally(() => setLoading(false));
   }, [subjectCode]);
 
@@ -205,14 +207,12 @@ export default function WeeklyTestDetailPage() {
 
                 <div className="flex items-center gap-2 shrink-0">
                   {test.pdfUrl && (
-                    <a
-                      href={test.pdfUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs px-3 py-2 rounded-lg border bg-bg-2 border-border text-text3 hover:text-secondary hover:border-secondary/30 transition-all"
+                    <button
+                      onClick={() => setViewerPdfUrl(test.pdfUrl)}
+                      className="text-xs px-3 py-2 rounded-lg border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all"
                     >
-                      Download PDF
-                    </a>
+                      View PDF
+                    </button>
                   )}
                   {!isDone ? (
                     <div className="flex items-center gap-2">
@@ -249,6 +249,20 @@ export default function WeeklyTestDetailPage() {
           <div className="text-center py-16 text-text3 text-sm">No tests found</div>
         )}
       </div>
+
+      {viewerPdfUrl && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => setViewerPdfUrl(null)}>
+          <div className="max-w-4xl max-h-[90vh] w-full bg-surface rounded-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <div className="text-sm font-semibold text-text">Test Paper</div>
+              <button onClick={() => setViewerPdfUrl(null)} className="text-text3 hover:text-text p-1">&times;</button>
+            </div>
+            <div className="p-2">
+              <iframe src={viewerPdfUrl} className="w-full h-[75vh] rounded" title="Test Paper" />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

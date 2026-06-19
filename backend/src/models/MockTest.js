@@ -81,7 +81,7 @@ mistakeEntrySchema.index({ user: 1, createdAt: -1 });
 
 let MockTestQuestion, MockTest, UserMockAttempt, MistakeEntry;
 try { MockTestQuestion = mongoose.model('MockTestQuestion'); } catch { MockTestQuestion = mongoose.model('MockTestQuestion', mockQuestionSchema); }
-try { MockTest = mongoose.model('MockTest'); } catch { MockTest = mongoose.model('MockTest', mockTestSchema); }
+try { MockTest = mongoose.model('PreSeededMockTest'); } catch { MockTest = mongoose.model('PreSeededMockTest', mockTestSchema); }
 try { UserMockAttempt = mongoose.model('UserMockAttempt'); } catch { UserMockAttempt = mongoose.model('UserMockAttempt', userMockAttemptSchema); }
 try { MistakeEntry = mongoose.model('MistakeEntry'); } catch { MistakeEntry = mongoose.model('MistakeEntry', mistakeEntrySchema); }
 

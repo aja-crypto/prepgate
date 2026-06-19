@@ -8,6 +8,19 @@ const { protect } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
 const { Note } = require('../models');
 const { getLocalNotes, saveLocalNote, updateLocalNote, deleteLocalNote } = require('../store/localDataStore');
+const { validateFields, VALID_SUBJECTS, VALID_DIFFICULTIES } = require('../middleware/validateInput');
+
+function makeAbsoluteUrl(fileUrl, req) {
+  if (!fileUrl) return fileUrl;
+  if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) return fileUrl;
+  const baseUrl = process.env.BACKEND_URL || `${req.protocol}://${req.get('host')}`;
+  return `${baseUrl}${fileUrl}`;
+}
+
+function transformNote(note, req) {
+  if (note.fileUrl) note.fileUrl = makeAbsoluteUrl(note.fileUrl, req);
+  return note;
+}
 
 // Configure Multer for local uploads
 const uploadsNotesDir = path.join(__dirname, '../..', 'uploads', 'notes');
@@ -42,9 +55,9 @@ router.get('/stats', protect, async (req, res, next) => {
       return res.json({
         success: true,
         data: {
-          recent: allLocal.slice(0, 5),
-          mostViewed: allLocal.slice(0, 5), // Basic fallback
-          pinned: allLocal.filter(n => n.isPinned)
+          recent: allLocal.slice(0, 5).map(n => transformNote(n, req)),
+          mostViewed: allLocal.slice(0, 5).map(n => transformNote(n, req)),
+          pinned: allLocal.filter(n => n.isPinned).map(n => transformNote(n, req))
         }
       });
     }
@@ -55,7 +68,11 @@ router.get('/stats', protect, async (req, res, next) => {
       Note.find({ user: userId, isPinned: true }).limit(10)
     ]);
 
-    res.json({ success: true, data: { recent, mostViewed, pinned } });
+    res.json({ success: true, data: { 
+      recent: recent.map(n => transformNote(n, req)), 
+      mostViewed: mostViewed.map(n => transformNote(n, req)), 
+      pinned: pinned.map(n => transformNote(n, req)) 
+    } });
   } catch (e) { next(e); }
 });
 
@@ -70,7 +87,7 @@ router.get('/', protect, async (req, res, next) => {
 
     if (!isMongoConnected()) {
       const notes = getLocalNotes(filter);
-      return res.json({ success: true, count: notes.length, data: notes });
+      return res.json({ success: true, count: notes.length, data: notes.map(n => transformNote(n, req)) });
     }
 
     const dbFilter = { user: req.user._id };
@@ -81,18 +98,31 @@ router.get('/', protect, async (req, res, next) => {
     if (req.query.search) dbFilter.$text = { $search: req.query.search };
 
     const notes = await Note.find(dbFilter).sort('-isPinned -updatedAt');
-    res.json({ success: true, count: notes.length, data: notes });
+    res.json({ success: true, count: notes.length, data: notes.map(n => transformNote(n, req)) });
   } catch (e) { next(e); }
 });
 
-router.post('/', protect, upload.single('file'), async (req, res, next) => {
+router.post('/', protect, upload.single('file'), validateFields([
+  { name: 'title', type: 'string', required: true, min: 1, max: 200 },
+  { name: 'content', type: 'string', min: 1, max: 50000 },
+  { name: 'subject', type: 'string', in: VALID_SUBJECTS },
+  { name: 'type', type: 'string', in: VALID_DIFFICULTIES },
+  { name: 'tags', type: 'string', max: 500 },
+  { name: 'isPinned', type: 'boolean' },
+  { name: 'isFavorite', type: 'boolean' },
+  { name: 'priority', type: 'number', min: 1, max: 10 },
+  { name: 'estimatedMinutes', type: 'number', min: 1, max: 600 },
+  { name: 'topic', type: 'string', max: 100 },
+]), async (req, res, next) => {
   try {
     // Ensure numeric/boolean conversions for FormData strings
     const noteData = { 
       ...req.body, 
       user: req.user._id,
       isPinned: req.body.isPinned === 'true',
-      isFavorite: req.body.isFavorite === 'true'
+      isFavorite: req.body.isFavorite === 'true',
+      priority: req.body.priority ? parseInt(req.body.priority) : undefined,
+      estimatedMinutes: req.body.estimatedMinutes ? parseInt(req.body.estimatedMinutes) : undefined
     };
     
     if (req.file) {
@@ -126,18 +156,31 @@ router.post('/', protect, upload.single('file'), async (req, res, next) => {
         .catch(err => console.error('Background OCR Error:', err));
     }
 
-    res.status(201).json({ success: true, data: note });
+    res.status(201).json({ success: true, data: transformNote(note, req) });
   } catch (e) {
     next(e);
   }
 });
 
-router.put('/:id', protect, upload.single('file'), async (req, res, next) => {
+router.put('/:id', protect, upload.single('file'), validateFields([
+  { name: 'title', type: 'string', min: 1, max: 200 },
+  { name: 'content', type: 'string', max: 50000 },
+  { name: 'subject', type: 'string', in: VALID_SUBJECTS },
+  { name: 'type', type: 'string', in: VALID_DIFFICULTIES },
+  { name: 'tags', type: 'string', max: 500 },
+  { name: 'isPinned', type: 'boolean' },
+  { name: 'isFavorite', type: 'boolean' },
+  { name: 'priority', type: 'number', min: 1, max: 10 },
+  { name: 'estimatedMinutes', type: 'number', min: 1, max: 600 },
+  { name: 'topic', type: 'string', max: 100 },
+]), async (req, res, next) => {
   try {
     const updateData = {
       ...req.body,
       isPinned: req.body.isPinned === 'true',
       isFavorite: req.body.isFavorite === 'true',
+      priority: req.body.priority ? parseInt(req.body.priority) : undefined,
+      estimatedMinutes: req.body.estimatedMinutes ? parseInt(req.body.estimatedMinutes) : undefined
     };
     if (req.file) {
       // Delete old file before replacing
@@ -169,7 +212,7 @@ router.put('/:id', protect, upload.single('file'), async (req, res, next) => {
     }
 
     if (!note) return res.status(404).json({ success: false, message: 'Note not found' });
-    res.json({ success: true, data: note });
+    res.json({ success: true, data: transformNote(note, req) });
   } catch (e) { next(e); }
 });
 

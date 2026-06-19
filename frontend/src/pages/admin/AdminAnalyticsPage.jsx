@@ -4,12 +4,19 @@ import adminApi from '../../services/adminApi';
 export default function AdminAnalyticsPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const fetchStats = () => {
+    setLoading(true);
+    setError(null);
     adminApi.get('/admin/stats').then(res => {
       setStats(res.data.data);
-    }).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+    }).catch(err => {
+      setError(err.response?.data?.message || 'Failed to load analytics');
+    }).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchStats(); }, []);
 
   const cards = [
     { label: 'Total Users', value: stats?.users ?? '—', color: '#8B5CF6' },
@@ -35,6 +42,15 @@ export default function AdminAnalyticsPage() {
               <div className="h-8 w-16 bg-bg-3 rounded" />
             </div>
           ))}
+        </div>
+      ) : error ? (
+        <div className="bg-surface border border-red-500/20 rounded-xl p-8 text-center">
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-red-500/10">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-red-400"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" strokeLinecap="round" /></svg>
+          </div>
+          <h2 className="text-base font-bold text-text mb-2">Failed to Load Analytics</h2>
+          <p className="text-sm text-text3 mb-4">{error}</p>
+          <button onClick={fetchStats} className="text-xs px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all font-semibold">Retry</button>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

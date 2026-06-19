@@ -245,11 +245,6 @@ const icons = {
       <path fillRule="evenodd" d="M7 10a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm0 4a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clipRule="evenodd" />
     </svg>
   ),
-  'mock-tests': (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="w-[18px] h-[18px]">
-      <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 2a6 6 0 100 12 6 6 0 000-12zm-1 2a1 1 0 112 0v3.586l1.707 1.707a1 1 0 01-1.414 1.414l-2-2A1 1 0 019 9V6z" clipRule="evenodd" />
-    </svg>
-  ),
   users: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="w-[18px] h-[18px]">
       <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
@@ -279,6 +274,15 @@ const icons = {
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
       <path d="M10 2a8 8 0 100 16 8 8 0 000-16z" />
       <path d="M10 7a2 2 0 100 4 2 2 0 000-4zM6 14a6 6 0 018 0" />
+    </svg>
+  ),
+  vault: (
+    <svg viewBox="0 0 24 24" fill="none" className="w-[18px] h-[18px]">
+      <path d="M12 2L3 7v10l9 5 9-5V7l-9-5z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M12 22V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M12 12L3 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M12 12l9-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
     </svg>
   ),
 };

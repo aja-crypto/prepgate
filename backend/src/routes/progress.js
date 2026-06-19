@@ -278,38 +278,74 @@ router.put('/sync', protect, async (req, res, next) => {
     const syncedMocks = [];
     const syncedNotes = [];
 
+    // Batch mock operations
+    const mockOps = [];
     for (const m of data.mocks || []) {
       if (m.mongoId) {
-        const updated = await MockTest.findOneAndUpdate(
-          { _id: m.mongoId, user: userId },
-          mockToDb(m),
-          { new: true, runValidators: true }
-        );
-        if (updated) syncedMocks.push(mockFromDb(updated));
-        else syncedMocks.push(m);
+        mockOps.push({
+          updateOne: {
+            filter: { _id: m.mongoId, user: userId },
+            update: mockToDb(m),
+            upsert: true,
+          },
+        });
       } else {
-        const created = await MockTest.create({ ...mockToDb(m), user: userId });
-        syncedMocks.push(mockFromDb(created));
+        mockOps.push({
+          insertOne: {
+            document: { ...mockToDb(m), user: userId },
+          },
+        });
       }
     }
 
+    // Batch note operations
+    const noteOps = [];
     for (const n of data.notes || []) {
       const payload = { title: n.title, content: n.content, color: n.color || '#4f8dff' };
       if (n.mongoId) {
-        const updated = await Note.findOneAndUpdate(
-          { _id: n.mongoId, user: userId },
-          payload,
-          { new: true, runValidators: true }
-        );
-        if (updated) {
-          await updated.populate('subject', 'name');
-          syncedNotes.push(noteFromDb(updated));
-        } else syncedNotes.push(n);
+        noteOps.push({
+          updateOne: {
+            filter: { _id: n.mongoId, user: userId },
+            update: payload,
+            upsert: true,
+          },
+        });
       } else {
-        const created = await Note.create({ ...payload, user: userId });
-        await created.populate('subject', 'name');
-        syncedNotes.push(noteFromDb(created));
+        noteOps.push({
+          insertOne: {
+            document: { ...payload, user: userId },
+          },
+        });
       }
+    }
+
+    // Execute bulk writes in parallel
+    const [mockResults, noteResults] = await Promise.all([
+      mockOps.length ? MockTest.bulkWrite(mockOps, { ordered: false }) : Promise.resolve({}),
+      noteOps.length ? Note.bulkWrite(noteOps, { ordered: false }) : Promise.resolve({}),
+    ]);
+
+    // Collect synced mocks
+    if (mockOps.length) {
+      const mockIds = data.mocks
+        .filter(m => m.mongoId)
+        .map(m => m.mongoId);
+      const createdIds = mockResults.upsertedIds || {};
+      const allMockIds = [...mockIds, ...Object.values(createdIds).map(v => v._id)];
+      const syncedMocksDb = await MockTest.find({ _id: { $in: allMockIds }, user: userId });
+      syncedMocks.push(...syncedMocksDb.map(mockFromDb));
+    }
+
+    // Collect synced notes
+    if (noteOps.length) {
+      const noteIds = data.notes
+        .filter(n => n.mongoId)
+        .map(n => n.mongoId);
+      const createdIds = noteResults.upsertedIds || {};
+      const allNoteIds = [...noteIds, ...Object.values(createdIds).map(v => v._id)];
+      const syncedNotesDb = await Note.find({ _id: { $in: allNoteIds }, user: userId })
+        .populate('subject', 'name');
+      syncedNotes.push(...syncedNotesDb.map(noteFromDb));
     }
 
     if (data.studyStats?.todayHours != null) {

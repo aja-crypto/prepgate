@@ -4,6 +4,7 @@ const { protect, adminOnly } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
 const Subject = require('../models/Subject');
 const localStore = require('../store/localDataStore');
+const { validateFields, VALID_SUBJECTS } = require('../middleware/validateInput');
 
 function buildAnalyticsFromLocal(userId) {
   const progressMap = localStore.getAllProgress(userId);
@@ -84,7 +85,11 @@ router.get('/', protect, async (req, res, next) => {
   try {
     if (!isMongoConnected()) {
       if (req.query.hierarchy !== 'true') {
-        const data = localStore.getSubjects();
+        let data = localStore.getSubjects();
+        if (req.query.code) {
+          const code = req.query.code.toUpperCase();
+          data = data.filter(s => s.code?.toUpperCase() === code);
+        }
         return res.json({ success: true, count: data.length, data });
       }
       const progressMap = localStore.getAllProgress(req.user._id);
@@ -93,7 +98,11 @@ router.get('/', protect, async (req, res, next) => {
     }
 
     const { Topic, Progress } = require('../models');
-    const subjects = await Subject.find({ isActive: true }).sort('order');
+    let filter = { isActive: true };
+    if (req.query.code) filter.code = req.query.code.toUpperCase();
+    console.log('[Subjects Route] Filter:', filter);
+    const subjects = await Subject.find(filter).sort('order');
+    console.log('[Subjects Route] Found:', subjects.length, subjects.map(s => s.code));
     if (req.query.hierarchy !== 'true') {
       return res.json({ success: true, count: subjects.length, data: subjects });
     }
@@ -138,35 +147,53 @@ router.get('/:id', protect, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.post('/', protect, adminOnly, async (req, res, next) => {
-  try {
-    if (!isMongoConnected()) {
-      return res.status(503).json({ success: false, message: 'Requires MongoDB — set MONGO_URI in .env' });
-    }
-    const subject = await Subject.create(req.body);
-    res.status(201).json({ success: true, data: subject });
-  } catch (e) { next(e); }
-});
-
-router.put('/:id', protect, adminOnly, async (req, res, next) => {
-  try {
-    if (!isMongoConnected()) {
-      return res.status(503).json({ success: false, message: 'Requires MongoDB' });
-    }
-    const subject = await Subject.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-    if (!subject) return res.status(404).json({ success: false, message: 'Subject not found' });
-    res.json({ success: true, data: subject });
-  } catch (e) { next(e); }
-});
-
-router.delete('/:id', protect, adminOnly, async (req, res, next) => {
-  try {
-    if (!isMongoConnected()) {
-      return res.status(503).json({ success: false, message: 'Requires MongoDB' });
-    }
-    await Subject.findByIdAndUpdate(req.params.id, { isActive: false });
-    res.json({ success: true, message: 'Subject deactivated' });
-  } catch (e) { next(e); }
-});
+router.post('/', protect, adminOnly, validateFields([
+   { name: 'name', type: 'string', required: true, min: 2, max: 100 },
+   { name: 'code', type: 'string', required: true, min: 2, max: 10, pattern: /^[A-Z0-9]+$/i },
+   { name: 'color', type: 'string', pattern: /^#[0-9A-F]{6}$/i },
+   { name: 'icon', type: 'string' },
+   { name: 'weightage', type: 'number', min: 1, max: 100 },
+   { name: 'order', type: 'number', min: 0 },
+   { name: 'isActive', type: 'boolean' },
+   { name: 'description', type: 'string', max: 500 },
+ ]), async (req, res, next) => {
+   try {
+     if (!isMongoConnected()) {
+       return res.status(503).json({ success: false, message: 'Requires MongoDB — set MONGO_URI in .env' });
+     }
+     const subject = await Subject.create(req.body);
+     res.status(201).json({ success: true, data: subject });
+   } catch (e) { next(e); }
+ });
+ 
+ router.put('/:id', protect, adminOnly, validateFields([
+   { name: 'name', type: 'string', min: 2, max: 100 },
+   { name: 'code', type: 'string', min: 2, max: 10, pattern: /^[A-Z0-9]+$/i },
+   { name: 'color', type: 'string', pattern: /^#[0-9A-F]{6}$/i },
+   { name: 'icon', type: 'string' },
+   { name: 'weightage', type: 'number', min: 1, max: 100 },
+   { name: 'order', type: 'number', min: 0 },
+   { name: 'isActive', type: 'boolean' },
+   { name: 'description', type: 'string', max: 500 },
+ ]), async (req, res, next) => {
+   try {
+     if (!isMongoConnected()) {
+       return res.status(503).json({ success: false, message: 'Requires MongoDB' });
+     }
+     const subject = await Subject.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+     if (!subject) return res.status(404).json({ success: false, message: 'Subject not found' });
+     res.json({ success: true, data: subject });
+   } catch (e) { next(e); }
+ });
+ 
+ router.delete('/:id', protect, adminOnly, async (req, res, next) => {
+   try {
+     if (!isMongoConnected()) {
+       return res.status(503).json({ success: false, message: 'Requires MongoDB' });
+     }
+     await Subject.findByIdAndUpdate(req.params.id, { isActive: false });
+     res.json({ success: true, message: 'Subject deactivated' });
+   } catch (e) { next(e); }
+ });
 
 module.exports = router;

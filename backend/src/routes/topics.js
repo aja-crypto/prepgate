@@ -1,9 +1,10 @@
 // src/routes/topics.js — syllabus topics + learning module + progress
 const router = require('express').Router();
-const { protect } = require('../middleware/auth');
+const { protect, adminOnly } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
-const { Topic, Progress, PYQ, UserPYQ } = require('../models');
+const Topic = require('../models/Topic');
 const localStore = require('../store/localDataStore');
+const { validateFields, VALID_SUBJECTS, VALID_DIFFICULTIES } = require('../middleware/validateInput');
 
 async function enrichProgressMongo(topics, userId) {
   const progressList = await Progress.find({ user: userId, topic: { $in: topics.map((t) => t._id) } });
@@ -212,23 +213,49 @@ router.patch('/:id/toggle', protect, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.post('/', protect, async (req, res, next) => {
+router.post('/', protect, adminOnly, validateFields([
+  { name: 'name', type: 'string', required: true, min: 2, max: 100 },
+  { name: 'code', type: 'string', min: 2, max: 50 },
+  { name: 'subject', type: 'string', in: VALID_SUBJECTS },
+  { name: 'difficulty', type: 'string', in: VALID_DIFFICULTIES },
+  { name: 'order', type: 'number', min: 0 },
+  { name: 'timeEstimate', type: 'number', min: 1, max: 600 },
+  { name: 'questions', type: 'number', min: 0, max: 1000 },
+  { name: 'passed', type: 'number', min: 0, max: 1000 },
+  { name: 'isDefault', type: 'boolean' },
+  { name: 'isActive', type: 'boolean' },
+  { name: 'description', type: 'string', max: 1000 },
+  { name: 'prerequisite', type: 'string', max: 100 },
+]), async (req, res, next) => {
   try {
     if (!isMongoConnected()) return res.status(503).json({ success: false, message: 'Requires MongoDB' });
     const topic = await Topic.create({ ...req.body, isDefault: false });
     res.status(201).json({ success: true, data: topic });
   } catch (e) { next(e); }
 });
-
-router.put('/:id', protect, async (req, res, next) => {
+ 
+router.put('/:id', protect, adminOnly, validateFields([
+  { name: 'name', type: 'string', min: 2, max: 100 },
+  { name: 'code', type: 'string', min: 2, max: 50 },
+  { name: 'subject', type: 'string', in: VALID_SUBJECTS },
+  { name: 'difficulty', type: 'string', in: VALID_DIFFICULTIES },
+  { name: 'order', type: 'number', min: 0 },
+  { name: 'timeEstimate', type: 'number', min: 1, max: 600 },
+  { name: 'questions', type: 'number', min: 0, max: 1000 },
+  { name: 'passed', type: 'number', min: 0, max: 1000 },
+  { name: 'isDefault', type: 'boolean' },
+  { name: 'isActive', type: 'boolean' },
+  { name: 'description', type: 'string', max: 1000 },
+  { name: 'prerequisite', type: 'string', max: 100 },
+]), async (req, res, next) => {
   try {
     if (!isMongoConnected()) return res.status(503).json({ success: false, message: 'Requires MongoDB' });
-    const topic = await Topic.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const topic = await Topic.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     res.json({ success: true, data: topic });
   } catch (e) { next(e); }
 });
-
-router.delete('/:id', protect, async (req, res, next) => {
+ 
+router.delete('/:id', protect, adminOnly, async (req, res, next) => {
   try {
     if (!isMongoConnected()) return res.status(503).json({ success: false, message: 'Requires MongoDB' });
     await Topic.findByIdAndDelete(req.params.id);

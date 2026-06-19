@@ -1,7 +1,7 @@
 // src/services/api.js – Axios API Service with token refresh
 import axios from 'axios';
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
@@ -36,7 +36,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ─── Response interceptor (auto token refresh) ──────────────
+// ─── Response interceptor (auto token refresh + retry) ──────
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -49,8 +49,42 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    if (!originalRequest) return Promise.reject(error);
 
-    if (error.response?.status === 401 && error.response?.data?.code === 'TOKEN_EXPIRED' && !originalRequest._retry) {
+    // Auto-retry on network errors (backend down, DB disconnect) — up to 2 tries
+    const isNetworkError = !error.response && error.message === 'Network Error';
+    const isServerUnavailable = error.response?.status === 503 || error.response?.status === 502;
+    if ((isNetworkError || isServerUnavailable) && !originalRequest._retryCount) {
+      originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
+      if (originalRequest._retryCount <= 2) {
+        const delay = originalRequest._retryCount * 1500;
+        await new Promise(r => setTimeout(r, delay));
+        return api(originalRequest);
+      }
+    }
+
+    // Handle invalid tokens (wrong secret, malformed, expired without refresh)
+    const isInvalidToken = error.response?.status === 401 && (
+      error.response?.data?.code === 'TOKEN_EXPIRED' ||
+      error.response?.data?.message?.toLowerCase().includes('invalid token') ||
+      error.response?.data?.message?.toLowerCase().includes('token expired')
+    );
+
+    // Force logout on non-refresh 401s where token is fundamentally unusable
+    if (error.response?.status === 401 && !originalRequest._retry &&
+        error.response?.data?.message?.toLowerCase().includes('invalid token') &&
+        !error.config.url?.includes('/auth/refresh') &&
+        !error.config.url?.includes('/auth/login')) {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      delete api.defaults.headers.common['Authorization'];
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+      return Promise.reject(error);
+    }
+
+    if (isInvalidToken && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -288,3 +322,12 @@ export const adminLiveService = {
 };
 
 export default api;
+
+// ─── GateVault API ──────────────────────────────────────────
+export const gateVaultService = {
+  getMonthlySet: () => api.get('/gate-vault/monthly-set'),
+  getProgress: () => api.get('/gate-vault/progress'),
+  startSession: (selectedSubjects) => api.post('/gate-vault/start', { selectedSubjects }),
+  submitAnswer: (data) => api.post('/gate-vault/answer', data),
+  getStats: () => api.get('/gate-vault/stats'),
+};

@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { mockTestService } from '../services/api';
-import toast from 'react-hot-toast';
 
 const SUBJECT_CODES = {
   APT: { name: 'General Aptitude', color: '#43aa8b' },
@@ -60,20 +59,26 @@ export default function MockTestsPage() {
   const [analytics, setAnalytics] = useState(null);
   const [activeFilter, setActiveFilter] = useState('All');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
-  useEffect(() => {
+  const loadData = () => {
     setLoading(true);
+    setLoadError(false);
     Promise.all([
-      mockTestService.getAll().then(r => setTests(r.data.data || [])).catch(() => toast.error('Failed to load mock tests')),
+      mockTestService.getAll().then(r => setTests(r.data.data || [])).catch(() => {}),
       mockTestService.getSubjectCounts().then(r => setSubjectCounts(r.data.data || [])).catch(() => {}),
       mockTestService.getAnalytics().then(r => setAnalytics(r.data.data || null)).catch(() => {}),
-    ]).finally(() => setLoading(false));
-  }, []);
+    ]).then(() => {
+      if (tests.length === 0) setLoadError(true);
+    }).catch(() => setLoadError(true)).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { loadData(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredTests = useMemo(() => {
     if (activeFilter === 'All') return tests;
     const typeMap = { 'subject-wise': 'subject', 'topic-wise': 'topic', 'full-length': 'full' };
-    const expected = typeMap[activeFilter.toLowerCase()]
+    const expected = typeMap[activeFilter.toLowerCase()] || activeFilter;
     if (!expected) return [];
     return tests.filter(t => t.type === expected);
   }, [tests, activeFilter]);
@@ -128,6 +133,22 @@ export default function MockTestsPage() {
             </div>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (loadError && tests.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
+        <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6" style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.12), rgba(239,68,68,0.08))', border: '1px solid rgba(239,68,68,0.15)' }}>
+          <span className="text-4xl">⚠️</span>
+        </div>
+        <h3 className="text-lg font-bold text-text mb-2">Failed to Load Mock Tests</h3>
+        <p className="text-sm text-text3 max-w-sm mb-6 leading-relaxed">Could not connect to the server. Make sure the backend is running.</p>
+        <button onClick={loadData} className="inline-flex items-center gap-2 text-sm px-6 py-2.5 rounded-xl font-semibold transition-all hover:scale-[1.02]" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', color: 'white' }}>
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" /></svg>
+          Retry
+        </button>
       </div>
     );
   }

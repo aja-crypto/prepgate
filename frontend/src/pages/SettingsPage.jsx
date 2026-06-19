@@ -4,9 +4,10 @@ import { useProgress } from '../context/ProgressContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/common/Modal';
-import { exportToCsv, exportToExcel, generateProgressPdf, generateDetailedReport } from '../utils/exportUtils';
+import { exportToCsv, exportToExcel } from '../utils/exportUtils';
 import { requestNotificationPermission } from '../utils/reminderUtils';
 import { authService, progressService, getApiErrorMessage } from '../services/api';
+import { silentCatch } from '../utils/errorHandler';
 import toast from 'react-hot-toast';
 
 function BackupIndicator({ status, lastBackupAt }) {
@@ -35,7 +36,7 @@ export default function SettingsPage() {
   const {
     backupStatus, lastBackupAt, cloudBackupStatus, lastCloudBackupAt, mongoAvailable, syncToCloud,
     resetAllProgress, resetSubjectProgress, resetTopicProgress, restoreFromSnapshot,
-    downloadJsonBackup, importUserData, getExportPayload,
+    importUserData, getExportPayload,
     gateFeatures, updateGateFeatures, notifications, updateNotifications,
     studyStats, topics,
   } = useProgress();
@@ -54,7 +55,7 @@ export default function SettingsPage() {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    progressService.getSnapshots().then((res) => setSnapshots(res.data?.data || [])).catch(() => {});
+    progressService.getSnapshots().then((res) => setSnapshots(res.data?.data || [])).catch(silentCatch('Load snapshots'));
   }, []);
 
   const handleReset = async () => {
@@ -194,7 +195,7 @@ export default function SettingsPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <button onClick={syncToCloud} className="text-xs bg-primary/10 border border-primary/20 text-primary px-3 py-2 rounded-lg hover:bg-primary/15">☁️ Sync Now</button>
-            <button onClick={downloadJsonBackup} className="text-xs bg-bg-2 border border-white/8 rounded-lg px-3 py-2 text-text2 hover:border-white/15">📦 JSON Export</button>
+
             <button onClick={() => fileInputRef.current?.click()} className="text-xs bg-bg-2 border border-white/8 rounded-lg px-3 py-2 text-text2 hover:border-white/15">📥 Import Data</button>
             <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
           </div>
@@ -202,12 +203,10 @@ export default function SettingsPage() {
       ),
     },
     {
-      title: '📥 Export & Reports',
-      desc: 'Download study data as PDF, CSV, Excel, or detailed performance report.',
+      title: '📥 Export Data',
+      desc: 'Export your study data as CSV or Excel for offline analysis.',
       action: (
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => { try { generateProgressPdf(getExportPayload()); toast.success('PDF downloaded'); } catch { toast.error('PDF failed'); } }} className="bg-gradient-to-r from-primary to-secondary text-white text-xs font-semibold px-4 py-2 rounded-lg hover:opacity-90">📄 PDF</button>
-          <button onClick={() => { generateDetailedReport(getExportPayload()); toast.success('Detailed report downloaded'); }} className="bg-bg-2 border border-white/8 text-text2 text-xs font-semibold px-4 py-2 rounded-lg hover:border-white/15">📋 Detailed Report</button>
           <button onClick={() => { exportToCsv(getExportPayload()); toast.success('CSV exported'); }} className="bg-bg-2 border border-white/8 text-text2 text-xs font-semibold px-4 py-2 rounded-lg hover:border-white/15">📊 CSV</button>
           <button onClick={() => { try { exportToExcel(getExportPayload()); toast.success('Excel exported'); } catch { toast.error('Excel export failed'); } }} className="bg-bg-2 border border-white/8 text-text2 text-xs font-semibold px-4 py-2 rounded-lg hover:border-white/15">📗 Excel</button>
         </div>

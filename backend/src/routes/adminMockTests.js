@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const mongoose = require('mongoose');
 const { adminProtect, requirePermission } = require('../middleware/adminAuth');
+const preSeededMockTestModels = require('../models/MockTest');
 const {
   getLocalMockTests, getLocalMockTestById, getLocalMockQuestionsByIds,
   saveLocalMockTest, updateLocalMockTest, deleteLocalMockTest,
@@ -13,13 +14,13 @@ function isMongoConnected() {
 }
 
 async function getModels() {
-  const MockTest = mongoose.model('MockTest');
-  const MockTestQuestion = mongoose.model('MockTestQuestion');
+  const MockTest = preSeededMockTestModels.MockTest;
+  const MockTestQuestion = preSeededMockTestModels.MockTestQuestion;
   return { MockTest, MockTestQuestion };
 }
 
 // GET /api/admin/mock-tests
-router.get('/mock-tests', adminProtect, requirePermission('mocks.manage'), async (req, res, next) => {
+router.get('/', adminProtect, requirePermission('mocks.manage'), async (req, res, next) => {
   try {
     const { subject, testType, difficulty, isActive } = req.query;
 
@@ -43,7 +44,7 @@ router.get('/mock-tests', adminProtect, requirePermission('mocks.manage'), async
 });
 
 // POST /api/admin/mock-tests
-router.post('/mock-tests', adminProtect, requirePermission('mocks.manage'), async (req, res, next) => {
+router.post('/', adminProtect, requirePermission('mocks.manage'), async (req, res, next) => {
   try {
     const { subject, subjectName, testType, topic, title, description, duration, totalMarks, questionCount, difficulty, topics } = req.body;
     if (!subject || !title) {
@@ -77,7 +78,7 @@ router.post('/mock-tests', adminProtect, requirePermission('mocks.manage'), asyn
 });
 
 // PUT /api/admin/mock-tests/:id
-router.put('/mock-tests/:id', adminProtect, requirePermission('mocks.manage'), async (req, res, next) => {
+router.put('/:id', adminProtect, requirePermission('mocks.manage'), async (req, res, next) => {
   try {
     const { title, description, duration, totalMarks, questionCount, difficulty, topics, subject, subjectName, testType, topic: testTopic } = req.body;
 
@@ -112,7 +113,7 @@ router.put('/mock-tests/:id', adminProtect, requirePermission('mocks.manage'), a
 });
 
 // DELETE /api/admin/mock-tests/:id
-router.delete('/mock-tests/:id', adminProtect, requirePermission('mocks.manage'), async (req, res, next) => {
+router.delete('/:id', adminProtect, requirePermission('mocks.manage'), async (req, res, next) => {
   try {
     if (isMongoConnected()) {
       const { MockTest } = await getModels();
@@ -130,7 +131,7 @@ router.delete('/mock-tests/:id', adminProtect, requirePermission('mocks.manage')
 });
 
 // PATCH /api/admin/mock-tests/:id/toggle
-router.patch('/mock-tests/:id/toggle', adminProtect, requirePermission('mocks.manage'), async (req, res, next) => {
+router.patch('/:id/toggle', adminProtect, requirePermission('mocks.manage'), async (req, res, next) => {
   try {
     const { isActive } = req.body;
     if (isActive === undefined) {
@@ -192,7 +193,7 @@ router.get('/mock-questions', adminProtect, requirePermission('mocks.manage'), a
 });
 
 // GET /api/admin/mock-tests/:id/questions
-router.get('/mock-tests/:id/questions', adminProtect, requirePermission('mocks.manage'), async (req, res, next) => {
+router.get('/:id/questions', adminProtect, requirePermission('mocks.manage'), async (req, res, next) => {
   try {
     if (isMongoConnected()) {
       const { MockTest, MockTestQuestion } = await getModels();

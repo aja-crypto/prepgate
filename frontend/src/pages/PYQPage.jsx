@@ -2,6 +2,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useProgress } from '../context/ProgressContext';
 import { pyqService } from '../services/api';
+import { silentCatch } from '../utils/errorHandler';
 import { computePyqStats, getMistakePatternSummary } from '../utils/gateUtils';
 import QuestionPractice from '../components/pyq/QuestionPractice';
 import Modal from '../components/common/Modal';
@@ -73,8 +74,8 @@ export default function PYQPage() {
     setLoading(true);
     Promise.all([
       refreshPyqs?.(),
-      pyqService.getStats().then((r) => setGlobalStats(r.data.data)).catch(() => {}),
-      pyqService.getBrowse().then((r) => setBrowse(r.data.data)).catch(() => {}),
+      pyqService.getStats().then((r) => setGlobalStats(r.data.data)).catch(silentCatch('Load PYQ stats')),
+      pyqService.getBrowse().then((r) => setBrowse(r.data.data)).catch(silentCatch('Load PYQ browse')),
     ]).finally(() => setLoading(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

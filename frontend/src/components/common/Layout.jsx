@@ -12,6 +12,7 @@ import VirtualCalculator from './VirtualCalculator';
 import FocusWidget from './FocusWidget';
 import NotificationBell from './NotificationBell';
 import FloatingAIAssistant from './FloatingAIAssistant';
+import AmbientBackground from './AmbientBackground';
 
 const NAV = [
   { label: 'Dashboard', icon: 'dashboard', to: '/dashboard' },
@@ -22,6 +23,7 @@ const NAV = [
   { label: 'Planner', icon: 'planner', to: '/planner' },
   { label: 'Notes Hub', icon: 'notes', to: '/study-hub' },
   { label: 'Focus Sessions', icon: 'productivity', to: '/productivity' },
+  { label: 'Deep Focus', icon: 'target', to: '/deep-focus' },
   { section: 'PRACTICE' },
   { label: 'PYQ Practice', icon: 'pyq', to: '/pyq' },
   { label: 'Mock Tests', icon: 'mocks', to: '/mocks' },
@@ -69,7 +71,8 @@ export default function Layout() {
   const initials = user?.name?.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
   return (
-    <div className="flex h-screen bg-bg overflow-hidden">
+    <div className="flex h-screen bg-bg overflow-hidden relative">
+      <AmbientBackground />
       {!onboardingDone && <OnboardingFlow />}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
       <VirtualCalculator isOpen={calcOpen} onClose={() => setCalcOpen(false)} />
@@ -79,7 +82,7 @@ export default function Layout() {
       )}
 
       <aside className={`
-        fixed md:relative z-50 md:z-auto h-full w-[240px] max-w-[85vw] glass-sidebar flex flex-col
+        fixed md:relative z-50 md:z-40 h-full w-[240px] max-w-[85vw] glass-sidebar flex flex-col
         transition-transform duration-300 ease-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
@@ -176,7 +179,7 @@ export default function Layout() {
         </div>
       </aside>
 
-      <main className={`flex-1 overflow-y-auto flex flex-col min-w-0 transition-all duration-300 ${aiPanelOpen ? 'ai-panel-open' : ''}`}>
+      <main className={`flex-1 overflow-y-auto flex flex-col min-w-0 relative z-10 transition-all duration-300 ${aiPanelOpen ? 'ai-panel-open' : ''}`}>
         <header className="sticky top-0 z-30 flex items-center gap-2 md:gap-4 px-3 md:px-6 py-3 md:py-4 border-b border-border glass-sidebar" style={{background: 'linear-gradient(135deg, rgba(10,15,44,0.95), rgba(2,6,23,0.95))', boxShadow: '0 0 30px rgba(168,85,247,0.15), inset 0 0 20px rgba(34,211,238,0.05)', borderBottom: '1px solid rgba(168,85,247,0.3)', borderRadius: '0 0 12px 12px', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>
           {/* Mobile sidebar toggle */}
           <button

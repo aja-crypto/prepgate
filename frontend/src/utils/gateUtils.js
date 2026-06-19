@@ -381,6 +381,26 @@ export function generateWeeklyPlan(topics, pyqs, subjects, dailyHours = 8) {
   return plan;
 }
 
+/** Compute weak areas — topics with low PYQ completion */
+export function computeWeakAreas(topics, pyqs) {
+  const safeTopics = topics || [];
+  const safePyqs = pyqs || [];
+  const subjectMap = {};
+  safeTopics.forEach(t => {
+    if (!subjectMap[t.subject]) subjectMap[t.subject] = { name: t.name, subject: t.subject, pyqCount: 0, solvedCount: 0 };
+  });
+  safePyqs.forEach(p => {
+    if (subjectMap[p.subject]) {
+      subjectMap[p.subject].pyqCount++;
+      if (p.solved) subjectMap[p.subject].solvedCount++;
+    }
+  });
+  return Object.values(subjectMap)
+    .map(s => ({ ...s, weakScore: s.pyqCount > 0 ? (1 - s.solvedCount / s.pyqCount) * 100 : 50 }))
+    .sort((a, b) => b.weakScore - a.weakScore)
+    .slice(0, 10);
+}
+
 /** Readiness score (0–100) from topics, PYQs, mocks, streak */
 export function computeReadinessScore(topics, pyqs, mocks, streak) {
   const topicPct = (topics?.length || 0) ? ((topics.filter((t) => t.done).length / topics.length) * 100) : 0;

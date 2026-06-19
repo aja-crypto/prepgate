@@ -43,7 +43,7 @@ const topicSchema = new mongoose.Schema({
   resources: [{
     title: String,
     url: String,
-    type: { type: String, enum: ['video', 'article', 'book', 'pdf'] },
+    type: { type: String, enum: ['video', 'article', 'book', 'pdf', 'youtube', 'practice', 'nptel'] },
   }],
   isDefault: {
     type: Boolean,

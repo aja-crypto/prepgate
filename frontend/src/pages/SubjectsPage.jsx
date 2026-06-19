@@ -5,6 +5,7 @@ import { useProgress } from '../context/ProgressContext';
 import { subjectService, getApiErrorMessage } from '../services/api';
 import { PageLoading } from '../components/common/GateLoadingScreen';
 import toast from 'react-hot-toast';
+import { PageState, usePageState } from '../components/common/PageState';
 
 const DIFF_DOT = { easy: 'bg-green-400', medium: 'bg-orange-400', hard: 'bg-red-400' };
 
@@ -24,14 +25,32 @@ const WEIGHTAGE_TABLE = [
 
 export default function SubjectsPage() {
   const { topics: localTopics, studyStats } = useProgress();
-  const [subjects, setSubjects] = useState([]);
-  const [analytics, setAnalytics] = useState(null);
-  const [expanded, setExpanded] = useState(null);
-  const [showWeightage, setShowWeightage] = useState(true);
-  const [loading, setLoading] = useState(true);
+
+  const loadData = async () => {
+    try {
+      const [subRes, analRes] = await Promise.all([
+        subjectService.getHierarchy().catch(() => null),
+        subjectService.getAnalytics().catch(() => null),
+      ]);
+
+      if (subRes?.data?.data && subRes.data.data.length > 0) {
+        return {
+          subjects: subRes.data.data,
+          analytics: analRes?.data?.data || null,
+          expanded: (subRes.data.data || []).find((s) => s.isHighPriority)?._id || null,
+        };
+      } else {
+        const fallback = buildFallbackData();
+        return { subjects: fallback.subjects, analytics: fallback, expanded: null };
+      }
+    } catch (err) {
+      const fallback = buildFallbackData();
+      toast.error(getApiErrorMessage(err, 'Showing local syllabus fallback'));
+      return { subjects: fallback.subjects, analytics: fallback, expanded: null };
+    }
+  };
 
   const buildFallbackData = () => {
-    // Default fallback subjects in case studyStats is empty
     const defaultSubjects = [
       { name: 'General Aptitude', code: 'aptitude', icon: '🧠', color: '#10b981', weightage: 15, isHighPriority: false },
       { name: 'Engineering Mathematics', code: 'math', icon: '📐', color: '#3b82f6', weightage: 13, isHighPriority: true },
@@ -92,37 +111,39 @@ export default function SubjectsPage() {
     };
   };
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const [hierRes, analRes] = await Promise.all([
-          subjectService.getHierarchy().catch(() => null),
-          subjectService.getAnalytics().catch(() => null),
-        ]);
-        if (hierRes?.data?.data) {
-          setSubjects(hierRes.data.data);
-          if (analRes?.data?.data) setAnalytics(analRes.data.data);
-          // Auto-expand first high-priority subject
-          const first = (hierRes.data.data || []).find((s) => s.isHighPriority);
-          if (first) setExpanded(first._id);
-        } else {
-          // Fallback to local if no API response
-          const fallback = buildFallbackData();
-          setSubjects(fallback.subjects);
-          setAnalytics(fallback);
-        }
-      } catch (err) {
-        const fallback = buildFallbackData();
-        setSubjects(fallback.subjects);
-        setAnalytics(fallback);
-        toast.error(getApiErrorMessage(err, 'Showing local syllabus fallback'));
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  const { state, data, error, retry } = usePageState(loadData, []);
 
-  if (loading) return <PageLoading title="Loading Subjects" />;
+  // Must call useState before any early return (React Hooks rule)
+  const [expandedId, setExpandedId] = useState(null);
+
+  // Sync expanded from loaded data once it becomes available
+  useEffect(() => {
+    if (data?.expanded) setExpandedId(data.expanded);
+  }, [data?.expanded]);
+
+  if (state === 'loading') return <PageLoading title="Loading Subjects" />;
+
+  if (state === 'error') {
+    return (
+      <PageState
+        state="error"
+        errorMessage={error?.message || 'Failed to load subjects. Showing fallback data.'}
+        errorAction={{ label: 'Try Again', onClick: retry }}
+      />
+    );
+  }
+
+  if (state === 'empty') {
+    return (
+      <PageState
+        state="empty"
+        emptyMessage="No subjects found in the system. Would you like to load the GATE 2027 syllabus?"
+        emptyAction={{ label: 'Load Syllabus', onClick: () => window.location.reload() }}
+      />
+    );
+  }
+
+  const { subjects, analytics } = data || {};
 
   return (
     <div>
@@ -177,12 +198,12 @@ export default function SubjectsPage() {
 
       <div className="space-y-2">
         {subjects.map((s) => {
-          const isOpen = expanded === s._id;
+          const isOpen = expandedId === s._id;
           const pct = s.completionPct || 0;
 
           return (
             <div key={s._id} className={`bg-surface border rounded-xl transition-all ${isOpen ? 'border-white/20' : 'border-border hover:border-white/10'}`}>
-              <button type="button" className="w-full p-4 flex items-center gap-3 text-left" onClick={() => setExpanded(isOpen ? null : s._id)}>
+              <button type="button" className="w-full p-4 flex items-center gap-3 text-left" onClick={() => setExpandedId(isOpen ? null : s._id)}>
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0" style={{ background: `${s.color}20` }}>{s.icon}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">

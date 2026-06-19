@@ -190,10 +190,6 @@ const AIMentorPage = () => {
   const fetchTimerRef = useRef(null);
   const abortRef = useRef(null);
 
-  const stableTopics = useMemo(() => topics, []);
-  const stablePyqs = useMemo(() => pyqs, []);
-  const stableMocks = useMemo(() => mocks, []);
-
   useEffect(() => {
     if (!localStorage.getItem('accessToken') && localStorage.getItem('isGuest') !== 'true') return;
 
@@ -208,9 +204,9 @@ const AIMentorPage = () => {
       try {
         const res = await aiService.getRecommendations({
           subjects: subjects || [],
-          topics: stableTopics || [],
-          pyqs: stablePyqs || [],
-          mocks: stableMocks || [],
+          topics: topics || [],
+          pyqs: pyqs || [],
+          mocks: mocks || [],
           gateFeatures: gateFeatures || {},
           overall: { percentage: overall || 0 },
           studyStats: studyStats || {}
@@ -225,9 +221,9 @@ const AIMentorPage = () => {
         if (error.name === 'CanceledError' || controller.signal.aborted) return;
         const fallback = localHeuristicRecommendations({
           subjects: subjects || [],
-          topics: stableTopics || [],
-          pyqs: stablePyqs || [],
-          mocks: stableMocks || [],
+          topics: topics || [],
+          pyqs: pyqs || [],
+          mocks: mocks || [],
           overall: { percentage: overall || 0 },
           studyStats: studyStats || {}
         });
@@ -243,7 +239,7 @@ const AIMentorPage = () => {
       if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
       if (abortRef.current) abortRef.current.abort();
     };
-  }, [subjects, overall, gateFeatures, studyStats, refreshKey]);
+  }, [subjects, topics, pyqs, mocks, overall, gateFeatures, studyStats, refreshKey]);
 
   const smartMessages = useMemo(() => {
     const msgs = [];

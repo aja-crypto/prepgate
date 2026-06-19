@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import adminApi from '../../services/adminApi';
 import GlassCard from '../../components/ui/GlassCard';
 import Icon from '../../components/ui/Icon';
@@ -9,11 +9,20 @@ const PAGE_SIZE = 50;
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const searchDebounceRef = useRef(null);
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchInput(val);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => setSearch(val), 300);
+  };
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -74,8 +83,8 @@ export default function AdminUsersPage() {
           <input
             type="text"
             placeholder="Search by name or email..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            value={searchInput}
+            onChange={(e) => { handleSearchChange(e); setPage(1); }}
             className="w-full pl-9 pr-3 py-2 bg-bg-2 border border-border rounded-lg text-sm text-text placeholder:text-text3 focus:outline-none focus:border-primary/40"
           />
         </div>

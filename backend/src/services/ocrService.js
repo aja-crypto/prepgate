@@ -12,8 +12,27 @@ function isGeminiConfigured() {
   return !!GEMINI_API_KEY;
 }
 
+// ─── Retry utility ───────────────────────────────────────────
+function retryWithBackoff(fn, maxRetries = 3, baseDelayMs = 1000) {
+  return async (...args) => {
+    let lastError;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await fn(...args);
+      } catch (error) {
+        lastError = error;
+        if (attempt === maxRetries - 1) break;
+        // Exponential backoff with jitter
+        const delay = baseDelayMs * Math.pow(2, attempt) + Math.random() * 500;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    throw lastError;
+  };
+}
+
 // ─── Mistral OCR ────────────────────────────────────────────
-async function callMistralOcr(pdfUrl) {
+const callMistralOcr = retryWithBackoff(async (pdfUrl) => {
   const response = await fetch('https://api.mistral.ai/v1/ocr', {
     method: 'POST',
     headers: {
@@ -40,10 +59,10 @@ async function callMistralOcr(pdfUrl) {
   }));
 
   return pages;
-}
+}, 3, 1000);
 
 // ─── Gemini OCR ──────────────────────────────────────────────
-async function callGeminiOcr(pdfBase64) {
+const callGeminiOcr = retryWithBackoff(async (pdfBase64) => {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
     {
@@ -73,7 +92,7 @@ async function callGeminiOcr(pdfBase64) {
     markdown: block.trim(),
     images: [],
   }));
-}
+}, 3, 1000);
 
 // ─── Mock OCR (for development) ─────────────────────────────
 function getMockOcrPages() {
@@ -114,19 +133,32 @@ Answer Key:
 }
 
 // ─── Main entry ─────────────────────────────────────────────
-async function extractTextFromPdf(pdfUrl) {
+async function extractTextFromPdf(pdfUrl, pdfBase64 = null) {
   if (isMistralConfigured()) {
     console.log('[OCR] Using Mistral OCR');
     return callMistralOcr(pdfUrl);
   }
+
   if (isGeminiConfigured()) {
     console.log('[OCR] Using Gemini OCR');
-    // For gemini we'd need the base64 — caller should pass it
-    const base64 = pdfUrl; // caller may pass base64 as fallback
-    return callGeminiOcr(base64);
+    if (!pdfBase64) {
+      console.warn('[OCR] Gemini requires base64 data — using mock fallback');
+      console.warn('[OCR] For production: configure MISTRAL_API_KEY or upload base64 PDFs');
+      return getMockOcrPages();
+    }
+    return callGeminiOcr(pdfBase64);
   }
-  console.log('[OCR] No OCR API key configured, using mock data');
+
+  console.warn('[OCR] No OCR API key configured, using mock data');
+  console.warn('[OCR] Configure MISTRAL_API_KEY or GEMINI_API_KEY for real OCR');
   return getMockOcrPages();
 }
 
-module.exports = { extractTextFromPdf, isMistralConfigured, isGeminiConfigured };
+module.exports = { 
+  extractTextFromPdf, 
+  isMistralConfigured, 
+  isGeminiConfigured,
+  getMockOcrPages,
+  callMistralOcr,
+  callGeminiOcr
+};

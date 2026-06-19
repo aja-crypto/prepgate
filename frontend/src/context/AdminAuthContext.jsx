@@ -11,11 +11,12 @@ export function AdminAuthProvider({ children }) {
     const token = localStorage.getItem('adminToken');
     if (!token) {
       setLoading(false);
-      return;
+      return Promise.resolve();
     }
     try {
       const res = await adminAuthService.me();
       setAdmin(res.data.data);
+      return Promise.resolve();
     } catch {
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminUser');
@@ -24,7 +25,10 @@ export function AdminAuthProvider({ children }) {
     }
   }, []);
 
-  useEffect(() => { loadAdmin(); }, [loadAdmin]);
+  useEffect(() => {
+    const timeoutId = setTimeout(() => setLoading(false), 15000);
+    loadAdmin().finally(() => clearTimeout(timeoutId));
+  }, [loadAdmin]);
 
   const login = async (email, password) => {
     const res = await adminAuthService.login(email, password);

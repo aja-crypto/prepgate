@@ -171,8 +171,9 @@ router.post('/pyq/import', adminProtect, requirePermission('mocks.manage'), requ
       return res.status(400).json({ success: false, message: 'Maximum 500 questions per import.' });
     }
 
-    let created = 0;
-    let errors = [];
+    // Prepare bulk insert operations
+    const docs = [];
+    const errors = [];
 
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
@@ -180,18 +181,31 @@ router.post('/pyq/import', adminProtect, requirePermission('mocks.manage'), requ
         errors.push({ index: i, message: 'Missing required fields (title, subject, year, questionText)' });
         continue;
       }
+      docs.push({
+        title: q.title, subject: q.subject, topic: q.topic || undefined,
+        year: q.year, difficulty: q.difficulty || 'medium', marks: q.marks || 2,
+        questionType: q.questionType || 'MCQ', questionText: q.questionText,
+        options: q.options || [], correctAnswer: q.correctAnswer,
+        explanation: q.explanation || '', tags: q.tags || [],
+        source: q.source || 'GATE Official', paperSet: q.paperSet || '',
+      });
+    }
+
+    let created = 0;
+    if (docs.length) {
       try {
-        await PYQ.create({
-          title: q.title, subject: q.subject, topic: q.topic || undefined,
-          year: q.year, difficulty: q.difficulty || 'medium', marks: q.marks || 2,
-          questionType: q.questionType || 'MCQ', questionText: q.questionText,
-          options: q.options || [], correctAnswer: q.correctAnswer,
-          explanation: q.explanation || '', tags: q.tags || [],
-          source: q.source || 'GATE Official', paperSet: q.paperSet || '',
-        });
-        created++;
+        const result = await PYQ.insertMany(docs, { ordered: false });
+        created = result.length;
       } catch (e) {
-        errors.push({ index: i, message: e.message });
+        // If some failed, try individual inserts to get more details
+        for (let i = 0; i < docs.length; i++) {
+          try {
+            await PYQ.create(docs[i]);
+            created++;
+          } catch (e) {
+            errors.push({ index: i, message: e.message });
+          }
+        }
       }
     }
 
@@ -266,8 +280,8 @@ router.post('/pyq/save-extracted', adminProtect, requirePermission('mocks.manage
       return res.status(400).json({ success: false, message: 'Maximum 200 questions per batch.' });
     }
 
-    let created = 0;
-    let errors = [];
+    const docs = [];
+    const errors = [];
 
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
@@ -275,26 +289,38 @@ router.post('/pyq/save-extracted', adminProtect, requirePermission('mocks.manage
         errors.push({ index: i, message: 'Missing questionText' });
         continue;
       }
+      docs.push({
+        title: q.title || `Q${i + 1}`,
+        subject: q.subject,
+        topic: q.topic || undefined,
+        year: q.year || new Date().getFullYear(),
+        difficulty: q.difficulty || 'medium',
+        marks: q.marks || 2,
+        questionType: q.questionType || 'MCQ',
+        questionText: q.questionText,
+        options: q.options || [],
+        correctAnswer: q.correctAnswer || undefined,
+        explanation: q.explanation || '',
+        tags: q.tags || [],
+        source: q.source || 'GATE Official',
+        paperSet: q.paperSet || '',
+      });
+    }
+
+    let created = 0;
+    if (docs.length) {
       try {
-        await PYQ.create({
-          title: q.title || `Q${i + 1}`,
-          subject: q.subject,
-          topic: q.topic || undefined,
-          year: q.year || new Date().getFullYear(),
-          difficulty: q.difficulty || 'medium',
-          marks: q.marks || 2,
-          questionType: q.questionType || 'MCQ',
-          questionText: q.questionText,
-          options: q.options || [],
-          correctAnswer: q.correctAnswer || undefined,
-          explanation: q.explanation || '',
-          tags: q.tags || [],
-          source: q.source || 'GATE Official',
-          paperSet: q.paperSet || '',
-        });
-        created++;
+        const result = await PYQ.insertMany(docs, { ordered: false });
+        created = result.length;
       } catch (e) {
-        errors.push({ index: i, message: e.message });
+        for (let i = 0; i < docs.length; i++) {
+          try {
+            await PYQ.create(docs[i]);
+            created++;
+          } catch (e) {
+            errors.push({ index: i, message: e.message });
+          }
+        }
       }
     }
 

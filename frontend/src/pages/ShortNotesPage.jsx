@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { shortNoteService } from '../services/api';
+import { silentCatch } from '../utils/errorHandler';
 import { PageLoading } from '../components/common/GateLoadingScreen';
 
 export default function ShortNotesPage() {
@@ -10,7 +11,7 @@ export default function ShortNotesPage() {
 
   useEffect(() => {
     setLoading(true);
-    shortNoteService.getAll().then(r => setSubjects(r.data.data)).catch(() => {}).finally(() => setLoading(false));
+    shortNoteService.getAll().then(r => setSubjects(r.data.data)).catch(silentCatch('Load short notes')).finally(() => setLoading(false));
   }, []);
 
   const filtered = useMemo(() => {
@@ -75,9 +76,8 @@ export default function ShortNotesPage() {
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {file.type === 'pdf' && (
-                      <button onClick={() => window.open(file.fileUrl, '_blank')} className="text-[10px] px-2 py-1 rounded border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all">View</button>
+                      <button onClick={() => setPreview(file)} className="text-[10px] px-2 py-1 rounded border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all">View</button>
                     )}
-                    <a href={file.fileUrl} download={file.name} className="text-[10px] px-2 py-1 rounded border bg-bg-2 border-border text-text3 hover:text-secondary hover:border-secondary/30 transition-all">Download</a>
                   </div>
                 </div>
               ))}

@@ -6,7 +6,8 @@ import { useProgress } from '../context/ProgressContext';
 import AirPredictor from '../components/gate/AirPredictor';
 import MockTestBuilder from '../components/mock/MockTestBuilder';
 import MockTestRunner from '../components/mock/MockTestRunner';
-import { mockSessionService } from '../services/api';
+import { api, mockSessionService, getApiErrorMessage } from '../services/api';
+import { silentCatch } from '../utils/errorHandler';
 import { predictAIR } from '../utils/gateUtils';
 
 Chart.register(...registerables);
@@ -62,8 +63,15 @@ export default function MocksPage() {
   const chartInst = useRef(null);
 
   useEffect(() => {
-    mockSessionService.getAll().then((r) => setPastSessions(r.data.data || [])).catch(() => {});
+    mockSessionService.getAll().then((r) => setPastSessions(r.data.data || [])).catch(silentCatch('Load past sessions'));
   }, [activeSession]);
+
+  useEffect(() => {
+    api.get('/mocks').then(r => {
+      const backend = r.data.data || [];
+      if (backend.length > mocks.length) updateMocks(backend);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!chartRef.current || tab !== 'Score Tracker') return;
@@ -99,14 +107,18 @@ export default function MocksPage() {
   const addTest = () => {
     if (!form.name || !form.score) return;
     const t = {
-      id: Date.now(),
       name: form.name,
-      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
       score: parseFloat(form.score),
       rank: parseInt(form.rank) || null,
       notes: form.notes,
     };
-    updateMocks((ts) => [...ts, t]);
+    api.post('/mocks', t).then(r => {
+      if (r.data.data) updateMocks((ts) => [...ts, r.data.data]);
+    }).catch(() => {
+      t.id = Date.now();
+      t.date = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      updateMocks((ts) => [...ts, t]);
+    });
     setForm({ name: '', score: '', rank: '', notes: '' });
     setShowModal(false);
   };

@@ -68,28 +68,14 @@ export default function AdminPYQTab() {
     }
   };
 
-  const downloadTemplate = () => {
-    if (!template) return;
-    const blob = new Blob([JSON.stringify(template.example, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'pyq-import-template.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <div className="space-y-5">
       <div className="bg-surface border border-border rounded-xl p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h3 className="text-sm font-semibold text-text">PYQ Import System</h3>
-            <p className="text-[11px] text-text3 mt-1">
-              Import legally obtained PYQs via CSV or JSON. Do not scrape copyrighted content.
-            </p>
-          </div>
-          <button type="button" onClick={downloadTemplate} className="text-xs btn-ghost">Download Template</button>
+        <div className="mb-3">
+          <h3 className="text-sm font-semibold text-text">PYQ Import System</h3>
+          <p className="text-[11px] text-text3 mt-1">
+            Import legally obtained PYQs via CSV or JSON. Do not scrape copyrighted content.
+          </p>
         </div>
 
         {template?.notes && (

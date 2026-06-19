@@ -105,12 +105,15 @@ export default function MockTestTakingPage() {
           if (typeof saved.timeLeft === 'number' && saved.timeLeft > 0) {
             totalTimeRef.current = saved.timeLeft;
             setTimeLeft(saved.timeLeft);
+          } else {
+            totalTimeRef.current = testData.duration ? testData.duration * 60 : qs.length * 90;
+            setTimeLeft(totalTimeRef.current);
           }
           setRestored(true);
+        } else {
+          totalTimeRef.current = testData.duration ? testData.duration * 60 : qs.length * 90;
+          setTimeLeft(totalTimeRef.current);
         }
-
-        totalTimeRef.current = testData.duration ? testData.duration * 60 : qs.length * 90;
-        if (!restored) setTimeLeft(totalTimeRef.current);
       } catch (err) {
         const msg = getApiErrorMessage(err, 'Failed to load test');
         setError(msg);
@@ -303,7 +306,24 @@ export default function MockTestTakingPage() {
     );
   }
 
-  if (!test || !questions.length) return null;
+  if (!test || !questions.length) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <GlassCard padding="p-8" className="text-center max-w-md">
+          <Icon name="alert-triangle" className="w-12 h-12 text-red-400 mx-auto mb-3" />
+          <h2 className="text-lg font-semibold text-text mb-2">Test Data Unavailable</h2>
+          <p className="text-sm text-text3 mb-4">The test questions could not be loaded. This may be due to a connection issue or the test has been removed.</p>
+          <button
+            type="button"
+            onClick={() => navigate('/mock-tests')}
+            className="text-sm px-5 py-2.5 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all"
+          >
+            Back to Mock Tests
+          </button>
+        </GlassCard>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen -m-6 p-6 bg-bg">

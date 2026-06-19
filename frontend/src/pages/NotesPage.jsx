@@ -428,9 +428,7 @@ export default function NotesPage() {
                 <span className="text-xs text-white font-mono w-12 text-center">{Math.round(zoom * 100)}%</span>
                 <button onClick={() => setZoom(z => Math.min(3, z + 0.25))} className="p-2 text-white hover:bg-white/10 rounded-lg"><Icon name="plus" className="w-4 h-4" /></button>
               </div>
-                <a href={resolveMediaUrl(viewingMedia.fileUrl)} download className="p-2.5 bg-primary text-white rounded-xl hover:opacity-90 transition-all">
-                  <Icon name="download" className="w-5 h-5" />
-                </a>
+
             </div>
           </div>
           <div className="flex-1 overflow-auto p-8 flex items-center justify-center custom-scrollbar">

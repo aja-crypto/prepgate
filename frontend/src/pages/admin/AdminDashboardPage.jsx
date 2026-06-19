@@ -147,38 +147,42 @@ export default function AdminDashboardPage() {
   const dbConnected = stats?.system?.databaseConnected;
 
   if (!dbConnected) {
-    return (
-      <div className="p-4 lg:p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-bold text-text">Dashboard</h1>
-            <p className="text-sm text-text3 mt-0.5">Welcome back, {admin?.name || 'Admin'}</p>
+    // Show available local data even without MongoDB
+    const hasLocalData = stats?.subjects || stats?.topics || stats?.tests;
+    if (!hasLocalData) {
+      return (
+        <div className="p-4 lg:p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg font-bold text-text">Dashboard</h1>
+              <p className="text-sm text-text3 mt-0.5">Welcome back, {admin?.name || 'Admin'}</p>
+            </div>
+          </div>
+          <div className="bg-surface border border-red-500/20 rounded-xl p-8 text-center">
+            <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-red-500/10">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-red-400">
+                <path d="M9 12h6M12 9v6M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" />
+              </svg>
+            </div>
+            <h2 className="text-base font-bold text-text mb-2">Live Analytics Not Available</h2>
+            <p className="text-sm text-text3 max-w-md mx-auto leading-relaxed mb-4">
+              Connect MongoDB to view:<br />
+              • User Growth<br />
+              • Mock Test Analytics<br />
+              • AI Usage Statistics<br />
+              • PDF Metrics
+            </p>
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-[11px] text-text3">Status: Database Not Connected</span>
+            </div>
+            <button onClick={fetchStats} className="text-xs px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all font-semibold">
+              Refresh
+            </button>
           </div>
         </div>
-        <div className="bg-surface border border-red-500/20 rounded-xl p-8 text-center">
-          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-red-500/10">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-red-400">
-              <path d="M9 12h6M12 9v6M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" />
-            </svg>
-          </div>
-          <h2 className="text-base font-bold text-text mb-2">Live Analytics Not Available</h2>
-          <p className="text-sm text-text3 max-w-md mx-auto leading-relaxed mb-4">
-            Connect MongoDB to view:<br />
-            • User Growth<br />
-            • Mock Test Analytics<br />
-            • AI Usage Statistics<br />
-            • PDF Metrics
-          </p>
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-[11px] text-text3">Status: Database Not Connected</span>
-          </div>
-          <button onClick={fetchStats} className="text-xs px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all font-semibold">
-            Refresh
-          </button>
-        </div>
-      </div>
-    );
+      );
+    }
   }
 
   const u = stats.users || {};
@@ -219,6 +223,27 @@ export default function AdminDashboardPage() {
         <StatCard label="Topics" value={stats.topics?.toLocaleString() || '—'} icon={ICONS.book} color="#14B8A6" />
         <StatCard label="Mock Tests" value={stats.tests?.toLocaleString() || '—'} icon={ICONS.clipboard} color="#EC4899" />
         <StatCard label="PYQs" value={stats.pyqs?.toLocaleString() || '—'} icon={ICONS.file} color="#F59E0B" />
+      </StatSection>
+
+      {/* Notes Section */}
+      <StatSection title="Notes & Resources">
+        <StatCard label="Total Notes" value={stats.notes?.toLocaleString() || '—'} icon={ICONS.book} color="#10B981" />
+      </StatSection>
+
+      {/* Mock Attempts Section */}
+      <StatSection title="Mock Test Attempts">
+        <StatCard label="Total Attempts" value={m.totalAttempts?.toLocaleString() || '—'} icon={ICONS.clipboard} color="#8B5CF6" />
+        <StatCard label="Completed" value={m.completed?.toLocaleString() || '—'} icon={ICONS.check} color="#10B981" />
+        <StatCard label="Avg Score" value={m.averageScore !== undefined ? `${m.averageScore}%` : '—'} icon={ICONS.chart} color="#F59E0B" />
+        <StatCard label="Top Performers" value={m.topPerformers?.length || '—'} icon={ICONS.users} color="#EC4899" />
+      </StatSection>
+
+      {/* AI Usage Section */}
+      <StatSection title="AI Usage">
+        <StatCard label="Total Requests" value={a.totalRequests?.toLocaleString() || '—'} icon={ICONS.cpu} color="#8B5CF6" />
+        <StatCard label="Requests Today" value={a.requestsToday?.toLocaleString() || '—'} icon={ICONS.active} color="#3B82F6" />
+        <StatCard label="Failed" value={a.failed?.toLocaleString() || '—'} icon={ICONS.warning} color="#EF4444" />
+        <StatCard label="Avg Response" value={a.avgResponseTime ? `${a.avgResponseTime}ms` : '—'} icon={ICONS.chart} color="#14B8A6" />
       </StatSection>
 
       {/* PDFs Section */}

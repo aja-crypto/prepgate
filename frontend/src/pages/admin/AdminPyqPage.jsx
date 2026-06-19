@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { adminPyqService } from '../../services/adminApi';
+import toast from 'react-hot-toast';
 
 const SUBJECT_OPTIONS = [
   { code: 'AL', name: 'Algorithms' }, { code: 'DS', name: 'Data Structures' },
@@ -67,7 +68,7 @@ export default function AdminPyqPage() {
     try {
       const res = await adminPyqService.getStats();
       setStats(res.data.data);
-    } catch (e) { /* stats are non-critical */ }
+    } catch (e) { toast.error('Failed to load PYQ stats'); }
   }, []);
 
   useEffect(() => { fetchPyqs(); }, [fetchPyqs]);

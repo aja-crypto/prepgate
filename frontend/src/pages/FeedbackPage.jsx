@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { feedbackService, getApiErrorMessage } from '../services/api';
+import { silentCatch } from '../utils/errorHandler';
 import toast from 'react-hot-toast';
 
 const POLLS = [
@@ -70,8 +71,8 @@ export default function FeedbackPage() {
 
   useEffect(() => {
     if (isAdmin) {
-      feedbackService.getAdminStats().then((r) => setAdminStats(r.data.data)).catch(() => {});
-      feedbackService.getAdminAll({ limit: 50 }).then((r) => setAdminFeedbacks(r.data.data || [])).catch(() => {});
+      feedbackService.getAdminStats().then((r) => setAdminStats(r.data.data)).catch(silentCatch('Load admin stats'));
+      feedbackService.getAdminAll({ limit: 50 }).then((r) => setAdminFeedbacks(r.data.data || [])).catch(silentCatch('Load admin feedbacks'));
     }
     feedbackService.get().then((r) => {
       const d = r.data.data;
@@ -88,7 +89,7 @@ export default function FeedbackPage() {
         }
         setAnon(d.anonymous);
       }
-    }).catch(() => {});
+    }).catch(silentCatch('Load feedbacks'));
   }, [isAdmin]);
 
   const addFeature = () => {

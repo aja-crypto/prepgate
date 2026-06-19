@@ -5,11 +5,14 @@ import Icon from '../ui/Icon';
 
 const NAV_ITEMS = [
   { path: '/admin/dashboard', label: 'Dashboard', icon: 'grid' },
+  { section: 'CONTENT' },
+  { path: '/admin/cms', label: 'CMS', icon: 'edit' },
   { section: 'MANAGEMENT' },
   { path: '/admin/users', label: 'Users', icon: 'users' },
   { path: '/admin/pdfs', label: 'PDF Library', icon: 'file-text' },
   { path: '/admin/mock-tests', label: 'Mock Tests', icon: 'mock-tests' },
   { path: '/admin/pyq', label: 'PYQs', icon: 'pyq' },
+  { path: '/admin/question-bank', label: 'Question Bank', icon: 'database' },
   { section: 'ANALYTICS' },
   { path: '/admin/analytics', label: 'Analytics', icon: 'bar-chart' },
   { path: '/admin/ai-analytics', label: 'AI Analytics', icon: 'cpu' },
