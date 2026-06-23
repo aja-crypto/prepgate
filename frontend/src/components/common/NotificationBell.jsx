@@ -119,7 +119,9 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-[1rem] left-auto top-full mt-2 w-[380px] max-h-[500px] rounded-2xl overflow-hidden z-50 shadow-2xl" style={{ background: '#0F1119', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="fixed right-4 top-[72px] w-[340px] max-h-[480px] rounded-2xl overflow-hidden z-50 shadow-2xl border border-white/[0.08] backdrop-blur-2xl animate-card-entrance" style={{ background: 'rgba(15,17,25,0.95)' }}>
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
             <h3 className="text-sm font-bold text-white">Notifications</h3>
             <div className="flex items-center gap-2">
@@ -182,6 +184,7 @@ export default function NotificationBell() {
             )}
           </div>
         </div>
+        </>
       )}
     </div>
   );

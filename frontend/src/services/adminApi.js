@@ -64,10 +64,10 @@ export const adminMockTestService = {
   delete: (id) => adminApi.delete(`/admin/mock-tests/${id}`),
   toggle: (id, isActive) => adminApi.patch(`/admin/mock-tests/${id}/toggle`, { isActive }),
   getQuestions: (testId) => adminApi.get(`/admin/mock-tests/${testId}/questions`),
-  getAllQuestions: (params) => adminApi.get('/admin/mock-questions', { params }),
-  createQuestion: (data) => adminApi.post('/admin/mock-questions', data),
-  updateQuestion: (id, data) => adminApi.put(`/admin/mock-questions/${id}`, data),
-  deleteQuestion: (id) => adminApi.delete(`/admin/mock-questions/${id}`),
+  getAllQuestions: (params) => adminApi.get('/admin/mock-tests/mock-questions', { params }),
+  createQuestion: (data) => adminApi.post('/admin/mock-tests/mock-questions', data),
+  updateQuestion: (id, data) => adminApi.put(`/admin/mock-tests/mock-questions/${id}`, data),
+  deleteQuestion: (id) => adminApi.delete(`/admin/mock-tests/mock-questions/${id}`),
 };
 
 export const adminPyqService = {
@@ -93,6 +93,22 @@ export const adminFlashcardService = {
   update: (id, data) => adminApi.put(`/admin/gate-vault/flashcards/${id}`, data),
   delete: (id) => adminApi.delete(`/admin/gate-vault/flashcards/${id}`),
   bulkImport: (cards) => adminApi.post('/admin/gate-vault/flashcards/bulk', { cards }),
+  upload: (formData, onProgress) =>
+    adminApi.post('/admin/gate-vault/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: onProgress,
+    }),
+  replaceFile: (id, formData, onProgress) =>
+    adminApi.put(`/admin/gate-vault/upload/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: onProgress,
+    }),
+  togglePublish: (id, isPublished) =>
+    adminApi.patch(`/admin/gate-vault/flashcards/${id}/publish`, { isPublished }),
+  importCsv: (csv) => adminApi.post('/admin/gate-vault/flashcards/import/csv', { csv }),
+  importJson: (data) => adminApi.post('/admin/gate-vault/flashcards/import/json', { data }),
+  bulkDelete: (ids) => adminApi.post('/admin/gate-vault/flashcards/bulk/delete', { ids }),
+  bulkPublish: (ids, isPublished) => adminApi.post('/admin/gate-vault/flashcards/bulk/publish', { ids, isPublished }),
   getMonthlySets: () => adminApi.get('/admin/gate-vault/monthly-sets'),
   createMonthlySet: (data) => adminApi.post('/admin/gate-vault/monthly-sets', data),
   publishMonthlySet: (id) => adminApi.post(`/admin/gate-vault/monthly-sets/${id}/publish`),
@@ -127,11 +143,16 @@ export const cmsService = {
 export const questionBankService = {
   list: (params) => adminApi.get('/admin/question-bank', { params }),
   stats: () => adminApi.get('/admin/question-bank/stats'),
+  grouped: (params) => adminApi.get('/admin/question-bank/grouped', { params }),
+  duplicates: () => adminApi.get('/admin/question-bank/duplicates'),
   create: (data) => adminApi.post('/admin/question-bank', data),
   update: (id, data) => adminApi.put(`/admin/question-bank/${id}`, data),
   delete: (id) => adminApi.delete(`/admin/question-bank/${id}`),
   importJson: (questions) => adminApi.post('/admin/question-bank/import/json', { questions }),
   importCsv: (csv) => adminApi.post('/admin/question-bank/import/csv', { csv }),
+  bulkDelete: (ids) => adminApi.post('/admin/question-bank/bulk/delete', { ids }),
+  bulkSubject: (ids, subject) => adminApi.post('/admin/question-bank/bulk/subject', { ids, subject }),
+  bulkDifficulty: (ids, difficulty) => adminApi.post('/admin/question-bank/bulk/difficulty', { ids, difficulty }),
 };
 
 export default adminApi;

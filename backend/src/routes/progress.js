@@ -50,6 +50,23 @@ function noteFromDb(n) {
   };
 }
 
+function syncStreakToProgress(user) {
+  const data = user.progressBackup?.data;
+  if (!data) return;
+  const { current = 0, longest = 0, lastStudyDate } = user.streak || {};
+  if (data.gateFeatures) {
+    data.gateFeatures.streak = {
+      current,
+      longest,
+      activityLog: data.gateFeatures.streak?.activityLog || {},
+      lastStudyDate: lastStudyDate || null,
+    };
+  }
+  if (data.studyStats) {
+    data.studyStats.streak = { current, longest };
+  }
+}
+
 // GET overall progress stats
 router.get('/', protect, async (req, res, next) => {
   try {
@@ -227,6 +244,7 @@ router.post('/restore/:snapshotId', protect, async (req, res, next) => {
 router.get('/sync', protect, async (req, res, next) => {
   try {
     if (isMockAuthEnabled()) {
+      syncStreakToProgress(req.user);
       return res.json({
         success: true,
         data: {
@@ -244,6 +262,7 @@ router.get('/sync', protect, async (req, res, next) => {
       Note.find({ user: userId }).populate('subject', 'name').sort('-createdAt'),
     ]);
 
+    syncStreakToProgress(req.user);
     res.json({
       success: true,
       data: {
@@ -263,6 +282,7 @@ router.put('/sync', protect, async (req, res, next) => {
     if (!data) return res.status(400).json({ success: false, message: 'Sync data required' });
 
     req.user.progressBackup = { data, updatedAt: new Date() };
+    syncStreakToProgress(req.user);
 
     if (isMockAuthEnabled()) {
       if (typeof req.user.save === 'function') {
@@ -381,6 +401,7 @@ router.put('/sync', protect, async (req, res, next) => {
 router.put('/backup', protect, async (req, res, next) => {
   try {
     req.user.progressBackup = { data: req.body.data, updatedAt: new Date() };
+    syncStreakToProgress(req.user);
     if (typeof req.user.save === 'function') {
       await req.user.save({ validateBeforeSave: false });
     }
@@ -391,6 +412,7 @@ router.put('/backup', protect, async (req, res, next) => {
 // GET cloud backup
 router.get('/backup', protect, async (req, res, next) => {
   try {
+    syncStreakToProgress(req.user);
     res.json({ success: true, data: req.user.progressBackup || null });
   } catch (e) { next(e); }
 });

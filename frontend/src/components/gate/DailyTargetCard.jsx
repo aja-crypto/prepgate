@@ -24,10 +24,11 @@ function ProgressRing({ pct, size = 80, stroke = 6 }) {
 
 export default function DailyTargetCard({ compact = false }) {
   const { gateFeatures, updateGateFeatures } = useProgress();
+  const gf = gateFeatures || {};
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState(gateFeatures.dailyTarget);
+  const [form, setForm] = useState(gf.dailyTarget || { hours: 8, topicsToComplete: 5 });
 
-  const progress = getDailyTargetProgress(gateFeatures.dailyTarget, gateFeatures.todayProgress);
+  const progress = getDailyTargetProgress(gf.dailyTarget, gf.todayProgress);
 
   const saveTarget = () => {
     updateGateFeatures((gf) => ({ ...gf, dailyTarget: { ...form } }));
@@ -67,7 +68,7 @@ export default function DailyTargetCard({ compact = false }) {
           <span className="absolute inset-0 flex items-center justify-center text-xs font-bold font-mono text-primary">{progress.overall}%</span>
         </div>
         <div>
-          <div className="text-xs text-text2">{progress.hours}/{gateFeatures.dailyTarget.hours}h · {progress.topicsCompleted}/{gateFeatures.dailyTarget.topicsToComplete} topics</div>
+          <div className="text-xs text-text2">{progress.hours}/{gf.dailyTarget?.hours || 8}h · {progress.topicsCompleted}/{gf.dailyTarget?.topicsToComplete || 5} topics</div>
         </div>
       </div>
     );
@@ -80,7 +81,7 @@ export default function DailyTargetCard({ compact = false }) {
           <div className="text-sm font-semibold text-text">🎯 Daily Target</div>
           <div className="text-[11px] text-text3 mt-0.5">Track today&apos;s study goals</div>
         </div>
-        <button onClick={() => { setForm(gateFeatures.dailyTarget); setEditing(!editing); }} className="text-[11px] text-primary hover:underline">
+        <button onClick={() => { setForm(gf.dailyTarget || { hours: 8, topicsToComplete: 5 }); setEditing(!editing); }} className="text-[11px] text-primary hover:underline">
           {editing ? 'Cancel' : 'Edit targets'}
         </button>
       </div>
@@ -109,11 +110,11 @@ export default function DailyTargetCard({ compact = false }) {
           </div>
           <div className="flex-1 space-y-2">
             <div>
-              <div className="flex justify-between text-xs mb-1"><span className="text-text2">Study Hours</span><span className="font-mono text-text3">{progress.hours}/{gateFeatures.dailyTarget.hours}h</span></div>
+              <div className="flex justify-between text-xs mb-1"><span className="text-text2">Study Hours</span><span className="font-mono text-text3">{progress.hours}/{gf.dailyTarget?.hours || 8}h</span></div>
               <div className="h-1.5 bg-bg-3 rounded-full overflow-hidden"><div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress.hoursPct}%` }} /></div>
             </div>
             <div>
-              <div className="flex justify-between text-xs mb-1"><span className="text-text2">Topics Done</span><span className="font-mono text-text3">{progress.topicsCompleted}/{gateFeatures.dailyTarget.topicsToComplete}</span></div>
+              <div className="flex justify-between text-xs mb-1"><span className="text-text2">Topics Done</span><span className="font-mono text-text3">{progress.topicsCompleted}/{gf.dailyTarget?.topicsToComplete || 5}</span></div>
               <div className="h-1.5 bg-bg-3 rounded-full overflow-hidden"><div className="h-full bg-accent rounded-full transition-all" style={{ width: `${progress.topicsPct}%` }} /></div>
             </div>
           </div>

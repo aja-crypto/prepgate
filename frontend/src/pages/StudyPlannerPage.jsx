@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 const SUBJECTS = ['Engineering Mathematics', 'Digital Logic', 'Computer Organization', 'Programming & DS', 'Algorithms', 'Operating Systems', 'DBMS', 'Computer Networks', 'Theory of Computation', 'Compiler Design', 'Aptitude'];
 
 export default function StudyPlannerPage() {
-  const { gateFeatures, updateGateFeatures, topics, pyqs, mocks, studyStats } = useProgress();
+  const { gateFeatures, updateGateFeatures, syncToCloud, topics, pyqs, mocks, studyStats } = useProgress();
   const [view, setView] = useState('month');
   const [showAiPlan, setShowAiPlan] = useState(false);
   const [aiPlan, setAiPlan] = useState([]);
@@ -49,7 +49,7 @@ export default function StudyPlannerPage() {
     setShowModal(true);
   };
 
-  const savePlan = () => {
+  const savePlan = async () => {
     if (!selectedDate || !form.topic.trim()) return;
     const key = format(selectedDate, 'yyyy-MM-dd');
     updateGateFeatures((gf) => {
@@ -61,6 +61,7 @@ export default function StudyPlannerPage() {
       return { ...gf, studyPlans: { ...gf.studyPlans, [key]: updated } };
     });
     setShowModal(false);
+    await syncToCloud();
   };
 
   const generateAiPlan = async () => {
@@ -89,7 +90,7 @@ export default function StudyPlannerPage() {
     }
   };
 
-  const applyAiPlan = () => {
+  const applyAiPlan = async () => {
     const start = startOfWeek(new Date(), { weekStartsOn: 1 });
     const newPlans = { ...gateFeatures.studyPlans };
     aiPlan.forEach((day, i) => {
@@ -107,10 +108,11 @@ export default function StudyPlannerPage() {
     });
     updateGateFeatures((gf) => ({ ...gf, studyPlans: newPlans }));
     setShowAiPlan(false);
+    await syncToCloud();
     toast.success('AI study plan applied to calendar');
   };
 
-  const deletePlan = (date, id) => {
+  const deletePlan = async (date, id) => {
     const key = format(date, 'yyyy-MM-dd');
     updateGateFeatures((gf) => {
       const updated = (gf.studyPlans[key] || []).filter((p) => p.id !== id);
@@ -119,6 +121,7 @@ export default function StudyPlannerPage() {
       else delete plans[key];
       return { ...gf, studyPlans: plans };
     });
+    await syncToCloud();
   };
 
   const DayCell = ({ date, inMonth = true }) => {

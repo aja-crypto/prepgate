@@ -18,7 +18,7 @@ export default function MotivationCard() {
         const data = Array.isArray(r.data.data) ? r.data.data : [r.data.data];
         if (data.length) setQuote(data[0]);
       }
-    }).catch(() => {});
+    }).catch(e => console.warn('[MotivationCard] fetch failed', e?.message));
   }, []);
 
   useEffect(() => {

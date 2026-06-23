@@ -23,11 +23,11 @@ const NAV = [
   { label: 'Planner', icon: 'planner', to: '/planner' },
   { label: 'Notes Hub', icon: 'notes', to: '/study-hub' },
   { label: 'Focus Sessions', icon: 'productivity', to: '/productivity' },
-  { label: 'Deep Focus', icon: 'target', to: '/deep-focus' },
   { section: 'PRACTICE' },
   { label: 'PYQ Practice', icon: 'pyq', to: '/pyq' },
   { label: 'Mock Tests', icon: 'mocks', to: '/mocks' },
   { label: 'Mistake Notebook', icon: 'target', to: '/mistakes' },
+  { label: 'Gate Vault', icon: 'folder', to: '/gate-vault' },
   { section: 'ANALYTICS' },
   { label: 'Progress Analytics', icon: 'analytics', to: '/analytics' },
   { label: 'AIR Predictor', icon: 'analytics', to: '/air-predictor' },
@@ -180,7 +180,7 @@ export default function Layout() {
       </aside>
 
       <main className={`flex-1 overflow-y-auto flex flex-col min-w-0 relative z-10 transition-all duration-300 ${aiPanelOpen ? 'ai-panel-open' : ''}`}>
-        <header className="sticky top-0 z-30 flex items-center gap-2 md:gap-4 px-3 md:px-6 py-3 md:py-4 border-b border-border glass-sidebar" style={{background: 'linear-gradient(135deg, rgba(10,15,44,0.95), rgba(2,6,23,0.95))', boxShadow: '0 0 30px rgba(168,85,247,0.15), inset 0 0 20px rgba(34,211,238,0.05)', borderBottom: '1px solid rgba(168,85,247,0.3)', borderRadius: '0 0 12px 12px', borderTop: 'none', borderLeft: 'none', borderRight: 'none'}}>
+        <header className="sticky top-0 z-30 flex items-center gap-2 md:gap-4 px-3 md:px-6 py-3 md:py-4 glass-header">
           {/* Mobile sidebar toggle */}
           <button
             onClick={() => setSidebarOpen(true)}

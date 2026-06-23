@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { path: '/admin/mock-tests', label: 'Mock Tests', icon: 'mock-tests' },
   { path: '/admin/pyq', label: 'PYQs', icon: 'pyq' },
   { path: '/admin/question-bank', label: 'Question Bank', icon: 'database' },
+  { path: '/admin/gate-vault', label: 'Gate Vault', icon: 'vault' },
   { section: 'ANALYTICS' },
   { path: '/admin/analytics', label: 'Analytics', icon: 'bar-chart' },
   { path: '/admin/ai-analytics', label: 'AI Analytics', icon: 'cpu' },
@@ -81,8 +82,11 @@ export default function AdminLayout() {
               {admin?.name?.charAt(0) || 'A'}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold text-text truncate">{admin?.name}</div>
-              <div className="text-[10px] text-text3 truncate">{admin?.role}</div>
+              <div className="flex items-center gap-2">
+                <div className="text-xs font-semibold text-text truncate">{admin?.name}</div>
+                <span className="shrink-0 inline-block text-[9px] px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/20 font-semibold leading-tight">ADMIN</span>
+              </div>
+              <div className="text-[10px] text-text3 truncate">{admin?.role?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
             </div>
             <button onClick={handleLogout} className="text-text3 hover:text-danger transition-colors p-1.5" title="Logout">
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" /></svg>

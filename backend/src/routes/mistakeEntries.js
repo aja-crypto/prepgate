@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
-const { isMongoConnected } = require('../config/db');
+const { isMongoConnected, isMockAuthEnabled } = require('../config/db');
 const { MistakeEntry } = require('../models/MockTest');
 const {
   saveLocalMistakeEntry,
@@ -18,7 +18,7 @@ router.get('/', protect, async (req, res, next) => {
     if (subject) filter.subject = subject;
     if (category) filter.category = category;
 
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.json({ success: true, data: getLocalMistakeEntries(userId, filter) });
     }
     const entries = await MistakeEntry.find({ user: userId, ...filter }).sort({ createdAt: -1 });
@@ -31,7 +31,7 @@ router.get('/', protect, async (req, res, next) => {
 router.get('/aggregates', protect, async (req, res, next) => {
   try {
     const userId = req.user.id;
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.json({ success: true, data: getLocalMistakeAggregates(userId) });
     }
     const entries = await MistakeEntry.find({ user: userId });

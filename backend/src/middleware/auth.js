@@ -1,7 +1,7 @@
 // src/middleware/auth.js – JWT Authentication Middleware
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { isMockAuthEnabled } = require('../config/devMode');
+const { isMockAuthEnabled, enableMockAuth } = require('../config/devMode');
 const mockStore = require('../store/mockStore');
 
 /**
@@ -19,6 +19,7 @@ exports.protect = async (req, res, next) => {
     // Check if it's a demo/guest user (only if not in strict mode)
     const isDemoRequest = req.headers['x-demo-user'] === 'true';
     if (isDemoRequest) {
+      enableMockAuth();
       req.user = {
         _id: 'demo_user_id',
         id: 'demo_user_id',

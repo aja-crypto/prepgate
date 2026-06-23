@@ -6,6 +6,7 @@ const fs = require('fs');
 const Tesseract = require('tesseract.js');
 const { protect } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
+const { isMockAuthEnabled } = require('../config/devMode');
 const { Note } = require('../models');
 const { getLocalNotes, saveLocalNote, updateLocalNote, deleteLocalNote } = require('../store/localDataStore');
 const { validateFields, VALID_SUBJECTS, VALID_DIFFICULTIES } = require('../middleware/validateInput');
@@ -50,7 +51,7 @@ router.get('/stats', protect, async (req, res, next) => {
   try {
     const userId = req.user._id;
 
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       const allLocal = getLocalNotes({ user: userId });
       return res.json({
         success: true,
@@ -85,7 +86,7 @@ router.get('/', protect, async (req, res, next) => {
     if (req.query.favorite) filter.isFavorite = true;
     if (req.query.search) filter.search = req.query.search;
 
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       const notes = getLocalNotes(filter);
       return res.json({ success: true, count: notes.length, data: notes.map(n => transformNote(n, req)) });
     }
@@ -135,7 +136,7 @@ router.post('/', protect, upload.single('file'), validateFields([
     }
 
     let note;
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       note = saveLocalNote(noteData);
       console.log('Saved to Local Store:', note._id);
     } else {
@@ -147,7 +148,7 @@ router.post('/', protect, upload.single('file'), validateFields([
     if (req.file && req.file.mimetype.startsWith('image/')) {
       Tesseract.recognize(req.file.path, 'eng')
         .then(({ data: { text } }) => {
-          if (isMongoConnected()) {
+          if (isMongoConnected() && !isMockAuthEnabled()) {
             Note.findByIdAndUpdate(note._id, { ocrText: text }).catch(console.error);
           } else {
             updateLocalNote(note._id, { ocrText: text });
@@ -185,7 +186,7 @@ router.put('/:id', protect, upload.single('file'), validateFields([
     if (req.file) {
       // Delete old file before replacing
       let oldNote;
-      if (isMongoConnected()) {
+      if (isMongoConnected() && !isMockAuthEnabled()) {
         oldNote = await Note.findOne({ _id: req.params.id, user: req.user._id });
       } else {
         const allLocal = getLocalNotes({ user: req.user._id });
@@ -201,7 +202,7 @@ router.put('/:id', protect, upload.single('file'), validateFields([
     }
 
     let note;
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       note = updateLocalNote(req.params.id, updateData);
     } else {
       note = await Note.findOneAndUpdate(
@@ -219,7 +220,7 @@ router.put('/:id', protect, upload.single('file'), validateFields([
 router.delete('/:id', protect, async (req, res, next) => {
   try {
     let note;
-    if (isMongoConnected()) {
+    if (isMongoConnected() && !isMockAuthEnabled()) {
       note = await Note.findOne({ _id: req.params.id, user: req.user._id });
     } else {
       const allLocal = getLocalNotes({ user: req.user._id });
@@ -231,7 +232,7 @@ router.delete('/:id', protect, async (req, res, next) => {
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     }
 
-    if (isMongoConnected()) {
+    if (isMongoConnected() && !isMockAuthEnabled()) {
       await Note.findOneAndDelete({ _id: req.params.id, user: req.user._id });
     } else {
       deleteLocalNote(req.params.id);

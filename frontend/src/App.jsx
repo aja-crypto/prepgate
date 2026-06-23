@@ -58,6 +58,7 @@ const ShortNotesPage = lazy(() => import('./pages/ShortNotesPage'));
 const FinalRevisionHubPage = lazy(() => import('./pages/FinalRevisionHubPage'));
 const DoubtSolverPage = lazy(() => import('./pages/DoubtSolverPage'));
 const DeepFocusPage = lazy(() => import('./pages/DeepFocusPage'));
+const FocusSessionPage = lazy(() => import('./pages/FocusSessionPage'));
 const SubjectMocksPage = lazy(() => import('./pages/SubjectMocksPage'));
 const MockTestsPage = lazy(() => import('./pages/MockTestsPage'));
 const MockTestTakingPage = lazy(() => import('./pages/MockTestTakingPage'));
@@ -214,6 +215,7 @@ export default function App() {
       <Route path="/about" element={<PrivateRoute><AboutPage /></PrivateRoute>} />
       <Route path="/protected/view/:id" element={<PrivateRoute><ProtectedViewPage /></PrivateRoute>} />
       <Route path="/deep-focus" element={<PrivateRoute><DeepFocusPage /></PrivateRoute>} />
+      <Route path="/focus-session" element={<PrivateRoute><FocusSessionPage /></PrivateRoute>} />
 
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />

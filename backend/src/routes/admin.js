@@ -7,6 +7,7 @@ const Subject = require('../models/Subject');
 const AdminPdf = require('../models/AdminPdf');
 const aiUsage = require('../services/aiUsageTracker');
 const { Topic, Note, MockTest, PYQ } = require('../models');
+const { getLocalMockTests } = require('../store/localDataStore');
 
 // Local user helpers (mock store)
 const localAdminStore = require('../store/localAdminStore');
@@ -104,13 +105,14 @@ router.get('/stats', adminProtect, async (req, res, next) => {
     const queries = [
       User.countDocuments(),
       User.countDocuments({ lastLogin: { $gte: todayStart } }),
+      User.countDocuments({ $or: [{ lastLogin: { $gte: todayStart } }, { 'streak.lastStudyDate': { $gte: todayStart } }] }),
       User.countDocuments({ createdAt: { $gte: weekAgo } }),
       User.countDocuments({ createdAt: { $gte: monthAgo } }),
       Subject.countDocuments({ isActive: true }),
       Topic.countDocuments(),
       Note.countDocuments(),
       MockTest.countDocuments(),
-      PYQ.countDocuments(),
+      PYQ.countDocuments({ isActive: { $ne: false } }),
       AdminPdf.countDocuments(),
       AdminPdf.countDocuments({ isPublished: true }),
       AdminPdf.countDocuments({ isPublished: false }),
@@ -144,7 +146,7 @@ router.get('/stats', adminProtect, async (req, res, next) => {
           subjects: subjectCount,
           topics: topicCount,
           notes: noteCount,
-          tests: mockTestCount,
+          tests: mockTestCount + (getLocalMockTests ? getLocalMockTests().length : 0),
           pyqs: pyqCount,
           pdfs: {
             total: totalPdfs,
@@ -193,14 +195,53 @@ router.get('/users', adminProtect, async (req, res, next) => {
       }
       if (status === 'active') users = users.filter(u => !u.deletedAt);
       if (status === 'deleted') users = users.filter(u => u.deletedAt);
-      const total = users.length;
-      users = users.slice(skip, skip + parseInt(limit));
+
+      // Deduplicate by email — keep latest entry per user
+      const userMap = new Map();
+      users.forEach(u => {
+        const key = u.email?.toLowerCase();
+        if (!key) return;
+        const existing = userMap.get(key);
+        if (!existing || (u.lastLogin && new Date(u.lastLogin) > new Date(existing.lastLogin || 0))) {
+          userMap.set(key, u);
+        }
+      });
+
+      // Calculate study hours from progress data if available
+      const getStudyHours = (u) => {
+        if (u.progressBackup?.data?.totalHours) return u.progressBackup.data.totalHours;
+        if (u.studyGoalHours) return u.studyGoalHours;
+        return 0;
+      };
+
+      // Calculate engagement from actual data
+      const getEngagement = (u) => {
+        const hours = getStudyHours(u);
+        const streak = u.streak?.current || 0;
+        if (hours > 50 && streak > 7) return 'Power User';
+        if (hours > 20) return 'High';
+        if (hours > 5) return 'Medium';
+        return 'Low';
+      };
+
+      const deduplicated = Array.from(userMap.values()).map(u => ({
+        ...u,
+        totalLogins: u.loginHistory?.length || 1,
+        lastLogin: u.lastLogin || u.createdAt,
+        studyHours: getStudyHours(u),
+        engagement: getEngagement(u),
+        streak: u.streak?.current || 0,
+        lastActive: u.lastLogin ? timeAgo(u.lastLogin) : timeAgo(u.createdAt),
+      }));
+
+      const total = deduplicated.length;
+      const paginated = deduplicated.slice(skip, skip + parseInt(limit));
       return res.json({
         success: true,
         count: total,
         page: parseInt(page),
         pages: Math.ceil(total / parseInt(limit)),
-        data: users.map(u => ({ ...u, password: undefined })),
+        data: paginated,
       });
     }
 
@@ -219,15 +260,49 @@ router.get('/users', adminProtect, async (req, res, next) => {
       User.find(filter).select('-password').sort(sort).skip(skip).limit(parseInt(limit)),
       User.countDocuments(filter),
     ]);
+
+    // Enrich with aggregated progress data
+    const enrichedUsers = users.map(u => {
+      const totalLogins = u.loginHistory?.length || 1;
+      const lastLogin = u.lastLogin ? timeAgo(u.lastLogin) : 'Never';
+      // Calculate study hours from progress or use studyGoalHours as fallback
+      const studyHours = u.progressBackup?.data?.totalHours || u.studyGoalHours || 0;
+      const streakCurrent = u.streak?.current || 0;
+      const isEngaged = studyHours > 50 && streakCurrent > 7;
+      const engagement = isEngaged ? 'Power User' : studyHours > 20 ? 'High' : studyHours > 5 ? 'Medium' : 'Low';
+
+      return {
+        ...u.toObject(),
+        totalLogins,
+        lastLogin,
+        studyHours,
+        streak: streakCurrent,
+        engagement,
+      };
+    });
+
     res.json({
       success: true,
       count: total,
       page: parseInt(page),
       pages: Math.ceil(total / parseInt(limit)),
-      data: users,
+      data: enrichedUsers,
     });
   } catch (e) { next(e); }
 });
+
+// Helper: time ago string
+function timeAgo(date) {
+  if (!date) return 'Never';
+  const now = new Date();
+  const d = new Date(date);
+  const diff = Math.floor((now - d) / 1000);
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return d.toLocaleDateString();
+}
 
 // PUT update user role
 router.put('/users/:id/role', adminProtect, async (req, res, next) => {

@@ -53,7 +53,7 @@ api.interceptors.response.use(
 
     // Auto-retry on network errors (backend down, DB disconnect) — up to 2 tries
     const isNetworkError = !error.response && error.message === 'Network Error';
-    const isServerUnavailable = error.response?.status === 503 || error.response?.status === 502;
+    const isServerUnavailable = error.response?.status === 503 || error.response?.status === 502 || error.response?.status === 504 || error.response?.status === 500;
     if ((isNetworkError || isServerUnavailable) && !originalRequest._retryCount) {
       originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
       if (originalRequest._retryCount <= 2) {

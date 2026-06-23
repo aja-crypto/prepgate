@@ -72,6 +72,7 @@ const userSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
   verifyEmailToken: String,
   verifyEmailExpire: Date,
+  lastLogin: { type: Date, default: null },
   deletedAt: { type: Date, default: null },
 }, {
   timestamps: true,

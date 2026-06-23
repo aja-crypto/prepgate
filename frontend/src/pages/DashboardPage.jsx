@@ -38,6 +38,7 @@ import GateVaultWidget from '../components/gate/GateVaultWidget';
 import NotesHubWidget from '../components/gate/NotesHubWidget';
 import RecommendationEngine from '../components/gate/RecommendationEngine';
 import ExamTimeline from '../components/gate/ExamTimeline';
+import FocusStatsCard from '../components/gate/FocusStatsCard';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -58,7 +59,7 @@ export default function DashboardPage() {
   );
   const overall = Math.round(subjects.reduce((s, x) => s + x.progress, 0) / (subjects.length || 1));
   const dailyProgress = getDailyTargetProgress(safeGF.dailyTarget, safeGF.todayProgress);
-  const { current: streakCurrent } = safeGF.streak || {};
+  const { current: streakCurrent = 0 } = safeGF.streak || {};
   const readiness = computeReadinessScore(safeTopics, safePyqs, safeMocks, safeGF.streak);
 
   const widgetContent = {
@@ -89,7 +90,7 @@ export default function DashboardPage() {
     ),
     countdown: (
       <OfficialCountdown
-        examDate={liveData?.examDate || gateFeatures.examDate}
+        examDate={liveData?.examDate || safeGF.examDate}
         schedule={liveData?.schedule || []}
       />
     ),
@@ -189,6 +190,81 @@ export default function DashboardPage() {
         <GamificationPanel gamification={gamification} />
       </div>
     ),
+    'focus-stats': <FocusStatsCard />,
+    'action-center': (
+      <GlassCard>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.2), rgba(245,158,11,0.15))' }}>🎯</div>
+          <div>
+            <h3 className="text-sm font-bold text-text">Am I Ready for GATE?</h3>
+            <p className="text-[10px] text-text3">Based on {overall}% overall progress</p>
+          </div>
+        </div>
+        <div className="space-y-2">
+          {[
+            { label: 'Subject Coverage', met: overall >= 60 },
+            { label: 'Mock Tests Attempted', met: safeMocks.length >= 5 },
+            { label: 'PYQs Solved', met: safePyqs.filter(p => p.solved).length >= 100 },
+            { label: 'Study Streak', met: streakCurrent >= 7 },
+          ].map((c, i) => (
+            <div key={i} className="flex items-center gap-2 text-xs">
+              <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] ${c.met ? 'bg-success/20 text-success' : 'bg-bg-3 text-text3'}`}>
+                {c.met ? '✓' : '×'}
+              </span>
+              <span className="text-text2">{c.label}</span>
+            </div>
+          ))}
+        </div>
+      </GlassCard>
+    ),
+    'today-plan': (
+      <GlassCard>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base" style={{ background: 'linear-gradient(135deg, rgba(79,143,255,0.2), rgba(6,214,160,0.15))' }}>📋</div>
+          <div>
+            <h3 className="text-sm font-bold text-text">Today&apos;s Plan</h3>
+            <p className="text-[10px] text-text3">{dailyProgress.hours}h studied · {dailyProgress.topicsCompleted} topics done</p>
+          </div>
+        </div>
+        <Link to="/topics" className="text-xs text-primary hover:underline">Open study planner →</Link>
+      </GlassCard>
+    ),
+    'success-hub': (
+      <GlassCard>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.2), rgba(245,158,11,0.15))' }}>🏆</div>
+          <div>
+            <h3 className="text-sm font-bold text-text">Success Hub</h3>
+            <p className="text-[10px] text-text3">Roadmaps, topper advice & more</p>
+          </div>
+        </div>
+        <Link to="/success-hub" className="text-xs text-primary hover:underline">Explore resources →</Link>
+      </GlassCard>
+    ),
+    'revision-schedule': (
+      <GlassCard>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base" style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.2), rgba(6,182,212,0.15))' }}>🔄</div>
+          <div>
+            <h3 className="text-sm font-bold text-text">Revision Schedule</h3>
+            <p className="text-[10px] text-text3">Topics due for revision</p>
+          </div>
+        </div>
+        <Link to="/revision" className="text-xs text-primary hover:underline">View revision plan →</Link>
+      </GlassCard>
+    ),
+    'progress-heatmap': (
+      <GlassCard>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(99,102,241,0.15))' }}>📊</div>
+          <div>
+            <h3 className="text-sm font-bold text-text">Progress Heatmap</h3>
+            <p className="text-[10px] text-text3">Study activity over time</p>
+          </div>
+        </div>
+        <Link to="/analytics" className="text-xs text-primary hover:underline">View full analytics →</Link>
+      </GlassCard>
+    ),
   };
 
   const spanMap = {
@@ -209,6 +285,12 @@ export default function DashboardPage() {
     subjects: 'col-span-full',
     recommendations: 'col-span-full',
     predictions: 'col-span-full',
+    'focus-stats': 'md:col-span-1',
+    'action-center': 'md:col-span-1',
+    'today-plan': 'md:col-span-1',
+    'success-hub': 'md:col-span-1',
+    'revision-schedule': 'md:col-span-1',
+    'progress-heatmap': 'md:col-span-1',
     'live-news': 'md:col-span-1',
     'exam-schedule': 'md:col-span-1',
     'exam-timeline': 'md:col-span-1',

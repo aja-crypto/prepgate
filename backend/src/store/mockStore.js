@@ -40,7 +40,7 @@ function loadUsersFromDisk() {
           if (this.streak.current > this.streak.longest) this.streak.longest = this.streak.current;
           this.streak.lastStudyDate = new Date();
         };
-        u.save = async function () { return this; };
+        u.save = async function () { saveUsersToDisk(); return this; };
         usersByEmail.set(u.email, u);
         usersById.set(u._id, u);
       });

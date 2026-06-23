@@ -101,7 +101,13 @@ export function FocusProvider({ children }) {
         setIsMinimized(true);
         sessionStartRef.current = saved.sessionStart || Date.now();
       } else if (saved.mode === 'work' && remaining <= 0) {
-        onSessionComplete();
+        // Session expired while away — mark as completed
+        const completedSessions = (saved.sessionsCompleted || 0) + 1;
+        setSessionsCompleted(completedSessions);
+        setMode('break');
+        setIsActive(false);
+        setTimeRemaining(0);
+        clearPersistedState();
       }
     }
     // restore daily focus
@@ -293,7 +299,7 @@ export function FocusProvider({ children }) {
   return (
     <FocusContext.Provider value={{
       isActive, isPaused, mode, sessionDuration, endTime, timeRemaining,
-      sessionsCompleted, focusHours, dailyStreak, isMinimized, currentSubject,
+      sessionsCompleted, focusHours, dailyStreak, isMinimized, currentSubject, setCurrentSubject,
       progress, isExpanded, setIsExpanded, DURATIONS, BREAK_DURATION,
       startSession, pauseSession, resumeSession, stopSession,
       toggleMinimized, selectDuration, getTodayFocus,

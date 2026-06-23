@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
-const { isMongoConnected } = require('../config/db');
+const { isMongoConnected, isMockAuthEnabled } = require('../config/db');
 const { MockTest, MockTestQuestion, UserMockAttempt } = require('../models/MockTest');
 const {
   seedLocalMockData,
@@ -67,7 +67,7 @@ router.get('/subjects', protect, async (req, res, next) => {
 router.get('/analytics', protect, async (req, res, next) => {
   try {
     const userId = req.user.id;
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.json({ success: true, data: getLocalMockAnalytics(userId) });
     }
     const attempts = await UserMockAttempt.find({ user: userId }).sort('createdAt');
@@ -94,7 +94,7 @@ router.get('/analytics', protect, async (req, res, next) => {
 router.get('/progress', protect, async (req, res, next) => {
   try {
     const userId = req.user.id;
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       const attempts = getAllLocalMockAttempts(userId);
       return res.json({ success: true, data: attempts });
     }

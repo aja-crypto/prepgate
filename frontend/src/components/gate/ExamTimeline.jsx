@@ -50,7 +50,7 @@ export default function ExamTimeline() {
     return d > now;
   });
   const activePhase = currentPhaseIdx >= 0 ? currentPhaseIdx : PHASES.length - 1;
-  const monthsLeft = Math.max(0, 7 - (now.getMonth() + 1 - 7));
+  const monthsLeft = Math.max(0, (new Date('2027-02-01').getFullYear() - now.getFullYear()) * 12 + (new Date('2027-02-01').getMonth() - now.getMonth()));
 
   return (
     <div className="space-y-4">

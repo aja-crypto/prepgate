@@ -19,7 +19,9 @@ export default function AdminAnalyticsPage() {
   useEffect(() => { fetchStats(); }, []);
 
   const cards = [
-    { label: 'Total Users', value: stats?.users ?? '—', color: '#8B5CF6' },
+    { label: 'Total Users', value: stats?.users?.total ?? stats?.users ?? '—', color: '#8B5CF6' },
+    { label: 'Active Today', value: stats?.users?.activeToday ?? '—', color: '#10B981' },
+    { label: 'New This Week', value: stats?.users?.newThisWeek ?? '—', color: '#3B82F6' },
     { label: 'Subjects', value: stats?.subjects ?? '—', color: '#3B82F6' },
     { label: 'Topics', value: stats?.topics ?? '—', color: '#10B981' },
     { label: 'Notes', value: stats?.notes ?? '—', color: '#F59E0B' },

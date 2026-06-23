@@ -1,7 +1,7 @@
 // src/routes/pyq.js – PYQ bank, practice, attempts, bookmarks
 const router = require('express').Router();
 const { protect, adminOnly } = require('../middleware/auth');
-const { isMongoConnected } = require('../config/db');
+const { isMongoConnected, isMockAuthEnabled } = require('../config/db');
 const { PYQ, UserPYQ } = require('../models');
 const { checkAnswer } = require('../services/pyqImportService');
 
@@ -106,7 +106,7 @@ router.get('/stats/overview', protect, async (req, res, next) => {
 // GET all PYQs with filters
 router.get('/', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) return emptyPyq(res, { page: 1 });
+    if (!isMongoConnected() || isMockAuthEnabled()) return emptyPyq(res, { page: 1 });
     const filter = { isActive: { $ne: false } };
     if (req.query.subject) filter.subject = req.query.subject;
     if (req.query.topic) filter.topic = req.query.topic;
@@ -150,7 +150,7 @@ router.get('/', protect, async (req, res, next) => {
 // GET single PYQ (hide answer unless reveal=true and user has attempted)
 router.get('/:id', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.status(404).json({ success: false, message: 'PYQ not found (MongoDB required for question bank)' });
     }
     const pyq = await PYQ.findById(req.params.id)
@@ -187,7 +187,7 @@ router.get('/:id', protect, async (req, res, next) => {
 // POST attempt answer — returns solution
 router.post('/:id/attempt', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.status(503).json({ success: false, message: 'PYQ practice requires MongoDB' });
     }
     const pyq = await PYQ.findById(req.params.id);
@@ -248,7 +248,7 @@ router.post('/:id/attempt', protect, async (req, res, next) => {
 
 router.patch('/:id/bookmark', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) return res.json({ success: true, data: { isBookmarked: req.body.isBookmarked } });
+    if (!isMongoConnected() || isMockAuthEnabled()) return res.json({ success: true, data: { isBookmarked: req.body.isBookmarked } });
     const pyq = await PYQ.findById(req.params.id);
     if (!pyq) return res.status(404).json({ success: false, message: 'PYQ not found' });
 
@@ -263,7 +263,7 @@ router.patch('/:id/bookmark', protect, async (req, res, next) => {
 
 router.patch('/:id/flags', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) return res.json({ success: true, data: req.body });
+    if (!isMongoConnected() || isMockAuthEnabled()) return res.json({ success: true, data: req.body });
     const pyq = await PYQ.findById(req.params.id);
     if (!pyq) return res.status(404).json({ success: false, message: 'PYQ not found' });
 
@@ -283,7 +283,7 @@ router.patch('/:id/flags', protect, async (req, res, next) => {
 
 router.patch('/:id/solved', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) return res.json({ success: true, data: { isSolved: req.body.isSolved } });
+    if (!isMongoConnected() || isMockAuthEnabled()) return res.json({ success: true, data: { isSolved: req.body.isSolved } });
     const pyq = await PYQ.findById(req.params.id);
     if (!pyq) return res.status(404).json({ success: false, message: 'PYQ not found' });
 

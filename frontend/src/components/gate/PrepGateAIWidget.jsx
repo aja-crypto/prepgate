@@ -23,7 +23,7 @@ export default function PrepGateAIWidget() {
       const data = r.data?.data;
       if (Array.isArray(data) && data.length) setInsights(data[0]);
       else if (data) setInsights(data);
-    }).catch(() => {});
+    }).catch(e => console.warn('[PrepGateAIWidget] insights fetch failed', e?.message));
   }, []);
 
   const safeTopics = topics || [];
@@ -164,7 +164,7 @@ export default function PrepGateAIWidget() {
         );
 
       case 'recommendations':
-        const readiness = safeTopics.length > 0 ? Math.round(completion.reduce((s, x) => s + x.progress, 0) / completion.length) : 0;
+        const readiness = completion.length > 0 ? Math.round(completion.reduce((s, x) => s + x.progress, 0) / completion.length) : 0;
         const recs = [];
         if (readiness < 30) recs.push('Focus on completing core subject topics first');
         if (readiness < 50) recs.push('Start solving PYQs alongside theory study');

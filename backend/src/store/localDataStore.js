@@ -19,6 +19,83 @@ const localProgress = new Map();
 const subjectIdMap = new Map(); // code -> id
 const topicIdMap = new Map();   // id -> topic doc
 
+let localFlashcards = [];
+const FLASHCARDS_FILE = path.join(__dirname, '../../data/gatevault_flashcards.json');
+
+function loadLocalFlashcards() {
+  try {
+    if (fs.existsSync(FLASHCARDS_FILE)) {
+      localFlashcards = JSON.parse(fs.readFileSync(FLASHCARDS_FILE, 'utf8'));
+    }
+  } catch {}
+}
+
+function saveLocalFlashcardsToDisk() {
+  try {
+    if (!fs.existsSync(path.dirname(FLASHCARDS_FILE))) {
+      fs.mkdirSync(path.dirname(FLASHCARDS_FILE), { recursive: true });
+    }
+    fs.writeFileSync(FLASHCARDS_FILE, JSON.stringify(localFlashcards, null, 2));
+  } catch (err) { console.error('Flashcard save failed:', err.message); }
+}
+
+function getLocalFlashcards(filter = {}) {
+  let result = localFlashcards;
+  if (filter.subject) result = result.filter(c => c.subject === filter.subject);
+  if (filter.difficulty) result = result.filter(c => c.difficulty === filter.difficulty);
+  if (filter.search) {
+    const s = filter.subject || '';
+    const q = filter.search.toLowerCase();
+    result = result.filter(c => (c.question || '').toLowerCase().includes(q));
+  }
+  return result;
+}
+
+function saveLocalFlashcard(data) {
+  const card = { _id: oid(), createdAt: new Date().toISOString(), ...data };
+  localFlashcards.push(card);
+  saveLocalFlashcardsToDisk();
+  return card;
+}
+
+function updateLocalFlashcard(id, data) {
+  const idx = localFlashcards.findIndex(c => c._id === id);
+  if (idx === -1) return null;
+  localFlashcards[idx] = { ...localFlashcards[idx], ...data };
+  saveLocalFlashcardsToDisk();
+  return localFlashcards[idx];
+}
+
+function deleteLocalFlashcard(id) {
+  const before = localFlashcards.length;
+  localFlashcards = localFlashcards.filter(c => c._id !== id);
+  saveLocalFlashcardsToDisk();
+  return localFlashcards.length < before;
+}
+
+function bulkSaveLocalFlashcards(cards) {
+  const created = cards.map(c => ({
+    _id: oid(),
+    createdAt: new Date().toISOString(),
+    question: c.question,
+    options: c.options || [],
+    correctAnswer: c.correctAnswer || '',
+    explanation: c.explanation || '',
+    subject: c.subject || 'APT',
+    topic: c.topic || '',
+    importanceScore: c.importanceScore || 5,
+    difficulty: c.difficulty || 'medium',
+    year: c.year,
+    marks: c.marks,
+    questionType: c.questionType || 'MCQ',
+  }));
+  localFlashcards.push(...created);
+  saveLocalFlashcardsToDisk();
+  return created;
+}
+
+loadLocalFlashcards();
+
 function oid() {
   return crypto.randomBytes(12).toString('hex');
 }
@@ -646,4 +723,9 @@ module.exports = {
   updateLocalMockQuestion,
   deleteLocalMockQuestion,
   getLocalMockQuestionsAll,
+  getLocalFlashcards,
+  saveLocalFlashcard,
+  updateLocalFlashcard,
+  deleteLocalFlashcard,
+  bulkSaveLocalFlashcards,
 };

@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 const PAGE_SIZE = 15;
 
 const TABS = [
+  { key: 'ai-studio', label: '✨ AI Studio', icon: 'sparkles' },
   { key: 'insights', label: 'GATE Insights', icon: 'chart' },
   { key: 'challenges', label: 'Challenges', icon: 'zap' },
   { key: 'motivation', label: 'Motivation', icon: 'heart' },
@@ -346,6 +347,53 @@ export default function AdminCmsPage() {
   const [filter, setFilter] = useState('');
   const searchRef = useRef(null);
 
+  // AI Content Studio State
+  const [aiInput, setAiInput] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiResult, setAiResult] = useState(null);
+  const [aiTargetTab, setAiTargetTab] = useState('insights');
+
+  const handleAiGenerate = async () => {
+    if (!aiInput.trim()) return;
+    setAiGenerating(true);
+    setAiResult(null);
+    try {
+      const res = await adminApi.post('/admin/cms/ai/generate', {
+        content: aiInput,
+        targetTab: aiTargetTab,
+      });
+      if (res.data.success) setAiResult(res.data.data);
+      else toast.error(res.data.message || 'Generation failed');
+    } catch {
+      toast.error('AI generation failed — using heuristic fallback');
+      // Heuristic fallback: parse content into basic structure
+      const lines = aiInput.split('\n').filter(l => l.trim());
+      const result = {
+        title: lines[0] || 'Untitled',
+        description: lines.slice(1, 3).join(' '),
+        insight: lines.find(l => l.toLowerCase().includes('insight')) || lines[0],
+        challenge: lines.find(l => l.toLowerCase().includes('challenge')) || '',
+        motivation: lines.find(l => l.toLowerCase().includes('motivation')) || lines[1] || '',
+        resource: lines.find(l => l.toLowerCase().includes('resource')) || '',
+      };
+      setAiResult(result);
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
+  const handleAiSave = async (generatedContent) => {
+    try {
+      const service = cmsService[aiTargetTab];
+      await service.create(generatedContent);
+      toast.success(`Saved to ${TABS.find(t => t.key === aiTargetTab)?.label}`);
+      setAiResult(null);
+      setAiInput('');
+    } catch {
+      toast.error('Save failed');
+    }
+  };
+
   // Fetch stats
   useEffect(() => {
     (async () => {
@@ -531,43 +579,70 @@ export default function AdminCmsPage() {
         <span className="text-xs text-text3 ml-auto">{total} items</span>
       </div>
 
-      {/* Data Table */}
-      <GlassCard className="overflow-hidden">
-        <div className="p-4">
-          <DataTable
-            fields={TAB_FIELDS[activeTab] || []}
-            data={items}
-            loading={loading}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onTogglePublish={handleTogglePublish}
-            selectedIds={selectedIds}
-            onSelect={handleSelect}
-            onSelectAll={handleSelectAll}
-          />
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 border-t border-border">
-            <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="px-3 py-1.5 text-sm rounded-lg bg-bg-3 text-text3 hover:text-text disabled:opacity-30"
-            >
-              Previous
-            </button>
-            <span className="text-xs text-text3">Page {page} of {totalPages}</span>
-            <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="px-3 py-1.5 text-sm rounded-lg bg-bg-3 text-text3 hover:text-text disabled:opacity-30"
-            >
-              Next
-            </button>
+      {/* Content — AI Studio vs normal table */}
+      {activeTab === 'ai-studio' ? (
+        <GlassCard className="p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(99,102,241,0.15))' }}>✨</div>
+            <div>
+              <h3 className="font-bold text-text">AI Content Studio</h3>
+              <p className="text-xs text-text3">Write freely — AI categorizes and structures for you</p>
+            </div>
           </div>
-        )}
-      </GlassCard>
+
+          <div className="mb-4">
+            <label className="text-xs text-text3 uppercase tracking-wider mb-2 block">Target Category</label>
+            <div className="flex gap-2 flex-wrap">
+              {[{ key: 'insights', label: '📊 Insight' }, { key: 'motivation', label: '🔥 Motivation' }, { key: 'challenges', label: '⚡ Challenge' }, { key: 'announcements', label: '📢 Announcement' }, { key: 'featured-resources', label: '📚 Resource' }].map(t => (
+                <button key={t.key} onClick={() => setAiTargetTab(t.key)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${aiTargetTab === t.key ? 'bg-purple-500/20 border-purple-500/40 text-purple-400' : 'bg-bg-2 border-border text-text3 hover:text-text'}`}>{t.label}</button>
+              ))}
+            </div>
+          </div>
+
+          <textarea value={aiInput} onChange={e => setAiInput(e.target.value)} rows={5} placeholder="Write your content freely... e.g. Many students struggle with Thermodynamics because they keep postponing revision. We recommend revising formulas every Sunday." className="w-full px-4 py-3 bg-bg-2 border border-border rounded-xl text-text text-sm placeholder:text-text3 focus:outline-none focus:border-purple-500 resize-y mb-4" />
+
+          <button onClick={handleAiGenerate} disabled={aiGenerating || !aiInput.trim()} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}>
+            {aiGenerating ? '⟳ Generating...' : '✨ Generate Content'} </button>
+
+          {aiResult && (
+            <div className="mt-6 space-y-4">
+              {aiResult.title && <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl"><span className="text-[10px] text-purple-400 uppercase tracking-wider">Title</span><p className="text-sm font-semibold text-text mt-0.5">{aiResult.title}</p></div>}
+              {aiResult.description && <div className="p-3 bg-bg-2 border border-border rounded-xl"><span className="text-[10px] text-text3 uppercase tracking-wider">Description</span><p className="text-sm text-text2 mt-0.5">{aiResult.description}</p></div>}
+              {aiResult.insight && <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl"><span className="text-[10px] text-blue-400 uppercase tracking-wider">📊 Insight</span><p className="text-sm text-text mt-0.5">{aiResult.insight}</p></div>}
+              {aiResult.motivation && <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl"><span className="text-[10px] text-amber-400 uppercase tracking-wider">🔥 Motivation</span><p className="text-sm text-text mt-0.5">{aiResult.motivation}</p></div>}
+              {aiResult.challenge && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl"><span className="text-[10px] text-red-400 uppercase tracking-wider">⚡ Challenge</span><p className="text-sm text-text mt-0.5">{aiResult.challenge}</p></div>}
+              {aiResult.resource && <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl"><span className="text-[10px] text-cyan-400 uppercase tracking-wider">📚 Resource</span><p className="text-sm text-text mt-0.5">{aiResult.resource}</p></div>}
+              <div className="flex gap-3">
+                <button onClick={() => handleAiSave(aiResult)} className="px-5 py-2 rounded-xl text-sm font-medium text-white" style={{ background: 'linear-gradient(135deg, #34D399, #22D3EE)' }}>💾 Save to {TABS.find(t => t.key === aiTargetTab)?.label}</button>
+                <button onClick={() => setAiResult(null)} className="px-4 py-2 rounded-xl text-sm text-text3 hover:text-text border border-border">Cancel</button>
+              </div>
+            </div>
+          )}
+        </GlassCard>
+      ) : (
+        <GlassCard className="overflow-hidden">
+          <div className="p-4">
+            <DataTable
+              fields={TAB_FIELDS[activeTab] || []}
+              data={items}
+              loading={loading}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onTogglePublish={handleTogglePublish}
+              selectedIds={selectedIds}
+              onSelect={handleSelect}
+              onSelectAll={handleSelectAll}
+            />
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between p-4 border-t border-border">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="px-3 py-1.5 text-sm rounded-lg bg-bg-3 text-text3 hover:text-text disabled:opacity-30">Previous</button>
+              <span className="text-xs text-text3">Page {page} of {totalPages}</span>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-3 py-1.5 text-sm rounded-lg bg-bg-3 text-text3 hover:text-text disabled:opacity-30">Next</button>
+            </div>
+          )}
+        </GlassCard>
+      )}
 
       {/* Form Modal */}
       <AnimatePresence>

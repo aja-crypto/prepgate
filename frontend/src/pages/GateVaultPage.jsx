@@ -61,7 +61,7 @@ export default function GateVaultPage() {
         if (progressRes.data.success && progressRes.data.data) {
           setExistingProgress(progressRes.data.data);
         }
-      } else if (!res.data.success && res.data.message?.includes('MongoDB')) {
+      } else {
         useDemoMode();
       }
     } catch (e) {
@@ -108,7 +108,7 @@ export default function GateVaultPage() {
           navigate('/gate-vault/practice', {
             state: {
               setId: monthlySet._id,
-              questions: monthlySet.questions,
+              questions: monthlySet.questions.filter(q => selectedSubjects.includes(q.subject)),
               totalQuestions: res.data.data.totalQuestions,
               progressId: res.data.data.progress._id,
               selectedSubjects,

@@ -31,11 +31,11 @@ export default function WeeklyTestsPage() {
     setLoading(true);
     setLoadError(false);
     Promise.all([
-      weeklyTestService.getSubjectCounts().then(r => setSubjects(r.data.data || [])).catch(() => {}),
-      weeklyTestService.getAll().then(r => setTests(r.data.data || [])).catch(() => {}),
-      weeklyTestService.getProgress().then(r => setProgress(r.data.data || [])).catch(() => {}),
-    ]).then(() => {
-      if (subjects.length === 0 && tests.length === 0) setLoadError(true);
+      weeklyTestService.getSubjectCounts().then(r => { setSubjects(r.data.data || []); return r.data.data?.length; }).catch(e => { console.warn('WeeklyTests getSubjectCounts failed', e?.message); return 0; }),
+      weeklyTestService.getAll().then(r => { setTests(r.data.data || []); return r.data.data?.length; }).catch(e => { console.warn('WeeklyTests getAll failed', e?.message); return 0; }),
+      weeklyTestService.getProgress().then(r => setProgress(r.data.data || [])).catch(e => { console.warn('WeeklyTests getProgress failed', e?.message); }),
+    ]).then(([subjectCount, testCount]) => {
+      if (!subjectCount && !testCount) setLoadError(true);
     }).catch(() => setLoadError(true)).finally(() => setLoading(false));
   };
 

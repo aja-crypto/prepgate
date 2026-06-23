@@ -162,9 +162,11 @@ exports.googleAuth = async (req, res, next) => {
         });
         user.googleId = googleId;
         user.authProvider = 'google';
-        user.isVerified = true;
-        user.avatar = picture;
+      user.isVerified = true;
+      user.avatar = picture;
       }
+      user.lastLogin = new Date();
+      await user.save();
       const { accessToken, refreshToken } = generateTokens(user._id);
       return res.json({
         success: true,
@@ -395,6 +397,8 @@ exports.login = async (req, res, next) => {
         });
       }
       user.updateStreak();
+      user.lastLogin = new Date();
+      await user.save();
       const { accessToken, refreshToken } = generateTokens(user._id);
       return res.status(200).json({
         success: true,
@@ -415,6 +419,7 @@ exports.login = async (req, res, next) => {
 
     // Update streak
     user.updateStreak();
+    user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });
 
     const { accessToken, refreshToken } = generateTokens(user._id);

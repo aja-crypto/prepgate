@@ -12,7 +12,7 @@ export default function AnnouncementBanner() {
         setAnnouncements(data);
         setVisible(true);
       }
-    }).catch(() => {});
+    }).catch(e => console.warn('[AnnouncementBanner] fetch failed', e?.message));
   }, []);
 
   useEffect(() => {

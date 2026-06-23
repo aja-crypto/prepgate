@@ -9,10 +9,19 @@ const flashcardSchema = new mongoose.Schema({
   topic: { type: String, default: '' },
   importanceScore: { type: Number, default: 5, min: 1, max: 10 },
   difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
+  diagramUrl: { type: String, default: '' },
+  category: { type: String, default: '' },
+  fileType: { type: String, default: '' },
+  fileName: { type: String, default: '' },
+  fileUrl: { type: String, default: '' },
+  fileSize: { type: Number, default: 0 },
+  tags: [String],
   createdAt: { type: Date, default: Date.now },
 }, { timestamps: true });
 
 flashcardSchema.index({ subject: 1, importanceScore: -1 });
+flashcardSchema.index({ category: 1 });
+flashcardSchema.index({ fileName: 1 });
 
 const monthlySetSchema = new mongoose.Schema({
   name: { type: String, required: true },

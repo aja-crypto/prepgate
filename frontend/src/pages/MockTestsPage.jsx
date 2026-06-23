@@ -65,11 +65,11 @@ export default function MockTestsPage() {
     setLoading(true);
     setLoadError(false);
     Promise.all([
-      mockTestService.getAll().then(r => setTests(r.data.data || [])).catch(() => {}),
-      mockTestService.getSubjectCounts().then(r => setSubjectCounts(r.data.data || [])).catch(() => {}),
-      mockTestService.getAnalytics().then(r => setAnalytics(r.data.data || null)).catch(() => {}),
-    ]).then(() => {
-      if (tests.length === 0) setLoadError(true);
+      mockTestService.getAll().then(r => { setTests(r.data.data || []); return r.data.data?.length; }).catch(e => { console.warn('MockTests getAll failed', e?.message); return 0; }),
+      mockTestService.getSubjectCounts().then(r => setSubjectCounts(r.data.data || [])).catch(e => { console.warn('MockTests getSubjectCounts failed', e?.message); }),
+      mockTestService.getAnalytics().then(r => setAnalytics(r.data.data || null)).catch(e => { console.warn('MockTests getAnalytics failed', e?.message); }),
+    ]).then(([testCount]) => {
+      if (!testCount) setLoadError(true);
     }).catch(() => setLoadError(true)).finally(() => setLoading(false));
   };
 

@@ -1,7 +1,7 @@
 // src/routes/subjects.js
 const router = require('express').Router();
 const { protect, adminOnly } = require('../middleware/auth');
-const { isMongoConnected } = require('../config/db');
+const { isMongoConnected, isMockAuthEnabled } = require('../config/db');
 const Subject = require('../models/Subject');
 const localStore = require('../store/localDataStore');
 const { validateFields, VALID_SUBJECTS } = require('../middleware/validateInput');
@@ -41,7 +41,7 @@ function buildAnalyticsFromLocal(userId) {
 
 router.get('/analytics/overview', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.json({ success: true, data: buildAnalyticsFromLocal(req.user._id) });
     }
     const { Topic, Progress } = require('../models');
@@ -83,7 +83,7 @@ router.get('/analytics/overview', protect, async (req, res, next) => {
 
 router.get('/', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       if (req.query.hierarchy !== 'true') {
         let data = localStore.getSubjects();
         if (req.query.code) {

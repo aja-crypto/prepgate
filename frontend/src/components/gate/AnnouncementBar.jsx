@@ -9,7 +9,7 @@ export default function AnnouncementBar() {
     api.get('/cms/announcements').then(r => {
       const data = r.data?.data || [];
       if (data.length) setItems(data);
-    }).catch(() => {});
+    }).catch(e => console.warn('[AnnouncementBar] fetch failed', e?.message));
   }, []);
 
   useEffect(() => {

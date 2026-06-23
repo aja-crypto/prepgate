@@ -280,6 +280,8 @@ app.use('/api/progress', require('./src/routes/progress'));
 app.use('/api/mocks', require('./src/routes/mocks'));
 app.use('/api/pyq', require('./src/routes/pyq'));
 app.use('/api/admin/pyq', require('./src/routes/adminPyq'));
+app.use('/api/admin/pyq-papers', require('./src/routes/adminPyqPapers'));
+app.use('/api/pyq-papers', require('./src/routes/pyqPapers'));
 app.use('/api/mock-sessions', require('./src/routes/mockSessions'));
 app.use('/api/notes', require('./src/routes/notes'));
 app.use('/api/admin/auth', require('./src/routes/adminAuth'));

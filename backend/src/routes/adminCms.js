@@ -269,4 +269,52 @@ router.get('/stats', adminProtect, requirePermission('content.manage'), asyncHan
   });
 }));
 
+// ─── AI Content Generator ─────────────────────────────────
+router.post('/ai/generate', adminProtect, requirePermission('content.manage'), asyncHandler(async (req, res) => {
+  const { content, targetTab } = req.body;
+  if (!content?.trim()) return res.status(400).json({ success: false, message: 'Content required' });
+
+  // Try AI API first, fall back to heuristic parsing
+  try {
+    const { callAiApi } = require('../services/aiService');
+    const prompt = `Analyze this GATE prep content and extract structured fields:\n\n"${content}"\n\nReturn JSON with: title, description, insight, motivation, challenge, resource, future. Only fill fields that match the content.`;
+    const result = await callAiApi([{ role: 'user', content: prompt }], { response_format: 'json_object' });
+    let parsed;
+    try {
+      parsed = JSON.parse(result);
+    } catch {
+      parsed = parseHeuristic(content);
+    }
+    return res.json({ success: true, data: parsed });
+  } catch {
+    // Fallback heuristic parser
+    const parsed = parseHeuristic(content);
+    return res.json({ success: true, data: parsed });
+  }
+}));
+
+function parseHeuristic(content) {
+  const lines = content.split('\n').filter(l => l.trim());
+  const lower = content.toLowerCase();
+
+  // Auto-detect categories by keywords
+  const isInsight = /students?|pyq|solved|score|rank|topic|subject|performance|analytics|trend/.test(lower);
+  const isMotivation = /motivate|inspire|streak|consistency|hard.?work|dedication|belief|success/.test(lower);
+  const isChallenge = /challenge|target|goal|struggle|difficult|weak|problem|issue/.test(lower);
+  const isResource = /resource|sheet|notes?|formula|pdf|book|video|link/.test(lower);
+  const isAnnouncement = /announce|release|new|launch|update|coming|week|month/.test(lower);
+  const isFuture = /next|future|upcoming|coming|will|plan/.test(lower);
+
+  return {
+    title: lines[0]?.slice(0, 80) || 'Untitled',
+    description: lines.slice(1, 4).join(' ').slice(0, 200) || '',
+    insight: isInsight ? lines.slice(0, 2).join('. ') : '',
+    motivation: isMotivation ? lines.find(l => /streak|consistency|hard.?work|dedication|believe/i.test(l)) || lines[0] : '',
+    challenge: isChallenge ? lines.find(l => /struggle|difficult|weak|problem|issue/i.test(l)) || lines[0] : '',
+    resource: isResource ? lines.find(l => /sheet|notes?|formula|pdf|book|video/i.test(l)) || '' : '',
+    future: isFuture || isAnnouncement ? `Upcoming: ${lines[0]}` : '',
+    ...(isAnnouncement ? { message: content.slice(0, 300) } : {}),
+  };
+}
+
 module.exports = router;

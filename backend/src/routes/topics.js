@@ -2,7 +2,9 @@
 const router = require('express').Router();
 const { protect, adminOnly } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
+const { isMockAuthEnabled } = require('../config/devMode');
 const Topic = require('../models/Topic');
+const { Progress, PYQ, UserPYQ } = require('../models');
 const localStore = require('../store/localDataStore');
 const { validateFields, VALID_SUBJECTS, VALID_DIFFICULTIES } = require('../middleware/validateInput');
 
@@ -34,7 +36,7 @@ async function enrichProgressMongo(topics, userId) {
 
 router.get('/', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       const filter = { isDefault: true };
       if (req.query.subject) filter.subject = req.query.subject;
       let topics = localStore.getTopics(filter);
@@ -57,7 +59,7 @@ router.get('/', protect, async (req, res, next) => {
 
 router.get('/:id/learn', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       const topic = localStore.getTopicById(req.params.id);
       if (!topic) return res.status(404).json({ success: false, message: 'Topic not found' });
       const progress = localStore.getProgress(req.user._id, req.params.id) || {
@@ -135,7 +137,7 @@ router.get('/:id/learn', protect, async (req, res, next) => {
 
 router.patch('/:id/progress', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       const topic = localStore.getTopicById(req.params.id);
       if (!topic) return res.status(404).json({ success: false, message: 'Topic not found' });
       const updates = { ...req.body };
@@ -184,7 +186,7 @@ router.patch('/:id/progress', protect, async (req, res, next) => {
 
 router.patch('/:id/toggle', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       const topic = localStore.getTopicById(req.params.id);
       if (!topic) return res.status(404).json({ success: false, message: 'Topic not found' });
       const prev = localStore.getProgress(req.user._id, req.params.id);

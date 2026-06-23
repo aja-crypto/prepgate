@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useFocus } from '../../context/FocusContext';
 
 export default function FocusWidget() {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     isActive, isPaused, mode, sessionDuration, timeRemaining,
     sessionsCompleted, dailyStreak, isMinimized, currentSubject,
@@ -16,6 +17,8 @@ export default function FocusWidget() {
   const [mobileExpanded, setMobileExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const pickerRef = useRef(null);
+
+  const isOnFocusPage = location.pathname === '/focus' || location.pathname === '/focus/';
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -36,10 +39,12 @@ export default function FocusWidget() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  if (isOnFocusPage) return null;
+
   if (!isActive && !isMinimized) {
     // Show the "Start Focus" trigger
     return (
-      <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2">
+      <div className="fixed bottom-5 right-5 z-[99998] flex flex-col items-end gap-2">
         {showDurationPicker && (
           <div ref={pickerRef} className="bg-surface backdrop-blur-xl border border-border rounded-xl p-2 shadow-2xl flex gap-1">
             {DURATIONS.map((d) => (
@@ -60,14 +65,6 @@ export default function FocusWidget() {
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
           Focus
         </button>
-        <button
-          onClick={() => navigate('/deep-focus')}
-          className="flex items-center gap-2 bg-white/5 border border-white/10 text-text2 text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-white/10 hover:border-primary/30 hover:text-primary transition-all"
-          title="Full-screen distraction-free focus mode"
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 11-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 00-1 1v1.586l-2.293-2.293a1 1 0 00-1.414 1.414L13.586 17H12a1 1 0 100 2h4a1 1 0 001-1v-4a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-          Deep Focus
-        </button>
       </div>
     );
   }
@@ -75,7 +72,7 @@ export default function FocusWidget() {
   // Mobile: floating pill when collapsed
   if (isMobile && !mobileExpanded) {
     return (
-      <div className="fixed bottom-5 right-5 z-50">
+      <div className="fixed bottom-5 right-5 z-[99998]">
         <button
           onClick={() => setMobileExpanded(true)}
           className="flex items-center gap-2 bg-primary/90 backdrop-blur-xl text-white text-xs font-semibold px-3 py-2 rounded-full shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-all border border-white/10"
@@ -89,7 +86,7 @@ export default function FocusWidget() {
 
   // Desktop widget or mobile expanded
   return (
-    <div className={`fixed bottom-5 right-5 z-50 ${isMobile ? 'inset-0 bottom-0 right-0 flex items-end justify-center p-4 bg-black/40' : ''}`}>
+    <div className={`fixed bottom-5 left-5 z-[99998] ${isMobile ? 'inset-0 bottom-0 right-0 flex items-end justify-center p-4 bg-black/40' : ''}`}>
       <div className={`bg-surface backdrop-blur-xl border border-border rounded-2xl shadow-2xl ${isMobile ? 'w-full max-w-sm' : 'w-[260px]'} overflow-hidden transition-all`}>
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-3.5 pb-2">

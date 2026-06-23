@@ -25,7 +25,7 @@ export function mergeProgressData(local, cloudBlob) {
     return {
       ...local,
       ...cloudBlob.data,
-      gateFeatures: { ...local.gateFeatures, ...cloudBlob.data.gateFeatures },
+      gateFeatures: { ...local.gateFeatures, ...cloudBlob.data.gateFeatures, studyPlans: { ...(local.gateFeatures?.studyPlans || {}), ...(cloudBlob.data.gateFeatures?.studyPlans || {}) } },
       gamification: { ...local.gamification, ...cloudBlob.data.gamification },
       productivity: { ...local.productivity, ...cloudBlob.data.productivity },
       notifications: { ...local.notifications, ...cloudBlob.data.notifications },

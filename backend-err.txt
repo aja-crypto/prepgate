@@ -1,0 +1,2096 @@
+⚠️ Startup validation issues:
+   MongoDB not connected - using local fallback mode
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:43:56.254Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:43:56.378Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: demo_user_id
+Timestamp: 2026-06-22T02:44:02.050Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: demo_user_id
+Timestamp: 2026-06-22T02:44:02.129Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: demo_user_id
+Timestamp: 2026-06-22T02:44:02.621Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: demo_user_id
+Timestamp: 2026-06-22T02:44:02.664Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:45:23.697Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:45:23.834Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:46:23.839Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:46:23.953Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: demo_user_id
+Timestamp: 2026-06-22T02:46:30.411Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: demo_user_id
+Timestamp: 2026-06-22T02:46:30.513Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: demo_user_id
+Timestamp: 2026-06-22T02:46:31.028Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: demo_user_id
+Timestamp: 2026-06-22T02:46:31.215Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:46:33.049Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:46:33.104Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\pyq.js:138:22
+Request: GET /api/pyq
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:49:28.521Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:49:32.608Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:49:32.708Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:49:38.398Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:49:38.907Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8e5c/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:49:45.974Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8e5c/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:49:46.065Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:50:39.729Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:50:39.808Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: demo_user_id
+Timestamp: 2026-06-22T02:50:46.040Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: demo_user_id
+Timestamp: 2026-06-22T02:50:46.085Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: demo_user_id
+Timestamp: 2026-06-22T02:50:46.985Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: demo_user_id
+Timestamp: 2026-06-22T02:50:47.186Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:50:52.235Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:50:52.305Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:52:51.648Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:52:51.754Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: demo_user_id
+Timestamp: 2026-06-22T02:52:57.670Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: demo_user_id
+Timestamp: 2026-06-22T02:52:58.242Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: demo_user_id
+Timestamp: 2026-06-22T02:53:01.324Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: demo_user_id
+Timestamp: 2026-06-22T02:53:13.482Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: demo_user_id
+Timestamp: 2026-06-22T02:53:14.589Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: demo_user_id
+Timestamp: 2026-06-22T02:53:19.316Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:54:23.604Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T02:54:23.705Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: demo_user_id
+Timestamp: 2026-06-22T02:55:01.521Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: demo_user_id
+Timestamp: 2026-06-22T02:55:01.879Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: demo_user_id
+Timestamp: 2026-06-22T02:55:02.667Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: demo_user_id
+Timestamp: 2026-06-22T02:55:03.240Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8e5c/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:56:46.675Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8e5c/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:56:46.782Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8e5c/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:56:49.383Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8e5c/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:56:49.503Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:56:58.574Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:56:59.368Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d921f/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:57:03.130Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d921f/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:57:03.289Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d921f/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:57:11.602Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d921f/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:57:11.742Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d921f/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:57:11.832Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d921f/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:57:11.919Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:175:22
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: PATCH /api/topics/6a3297f2d86d7b7af86d921f/progress
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:57:52.419Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:57:52.430Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:57:52.575Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:58:24.221Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:58:24.408Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T02:59:56.985Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:01.719Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:01.972Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:02.696Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:02.923Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\pyq.js:138:22
+Request: GET /api/pyq
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:09.423Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\pyq.js:138:22
+Request: GET /api/pyq
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:09.619Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\pyq.js:138:22
+Request: GET /api/pyq
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:19.011Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\pyq.js:138:22
+Request: GET /api/pyq
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:19.227Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\pyq.js:138:22
+Request: GET /api/pyq
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:19.460Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\pyq.js:138:22
+Request: GET /api/pyq
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:19.665Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\pyq.js:138:22
+Request: GET /api/pyq
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:19.971Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\pyq.js:138:22
+Request: GET /api/pyq
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:20.168Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\pyq.js:138:22
+Request: GET /api/pyq
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:20.509Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\pyq.js:138:22
+Request: GET /api/pyq
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:20.668Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\pyq.js:138:22
+Request: GET /api/pyq
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:21.331Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserPYQ"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\pyq.js:138:22
+Request: GET /api/pyq
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:21.539Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:36.434Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:37.171Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d9234/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:41.648Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d9234/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:41.754Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d9234/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:44.142Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d9234/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:44.244Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d9234/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:45.645Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d9234/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:45.787Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d9234/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:45.922Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d9234/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:46.005Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d9234/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:46.478Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d9234/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:46.580Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d9234/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:47.726Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d9234/learn
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:47.811Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:53.363Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:00:53.476Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "Feedback"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "Feedback"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\feedback.js:15:24
+Request: GET /api/feedback
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:01:16.283Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "Feedback"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "Feedback"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\feedback.js:15:24
+Request: GET /api/feedback
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:01:16.291Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:01:25.019Z
+❌ Global error caught: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "5c0adb0f-243d-4943-9ca6-da05b6bec92b" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: 5c0adb0f-243d-4943-9ca6-da05b6bec92b
+Timestamp: 2026-06-22T03:01:25.113Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:01:31.576Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:01:31.668Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:01:40.066Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:01:40.195Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:01:58.425Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T03:02:01.127Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T03:02:01.264Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T03:02:05.191Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T03:02:05.297Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:02:05.901Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:02:06.377Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:02:07.331Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:02:07.432Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: demo_user_id
+Timestamp: 2026-06-22T03:02:10.943Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: demo_user_id
+Timestamp: 2026-06-22T03:02:10.990Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: demo_user_id
+Timestamp: 2026-06-22T03:02:11.572Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: demo_user_id
+Timestamp: 2026-06-22T03:02:11.630Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: demo_user_id
+Timestamp: 2026-06-22T03:02:16.963Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: demo_user_id
+Timestamp: 2026-06-22T03:02:17.377Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T03:02:27.128Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T03:02:27.176Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T03:03:07.283Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: demo_user_id
+Timestamp: 2026-06-22T03:03:07.362Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: demo_user_id
+Timestamp: 2026-06-22T03:03:11.919Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: demo_user_id
+Timestamp: 2026-06-22T03:03:11.973Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: demo_user_id
+Timestamp: 2026-06-22T03:03:12.435Z
+❌ Global error caught: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "demo_user_id" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: demo_user_id
+Timestamp: 2026-06-22T03:03:12.782Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:03:34.253Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:03:38.864Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:03:39.563Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8e5c/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:03:41.157Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8e5c/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:03:41.236Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8e5c/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:03:44.455Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8e5c/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:03:44.543Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8e5c/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:03:46.567Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8e5c/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:03:46.658Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:03:48.355Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:03:49.102Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8efa/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:03:52.231Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8efa/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:03:52.314Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:04:04.055Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:04:04.562Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8f7e/learn
+User: demo_user_id
+Timestamp: 2026-06-22T03:04:12.718Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8f26/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:04:23.232Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8f26/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:04:23.343Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:04:50.197Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:04:50.724Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:04:58.892Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:04:58.937Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:04:59.833Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:04:59.885Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:05:10.016Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:05:10.061Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:05:22.310Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "UserFlashcardProgress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\gateVault.js:56:22
+Request: GET /api/gate-vault/progress
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:05:22.419Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Feedback"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Feedback"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\feedback.js:15:24
+Request: GET /api/feedback
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:05:34.752Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Feedback"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Feedback"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._findOne (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2697:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\feedback.js:15:24
+Request: GET /api/feedback
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:05:34.761Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:06:40.595Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:06:40.818Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:06:40.991Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:06:41.460Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8e5c/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:06:42.733Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8e5c/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:06:42.821Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:06:50.579Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:06:51.325Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d9085/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:06:53.185Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d9085/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:06:53.281Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:06:55.533Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:06:56.135Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8fac/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:06:56.447Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:89:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics/6a3297f2d86d7b7af86d8fac/learn
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:06:56.536Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:07:05.582Z
+❌ Global error caught: Progress is not defined
+ReferenceError: Progress is not defined
+    at enrichProgressMongo (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:10:24)
+    at C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\topics.js:53:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Request: GET /api/topics
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:07:06.148Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:07:06.697Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:07:06.791Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:110:26
+Request: GET /api/subjects
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:07:07.273Z
+❌ Global error caught: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+CastError: Cast to ObjectId failed for value "b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee" (type string) at path "user" for model "Progress"
+    at SchemaObjectId.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schema\objectId.js:253:11)
+    at SchemaType.applySetters (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1288:12)
+    at SchemaType.castForQuery (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\schemaType.js:1718:17)
+    at cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\cast.js:390:32)
+    at Query.cast (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:5060:12)
+    at Query._castConditions (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2374:10)
+    at model.Query._find (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:2401:8)
+    at model.Query.exec (C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\node_modules\mongoose\lib\query.js:4627:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async C:\Users\purru\OneDrive\GATE 2026\gate2027\backend\src\routes\subjects.js:50:26
+Request: GET /api/subjects/analytics/overview
+User: b90c55b9-8d71-49be-bcf8-a4ab5ce0f3ee
+Timestamp: 2026-06-22T03:07:07.389Z

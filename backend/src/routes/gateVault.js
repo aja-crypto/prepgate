@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { protect } = require('../middleware/auth');
-const { isMongoConnected } = require('../config/db');
+const { isMongoConnected, isMockAuthEnabled } = require('../config/db');
 const { Flashcard, MonthlySet, UserFlashcardProgress } = require('../models/GateVault');
 const localStore = require('../store/localDataStore');
 
@@ -40,7 +40,7 @@ router.get('/monthly-set', protect, async (req, res, next) => {
 // GET user's progress for current month
 router.get('/progress', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.json({ success: false, message: 'MongoDB required' });
     }
     const now = new Date();
@@ -65,7 +65,7 @@ router.get('/progress', protect, async (req, res, next) => {
 // POST start/continue session
 router.post('/start', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.status(503).json({ success: false, message: 'MongoDB required' });
     }
     const { selectedSubjects } = req.body; // ['APT', 'DS', 'DBMS', ...]
@@ -114,7 +114,7 @@ router.post('/start', protect, async (req, res, next) => {
 // POST submit answer
 router.post('/answer', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.status(503).json({ success: false, message: 'MongoDB required' });
     }
     const { monthlySetId, questionIndex, selectedAnswer, timeTaken } = req.body;
@@ -211,14 +211,14 @@ router.post('/answer', protect, async (req, res, next) => {
 // GET stats/analytics
 router.get('/stats', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.json({ success: true, data: { totalAttempted: 0, bestScore: 0, avgAccuracy: 0 } });
     }
     const stats = await UserFlashcardProgress.aggregate([
       { $match: { user: req.user._id } },
       { $group: {
         _id: null,
-        totalAttempted: { $sum: '$answers' },
+        totalAttempted: { $sum: { $size: { $ifNull: ['$answers', []] } } },
         bestScore: { $max: '$score' },
         avgAccuracy: { $avg: '$accuracy' },
         completedSets: { $sum: { $cond: ['$isCompleted', 1, 0] } },

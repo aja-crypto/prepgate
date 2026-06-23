@@ -1,7 +1,7 @@
 // src/routes/feedback.js – Feedback & Suggestions API
 const router = require('express').Router();
 const { protect, adminOnly } = require('../middleware/auth');
-const { isMongoConnected } = require('../config/db');
+const { isMongoConnected, isMockAuthEnabled } = require('../config/db');
 const Feedback = require('../models/Feedback');
 
 function getStore() {
@@ -11,7 +11,7 @@ function getStore() {
 // GET /api/feedback – Get current user's feedback
 router.get('/', protect, async (req, res, next) => {
   try {
-    if (isMongoConnected()) {
+    if (isMongoConnected() && !isMockAuthEnabled()) {
       const feedback = await Feedback.findOne({ user: req.user._id }).sort('-createdAt');
       return res.json({ success: true, data: feedback });
     }
@@ -26,7 +26,7 @@ router.post('/', protect, async (req, res, next) => {
   try {
     const { anonymous, ratings, featureRequests, bugReports, preparation, recommendation, polls } = req.body;
 
-    if (isMongoConnected()) {
+    if (isMongoConnected() && !isMockAuthEnabled()) {
       let feedback = await Feedback.findOne({ user: req.user._id });
       if (feedback) {
         Object.assign(feedback, {

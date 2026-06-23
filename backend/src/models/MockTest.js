@@ -4,6 +4,7 @@ const mockQuestionSchema = new mongoose.Schema({
   subject: { type: String, required: true, index: true },
   topic: { type: String, required: true },
   difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
+  questionType: { type: String, enum: ['MCQ', 'MSQ', 'NAT'], default: 'MCQ' },
   questionText: { type: String, required: true },
   options: [{ type: String, required: true }],
   correctAnswer: { type: Number, required: true },
@@ -11,6 +12,9 @@ const mockQuestionSchema = new mongoose.Schema({
   marks: { type: Number, default: 1 },
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
+
+mockQuestionSchema.index({ subject: 1, topic: 1 });
+mockQuestionSchema.index({ questionType: 1 });
 
 const mockTestSchema = new mongoose.Schema({
   subject: { type: String, required: true, index: true },

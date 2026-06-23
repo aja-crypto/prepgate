@@ -1,6 +1,6 @@
-// Admin PYQ management — bulk import (CSV/JSON), CRUD
+// Admin PYQ management — CRUD, stats, toggle, import
 const router = require('express').Router();
-const { adminProtect } = require('../middleware/adminAuth');
+const { adminProtect, requirePermission } = require('../middleware/adminAuth');
 const { isMongoConnected } = require('../config/db');
 const { PYQ } = require('../models');
 const {
@@ -8,6 +8,21 @@ const {
 } = require('../services/pyqImportService');
 
 router.use(adminProtect);
+
+router.get('/stats', requirePermission('mocks.manage'), async (req, res, next) => {
+  try {
+    if (!isMongoConnected()) return res.json({ success: true, data: { totalCount: 0, activeCount: 0, bySubject: [], byYear: [], byDifficulty: [], byType: [] } });
+    const [totalCount, activeCount, bySubject, byYear, byDifficulty, byType] = await Promise.all([
+      PYQ.countDocuments({}),
+      PYQ.countDocuments({ isActive: true }),
+      PYQ.aggregate([{ $group: { _id: '$subject', count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }]),
+      PYQ.aggregate([{ $group: { _id: '$year', count: { $sum: 1 } } }, { $sort: { _id: -1 } }]),
+      PYQ.aggregate([{ $group: { _id: '$difficulty', count: { $sum: 1 } } }]),
+      PYQ.aggregate([{ $group: { _id: '$questionType', count: { $sum: 1 } } }]),
+    ]);
+    res.json({ success: true, data: { totalCount, activeCount, bySubject, byYear, byDifficulty, byType } });
+  } catch (e) { next(e); }
+});
 
 router.get('/import-template', (req, res) => {
   res.json({ success: true, data: getImportTemplate() });
@@ -19,6 +34,16 @@ router.post('/validate', async (req, res, next) => {
     const rows = Array.isArray(req.body) ? req.body : req.body.questions || [];
     const result = await validateRows(rows);
     res.json({ success: true, data: result });
+  } catch (e) { next(e); }
+});
+
+router.post('/import', async (req, res, next) => {
+  try {
+    if (!isMongoConnected()) return res.status(503).json({ success: false, message: 'PYQ import requires MongoDB' });
+    const rows = Array.isArray(req.body.questions) ? req.body.questions : req.body.questions || [];
+    const upsert = req.query.upsert === 'true';
+    const result = await importRows(rows, { upsert });
+    res.status(201).json({ success: true, data: result });
   } catch (e) { next(e); }
 });
 
@@ -40,6 +65,46 @@ router.post('/import/csv', async (req, res, next) => {
     const rows = parseCsv(csvText);
     const upsert = req.query.upsert === 'true';
     const result = await importRows(rows, { upsert });
+    res.status(201).json({ success: true, data: result });
+  } catch (e) { next(e); }
+});
+
+// GET /:id — get single PYQ
+router.get('/:id', async (req, res, next) => {
+  try {
+    if (!isMongoConnected()) return res.status(404).json({ success: false, message: 'PYQ not found' });
+    const pyq = await PYQ.findById(req.params.id).populate('subject', 'name code').populate('topic', 'name');
+    if (!pyq) return res.status(404).json({ success: false, message: 'PYQ not found' });
+    res.json({ success: true, data: pyq });
+  } catch (e) { next(e); }
+});
+
+// POST / — create PYQ
+router.post('/', requirePermission('mocks.manage'), async (req, res, next) => {
+  try {
+    if (!isMongoConnected()) return res.status(503).json({ success: false, message: 'PYQ creation requires MongoDB' });
+    const pyq = await PYQ.create(req.body);
+    res.status(201).json({ success: true, data: pyq });
+  } catch (e) { next(e); }
+});
+
+// PATCH /:id/toggle — toggle PYQ active status
+router.patch('/:id/toggle', requirePermission('mocks.manage'), async (req, res, next) => {
+  try {
+    if (!isMongoConnected()) return res.status(503).json({ success: false, message: 'Requires MongoDB' });
+    const pyq = await PYQ.findByIdAndUpdate(req.params.id, { isActive: req.body.isActive }, { new: true });
+    if (!pyq) return res.status(404).json({ success: false, message: 'PYQ not found' });
+    res.json({ success: true, data: pyq });
+  } catch (e) { next(e); }
+});
+
+// POST /save-extracted — save OCR-extracted questions
+router.post('/save-extracted', requirePermission('mocks.manage'), async (req, res, next) => {
+  try {
+    if (!isMongoConnected()) return res.status(503).json({ success: false, message: 'Requires MongoDB' });
+    const { questions } = req.body;
+    if (!Array.isArray(questions) || questions.length === 0) return res.status(400).json({ success: false, message: 'questions array required' });
+    const result = await importRows(questions, { upsert: false });
     res.status(201).json({ success: true, data: result });
   } catch (e) { next(e); }
 });

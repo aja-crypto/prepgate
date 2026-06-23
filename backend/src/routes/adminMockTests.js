@@ -23,6 +23,8 @@ async function getModels() {
 router.get('/', adminProtect, requirePermission('mocks.manage'), async (req, res, next) => {
   try {
     const { subject, testType, difficulty, isActive } = req.query;
+    const localList = getLocalMockTests({ subject, testType, difficulty });
+    if (isActive !== undefined) localList.filter(t => t.isActive === (isActive === 'true'));
 
     if (isMongoConnected()) {
       const { MockTest } = await getModels();
@@ -31,13 +33,13 @@ router.get('/', adminProtect, requirePermission('mocks.manage'), async (req, res
       if (testType) filter.testType = testType;
       if (difficulty) filter.difficulty = difficulty;
       if (isActive !== undefined) filter.isActive = isActive === 'true';
-      const tests = await MockTest.find(filter).populate('questionIds').sort({ subject: 1, testNumber: 1 });
-      return res.json({ success: true, count: tests.length, data: tests });
+      const mongoTests = await MockTest.find(filter).populate('questionIds').sort({ subject: 1, testNumber: 1 }).lean();
+      const mongoIds = new Set(mongoTests.map(t => t._id?.toString()));
+      const merged = [...mongoTests, ...localList.filter(t => !mongoIds.has(t._id?.toString()))];
+      return res.json({ success: true, count: merged.length, data: merged });
     }
 
-    let list = getLocalMockTests({ subject, testType, difficulty });
-    if (isActive !== undefined) list = list.filter(t => t.isActive === (isActive === 'true'));
-    return res.json({ success: true, count: list.length, data: list });
+    return res.json({ success: true, count: localList.length, data: localList });
   } catch (e) {
     next(e);
   }
@@ -219,11 +221,17 @@ router.post('/mock-questions', adminProtect, requirePermission('mocks.manage'), 
       return res.status(400).json({ success: false, message: 'Subject, questionText, and at least 2 options are required.' });
     }
 
+    let ca = correctAnswer;
+    if (typeof ca === 'string' && /^[A-D]$/i.test(ca.trim())) {
+      ca = ca.toUpperCase().charCodeAt(0) - 65;
+    }
+    if (typeof ca === 'string') ca = Number(ca);
+
     if (isMongoConnected()) {
       const { MockTestQuestion } = await getModels();
       const q = await MockTestQuestion.create({
         subject, topic: topic || '', difficulty: difficulty || 'medium',
-        questionText, options, correctAnswer: correctAnswer ?? 0,
+        questionText, options, correctAnswer: ca ?? 0,
         explanation: explanation || '', marks: marks || 1,
       });
       return res.status(201).json({ success: true, data: q });
@@ -231,7 +239,7 @@ router.post('/mock-questions', adminProtect, requirePermission('mocks.manage'), 
 
     const q = saveLocalMockQuestion({
       subject, topic: topic || '', difficulty: difficulty || 'medium',
-      questionText, options, correctAnswer: correctAnswer ?? 0,
+      questionText, options, correctAnswer: ca ?? 0,
       explanation: explanation || '', marks: marks || 1,
     });
     res.status(201).json({ success: true, data: q });

@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://prepgate-api.onrender.com/api/$1" },
+    { "source": "/uploads/(.*)", "destination": "https://prepgate-api.onrender.com/uploads/$1" },
+    { "source": "/resources/(.*)", "destination": "https://prepgate-api.onrender.com/resources/$1" },
+    { "source": "/health", "destination": "https://prepgate-api.onrender.com/health" }
+  ]
+}

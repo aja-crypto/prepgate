@@ -21,7 +21,7 @@ export default function DashboardMotivation() {
         const data = Array.isArray(r.data.data) ? r.data.data : [r.data.data];
         if (data.length) setItems(data);
       }
-    }).catch(() => {});
+    }).catch(e => console.warn('[DashboardMotivation] fetch failed', e?.message));
   }, []);
 
   useEffect(() => {

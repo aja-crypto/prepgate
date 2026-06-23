@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { mockTestService, getApiErrorMessage } from '../services/api';
 import { MockExamLoading } from '../components/common/GateLoadingScreen';
 import { useAuth } from '../context/AuthContext';
+import { useProgress } from '../context/ProgressContext';
 import GlassCard from '../components/ui/GlassCard';
 import Icon from '../components/ui/Icon';
 import toast from 'react-hot-toast';
@@ -51,6 +52,7 @@ export default function MockTestTakingPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { updateMocks } = useProgress();
 
   const [test, setTest] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -268,6 +270,23 @@ export default function MockTestTakingPage() {
 
       const timeTaken = totalTimeRef.current - timeLeft;
       await mockTestService.submit(id, { answers: answersPayload, timeTaken });
+      const answeredCount = answersPayload.filter(a => a.selectedAnswer !== null).length;
+      const totalMarks = currentQuestions.reduce((sum, q) => sum + (q.marks || 1), 0);
+      const correctMarks = answersPayload.reduce((sum, a, idx) => {
+        const q = currentQuestions[idx];
+        if (q && a.selectedAnswer !== null && a.selectedAnswer === q.correctAnswer) {
+          return sum + (q.marks || 1);
+        }
+        return sum;
+      }, 0);
+      updateMocks(ts => [...ts, {
+        id: Date.now(),
+        name: currentTest?.title || 'Mock Test',
+        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+        score: totalMarks ? Math.round((correctMarks / totalMarks) * 100) : 0,
+        rank: null,
+        notes: `${answeredCount}/${currentQuestions.length} answered`,
+      }]);
       clearSavedState(id);
       toast.success('Test submitted successfully!');
       navigate(`/mock-tests/${id}/result`);

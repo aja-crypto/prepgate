@@ -70,7 +70,7 @@ export default function MocksPage() {
     api.get('/mocks').then(r => {
       const backend = r.data.data || [];
       if (backend.length > mocks.length) updateMocks(backend);
-    }).catch(() => {});
+    }).catch(e => console.warn('MocksPage fetch failed', e?.message));
   }, []);
 
   useEffect(() => {

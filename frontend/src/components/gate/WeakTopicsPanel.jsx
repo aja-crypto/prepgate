@@ -8,8 +8,8 @@ export default function WeakTopicsPanel({ limit = 5 }) {
   const { topics, pyqs, mocks, studyStats } = useProgress();
 
   const weak = useMemo(
-    () => detectWeakTopics(topics, pyqs, mocks, studyStats.subjects).slice(0, limit),
-    [topics, pyqs, mocks, studyStats.subjects, limit]
+    () => detectWeakTopics(topics, pyqs, mocks, studyStats?.subjects || []).slice(0, limit),
+    [topics, pyqs, mocks, studyStats?.subjects, limit]
   );
 
   return (

@@ -6,8 +6,9 @@ import { ProgressRingMini } from '../ui/ProgressRing';
 
 export default function SubjectCompletionRings({ limit }) {
   const { studyStats, topics, pyqs } = useProgress();
-  const subjects = computeSubjectCompletion(studyStats.subjects, topics, pyqs);
-  const accuracies = getSubjectAccuracy(studyStats.subjects, pyqs);
+  const safeSubjects = studyStats?.subjects || [];
+  const subjects = computeSubjectCompletion(safeSubjects, topics, pyqs);
+  const accuracies = getSubjectAccuracy(safeSubjects, pyqs);
   
   const display = limit ? subjects.slice(0, limit) : subjects;
   const overall = Math.round(subjects.reduce((s, x) => s + x.progress, 0) / (subjects.length || 1));

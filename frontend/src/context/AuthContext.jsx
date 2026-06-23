@@ -14,17 +14,16 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('accessToken');
     const isGuest = localStorage.getItem('isGuest') === 'true';
 
-    // Timeout: stop showing loading after 15s to prevent permanent blank screen
-    const timeoutId = setTimeout(() => setLoading(false), 15000);
+    // Timeout: stop showing loading after 30s to prevent permanent blank screen (was 15s)
+    const timeoutId = setTimeout(() => setLoading(false), 30000);
 
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       authService.getMe()
         .then((res) => setUser(res.data.data.user))
         .catch(() => {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          delete api.defaults.headers.common['Authorization'];
+          // Don't delete token here — api.js interceptor handles 401 refresh + cleanup
+          // Only clear on explicit 401 from getMe after interceptor already tried refresh
         })
         .finally(() => {
           clearTimeout(timeoutId);
@@ -33,9 +32,9 @@ export const AuthProvider = ({ children }) => {
     } else if (isGuest) {
       clearTimeout(timeoutId);
       setUser({
-        id: 'guest_123',
+        id: 'demo_user_id',
         name: 'GATE Aspirant (Demo)',
-        email: 'guest@example.com',
+        email: 'demo@gate2027.in',
         role: 'user',
         isGuest: true
       });
