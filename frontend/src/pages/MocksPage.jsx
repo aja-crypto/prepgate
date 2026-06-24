@@ -8,6 +8,7 @@ import MockTestBuilder from '../components/mock/MockTestBuilder';
 import MockTestRunner from '../components/mock/MockTestRunner';
 import { api, mockSessionService, getApiErrorMessage } from '../services/api';
 import { silentCatch } from '../utils/errorHandler';
+import toast from 'react-hot-toast';
 import { predictAIR } from '../utils/gateUtils';
 
 Chart.register(...registerables);
@@ -115,6 +116,7 @@ export default function MocksPage() {
     api.post('/mocks', t).then(r => {
       if (r.data.data) updateMocks((ts) => [...ts, r.data.data]);
     }).catch(() => {
+      toast.error('Failed to save score. Saved locally only.');
       t.id = Date.now();
       t.date = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
       updateMocks((ts) => [...ts, t]);

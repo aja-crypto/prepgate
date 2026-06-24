@@ -71,33 +71,57 @@ export default function NotificationBell() {
 
   async function markRead(id) {
     const token = localStorage.getItem('accessToken');
-    await fetch(`/api/notifications/${id}/read`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    setUnread(prev => Math.max(0, prev - 1));
+    const prev = notifications;
+    const prevUnread = unread;
+    setNotifications(prevN => prevN.map(n => n.id === id ? { ...n, read: true } : n));
+    setUnread(u => Math.max(0, u - 1));
+    try {
+      const res = await fetch(`/api/notifications/${id}/read`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed');
+    } catch (e) {
+      setNotifications(prev);
+      setUnread(prevUnread);
+    }
   }
 
   async function markAllRead() {
     const token = localStorage.getItem('accessToken');
-    await fetch('/api/notifications/read-all', {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    const prev = notifications;
+    const prevUnread = unread;
+    setNotifications(prevN => prevN.map(n => ({ ...n, read: true })));
     setUnread(0);
+    try {
+      const res = await fetch('/api/notifications/read-all', {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed');
+    } catch (e) {
+      setNotifications(prev);
+      setUnread(prevUnread);
+    }
   }
 
   async function deleteNote(id) {
     const token = localStorage.getItem('accessToken');
-    await fetch(`/api/notifications/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const prev = notifications;
+    const prevUnread = unread;
     const wasUnread = notifications.find(n => n.id === id)?.read === false;
-    setNotifications(prev => prev.filter(n => n.id !== id));
-    if (wasUnread) setUnread(prev => Math.max(0, prev - 1));
+    setNotifications(prevN => prevN.filter(n => n.id !== id));
+    if (wasUnread) setUnread(u => Math.max(0, u - 1));
+    try {
+      const res = await fetch(`/api/notifications/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed');
+    } catch (e) {
+      setNotifications(prev);
+      setUnread(prevUnread);
+    }
   }
 
   return (

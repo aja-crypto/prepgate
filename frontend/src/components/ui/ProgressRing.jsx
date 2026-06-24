@@ -1,5 +1,7 @@
+import { memo } from 'react';
+
 // SVG progress ring — replaces basic progress bars
-export default function ProgressRing({
+const ProgressRing = memo(function ProgressRing({
   value = 0,
   size = 80,
   stroke = 6,
@@ -46,7 +48,7 @@ export default function ProgressRing({
       {sublabel && <span className="text-[10px] text-text3 mt-2 text-center max-w-[90px] truncate">{sublabel}</span>}
     </div>
   );
-}
+});
 
 // Compact inline ring for lists
 export function ProgressRingMini({ value = 0, size = 36, stroke = 3, color = 'var(--color-primary)' }) {
@@ -64,3 +66,5 @@ export function ProgressRingMini({ value = 0, size = 36, stroke = 3, color = 'va
     </div>
   );
 }
+
+export default ProgressRing;

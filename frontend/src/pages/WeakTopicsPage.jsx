@@ -4,7 +4,7 @@ import { useProgress } from '../context/ProgressContext';
 import { detectWeakTopics } from '../utils/gateUtils';
 import NeuralBackground from '../components/common/NeuralBackground';
 
-const SUBJECTS = ['All', 'Mathematics', 'Digital Logic', 'Computer Organization', 'Programming & DS', 'Algorithms', 'Operating Systems', 'DBMS', 'Computer Networks', 'TOC', 'Compiler Design'];
+const SUBJECTS = ['All', 'Engineering Mathematics', 'Digital Logic', 'Computer Organization', 'Programming & Data Structures', 'Algorithms', 'Operating Systems', 'DBMS', 'Computer Networks', 'Theory of Computation', 'Compiler Design'];
 
 export default function WeakTopicsPage() {
   const { topics, pyqs, mocks, studyStats } = useProgress();

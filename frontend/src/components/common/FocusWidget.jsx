@@ -44,7 +44,7 @@ export default function FocusWidget() {
   if (!isActive && !isMinimized) {
     // Show the "Start Focus" trigger
     return (
-      <div className="fixed bottom-5 right-5 z-[99998] flex flex-col items-end gap-2">
+      <div className="fixed bottom-20 right-5 z-[99998] flex flex-col items-end gap-2">
         {showDurationPicker && (
           <div ref={pickerRef} className="bg-surface backdrop-blur-xl border border-border rounded-xl p-2 shadow-2xl flex gap-1">
             {DURATIONS.map((d) => (
@@ -72,7 +72,7 @@ export default function FocusWidget() {
   // Mobile: floating pill when collapsed
   if (isMobile && !mobileExpanded) {
     return (
-      <div className="fixed bottom-5 right-5 z-[99998]">
+      <div className="fixed bottom-20 right-5 z-[99998]">
         <button
           onClick={() => setMobileExpanded(true)}
           className="flex items-center gap-2 bg-primary/90 backdrop-blur-xl text-white text-xs font-semibold px-3 py-2 rounded-full shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-all border border-white/10"
@@ -86,7 +86,7 @@ export default function FocusWidget() {
 
   // Desktop widget or mobile expanded
   return (
-    <div className={`fixed bottom-5 left-5 z-[99998] ${isMobile ? 'inset-0 bottom-0 right-0 flex items-end justify-center p-4 bg-black/40' : ''}`}>
+    <div className={`fixed bottom-20 left-5 z-[99998] ${isMobile ? 'inset-0 bottom-0 right-0 flex items-end justify-center p-4 bg-black/40' : ''}`}>
       <div className={`bg-surface backdrop-blur-xl border border-border rounded-2xl shadow-2xl ${isMobile ? 'w-full max-w-sm' : 'w-[260px]'} overflow-hidden transition-all`}>
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-3.5 pb-2">

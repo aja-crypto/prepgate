@@ -107,15 +107,17 @@ const TOPIC_WEIGHTAGE = [
 ];
 
 const MARKS_DISTRIBUTION = [
-  { subject: 'Algorithms', marks: 12, percentage: 17.1 },
-  { subject: 'Operating Systems', marks: 10, percentage: 14.3 },
-  { subject: 'DBMS', marks: 10, percentage: 14.3 },
-  { subject: 'Computer Networks', marks: 8, percentage: 11.4 },
-  { subject: 'Computer Organization', marks: 8, percentage: 11.4 },
-  { subject: 'Engineering Mathematics', marks: 7, percentage: 10.0 },
-  { subject: 'Theory of Computation', marks: 6, percentage: 8.6 },
-  { subject: 'Compiler Design', marks: 5, percentage: 7.1 },
-  { subject: 'Digital Logic', marks: 4, percentage: 5.7 },
+  { subject: 'General Aptitude', marks: 15, percentage: 15.0 },
+  { subject: 'Engineering Mathematics', marks: 12.5, percentage: 12.5 },
+  { subject: 'Programming & Data Structures', marks: 11.5, percentage: 11.5 },
+  { subject: 'Algorithms', marks: 7.5, percentage: 7.5 },
+  { subject: 'Operating Systems', marks: 9, percentage: 9.0 },
+  { subject: 'DBMS', marks: 8, percentage: 8.0 },
+  { subject: 'Computer Networks', marks: 8.5, percentage: 8.5 },
+  { subject: 'Computer Organization', marks: 8.5, percentage: 8.5 },
+  { subject: 'Theory of Computation', marks: 8, percentage: 8.0 },
+  { subject: 'Compiler Design', marks: 5, percentage: 5.0 },
+  { subject: 'Digital Logic', marks: 5, percentage: 5.0 },
 ];
 
 const FREQUENT_TOPICS = [

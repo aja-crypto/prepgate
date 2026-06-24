@@ -1,5 +1,7 @@
+import { memo } from 'react';
+
 // Premium glass card container
-export default function GlassCard({
+const GlassCard = memo(function GlassCard({
   children,
   className = '',
   hover = true,
@@ -18,4 +20,6 @@ export default function GlassCard({
       {children}
     </div>
   );
-}
+});
+
+export default GlassCard;

@@ -45,6 +45,19 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
+const refreshAccessToken = async () => {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) {
+    throw new Error('No refresh token available');
+  }
+  const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken });
+  const { accessToken, refreshToken: newRefreshToken } = res.data.data;
+  localStorage.setItem('accessToken', accessToken);
+  if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken);
+  api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+  return accessToken;
+};
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -85,25 +98,35 @@ api.interceptors.response.use(
     }
 
     if (isInvalidToken && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then(token => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        });
+      originalRequest._retry = true;
+
+      if (originalRequest.method?.toUpperCase() === 'POST') {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        delete api.defaults.headers.common['Authorization'];
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
       }
 
-      originalRequest._retry = true;
+      if (isRefreshing) {
+        // Wait for ongoing refresh
+        try {
+          const token = await new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          });
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api(originalRequest);
+        } catch (queueError) {
+          return Promise.reject(queueError);
+        }
+      }
+
       isRefreshing = true;
 
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken });
-        const { accessToken, refreshToken: newRefreshToken } = res.data.data;
-        localStorage.setItem('accessToken', accessToken);
-        if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken);
-        api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+        const accessToken = await refreshAccessToken();
         processQueue(null, accessToken);
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
@@ -111,7 +134,10 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        delete api.defaults.headers.common['Authorization'];
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

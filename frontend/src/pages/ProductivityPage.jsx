@@ -27,7 +27,7 @@ const QUOTES = [
   { text: "It always seems impossible until it's done.", author: "Nelson Mandela" },
   { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
   { text: "Study hard what interests you the most in the most undisciplined way possible.", author: "Richard Feynman" },
-  { text: "GATE is not just an exam, it is a commitment to yourself.", author: "PrepGate" },
+  { text: "GATE is not just an exam, it is a commitment to yourself.", author: "GateApex" },
   { text: "The expert in anything was once a beginner.", author: "Helen Hayes" },
   { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
   { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
@@ -49,13 +49,15 @@ function GalaxyBackground() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) return;
     const ctx = canvas.getContext('2d');
     let raf;
     let stars = [];
     const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
     resize();
     window.addEventListener('resize', resize);
-    for (let i = 0; i < 120; i++) {
+    for (let i = 0; i < 60; i++) {
       stars.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -98,7 +100,7 @@ function GalaxyBackground() {
 
 function FloatingFormulas() {
   const [items] = useState(() =>
-    FORMULAS.map((f, i) => ({
+    FORMULAS.slice(0, 8).map((f, i) => ({
       text: f,
       x: Math.random() * 100,
       y: Math.random() * 100,
@@ -110,9 +112,8 @@ function FloatingFormulas() {
   );
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 1 }}>
-      {items.map((f, i) => (
-        <div key={i} className="absolute text-primary whitespace-nowrap"
-          style={{
+          {items.map((f, i) => (
+            <div key={i} className="absolute text-primary whitespace-nowrap" style={{
             left: `${f.x}%`, top: `${f.y}%`, fontSize: `${f.size}px`,
             opacity: f.opacity, animation: `float ${f.duration}s ease-in-out ${f.delay}s infinite`,
           }}>
@@ -432,7 +433,7 @@ export default function ProductivityPage() {
 
               <div className="flex flex-col items-center py-2">
                 {/* Giant Timer Ring */}
-                <div className="relative flex items-center justify-center mb-4" style={{ width: 380, height: 380 }}>
+                <div className="relative flex items-center justify-center mb-4 w-[min(380px,80vw)] h-[min(380px,80vw)]">
                   <NeonRing progress={progress} size={380} strokeWidth={10} isActive={isActive} isPaused={isPaused} />
                   <div className="flex flex-col items-center z-10">
                     <span className="text-8xl sm:text-9xl font-bold font-mono text-text tracking-tight leading-none"
@@ -757,3 +758,4 @@ export default function ProductivityPage() {
     </div>
   );
 }
+

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { questionBankService } from '../../services/adminApi';
 import BulkImporter from '../../components/admin/BulkImporter';
+import toast from 'react-hot-toast';
 
 const SUBJECTS = [
   { code: 'APT', name: 'Aptitude' },
@@ -40,7 +41,7 @@ export default function AdminQuestionBankPage() {
   const [expandedSubject, setExpandedSubject] = useState(null);
 
   // filters
-  const [filters, setFilters] = useState({ search: '', subject: '', difficulty: '', topic: '', questionType: '', marks: '', year: '', set: '', questionType: '', sort: '-createdAt' });
+  const [filters, setFilters] = useState({ search: '', subject: '', difficulty: '', topic: '', questionType: '', marks: '', year: '', set: '', sort: '-createdAt' });
   const hasActiveFilters = Object.values(filters).some(v => v && v !== '-createdAt' && v !== '');
 
   // bulk
@@ -72,7 +73,7 @@ export default function AdminQuestionBankPage() {
       if (filters.marks) params.marks = filters.marks;
       const res = await questionBankService.grouped(params);
       setGroups(res.data.data || []);
-    } catch {} finally { setLoading(false); }
+    } catch (e) { toast.error('Failed to load questions'); } finally { setLoading(false); }
   }, [filters]);
 
   const loadList = useCallback(async () => {
@@ -88,7 +89,7 @@ export default function AdminQuestionBankPage() {
       const res = await questionBankService.list(params);
       setQuestions(res.data.data || []);
       setTotalPages(res.data.totalPages || 1);
-    } catch {} finally { setLoading(false); }
+    } catch (e) { toast.error('Failed to load questions'); } finally { setLoading(false); }
   }, [page, filters]);
 
   useEffect(() => { if (view === 'grouped') loadGrouped(); else loadList(); }, [view, loadGrouped, loadList]);
@@ -122,26 +123,26 @@ export default function AdminQuestionBankPage() {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this question?')) return;
-    try { await questionBankService.delete(id); if (view === 'grouped') loadGrouped(); else loadList(); } catch {}
+    try { await questionBankService.delete(id); if (view === 'grouped') loadGrouped(); else loadList(); } catch (e) { toast.error('Failed to delete question'); }
   };
 
   const handleBulkDelete = async () => {
     if (!selected.length || !confirm(`Delete ${selected.length} questions?`)) return;
-    try { await questionBankService.bulkDelete(selected); setSelected([]); loadList(); } catch {}
+    try { await questionBankService.bulkDelete(selected); setSelected([]); loadList(); } catch (e) { toast.error('Failed to delete questions'); }
   };
 
   const handleBulkSubject = async () => {
     if (!selected.length || !bulkSubjectTarget) return;
-    try { await questionBankService.bulkSubject(selected, bulkSubjectTarget); setSelected([]); setBulkSubjectTarget(''); loadList(); } catch {}
+    try { await questionBankService.bulkSubject(selected, bulkSubjectTarget); setSelected([]); setBulkSubjectTarget(''); loadList(); } catch (e) { toast.error('Failed to update subjects'); }
   };
 
   const handleBulkDifficulty = async () => {
     if (!selected.length || !bulkDiffTarget) return;
-    try { await questionBankService.bulkDifficulty(selected, bulkDiffTarget); setSelected([]); setBulkDiffTarget(''); loadList(); } catch {}
+    try { await questionBankService.bulkDifficulty(selected, bulkDiffTarget); setSelected([]); setBulkDiffTarget(''); loadList(); } catch (e) { toast.error('Failed to update difficulties'); }
   };
 
   const loadDuplicates = async () => {
-    try { const res = await questionBankService.duplicates(); setDuplicates(res.data.data || []); setShowDuplicates(true); } catch {}
+    try { const res = await questionBankService.duplicates(); setDuplicates(res.data.data || []); setShowDuplicates(true); } catch (e) { toast.error('Failed to find duplicates'); }
   };
 
   const editQuestion = (q) => {
@@ -498,7 +499,7 @@ function SubjectQuestions({ subject, onEdit, onDelete }) {
       try {
         const res = await questionBankService.list({ subject, limit: 200 });
         setQuestions(res.data.data || []);
-      } catch {} finally { setLoading(false); }
+      } catch (e) { toast.error('Failed to load questions'); } finally { setLoading(false); }
     });
   }, [subject]);
 

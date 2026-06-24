@@ -43,7 +43,7 @@ function detectCategory(fileName) {
 function detectTopic(fileName) {
   const cleaned = fileName.replace(/\.\w+$/, '').replace(/[_-]/g, ' ');
   const parts = cleaned.split(/\s+/);
-  const skipWords = new Set(['notes', 'pyq', 'formula', 'sheet', 'short', 'gate', 'prepgate', 'apt', 'em', 'ds', 'al', 'db', 'os', 'cn', 'toc', 'cd', 'co', 'dl', 'se', 'pdf', 'questions', 'question', 'bank']);
+  const skipWords = new Set(['notes', 'pyq', 'formula', 'sheet', 'short', 'gate', 'GateApex', 'apt', 'em', 'ds', 'al', 'db', 'os', 'cn', 'toc', 'cd', 'co', 'dl', 'se', 'pdf', 'questions', 'question', 'bank']);
   const filtered = parts.filter(p => p.length > 2 && !skipWords.has(p.toLowerCase()));
   if (filtered.length > 0) {
     return filtered.slice(0, 3).join(' ');
@@ -166,7 +166,7 @@ export default function AdminGateVaultPage() {
         },
       });
       if (res.data.success) { loadData(); setUploadQueue([]); }
-    } catch (e) { console.error('Upload failed:', e); }
+    } catch (e) { toast.error('Upload failed'); }
     finally { setUploading(false); setUploadProgress(0); }
   };
 
@@ -229,7 +229,7 @@ export default function AdminGateVaultPage() {
       const answerIdx = lines.findIndex(l => l.toLowerCase().startsWith('answer:'));
       const explanationIdx = lines.findIndex(l => l.toLowerCase().startsWith('explanation:'));
       
-      const metaEnd = Math.max(
+      const metaEnd = Math.min(
         optionStartIdx >= 0 ? optionStartIdx : lines.length,
         answerIdx >= 0 ? answerIdx : lines.length,
         explanationIdx >= 0 ? explanationIdx : lines.length
@@ -334,8 +334,6 @@ export default function AdminGateVaultPage() {
   const handleInlineDelete = (index) => {
     if (confirm('Delete this question?')) {
       setSmartImportPreview(prev => prev.filter((_, i) => i !== index));
-      // Update selected questions in preview if needed
-      setSelectedQuestionsInPreview(prev => prev.filter(i => i !== index));
     }
   };
 
@@ -404,12 +402,12 @@ export default function AdminGateVaultPage() {
       if (editingCard) { await adminApi.put(`/admin/gate-vault/flashcards/${editingCard._id}`, form); }
       else { await adminApi.post('/admin/gate-vault/flashcards', form); }
       setShowModal(false); resetForm(); loadData();
-    } catch {}
+    } catch (e) { toast.error('Failed to save flashcard'); }
   };
 
   const handleDeleteCard = async (id) => {
     if (!confirm('Delete this flashcard?')) return;
-    try { await adminApi.delete(`/admin/gate-vault/flashcards/${id}`); loadData(); } catch {}
+    try { await adminApi.delete(`/admin/gate-vault/flashcards/${id}`); loadData(); } catch (e) { toast.error('Failed to delete flashcard'); }
   };
 
   const handleBulkImport = async () => {
@@ -423,7 +421,7 @@ export default function AdminGateVaultPage() {
         const cards = JSON.parse(text);
         const res = await adminApi.post('/admin/gate-vault/flashcards/bulk', { cards });
         if (res.data.success) loadData();
-      } catch {}
+      } catch (e) { toast.error('Failed to import flashcards'); }
     };
     input.click();
   };
@@ -432,11 +430,11 @@ export default function AdminGateVaultPage() {
     try {
       const res = await adminApi.post('/admin/gate-vault/monthly-sets', monthlySetForm);
       if (res.data.success) { setShowSetModal(false); loadData(); }
-    } catch {}
+    } catch (e) { toast.error('Failed to create monthly set'); }
   };
 
   const handlePublishSet = async (id) => {
-    try { await adminApi.post(`/admin/gate-vault/monthly-sets/${id}/publish`); loadData(); } catch {}
+    try { await adminApi.post(`/admin/gate-vault/monthly-sets/${id}/publish`); loadData(); } catch (e) { toast.error('Failed to publish set'); }
   };
 
   const resetForm = () => {
@@ -839,3 +837,4 @@ export default function AdminGateVaultPage() {
       </div>
     );
   }
+

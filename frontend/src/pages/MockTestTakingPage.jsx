@@ -27,6 +27,7 @@ function loadSavedState(testId) {
     if (parsed.answers) parsed.answers = parsed.answers;
     if (parsed.markedForReview) parsed.markedForReview = new Set(parsed.markedForReview);
     if (parsed.visitedQuestions) parsed.visitedQuestions = new Set(parsed.visitedQuestions);
+    if (parsed.questionTimes) parsed.questionTimes = parsed.questionTimes;
     return parsed;
   } catch { return null; }
 }
@@ -39,6 +40,8 @@ function saveState(testId, state) {
       visitedQuestions: Array.from(state.visitedQuestions),
       currentIndex: state.currentIndex,
       timeLeft: state.timeLeft,
+      questionTimes: state.questionTimes || {},
+      submitted: false,
     };
     localStorage.setItem(STORAGE_PREFIX + testId, JSON.stringify(toStore));
   } catch { /* storage full or unavailable */ }
@@ -76,6 +79,8 @@ export default function MockTestTakingPage() {
   const questionsRef = useRef(questions);
   const testRef = useRef(test);
   const saveTimerRef = useRef(null);
+  const questionStartTimeRef = useRef(Date.now());
+  const questionTimesRef = useRef({});
 
   answersRef.current = answers;
   questionsRef.current = questions;
@@ -97,12 +102,13 @@ export default function MockTestTakingPage() {
         setTest(testData);
         setQuestions(qs);
 
-        // Restore saved state from localStorage
+        // Restore saved state from localStorage only if it's a continuation
         const saved = loadSavedState(id);
-        if (saved && saved.answers && Object.keys(saved.answers).length > 0) {
+        if (saved && saved.answers && Object.keys(saved.answers).length > 0 && !saved.submitted) {
           setAnswers(saved.answers);
           setMarkedForReview(saved.markedForReview || new Set());
           setVisitedQuestions(new Set([...(saved.visitedQuestions || []), 0]));
+          if (saved.questionTimes) questionTimesRef.current = saved.questionTimes;
           if (typeof saved.currentIndex === 'number') setCurrentIndex(saved.currentIndex);
           if (typeof saved.timeLeft === 'number' && saved.timeLeft > 0) {
             totalTimeRef.current = saved.timeLeft;
@@ -151,6 +157,13 @@ export default function MockTestTakingPage() {
   useEffect(() => {
     if (questions.length === 0) return;
     setVisitedQuestions((prev) => new Set([...prev, currentIndex]));
+    const now = Date.now();
+    const elapsed = Math.round((now - questionStartTimeRef.current) / 1000);
+    const prevIdx = visitedQuestions.size > 0 ? [...visitedQuestions].pop() : null;
+    if (prevIdx !== null && prevIdx !== currentIndex) {
+      questionTimesRef.current[prevIdx] = (questionTimesRef.current[prevIdx] || 0) + elapsed;
+    }
+    questionStartTimeRef.current = now;
   }, [currentIndex, questions.length]);
 
   // Auto-save to localStorage every 3s
@@ -158,7 +171,7 @@ export default function MockTestTakingPage() {
     if (!id || !questions.length || autoSubmitted) return;
     if (saveTimerRef.current) clearInterval(saveTimerRef.current);
     saveTimerRef.current = setInterval(() => {
-      saveState(id, { answers, markedForReview, visitedQuestions, currentIndex, timeLeft });
+      saveState(id, { answers, markedForReview, visitedQuestions, currentIndex, timeLeft, questionTimes: questionTimesRef.current });
     }, 3000);
     return () => { if (saveTimerRef.current) clearInterval(saveTimerRef.current); };
   }, [id, questions.length, autoSubmitted, answers, markedForReview, visitedQuestions, currentIndex, timeLeft]);
@@ -259,10 +272,11 @@ export default function MockTestTakingPage() {
       const answersPayload = currentQuestions.map((q, idx) => {
         const key = qId(q, idx);
         const sel = currentAnswers[key];
+        const spent = questionTimesRef.current[idx] || 0;
         return {
           questionId: q._id,
           selectedAnswer: sel !== undefined ? sel : null,
-          timeSpent: 0,
+          timeSpent: spent,
           skipped: sel === undefined,
           mistakeCategory: withMistakes ? (mistakeCategories[key] || null) : null,
         };

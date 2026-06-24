@@ -450,7 +450,7 @@ export function getXpProgress(xp) {
 }
 
 export function checkNewBadges(gamification, data) {
-  const earned = new Set(gamification.badges || []);
+  const earned = new Set(gamification?.badges || []);
   const newBadges = [];
   const { streak } = data.gateFeatures || {};
   const pyqSolved = data.pyqs.filter((p) => p.solved).length;
@@ -481,26 +481,25 @@ export function getRevisionStatus(dueDate) {
   return 'upcoming';
 }
 
-/** GATE subject weightage (approx marks distribution for CSE) */
+/** GATE CSE subject weightage (approx marks out of 100) — canonical source */
 export const SUBJECT_WEIGHTAGE = {
-  'Operating Systems': 8,
-  'Computer Networks': 8,
-  'DBMS': 7,
-  'Computer Organization': 6,
-  'Data Structures': 6,
-  'Algorithms': 6,
-  'Theory of Computation': 5,
-  'Compiler Design': 4,
-  'Digital Logic': 4,
-  'Discrete Mathematics': 10,
-  'Engineering Mathematics': 10,
+  'Operating Systems': 9,
+  'Computer Networks': 8.5,
+  'DBMS': 8,
+  'Computer Organization': 8.5,
+  'Theory of Computation': 8,
+  'Algorithms': 7.5,
+  'Programming & Data Structures': 11.5,
+  'Engineering Mathematics': 12.5,
+  'Digital Logic': 5,
+  'Compiler Design': 5,
   'General Aptitude': 15,
 };
 
 /** Compute next best topic recommendation with confidence & expected gain */
 export function getNextTopicRecommendation(topics, pyqs, subjects, studyStats = {}) {
   if (!topics?.length) {
-    return { topicName: 'Start with Discrete Mathematics', confidence: 75, expectedGain: '+12 marks', subject: 'Discrete Mathematics', reason: 'Highest weightage subject' };
+    return { topicName: 'Start with Engineering Mathematics', confidence: 75, expectedGain: '+12 marks', subject: 'Engineering Mathematics', reason: 'Highest weightage subject' };
   }
 
   const subjectProgress = computeSubjectCompletion(subjects || [], topics, pyqs || []);
@@ -558,3 +557,39 @@ export function getNextTopicRecommendation(topics, pyqs, subjects, studyStats = 
     reason: `${best.subject} has ${best.weightage} marks weightage, ${Math.round(best.progress)}% done`,
   };
 }
+
+/** Auto-schedule a revision entry for a topic after a wrong answer */
+export function createRevisionEntry({ topicName, subject, source = 'pyq' }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const firstStep = REVISION_STEPS[0];
+  return {
+    id: `auto_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    topicName,
+    subject,
+    dueDate: getNextRevisionDate(today, firstStep.intervalDays),
+    status: 'upcoming',
+    stage: firstStep.stage,
+    interval: firstStep.intervalDays,
+    lastReviewed: today,
+    source,
+    incorrectCount: 1,
+  };
+}
+
+/** Check if a revision entry already exists for a topic */
+export function hasRevisionForTopic(schedule, topicName) {
+  return schedule.some(
+    (r) => r.topicName === topicName && r.status !== 'done'
+  );
+}
+
+/** Compute revision priority score: weightage + incorrect attempts + delay */
+export function computeRevisionPriority(item, today) {
+  const weight = SUBJECT_WEIGHT_MAP[item.subject] || 5;
+  const incorrect = item.incorrectCount || 1;
+  const dueDate = item.dueDate || today;
+  const daysOverdue = dueDate < today ? Math.min(30, (new Date(today) - new Date(dueDate)) / 86400000) : 0;
+  return Math.round(weight * 2 + incorrect * 5 + daysOverdue * 3);
+}
+
+const SUBJECT_WEIGHT_MAP = SUBJECT_WEIGHTAGE;

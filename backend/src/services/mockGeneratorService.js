@@ -3,7 +3,7 @@ const Subject = require('../models/Subject');
 const { PYQ } = require('../models');
 
 const GATE_SUBJECT_WEIGHTS = {
-  EM: 13, DL: 9, CO: 9, DS: 11, AL: 11, OS: 9, DB: 9, CN: 9, TOC: 9, CD: 6, APT: 15,
+  EM: 12.5, DL: 5, CO: 8.5, DS: 11.5, AL: 7.5, OS: 9, DB: 8, CN: 8.5, TOC: 8, CD: 5, APT: 15,
 };
 
 function shuffle(arr) {
