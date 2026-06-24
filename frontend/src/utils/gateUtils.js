@@ -41,8 +41,9 @@ export function computeSubjectCompletion(subjects, topics, pyqs) {
     const topicPct = subTopics.length ? (subTopics.filter((t) => t.done).length / subTopics.length) * 100 : sub.progress || 0;
     const pyqPct = subPyqs.length ? (subPyqs.filter((p) => p.solved).length / subPyqs.length) * 100 : sub.progress || 0;
     const progress = Math.round((topicPct * 0.6 + pyqPct * 0.4));
+    const color = progress >= 70 ? '#06d6a0' : progress >= 30 ? '#ff9f43' : '#ff6b6b';
 
-    return { ...sub, progress, topicPct: Math.round(topicPct), pyqPct: Math.round(pyqPct) };
+    return { ...sub, progress, topicPct: Math.round(topicPct), pyqPct: Math.round(pyqPct), color };
   });
 }
 

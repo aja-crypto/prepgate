@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useProgress } from '../../context/ProgressContext';
-import { aiService } from '../../services/api';
+import { aiService, noteService } from '../../services/api';
 import Icon from '../ui/Icon';
 import GlassCard from '../ui/GlassCard';
-import PrepGateAIIcon from '../ui/PrepGateAIIcon';
+import GateApexAIIcon from '../ui/GateApexAIIcon';
+import toast from 'react-hot-toast';
 
 const WELCOME_SUGGESTIONS = [
   "Make Study Plan",
@@ -27,9 +28,32 @@ const generateSmartSuggestions = (userMessage, aiReply) => {
   return ['What should I study today?', 'Create a weekly study plan', 'Analyze my mock performance', 'Which PYQs should I solve?'];
 };
 
+const AI_COACH_STORAGE = 'gateapex_ai_coach_chat';
+
+function loadCoachHistory() {
+  try {
+    const raw = localStorage.getItem(AI_COACH_STORAGE);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const dayAgo = Date.now() - 86400000;
+    return parsed.filter((m) => m.timestamp > dayAgo);
+  } catch { return []; }
+}
+
+function saveCoachHistory(messages) {
+  try {
+    const recent = messages.slice(-50).map((m) => ({ ...m, timestamp: m.timestamp || Date.now() }));
+    localStorage.setItem(AI_COACH_STORAGE, JSON.stringify(recent));
+  } catch {}
+}
+
 export default function AICoachChat({ initialPrompt }) {
   const { topics, pyqs, mocks, studyStats, gateFeatures } = useProgress();
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    const saved = loadCoachHistory();
+    return saved.length > 0 ? saved : [];
+  });
   const [input, setFormInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
@@ -47,6 +71,10 @@ export default function AICoachChat({ initialPrompt }) {
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  useEffect(() => {
+    if (messages.length > 0) saveCoachHistory(messages);
   }, [messages]);
 
   const handleSend = async (text) => {
@@ -93,7 +121,7 @@ export default function AICoachChat({ initialPrompt }) {
     } catch (error) {
       console.error('AI Coach Error:', error);
       const errorMsg = error.response?.data?.message || error.message;
-      let displayMsg = "Unable to connect to PrepGate AI. Please try again in a moment.";
+      let displayMsg = "Unable to connect to GateApex AI. Please try again in a moment.";
 
       if (errorMsg?.includes('rate limit')) {
         displayMsg = "You're asking questions too fast! Please wait a moment.";
@@ -110,9 +138,9 @@ export default function AICoachChat({ initialPrompt }) {
   return (
     <GlassCard className="flex flex-col h-[500px]" padding="p-0">
       <div className="p-4 border-b border-border flex items-center gap-3 bg-primary/5">
-        <PrepGateAIIcon size={32} thinking={loading} />
+        <GateApexAIIcon size={32} thinking={loading} />
         <div>
-          <div className="text-sm font-bold text-text">PrepGate AI</div>
+          <div className="text-sm font-bold text-text">GateApex AI</div>
           <div className="text-[10px] text-success font-bold uppercase tracking-wider flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
             Your Personal GATE Assistant
@@ -123,8 +151,8 @@ export default function AICoachChat({ initialPrompt }) {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="text-center py-6">
-            <PrepGateAIIcon size={48} className="mx-auto mb-3 opacity-60" />
-            <p className="text-sm font-semibold text-white mb-1">Welcome to PrepGate AI</p>
+            <GateApexAIIcon size={48} className="mx-auto mb-3 opacity-60" />
+            <p className="text-sm font-semibold text-white mb-1">Welcome to GateApex AI</p>
             <p className="text-xs text-gray-400 mb-4">Your Personal GATE Assistant</p>
             <p className="text-[11px] text-gray-500 mb-4 leading-relaxed max-w-[85%] mx-auto">
               I can help with:<br />
@@ -158,6 +186,19 @@ export default function AICoachChat({ initialPrompt }) {
                     {msg.content}
                   </div>
                 </div>
+                {msg.role === 'assistant' && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await noteService.create({ title: `AI: ${msg.content.slice(0, 50)}...`, content: msg.content, type: 'ai-response' });
+                        toast.success('Saved to Notes');
+                      } catch { toast.error('Failed to save'); }
+                    }}
+                    className="ml-2 mt-1 text-[9px] text-text3 hover:text-primary transition-colors"
+                  >
+                    Save to Notes
+                  </button>
+                )}
                 {msg.role === 'assistant' && suggestions && i === messages.length - 1 && (
                   <div className="mt-2 ml-2">
                     <p className="text-[10px] font-medium text-gray-500 mb-1.5">Suggested Questions</p>
@@ -214,3 +255,4 @@ export default function AICoachChat({ initialPrompt }) {
     </GlassCard>
   );
 }
+

@@ -14,9 +14,30 @@ import NotificationBell from './NotificationBell';
 import FloatingAIAssistant from './FloatingAIAssistant';
 import AmbientBackground from './AmbientBackground';
 
+function BackToTop() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const main = document.querySelector('main');
+    if (!main) return;
+    const onScroll = () => setShow(main.scrollTop > 400);
+    main.addEventListener('scroll', onScroll, { passive: true });
+    return () => main.removeEventListener('scroll', onScroll);
+  }, []);
+  if (!show) return null;
+  return (
+    <button
+      onClick={() => document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' })}
+      className="fixed bottom-20 right-4 md:right-6 z-40 w-10 h-10 rounded-full bg-surface border border-border shadow-lg flex items-center justify-center text-text2 hover:text-primary hover:border-primary/30 transition-all"
+      aria-label="Back to top"
+    >
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
+    </button>
+  );
+}
+
 const NAV = [
   { label: 'Dashboard', icon: 'dashboard', to: '/dashboard' },
-  { label: 'PrepGate AI', icon: 'zap', to: '/prepgate-ai' },
+  { label: 'GateApex AI', icon: 'zap', to: '/gateapex-ai' },
   { section: 'STUDY' },
   { label: 'Subjects', icon: 'subjects', to: '/subjects' },
   { label: 'Topics', icon: 'topics', to: '/topics' },
@@ -51,12 +72,32 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [calcOpen, setCalcOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+      const key = e.key.toLowerCase();
+      if (key === 'f' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); navigate('/productivity'); }
+      else if (key === 'n' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); navigate('/study-hub'); }
+      else if (key === 'q' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); navigate('/pyq'); }
+      else if (key === 'd' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); navigate('/dashboard'); }
+      else if (key === 'm' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); navigate('/mocks'); }
+      else if (key === 's' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); navigate('/settings'); }
+      else if (key === 'escape') { setSidebarOpen(false); setCalcOpen(false); setSearchOpen(false); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [navigate]);
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
 
   useGlobalSearchShortcut(setSearchOpen);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     function handleClick(e) {
@@ -191,7 +232,7 @@ export default function Layout() {
             </svg>
           </button>
 
-          {/* Left: PrepGate AI Emblem - smaller on mobile */}
+          {/* Left: GateApex AI Emblem - smaller on mobile */}
           <div className="flex-shrink-0 hidden sm:block">
             <svg 
               viewBox="0 0 120 80" 
@@ -287,7 +328,7 @@ export default function Layout() {
               <span className="text-xs font-semibold">Focus</span>
             </NavLink>
 
-            <NavLink to="/prepgate-ai" className={({ isActive }) => `flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all relative ${isActive ? 'text-primary bg-primary/10 border-b-2 border-primary' : 'text-text2 hover:text-primary hover:bg-hover/50'}`}>
+            <NavLink to="/GateApex-ai" className={({ isActive }) => `flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all relative ${isActive ? 'text-primary bg-primary/10 border-b-2 border-primary' : 'text-text2 hover:text-primary hover:bg-hover/50'}`}>
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" style={{filter: 'drop-shadow(0 0 8px rgba(34,211,238,0.4)) drop-shadow(0 0 4px rgba(168,85,247,0.3))'}}>
                 <path d="M4 11 C7 6 17 6 20 11 L22 13 L20 16 L17 19 L15 17 L13 19 L11 17 L9 19 L7 17 L4 16 L2 13 Z" fill="rgba(30,27,75,0.95)" stroke="#22D3EE" strokeWidth="1.6" />
                 <rect x="9" y="4" width="6" height="13" rx="2" fill="rgba(30,27,75,0.9)" stroke="#A855F7" strokeWidth="2" />
@@ -299,7 +340,7 @@ export default function Layout() {
                 <circle cx="12" cy="11" r="1" fill="white" />
               </svg>
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full animate-pulse" />
-              <span className="text-xs font-semibold">PrepGate AI</span>
+              <span className="text-xs font-semibold">GateApex AI</span>
             </NavLink>
 
             <button
@@ -381,8 +422,10 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+      <BackToTop />
       <FocusWidget />
       <FloatingAIAssistant open={aiPanelOpen} setOpen={setAiPanelOpen} />
     </div>
   );
 }
+

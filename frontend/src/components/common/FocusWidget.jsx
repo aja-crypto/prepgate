@@ -167,7 +167,7 @@ export default function FocusWidget() {
           {!isActive ? (
             <button
               onClick={() => startSession(sessionDuration, currentSubject)}
-              className="flex items-center gap-1.5 bg-primary text-white text-xs font-semibold px-5 py-2 rounded-lg hover:opacity-90 transition-all shadow-sm shadow-primary/20"
+              className="flex items-center gap-1.5 bg-primary text-white text-xs font-semibold px-5 py-2.5 min-h-[44px] rounded-lg hover:opacity-90 transition-all shadow-sm shadow-primary/20"
             >
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
               Start
@@ -177,7 +177,7 @@ export default function FocusWidget() {
               {isPaused ? (
                 <button
                   onClick={resumeSession}
-                  className="flex items-center gap-1.5 bg-primary text-white text-xs font-semibold px-5 py-2 rounded-lg hover:opacity-90 transition-all"
+                  className="flex items-center gap-1.5 bg-primary text-white text-xs font-semibold px-5 py-2.5 min-h-[44px] rounded-lg hover:opacity-90 transition-all"
                 >
                   <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" /></svg>
                   Resume
@@ -185,7 +185,7 @@ export default function FocusWidget() {
               ) : (
                 <button
                   onClick={pauseSession}
-                  className="flex items-center gap-1.5 bg-bg-2 border border-border text-text2 text-xs font-semibold px-5 py-2 rounded-lg hover:bg-hover transition-all"
+                  className="flex items-center gap-1.5 bg-bg-2 border border-border text-text2 text-xs font-semibold px-5 py-2.5 min-h-[44px] rounded-lg hover:bg-hover transition-all"
                 >
                   <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
                   Pause

@@ -1,4 +1,4 @@
-/* PrepGate Design System — premium SaaS aesthetic */
+/* GateApex Design System — premium SaaS aesthetic */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -76,10 +76,11 @@
       overflow-x: hidden;
       width: 100%;
     }
-    input, textarea, select { font-size: 16px; }
+    input, textarea, select { font-size: 16px !important; }
     * { max-width: 100vw; }
     img, svg, canvas, video { max-width: 100%; height: auto; }
     table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
   }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }

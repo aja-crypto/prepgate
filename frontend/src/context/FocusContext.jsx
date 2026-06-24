@@ -3,8 +3,9 @@ import { useProgress } from './ProgressContext';
 import { useAuth } from './AuthContext';
 import { progressService } from '../services/api';
 
-const FOCUS_STORAGE_KEY = 'gate2027_focus_session';
-const DAILY_FOCUS_KEY = 'gate2027_daily_focus';
+const FOCUS_STORAGE_KEY = 'gateapex_focus_session';
+const DAILY_FOCUS_KEY = 'gateapex_daily_focus';
+const FOCUS_HISTORY_KEY = 'gateapex_focus_history';
 
 const DURATIONS = [
   { label: '25 min', value: 25 * 60 },
@@ -20,6 +21,10 @@ let notifPermission = Notification?.permission || 'default';
 
 function persistState(state) {
   try { localStorage.setItem(FOCUS_STORAGE_KEY, JSON.stringify(state)); } catch {}
+}
+
+function clearPersistedState() {
+  try { localStorage.removeItem(FOCUS_STORAGE_KEY); } catch {}
 }
 
 function loadPersistedState() {
@@ -42,12 +47,24 @@ function persistDailyFocus(data) {
   try { localStorage.setItem(DAILY_FOCUS_KEY, JSON.stringify(data)); } catch {}
 }
 
+function loadFocusHistory() {
+  try {
+    const raw = localStorage.getItem(FOCUS_HISTORY_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch { return []; }
+}
+
+function persistFocusHistory(history) {
+  try { localStorage.setItem(FOCUS_HISTORY_KEY, JSON.stringify(history.slice(-200))); } catch {}
+}
+
 function sendNotification(title, body) {
   if (notifPermission !== 'granted') return;
   try {
     if (navigator.serviceWorker?.ready) {
       navigator.serviceWorker.ready.then((reg) => {
-        reg.showNotification(title, { body, icon: '/favicon.ico', badge: '/favicon.ico', tag: 'prepgate-focus' });
+        reg.showNotification(title, { body, icon: '/favicon.ico', badge: '/favicon.ico', tag: 'gateapex-focus' });
       });
     } else {
       new Notification(title, { body, icon: '/favicon.ico' });
@@ -79,6 +96,7 @@ export function FocusProvider({ children }) {
   const [isMinimized, setIsMinimized] = useState(false);
   const [currentSubject, setCurrentSubject] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [history, setHistory] = useState(() => loadFocusHistory());
   const intervalRef = useRef(null);
   const sessionStartRef = useRef(null);
   const dailyFocusRef = useRef(null);
@@ -123,7 +141,7 @@ export function FocusProvider({ children }) {
     }
   }, []);
 
-  // Master tick
+  // Master tick — uses Date.now() based calculation (no setInterval drift)
   useEffect(() => {
     if (!isActive || isPaused) {
       if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
@@ -141,7 +159,6 @@ export function FocusProvider({ children }) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
         if (mode === 'work') {
-          // Work session complete
           const elapsed = sessionDuration;
           const focusMins = elapsed / 60;
           setFocusHours((h) => h + focusMins / 60);
@@ -157,7 +174,6 @@ export function FocusProvider({ children }) {
 
           sendNotification('Focus Session Complete', `Take a ${BREAK_DURATION / 60}-minute break.`);
 
-          // track daily focus
           const today = new Date().toDateString();
           const df = dailyFocusRef.current || { date: today, hours: 0, sessions: 0, streak: 0 };
           if (df.date !== today) {
@@ -172,8 +188,6 @@ export function FocusProvider({ children }) {
             const prev = loadDailyFocus();
             if (prev?.date === prevDateStr && prev.hours > 0) {
               df.streak = (prev.streak || 0) + 1;
-            } else if (!prev || prev.date !== prevDateStr) {
-              df.streak = 1;
             } else {
               df.streak = 1;
             }
@@ -182,7 +196,20 @@ export function FocusProvider({ children }) {
           dailyFocusRef.current = df;
           persistDailyFocus(df);
 
-          // Start break
+          const historyEntry = {
+            id: Date.now(),
+            date: new Date().toISOString(),
+            duration: sessionDuration,
+            subject: currentSubject || 'General',
+            type: 'pomodoro',
+            sessionsAtEnd: totalSessions,
+          };
+          setHistory((prev) => {
+            const next = [...prev, historyEntry];
+            persistFocusHistory(next);
+            return next;
+          });
+
           const breakEnd = Date.now() + BREAK_DURATION * 1000;
           setMode('break');
           setEndTime(breakEnd);
@@ -194,7 +221,6 @@ export function FocusProvider({ children }) {
             sessionStart: sessionStartRef.current,
           });
         } else {
-          // Break complete
           sendNotification('Break Over', 'Ready for another focus session?');
           setIsActive(false);
           setIsPaused(false);
@@ -207,6 +233,52 @@ export function FocusProvider({ children }) {
       }
     }, 500);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [isActive, isPaused, endTime, mode, sessionDuration, sessionsCompleted, currentSubject, updateStudyStats, updateProductivity]);
+
+  // Visibility API — recalculate remaining time when tab returns from background
+  useEffect(() => {
+    if (!isActive || isPaused) return;
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && endTime) {
+        const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+        setTimeRemaining(remaining);
+        if (remaining <= 0) {
+          // Session expired while in background — trigger completion
+          if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+          if (mode === 'work') {
+            const focusMins = sessionDuration / 60;
+            setFocusHours((h) => h + focusMins / 60);
+            const totalSessions = sessionsCompleted + 1;
+            setSessionsCompleted(totalSessions);
+            updateProductivity((p) => ({ ...p, pomodoroSessions: (p.pomodoroSessions || 0) + 1 }));
+            updateStudyStats((s) => ({
+              ...s,
+              todayHours: (s.todayHours || 0) + focusMins / 60,
+              weekHours: (s.weekHours || 0) + focusMins / 60,
+            }));
+            sendNotification('Focus Session Complete', `Take a ${BREAK_DURATION / 60}-minute break.`);
+            const breakEnd = Date.now() + BREAK_DURATION * 1000;
+            setMode('break');
+            setEndTime(breakEnd);
+            setTimeRemaining(BREAK_DURATION);
+            persistState({
+              isActive: true, isPaused: false, mode: 'break', sessionDuration,
+              endTime: breakEnd, sessionsCompleted: totalSessions, currentSubject,
+              sessionStart: sessionStartRef.current,
+            });
+          } else {
+            sendNotification('Break Over', 'Ready for another focus session?');
+            setIsActive(false);
+            setMode('work');
+            setTimeRemaining(sessionDuration);
+            setEndTime(null);
+            persistState({ isActive: false, isPaused: false, mode: 'work', sessionDuration, endTime: null, sessionsCompleted, currentSubject, sessionStart: null });
+          }
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [isActive, isPaused, endTime, mode, sessionDuration, sessionsCompleted, currentSubject, updateStudyStats, updateProductivity]);
 
   const requestNotificationPermission = useCallback(() => {
@@ -302,7 +374,7 @@ export function FocusProvider({ children }) {
       sessionsCompleted, focusHours, dailyStreak, isMinimized, currentSubject, setCurrentSubject,
       progress, isExpanded, setIsExpanded, DURATIONS, BREAK_DURATION,
       startSession, pauseSession, resumeSession, stopSession,
-      toggleMinimized, selectDuration, getTodayFocus,
+      toggleMinimized, selectDuration, getTodayFocus, history,
       requestNotificationPermission, formatTime,
     }}>
       {children}
@@ -315,3 +387,4 @@ export const useFocus = () => {
   if (!ctx) throw new Error('useFocus must be used within FocusProvider');
   return ctx;
 };
+

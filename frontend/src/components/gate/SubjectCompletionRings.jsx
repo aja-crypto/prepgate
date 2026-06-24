@@ -12,6 +12,7 @@ export default function SubjectCompletionRings({ limit }) {
   
   const display = limit ? subjects.slice(0, limit) : subjects;
   const overall = Math.round(subjects.reduce((s, x) => s + x.progress, 0) / (subjects.length || 1));
+  const needsAttention = subjects.filter((s) => s.progress < 50).sort((a, b) => a.progress - b.progress);
 
   return (
     <GlassCard>
@@ -27,6 +28,19 @@ export default function SubjectCompletionRings({ limit }) {
         </div>
       </div>
 
+      {needsAttention.length > 0 && (
+        <div className="mb-4 p-3 rounded-xl bg-red-500/5 border border-red-500/15">
+          <div className="text-[10px] font-semibold text-red-400 uppercase tracking-wider mb-2">Needs Attention</div>
+          <div className="flex flex-wrap gap-2">
+            {needsAttention.map((s) => (
+              <span key={s.name} className="text-[10px] px-2 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300">
+                {s.name} ({s.progress}%)
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {display.map((s, idx) => (
           <div
@@ -35,7 +49,7 @@ export default function SubjectCompletionRings({ limit }) {
           >
             <ProgressRingMini value={s.progress} size={40} stroke={3.5} color={s.color || 'var(--color-primary)'} />
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-medium text-text truncate">{s.name}</div>
+              <div className="text-[11px] font-medium text-text truncate" title={s.name}>{s.name}</div>
               <div className="flex items-center justify-between">
                 <div className="text-[10px] text-text3">{s.icon}</div>
                 {accuracies[idx] > 0 && (
