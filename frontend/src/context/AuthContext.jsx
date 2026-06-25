@@ -4,7 +4,7 @@ import api, { authService } from '../services/api';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext(null);
-const progressKey = (userId) => `gate2027_progress_${userId}`;
+const progressKey = (userId) => `gateapex_progress_${userId}`;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);

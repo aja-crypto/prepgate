@@ -13,7 +13,7 @@ import { mergePyqLists } from '../utils/pyqMapper';
 import toast from 'react-hot-toast';
 
 const ProgressContext = createContext(null);
-const storageKey = (userId) => `gate2027_progress_${userId || 'guest'}`;
+const storageKey = (userId) => `gateapex_progress_${userId || 'guest'}`;
 const BACKUP_INTERVAL_MS = 5 * 60 * 1000;
 const PUSH_DEBOUNCE_MS = 2000;
 
@@ -77,7 +77,7 @@ export const ProgressProvider = ({ children }) => {
       const mongo = await checkMongoAvailable();
       setMongoAvailable(mongo);
       const local = loadFromStorage(userId, user);
-      const { data: merged, updatedAt, mongoAvailable: ma, fromCloud } = await pullFromServer(local, user);
+      const { data: merged, updatedAt, mongoAvailable: ma, fromCloud } = await pullFromServer(local, user, dataRef.current);
 
       if (controller.signal.aborted) return;
 
@@ -110,22 +110,16 @@ export const ProgressProvider = ({ children }) => {
     return () => { clearTimeout(timeout); controller.abort(); };
   }, [user, userId]);
 
-  // Auto-save to localStorage on every change
+  // Auto-save to localStorage on every change — no state updates to avoid extra renders
   useEffect(() => {
     if (userId === 'guest') return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    setBackupStatus('saving');
     saveTimer.current = setTimeout(() => {
       try {
         const now = new Date().toISOString();
         const toSave = { ...data, lastSaved: now };
         localStorage.setItem(storageKey(userId), JSON.stringify(toSave));
-        setLastBackupAt(now);
-        setBackupStatus('saved');
-        setIsNewUser(isEmptyProgress(toSave));
-      } catch {
-        setBackupStatus('error');
-      }
+      } catch { /* storage full */ }
     }, 400);
     return () => clearTimeout(saveTimer.current);
   }, [data, userId]);
@@ -140,7 +134,15 @@ export const ProgressProvider = ({ children }) => {
       if (result.error) {
         setCloudBackupStatus('offline');
       } else {
-        if (result.data) setData(result.data);
+        if (result.data?.mocks || result.data?.notes) {
+          setData((prev) => {
+            const next = { ...prev };
+            if (result.data.mocks) next.mocks = result.data.mocks;
+            if (result.data.notes) next.notes = result.data.notes;
+            if (next.mocks === prev.mocks && next.notes === prev.notes) return prev;
+            return next;
+          });
+        }
         setLastCloudBackupAt(result.data?.lastSaved || new Date().toISOString());
         setCloudBackupStatus('synced');
         setMongoAvailable(result.mongoAvailable);
@@ -150,7 +152,7 @@ export const ProgressProvider = ({ children }) => {
     }
   }, [user, userId]);
 
-  // Debounced cloud push on every change
+  // Debounced cloud push — data is read via dataRef, so no dep needed
   useEffect(() => {
     if (!user || userId === 'guest') return;
     if (pushTimer.current) clearTimeout(pushTimer.current);

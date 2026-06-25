@@ -69,8 +69,8 @@ export default function NotesHubWidget() {
         <div className="space-y-2 mb-4">
           <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Featured Resources</p>
           <div className="grid grid-cols-2 gap-2">
-            {filtered.slice(0, 4).map(r => (
-              <Link key={r._id} to={r.url || '/study-hub'} className="p-2.5 rounded-lg transition-all hover:-translate-y-0.5" style={{ background: 'rgba(52,211,153,0.03)', border: '1px solid rgba(52,211,153,0.08)' }}>
+            {filtered.slice(0, 4).map((r, i) => (
+              <Link key={r._id || r.id || i} to={r.url || '/study-hub'} className="p-2.5 rounded-lg transition-all hover:-translate-y-0.5" style={{ background: 'rgba(52,211,153,0.03)', border: '1px solid rgba(52,211,153,0.08)' }}>
                 <p className="text-xs font-medium text-white truncate">{r.title}</p>
                 <p className="text-[9px] text-gray-400 mt-0.5 truncate">{r.description}</p>
                 {r.resourceType && (
@@ -89,8 +89,8 @@ export default function NotesHubWidget() {
         <div className="space-y-2">
           <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Featured Content</p>
           <div className="space-y-1.5">
-            {featuredContent.slice(0, 4).map(fc => (
-              <Link key={fc._id} to={fc.link || '/study-hub'} className="flex items-center gap-2.5 p-2 rounded-lg transition-all hover:bg-white/[0.02]" style={{ border: '1px solid rgba(167,139,250,0.06)' }}>
+            {featuredContent.slice(0, 4).map((fc, i) => (
+              <Link key={fc._id || fc.id || i} to={fc.link || '/study-hub'} className="flex items-center gap-2.5 p-2 rounded-lg transition-all hover:bg-white/[0.02]" style={{ border: '1px solid rgba(167,139,250,0.06)' }}>
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs shrink-0" style={{ background: 'rgba(167,139,250,0.1)' }}>
                   📌
                 </div>
@@ -109,8 +109,8 @@ export default function NotesHubWidget() {
         <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-2">Your Notes ({safeNotes.length})</p>
           <div className="flex flex-wrap gap-1.5">
-            {safeNotes.slice(0, 5).map(n => (
-              <Link key={n.id || n._id} to="/study-hub" className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(167,139,250,0.08)', color: '#A78BFA' }}>
+            {safeNotes.slice(0, 5).map((n, i) => (
+              <Link key={n.id || n._id || i} to="/study-hub" className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(167,139,250,0.08)', color: '#A78BFA' }}>
                 {n.title}
               </Link>
             ))}

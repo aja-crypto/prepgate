@@ -1,7 +1,7 @@
-# PrepGate — Resume After Break
+# GateApex — Resume After Break
 
 **Generated:** June 19, 2026
-**Last Commit:** `bf026e9` — "PrepGate backup before break" (130 files, 10,939 insertions)
+**Last Commit:** `bf026e9` — "GateApex backup before break" (130 files, 10,939 insertions)
 **Branch:** main
 **GitHub Status:** ⚠️ **NOT PUSHED** — No remote configured. Run: `git remote add origin <your-github-url> && git push origin main`
 
@@ -32,7 +32,7 @@ The project is in a mature, production-ready state with all major features imple
 - Exam countdown (GATE 2027: Feb 7, 2027)
 - DashboardMotivation widget (CMS-driven quotes)
 - AnnouncementBar widget (CMS banners)
-- PrepGateAIWidget (5-tab AI command center)
+- GateApexAIWidget (5-tab AI command center)
 - GateVaultWidget (4-tab challenges/progress/badges)
 - NotesHubWidget (featured resources)
 - RecommendationEngine (priority-ranked tasks)
@@ -71,7 +71,7 @@ The project is in a mature, production-ready state with all major features imple
 - Secure document viewer with signed Cloudinary URLs + watermark
 - Question Bank with JSON/CSV bulk import
 - System Health monitoring (uptime, memory, heap)
-- Admin login: `admin@prepgate.app` / `Admin@123`
+- Admin login: `admin@GateApex.app` / `Admin@123`
 
 ### Focus Mode
 - FocusContext: full timer state machine, break timer, localStorage persistence
@@ -129,7 +129,7 @@ The project is in a mature, production-ready state with all major features imple
 ### Vercel Deployment (Partially Configured)
 - **Status:** `vercel.json` proxy configured, build passes, but not deployed
 - **Missing:** Production `FRONTEND_URL` and `CORS_ORIGIN` not set in backend `.env`
-- **Fix:** Add `FRONTEND_URL=https://prepgate.vercel.app` and `CORS_ORIGIN=https://prepgate.vercel.app` to backend `.env`, then trigger deploy
+- **Fix:** Add `FRONTEND_URL=https://GateApex.vercel.app` and `CORS_ORIGIN=https://GateApex.vercel.app` to backend `.env`, then trigger deploy
 
 ### Firebase Push Notifications (Configured but Inactive)
 - **Status:** All 6 Firebase env vars commented out in frontend `.env`
@@ -251,15 +251,15 @@ Reason: Current key is exposed in commit history (bf026e9)
 
 TASK 3 — Update Backend .env for Production
 Add these lines to backend/.env:
-  FRONTEND_URL=https://prepgate.vercel.app
-  CORS_ORIGIN=https://prepgate.vercel.app
+  FRONTEND_URL=https://GateApex.vercel.app
+  CORS_ORIGIN=https://GateApex.vercel.app
 Then commit and push to trigger Render redeploy
 
 TASK 4 — Verify Admin Login
 1. Start frontend: cd frontend && npm run dev
 2. Start backend: cd backend && node server.js
 3. Navigate to http://localhost:5173/admin/login
-4. Login: admin@prepgate.app / Admin@123
+4. Login: admin@GateApex.app / Admin@123
 5. Verify all 15 admin pages load
 
 TASK 5 — Verify MongoDB Connection
@@ -311,13 +311,13 @@ Then verify scores persist across page refresh
 |------|-------|
 | Frontend Dev | `cd frontend && npm run dev` → http://localhost:5173 |
 | Backend Dev | `cd backend && node server.js` → http://localhost:5000 |
-| Admin Login | admin@prepgate.app / Admin@123 |
-| Demo User | demo@prepgate.app / demo123456 |
+| Admin Login | admin@GateApex.app / Admin@123 |
+| Demo User | demo@GateApex.app / demo123456 |
 | MongoDB | Atlas Cluster0, database: gate2027 |
 | OpenRouter Model | openai/gpt-4o-mini (no vision) |
 | Cloudinary | cloud name: dpp9estoy |
 | Last Build | ✅ 0 errors, 2720 modules, 12.69s |
-| Last Commit | bf026e9 "PrepGate backup before break" |
+| Last Commit | bf026e9 "GateApex backup before break" |
 | GitHub | ⚠️ Not connected — must run `git remote add origin` |
 
 ---
@@ -328,7 +328,7 @@ Then verify scores persist across page refresh
 |------|---------|
 | `PROJECT_STATUS.md` | Full technical status report |
 | `BACKUP_CHECKLIST.md` | Pre-break verification checklist |
-| `PrepGate-Secrets.txt` | All credentials (NEVER commit) |
+| `GateApex-Secrets.txt` | All credentials (NEVER commit) |
 | `MongoDB-Backup.txt` | MongoDB Atlas connection info |
 | `AGENTS.md` | Session history and decisions |
 

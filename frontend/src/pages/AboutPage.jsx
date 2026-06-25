@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { BRAND } from '../design/tokens';
+import Icon from '../components/ui/Icon';
 
 function useIntersection(rootMargin = '-80px', threshold = 0.15) {
   const [entries, setEntries] = useState({});
@@ -70,7 +71,7 @@ export default function AboutPage() {
 
       <nav className="about-nav">
         <Link to="/" className="nav-logo">
-          <img src="/images/logo.png" alt="PrepGate" className="nav-logo-img" />
+          <Icon name="logo" className="nav-logo-img" />
           <div className="logo-text">
             <span className="logo-name">{BRAND.name}</span>
             <span className="logo-year">GATE 2027</span>
@@ -114,7 +115,7 @@ export default function AboutPage() {
           </div>
 
           <div className="hero-content">
-            <div className="hc-badge">About PrepGate</div>
+            <div className="hc-badge">About GateApex</div>
             <h1 className="hc-heading">
               One Platform.<br />Every Resource.<br />Complete Preparation.
             </h1>
@@ -141,13 +142,13 @@ export default function AboutPage() {
               Preparation should be challenging because of concepts, not because resources are difficult to find.
             </p>
             <p className="mission-text">
-              PrepGate exists to make preparation more organized, accessible, and efficient for every aspirant.
+              GateApex exists to make preparation more organized, accessible, and efficient for every aspirant.
             </p>
             <div className="mission-accent" />
           </div>
         </ScrollReveal>
 
-        {/* ── WHY I BUILT PREPGATE ── */}
+        {/* ── WHY I BUILT GateApex ── */}
         <ScrollReveal section="why" observe={observe} entries={entries}>
           <div className="why-card">
             <div className="why-quote-icon">"</div>
@@ -156,13 +157,13 @@ export default function AboutPage() {
                 <span key={i} className="why-particle" style={{ animationDelay: `${i * 0.4}s` }} />
               ))}
             </div>
-            <h2 className="why-heading">Why I Built PrepGate</h2>
+            <h2 className="why-heading">Why I Built GateApex</h2>
             <p className="why-text">
               Most students waste countless hours searching for notes, PDFs, PYQs, and resources 
               across Telegram, YouTube, blogs, and websites. I experienced this firsthand.
             </p>
             <p className="why-text">
-              PrepGate was built to organize everything in one place so aspirants can focus on 
+              GateApex was built to organize everything in one place so aspirants can focus on 
               preparation instead of searching. Every feature exists because I wished it existed 
               when I was preparing.
             </p>
@@ -177,7 +178,7 @@ export default function AboutPage() {
           <div className="resources-block">
             <h2 className="section-heading">What You Will Find Here</h2>
             <p className="section-sub">
-              Everything on PrepGate is designed around one goal — helping you prepare with clarity, consistency, and confidence.
+              Everything on GateApex is designed around one goal — helping you prepare with clarity, consistency, and confidence.
             </p>
             <div className="resource-grid">
               {[
@@ -244,7 +245,7 @@ export default function AboutPage() {
         <ScrollReveal section="feedback" observe={observe} entries={entries}>
           <div className="feedback-block">
             <h2 className="section-heading">Feedback &amp; Suggestions</h2>
-            <p className="section-sub">PrepGate is continuously improving. Help us make it better.</p>
+            <p className="section-sub">GateApex is continuously improving. Help us make it better.</p>
             <div className="feedback-grid">
               {[
                 { icon: '🔍', title: 'Missing Resources', desc: 'Found something we should add?' },
@@ -278,14 +279,14 @@ export default function AboutPage() {
                   <span>GATE 2027 Aspirant</span>
                 </div>
                 <p className="fc-premium-text">
-                  I built PrepGate because I lived the struggle of GATE preparation myself. The scattered resources, 
+                  I built GateApex because I lived the struggle of GATE preparation myself. The scattered resources, 
                   the endless Telegram channels, the fear of missing a good PDF or a mock test — I experienced it all. 
                   This platform is my attempt to solve that problem for every aspirant who follows. Every feature, 
                   every resource, every line of code was written with one question in mind: 
                   "Would this have helped me when I was preparing?"
                 </p>
                 <p className="fc-premium-text">
-                  PrepGate is free, open, and always will be. Because quality preparation should not depend 
+                  GateApex is free, open, and always will be. Because quality preparation should not depend 
                   on how much you can spend.
                 </p>
               </div>
@@ -743,7 +744,7 @@ export default function AboutPage() {
           animation: glowPulse 3s ease infinite;
         }
 
-        /* ── WHY I BUILT PREPGATE ── */
+        /* ── WHY I BUILT GateApex ── */
         .why-card {
           position: relative;
           padding: 48px 40px;
@@ -1156,3 +1157,4 @@ export default function AboutPage() {
     </div>
   );
 }
+

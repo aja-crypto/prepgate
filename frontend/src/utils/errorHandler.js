@@ -12,13 +12,13 @@ function shouldShowToast(key) {
 
 export function warn(...args) {
   if (process.env.NODE_ENV !== 'production') {
-    console.warn('[PrepGate]', ...args);
+    console.warn('[GateApex]', ...args);
   }
 }
 
 export function logError(operation, error, context = {}) {
   const msg = error?.response?.data?.message || error?.message || String(error);
-  console.error(`[PrepGate] ${operation} failed:`, msg, Object.keys(context).length ? context : '');
+  console.error(`[GateApex] ${operation} failed:`, msg, Object.keys(context).length ? context : '');
   return msg;
 }
 
@@ -57,3 +57,4 @@ export function createServiceHandler(serviceFn, operation, options = {}) {
     return serviceFn(...args).catch(silentCatch(operation, options));
   };
 }
+

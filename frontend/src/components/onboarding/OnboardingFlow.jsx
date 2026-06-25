@@ -6,7 +6,7 @@ import Icon from '../ui/Icon';
 import GlassCard from '../ui/GlassCard';
 
 const STEPS = [
-  { id: 'welcome', title: 'Welcome to PrepGate' },
+  { id: 'welcome', title: 'Welcome to GateApex' },
   { id: 'theme', title: 'Choose your theme' },
   { id: 'colors', title: 'Pick your accent' },
   { id: 'ready', title: 'You\'re all set' },
@@ -40,9 +40,9 @@ export default function OnboardingFlow() {
       <GlassCard className="relative w-full max-w-lg animate-scale-in" padding="p-0" hover={false}>
         <div className="p-8 pb-6">
           <div className="flex items-center gap-3 mb-8">
-            <img src="/images/logo.png" alt="" className="w-10 h-10 object-contain" />
+            <Icon name="logo" className="w-10 h-10" />
             <div>
-              <div className="font-bold text-text tracking-tight" style={{ fontSize: '20px', lineHeight: '1.1' }}>PrepGate</div>
+              <div className="font-bold text-text tracking-tight" style={{ fontSize: '20px', lineHeight: '1.1' }}>GateApex</div>
               <div style={{ color: '#A855F7', fontSize: '10px', fontWeight: 600, letterSpacing: '1px' }}>GATE 2027</div>
             </div>
           </div>
@@ -60,7 +60,7 @@ export default function OnboardingFlow() {
             <div className="animate-fade-in">
               <h2 className="text-2xl font-bold text-text tracking-tight mb-2">Your GATE Preparation Hub</h2>
               <p className="text-sm text-text2 leading-relaxed mb-6">
-                PrepGate is a premium preparation platform for GATE 2027. Track progress, analyze trends, and stay exam-ready — built for focus, not distraction.
+                GateApex is a premium preparation platform for GATE 2027. Track progress, analyze trends, and stay exam-ready — built for focus, not distraction.
               </p>
               <div className="grid grid-cols-3 gap-3">
                 {[
@@ -80,7 +80,7 @@ export default function OnboardingFlow() {
           {current.id === 'theme' && (
             <div className="animate-fade-in">
               <h2 className="text-xl font-bold text-text mb-2">Appearance</h2>
-              <p className="text-sm text-text2 mb-5">Choose how PrepGate looks. You can change this anytime in Settings.</p>
+              <p className="text-sm text-text2 mb-5">Choose how GateApex looks. You can change this anytime in Settings.</p>
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { id: 'dark', label: 'Dark', preview: 'bg-[#0F172A] border-primary/30' },
@@ -163,3 +163,4 @@ export default function OnboardingFlow() {
     </div>
   );
 }
+

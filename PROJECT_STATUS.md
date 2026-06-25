@@ -1,4 +1,4 @@
-# PrepGate — Project Status Report
+# GateApex — Project Status Report
 
 **Generated:** June 19, 2026
 **Branch:** main
@@ -105,7 +105,7 @@ The project is in a mature, production-ready state with 48 modified files and 54
 - DashboardMotivation widget (CMS-driven quotes)
 - AnnouncementBar widget
 - NotesHubWidget
-- PrepGateAIWidget (5-tab command center)
+- GateApexAIWidget (5-tab command center)
 - RecommendationEngine widget
 - ExamTimeline rewritten as personalized success roadmap
 - CMS-driven content for all dashboard widgets
@@ -134,9 +134,9 @@ The project is in a mature, production-ready state with 48 modified files and 54
 ## In-Progress Modules (⚠️)
 
 ### Vercel Deployment Configuration
-- `vercel.json` rewrites `/api/(.*)` → `https://prepgate-api.onrender.com/api/$1`
+- `vercel.json` rewrites `/api/(.*)` → `https://GateApex-api.onrender.com/api/$1`
 - Frontend `.env`: `VITE_API_URL=/api` is correct for Vite proxy in dev
-- Production deployment needs `FRONTEND_URL=https://prepgate.vercel.app` and `CORS_ORIGIN=https://prepgate.vercel.app` added to backend `.env`
+- Production deployment needs `FRONTEND_URL=https://GateApex.vercel.app` and `CORS_ORIGIN=https://GateApex.vercel.app` added to backend `.env`
 - **Status:** Build passes, proxy configured, but production URL not updated in backend `.env`
 
 ### Firebase Push Notifications
@@ -207,7 +207,7 @@ The project is in a mature, production-ready state with 48 modified files and 54
 | System Health | ✅ Working | `/admin/system-health` |
 | Settings | ✅ Working | `/admin/settings` |
 
-Admin credentials: `admin@prepgate.app` / `Admin@123`
+Admin credentials: `admin@GateApex.app` / `Admin@123`
 
 ---
 
@@ -266,9 +266,9 @@ Admin credentials: `admin@prepgate.app` / `Admin@123`
 | Item | Status | Notes |
 |------|--------|-------|
 | Frontend (Vercel) | ⚠️ Not verified | `vercel.json` configured, proxy to Render |
-| Backend (Render) | ⚠️ Not verified | `prepgate-api.onrender.com` in proxy |
+| Backend (Render) | ⚠️ Not verified | `GateApex-api.onrender.com` in proxy |
 | API Proxy | ✅ Working | Vite dev proxy → localhost:5000 |
-| Vercel Proxy | ✅ Configured | `/api/*` → `https://prepgate-api.onrender.com/api/*` |
+| Vercel Proxy | ✅ Configured | `/api/*` → `https://GateApex-api.onrender.com/api/*` |
 | FRONTEND_URL | 🔴 Not updated | Still `http://localhost:5173` in `.env` |
 | CORS_ORIGIN | 🔴 Not updated | Not set for production |
 | JWT Secret | ✅ 64-char hex | Changed from placeholder |
@@ -296,7 +296,7 @@ Admin credentials: `admin@prepgate.app` / `Admin@123`
 
 **Frontend admin pages:** `AdminDashboardPage.jsx`, `AdminPdfsPage.jsx`, `AdminPyqPage.jsx`, `AdminUsersPage.jsx`, `AdminAnalyticsPage.jsx`, `AdminSystemHealthPage.jsx`, `AdminAiAnalyticsPage.jsx`
 
-**Frontend components:** `AdminLayout.jsx`, `AdminPYQTab.jsx`, `Icon.jsx`, `TodayPlan.jsx`, `MockTestBuilder.jsx`, `PageState.jsx`, `AmbientBackground.jsx`, `ErrorBoundary.jsx`, `FloatingAIOrb.jsx`, `AnnouncementBar.jsx`, `DashboardMotivation.jsx`, `ExamTimeline.jsx`, `GateVaultAnimations.jsx`, `GateVaultWidget.jsx`, `MotivationCard.jsx`, `NotesHubWidget.jsx`, `PrepGateAIWidget.jsx`, `RecommendationEngine.jsx`, `AnnouncementBanner.jsx`, `landing/*`
+**Frontend components:** `AdminLayout.jsx`, `AdminPYQTab.jsx`, `Icon.jsx`, `TodayPlan.jsx`, `MockTestBuilder.jsx`, `PageState.jsx`, `AmbientBackground.jsx`, `ErrorBoundary.jsx`, `FloatingAIOrb.jsx`, `AnnouncementBar.jsx`, `DashboardMotivation.jsx`, `ExamTimeline.jsx`, `GateVaultAnimations.jsx`, `GateVaultWidget.jsx`, `MotivationCard.jsx`, `NotesHubWidget.jsx`, `GateApexAIWidget.jsx`, `RecommendationEngine.jsx`, `AnnouncementBanner.jsx`, `landing/*`
 
 **Frontend services:** `api.js`, `adminApi.js`
 

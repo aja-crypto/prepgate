@@ -114,11 +114,11 @@ export default function SubjectsPage() {
   const { state, data, error, retry } = usePageState(loadData, []);
 
   // Must call useState before any early return (React Hooks rule)
-  const [expandedId, setExpandedId] = useState(null);
+  const [expandedIds, setExpandedIds] = useState(new Set());
 
   // Sync expanded from loaded data once it becomes available
   useEffect(() => {
-    if (data?.expanded) setExpandedId(data.expanded);
+    if (data?.expanded) setExpandedIds(new Set([data.expanded]));
   }, [data?.expanded]);
 
   if (state === 'loading') return <PageLoading title="Loading Subjects" />;
@@ -172,7 +172,16 @@ export default function SubjectsPage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
         {WEIGHTAGE_TABLE.map((row) => {
-          const sub = subjects.find((s) => s.name.includes(row.subject.split(' ')[0]) || s.name === row.subject);
+          const sub = subjects.find((s) => {
+            if (s.name === row.subject) return true;
+            const codeMap = {
+              'General Aptitude': 'APT', 'Engineering Mathematics': 'EM',
+              'Programming & Data Structures': 'DS', 'Computer Networks': 'CN',
+              'Operating Systems': 'OS', 'DBMS': 'DB', 'Theory of Computation': 'TOC',
+              'Algorithms': 'AL', 'Compiler Design': 'CD', 'Digital Logic': 'DL',
+            };
+            return s.code === codeMap[row.subject] || s.name === row.subject;
+          });
           const pct = sub?.completionPct || 0;
           const color = sub?.color || '#4f8dff';
           return (
@@ -198,12 +207,19 @@ export default function SubjectsPage() {
 
       <div className="space-y-2">
         {subjects.map((s) => {
-          const isOpen = expandedId === s._id;
+          const isOpen = expandedIds.has(s._id);
           const pct = s.completionPct || 0;
 
           return (
             <div key={s._id} className={`bg-surface border rounded-xl transition-all ${isOpen ? 'border-white/20' : 'border-border hover:border-white/10'}`}>
-              <button type="button" className="w-full p-4 flex items-center gap-3 text-left" onClick={() => setExpandedId(isOpen ? null : s._id)}>
+              <button type="button" className="w-full p-4 flex items-center gap-3 text-left" onClick={() => {
+                setExpandedIds(prev => {
+                  const next = new Set(prev);
+                  if (next.has(s._id)) next.delete(s._id);
+                  else next.add(s._id);
+                  return next;
+                });
+              }}>
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0" style={{ background: `${s.color}20` }}>{s.icon}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -260,8 +276,12 @@ export default function SubjectsPage() {
       </div>
 
       {!subjects.length && (
-        <div className="text-center py-16 text-text3 text-sm">
-          Run <code className="text-primary">cd backend && npm run seed</code> to load the GATE 2027 syllabus.
+        <div className="text-center py-16">
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(79,141,255,0.12), rgba(79,141,255,0.06))', border: '1px solid rgba(79,141,255,0.15)' }}>
+            <span className="text-3xl">📚</span>
+          </div>
+          <h3 className="text-base font-bold text-text mb-1">No Subjects Available</h3>
+          <p className="text-sm text-text3 max-w-sm mx-auto">The GATE 2027 syllabus hasn&apos;t been loaded yet. Please contact an admin to seed the subject data.</p>
         </div>
       )}
     </div>

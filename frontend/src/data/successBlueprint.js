@@ -10,7 +10,7 @@ export const SUCCESS_PRINCIPLES = [
       'Builds foundation for technical subjects',
       'Improves overall problem-solving ability',
     ],
-    prepgateTip: 'Dedicate the first 45 minutes daily to Aptitude and Mathematics.',
+    gateapexTip: 'Dedicate the first 45 minutes daily to Aptitude and Mathematics.',
     tags: ['Mathematics', 'Aptitude', 'Foundation', 'Cutoff'],
   },
   {
@@ -23,7 +23,7 @@ export const SUCCESS_PRINCIPLES = [
       'Algorithms → DBMS → Operating Systems → Computer Networks',
       'COA → TOC → Compiler Design',
     ],
-    prepgateTip: 'Study subjects in this order — each builds on the previous one.',
+    gateapexTip: 'Study subjects in this order — each builds on the previous one.',
     tags: ['Sequencing', 'Planning', 'Syllabus'],
   },
   {
@@ -35,9 +35,9 @@ export const SUCCESS_PRINCIPLES = [
       'Identify high-weightage topics first',
       'Avoid spending equal time on every topic',
       'Focus on topics with 2+ PYQs per year',
-      'Use PrepGate weightage indicators',
+      'Use GateApex weightage indicators',
     ],
-    prepgateTip: 'Check topic weightage in PrepGate — prioritize 4★ and 5★ topics.',
+    gateapexTip: 'Check topic weightage in GateApex — prioritize 4★ and 5★ topics.',
     tags: ['Weightage', 'Prioritization', 'PYQs'],
   },
   {
@@ -51,7 +51,7 @@ export const SUCCESS_PRINCIPLES = [
       'Secure marks efficiently with less effort',
       'Don\'t get stuck on low-weightage topics',
     ],
-    prepgateTip: 'Use PrepGate analytics to find your 20% high-yield topics.',
+    gateapexTip: 'Use GateApex analytics to find your 20% high-yield topics.',
     tags: ['80/20', 'Efficiency', 'Smart Study'],
   },
   {
@@ -66,7 +66,7 @@ export const SUCCESS_PRINCIPLES = [
       'Revision: 1 Hour',
       'Total: 5–7 Hours Daily',
     ],
-    prepgateTip: 'Set daily targets in PrepGate — track your 5–7 hour study system.',
+    gateapexTip: 'Set daily targets in GateApex — track your 5–7 hour study system.',
     tags: ['Daily Routine', 'Time Management', 'Consistency'],
   },
   {
@@ -80,7 +80,7 @@ export const SUCCESS_PRINCIPLES = [
       'Solve PYQs multiple times',
       'Use PYQs to identify important concepts',
     ],
-    prepgateTip: 'Track PYQ progress in PrepGate — aim to solve each PYQ at least twice.',
+    gateapexTip: 'Track PYQ progress in GateApex — aim to solve each PYQ at least twice.',
     tags: ['PYQs', 'Pattern Recognition', 'Practice'],
   },
   {
@@ -94,7 +94,7 @@ export const SUCCESS_PRINCIPLES = [
       '7 Day Revision — Full topic revisit',
       'Benefits: Reduces forgetting, improves recall speed, strengthens memory retention',
     ],
-    prepgateTip: 'Use PrepGate\'s built-in revision scheduler at 3-7-15-30 day intervals.',
+    gateapexTip: 'Use GateApex\'s built-in revision scheduler at 3-7-15-30 day intervals.',
     tags: ['Revision', 'Spaced Repetition', 'Memory'],
   },
   {
@@ -109,7 +109,7 @@ export const SUCCESS_PRINCIPLES = [
       'Frequently Asked Concepts',
       'Target: 10–15 Pages Per Subject',
     ],
-    prepgateTip: 'Use PrepGate notes to store and organize your short notes per topic.',
+    gateapexTip: 'Use GateApex notes to store and organize your short notes per topic.',
     tags: ['Notes', 'Organization', 'Revision'],
   },
   {
@@ -124,7 +124,7 @@ export const SUCCESS_PRINCIPLES = [
       'Track accuracy by subject',
       'Improve strategy for next mock',
     ],
-    prepgateTip: 'Use PrepGate mock test analytics to track your improvement over time.',
+    gateapexTip: 'Use GateApex mock test analytics to track your improvement over time.',
     tags: ['Mock Tests', 'Analysis', 'Improvement'],
   },
   {
@@ -138,7 +138,7 @@ export const SUCCESS_PRINCIPLES = [
       'Use one standard reference book',
       'Do not keep changing resources',
     ],
-    prepgateTip: 'PrepGate curates the best single resource per topic — stick with it.',
+    gateapexTip: 'GateApex curates the best single resource per topic — stick with it.',
     tags: ['Resources', 'Focus', 'Consistency'],
   },
   {
@@ -152,7 +152,7 @@ export const SUCCESS_PRINCIPLES = [
       'GeeksforGeeks: Practice problems',
       'Standard Reference Books: Depth',
     ],
-    prepgateTip: 'PrepGate links the best free resource for every topic.',
+    gateapexTip: 'GateApex links the best free resource for every topic.',
     tags: ['Free Resources', 'NPTEL', 'YouTube', 'GFG'],
   },
   {
@@ -165,7 +165,7 @@ export const SUCCESS_PRINCIPLES = [
       'Cache Memory — Mapping, Replacement Policies',
       'IEEE 754 Floating Point Representation',
     ],
-    prepgateTip: 'Mark these high-yield COA topics in PrepGate for priority revision.',
+    gateapexTip: 'Mark these high-yield COA topics in GateApex for priority revision.',
     tags: ['COA', 'Pipelining', 'Cache', 'IEEE 754'],
   },
   {
@@ -177,7 +177,7 @@ export const SUCCESS_PRINCIPLES = [
       'Memory Management — Paging, Segmentation, Virtual Memory',
       'Synchronization — Semaphores, Deadlocks, Monitors',
     ],
-    prepgateTip: 'Track OS Memory Management and Synchronization in PrepGate.',
+    gateapexTip: 'Track OS Memory Management and Synchronization in GateApex.',
     tags: ['OS', 'Memory', 'Synchronization'],
   },
   {
@@ -189,7 +189,7 @@ export const SUCCESS_PRINCIPLES = [
       'Indexing — B+ Trees, Hashing',
       'Normalization — Normal Forms, Decomposition',
     ],
-    prepgateTip: 'Practice Indexing and Normalization PYQs in PrepGate.',
+    gateapexTip: 'Practice Indexing and Normalization PYQs in GateApex.',
     tags: ['DBMS', 'Indexing', 'Normalization'],
   },
   {
@@ -202,7 +202,7 @@ export const SUCCESS_PRINCIPLES = [
       'TCP — Congestion Control, Flow Control',
       'Flow Control — Stop-and-Wait, Sliding Window',
     ],
-    prepgateTip: 'Use PrepGate CN topic tracker to master IP Addressing and TCP.',
+    gateapexTip: 'Use GateApex CN topic tracker to master IP Addressing and TCP.',
     tags: ['CN', 'IP', 'TCP', 'Flow Control'],
   },
   {
@@ -215,7 +215,7 @@ export const SUCCESS_PRINCIPLES = [
       'Time Complexity — Master Theorem, Recurrences',
       'Graph Algorithms — BFS, DFS, Shortest Path',
     ],
-    prepgateTip: 'Practice Sorting and Graph algorithm PYQs in PrepGate.',
+    gateapexTip: 'Practice Sorting and Graph algorithm PYQs in GateApex.',
     tags: ['Algorithms', 'Sorting', 'Graph', 'Complexity'],
   },
   {
@@ -228,7 +228,7 @@ export const SUCCESS_PRINCIPLES = [
       'PDA — Pushdown Automata, Context-Free Languages',
       'Decidability — Turing Machines, Undecidability',
     ],
-    prepgateTip: 'Track TOC topics in PrepGate — focus on Automata and Decidability.',
+    gateapexTip: 'Track TOC topics in GateApex — focus on Automata and Decidability.',
     tags: ['TOC', 'Automata', 'PDA', 'Decidability'],
   },
   {
@@ -242,7 +242,7 @@ export const SUCCESS_PRINCIPLES = [
       'Revision before new content — don\'t pile up',
       'Practice before theory overload — apply what you learn',
     ],
-    prepgateTip: 'Let PrepGate guide you — follow your daily plan, not your mood.',
+    gateapexTip: 'Let GateApex guide you — follow your daily plan, not your mood.',
     tags: ['Mindset', 'Motivation', 'Consistency', 'Discipline'],
   },
 ];
@@ -256,5 +256,6 @@ export const STUDY_BLUEPRINT = {
     { activity: 'Revision', hours: 1, color: '#10B981' },
   ],
   totalHours: '5–7',
-  prepgateTip: 'Set daily targets in PrepGate to track this blueprint.',
+  gateapexTip: 'Set daily targets in GateApex to track this blueprint.',
 };
+

@@ -1,0 +1,228 @@
+<<<<<<< HEAD
+# 🎓 GATE 2027 Progress Tracker
+
+A full-stack GATE CSE preparation platform built with **React + Node.js + MongoDB Atlas + JWT Auth**.
+
+---
+
+## 📁 Project Structure
+
+```
+gate2027/
+├── frontend/                  # React.js (Vite + Tailwind CSS)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── auth/          # Login, Register, ForgotPassword
+│   │   │   ├── dashboard/     # Stats, Countdown, WeekChart
+│   │   │   ├── subjects/      # SubjectCard, TopicList
+│   │   │   ├── topics/        # TopicTracker, AddTopicModal
+│   │   │   ├── pyq/           # PYQCard, PYQFilter
+│   │   │   ├── mocks/         # MockTestTable, ScoreChart
+│   │   │   ├── analytics/     # RadarChart, StreakGrid, WeakTopics
+│   │   │   ├── notes/         # NoteCard, NoteEditor
+│   │   │   ├── admin/         # AdminPanel, SubjectManager
+│   │   │   └── common/        # Navbar, Sidebar, Modal, Button
+│   │   ├── pages/             # Page-level components
+│   │   ├── context/           # AuthContext, ThemeContext
+│   │   ├── hooks/             # useAuth, useProgress, useSubjects
+│   │   ├── services/          # API service functions
+│   │   ├── utils/             # helpers, validators
+│   │   └── styles/            # Tailwind config, globals
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   └── package.json
+│
+├── backend/                   # Node.js + Express.js
+│   ├── src/
+│   │   ├── controllers/       # Auth, Subject, Topic, Note, Mock, PYQ
+│   │   ├── models/            # MongoDB Mongoose schemas
+│   │   ├── middleware/        # auth, error, validate, rateLimit
+│   │   ├── routes/            # API route definitions
+│   │   ├── config/            # DB connection, env config
+│   │   └── utils/             # email, jwt, helpers
+│   ├── tests/                 # Jest unit tests
+│   ├── server.js
+│   └── package.json
+│
+├── .github/
+│   └── workflows/             # CI/CD pipelines
+├── .env.example
+└── README.md
+```
+
+---
+
+## 🚀 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 18 + Vite + Tailwind CSS |
+| Backend | Node.js 20 + Express.js 4 |
+| Database | MongoDB Atlas (Mongoose ODM) |
+| Auth | JWT (Access + Refresh tokens) |
+| Charts | Chart.js 4 |
+| Deploy FE | Vercel |
+| Deploy BE | Render.com |
+| Email | Nodemailer + SendGrid |
+
+---
+
+## ⚡ Quick Start
+
+### 1. Clone & Install
+
+```bash
+git clone https://github.com/yourname/gate2027.git
+cd gate2027
+
+# Install backend
+cd backend && npm install
+
+# Install frontend
+cd ../frontend && npm install
+```
+
+### 2. Configure Environment
+
+```bash
+# Backend .env
+cp .env.example backend/.env
+# Fill in MongoDB URI, JWT secret, etc.
+
+# Frontend .env
+cp .env.example frontend/.env
+# Set VITE_API_URL
+```
+
+### 3. Run Development
+
+```bash
+# Terminal 1 – Backend (port 5000)
+cd backend && npm run dev
+
+# Terminal 2 – Frontend (port 5173)
+cd frontend && npm run dev
+```
+
+---
+
+## 🌐 Deployment
+
+### Frontend → Vercel
+```bash
+cd frontend
+npm run build
+# Connect repo to Vercel, set VITE_API_URL env var
+vercel --prod
+```
+
+### Backend → Render
+1. Create new **Web Service** on Render
+2. Connect GitHub repo → select `/backend`
+3. Build: `npm install` | Start: `npm start`
+4. Set all environment variables in Render dashboard
+5. Use Render's free MongoDB add-on or MongoDB Atlas
+
+---
+
+## 📡 REST API Documentation
+
+### Auth Endpoints
+| Method | Route | Description |
+|---|---|---|
+| POST | /api/auth/register | Register new user |
+| POST | /api/auth/login | Login, returns JWT |
+| POST | /api/auth/refresh | Refresh access token |
+| POST | /api/auth/forgot-password | Send reset email |
+| POST | /api/auth/reset-password | Reset with token |
+| GET | /api/auth/me | Get current user |
+| PUT | /api/auth/profile | Update profile |
+
+### Subject Endpoints
+| Method | Route | Description |
+|---|---|---|
+| GET | /api/subjects | Get all subjects |
+| GET | /api/subjects/:id | Get subject + topics |
+| POST | /api/subjects | Create subject (admin) |
+| PUT | /api/subjects/:id | Update subject (admin) |
+| DELETE | /api/subjects/:id | Delete subject (admin) |
+
+### Topic Endpoints
+| Method | Route | Description |
+|---|---|---|
+| GET | /api/topics | Get all topics |
+| GET | /api/topics?subject=:id | Filter by subject |
+| POST | /api/topics | Add topic |
+| PUT | /api/topics/:id | Edit topic |
+| PATCH | /api/topics/:id/toggle | Toggle complete |
+| DELETE | /api/topics/:id | Delete topic |
+
+### Progress Endpoints
+| Method | Route | Description |
+|---|---|---|
+| GET | /api/progress | Overall progress stats |
+| GET | /api/progress/subject/:id | Subject progress |
+| PUT | /api/progress/study-hours | Log study hours |
+| GET | /api/progress/streak | Get study streak |
+
+### Mock Test Endpoints
+| Method | Route | Description |
+|---|---|---|
+| GET | /api/mocks | Get all mock tests |
+| POST | /api/mocks | Add mock test |
+| PUT | /api/mocks/:id | Edit mock test |
+| DELETE | /api/mocks/:id | Delete mock test |
+| GET | /api/mocks/analytics | Score trend data |
+
+### PYQ Endpoints
+| Method | Route | Description |
+|---|---|---|
+| GET | /api/pyq | Get all PYQs |
+| GET | /api/pyq?subject=&year=&difficulty= | Filtered PYQs |
+| PATCH | /api/pyq/:id/solved | Toggle solved |
+| POST | /api/pyq | Add PYQ (admin) |
+
+### Notes Endpoints
+| Method | Route | Description |
+|---|---|---|
+| GET | /api/notes | Get all notes |
+| POST | /api/notes | Create note |
+| PUT | /api/notes/:id | Update note |
+| DELETE | /api/notes/:id | Delete note |
+
+---
+
+## 🗄️ MongoDB Schema Design
+
+See `backend/src/models/` for all Mongoose schemas.
+
+### ER Relationships
+```
+User ──< Progress (1:1)
+User ──< Notes (1:N)
+User ──< MockTests (1:N)
+User ──< UserTopicProgress (1:N)
+Subject ──< Topics (1:N)
+Topic ──< PYQ (1:N)
+```
+
+---
+
+## 🔮 Future Improvements
+
+1. **AI Study Planner** — GPT-4 powered daily schedule generator
+2. **Peer Comparison** — Anonymous rank comparison with other users
+3. **Video Resource Links** — YouTube/NPTEL integration per topic
+4. **Spaced Repetition** — Smart review scheduling (like Anki)
+5. **Push Notifications** — Daily study reminders via Firebase
+6. **Offline Mode** — PWA with service workers
+7. **Mobile App** — React Native version
+8. **Forum** — Doubt-solving community per topic
+9. **Formula Sheets** — LaTeX-rendered quick reference
+10. **Adaptive Mock Tests** — Questions adapt to weak areas
+=======
+# prepgate
+AI-powered GATE CSE preparation platform with progress tracking, revision planning, PYQ analysis, mock tests, notes, formula sheets, and personalized study recommendations.
+>>>>>>> 846281a0cc852101548ef69f2e67e12705f36bd6
+

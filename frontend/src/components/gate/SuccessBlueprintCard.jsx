@@ -58,13 +58,13 @@ export default function SuccessBlueprintCard({ principle, featured }) {
                   ))}
                 </ul>
               )}
-              {principle.prepgateTip && (
+              {principle.gateapexTip && (
                 <div
                   className="rounded-xl p-3 text-[10px] leading-relaxed"
                   style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.15)' }}
                 >
-                  <span className="font-semibold" style={{ color: '#22D3EE' }}>PrepGate Tip: </span>
-                  <span className="text-gray-300">{principle.prepgateTip}</span>
+                  <span className="font-semibold" style={{ color: '#22D3EE' }}>GateApex Tip: </span>
+                  <span className="text-gray-300">{principle.gateapexTip}</span>
                 </div>
               )}
             </div>
@@ -74,3 +74,4 @@ export default function SuccessBlueprintCard({ principle, featured }) {
     </div>
   );
 }
+

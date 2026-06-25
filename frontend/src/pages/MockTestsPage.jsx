@@ -174,13 +174,13 @@ export default function MockTestsPage() {
         ))}
       </div>
 
-      <div className="flex gap-2 mb-5">
+      <div className="flex gap-2 mb-5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
         {FILTER_TABS.map(t => (
           <button
             key={t}
             type="button"
             onClick={() => setActiveFilter(t)}
-            className={`text-xs px-4 py-2 rounded-lg border transition-all ${
+            className={`text-xs px-4 py-2 rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${
               activeFilter === t
                 ? 'bg-primary/15 border-primary/30 text-primary'
                 : 'bg-bg-2 border-border text-text3 hover:border-white/10'
@@ -261,8 +261,20 @@ export default function MockTestsPage() {
 
                       {attempted ? (
                         <div className="flex items-center justify-between pt-2 border-t border-border">
-                          <span className="text-[10px] text-text3">Your Score</span>
-                          <span className="text-sm font-bold font-mono text-green-400">{test.score}/{test.totalMarks || test.questionCount}</span>
+                          <div>
+                            <span className="text-[10px] text-text3">Score</span>
+                            {test.attempts > 1 && <span className="text-[9px] text-text3 ml-1">({test.attempts} attempts)</span>}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold font-mono text-green-400">{test.score}/{test.totalMarks || test.questionCount}</span>
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/mock-tests/${test._id}`)}
+                              className="text-[10px] px-2 py-1 rounded border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all"
+                            >
+                              Retake
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <button

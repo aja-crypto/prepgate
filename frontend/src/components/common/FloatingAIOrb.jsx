@@ -11,13 +11,13 @@ export default function FloatingAIOrb() {
       {hovered && (
         <div className="absolute bottom-16 right-0 mb-2 px-3 py-2 rounded-xl text-xs font-medium text-white whitespace-nowrap animate-fade-in"
           style={{ background: 'rgba(12,15,35,0.9)', backdropFilter: 'blur(12px)', border: '1px solid rgba(167,139,250,0.2)' }}>
-          Ask PrepGate AI
+          Ask GateApex AI
           <div className="absolute -bottom-1 right-4 w-2 h-2 rotate-45" style={{ background: 'rgba(12,15,35,0.9)', border: '1px solid rgba(167,139,250,0.2)', borderTop: 'none', borderLeft: 'none' }} />
         </div>
       )}
 
       <button
-        onClick={() => navigate('/prepgate-ai')}
+        onClick={() => navigate('/GateApex-ai')}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         className="relative w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110"
@@ -48,3 +48,4 @@ export default function FloatingAIOrb() {
     </div>
   );
 }
+

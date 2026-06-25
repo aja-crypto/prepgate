@@ -1,8 +1,17 @@
 // Revision calendar with spaced repetition tracking
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useProgress } from '../context/ProgressContext';
-import { REVISION_STEPS, getNextRevisionDate, getNextRevisionStage, getRevisionStageMeta, getRevisionStatus } from '../utils/gateUtils';
+import { REVISION_STEPS, getNextRevisionDate, getNextRevisionStage, getRevisionStageMeta, getRevisionStatus, computeRevisionPriority } from '../utils/gateUtils';
 import toast from 'react-hot-toast';
+
+const SUBJECT_WEIGHT = {
+  'Operating Systems': 9, 'DBMS': 8, 'Computer Networks': 8.5,
+  'Computer Organization': 8.5, 'Theory of Computation': 8,
+  'Algorithms': 7.5, 'Programming & Data Structures': 11.5,
+  'Engineering Mathematics': 12.5, 'Digital Logic': 5,
+  'Compiler Design': 5, 'General Aptitude': 15,
+};
 
 const STATUS_STYLE = {
   missed: 'bg-red-500/10 border-red-500/25 text-red-400',
@@ -12,7 +21,7 @@ const STATUS_STYLE = {
 };
 
 const HowItWorks = () => {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   return (
     <div className="mb-6">
       <button
@@ -48,19 +57,73 @@ const HowItWorks = () => {
   );
 };
 
+const AddRevisionForm = ({ onAdd }) => {
+  const [show, setShow] = useState(false);
+  const [topicName, setTopicName] = useState('');
+  const [subject, setSubject] = useState('');
+  const subjects = Object.keys(SUBJECT_WEIGHT);
+  const handleSubmit = () => {
+    if (!topicName.trim() || !subject.trim()) return;
+    onAdd(topicName.trim(), subject);
+    setTopicName('');
+    setSubject('');
+    setShow(false);
+  };
+  if (!show) {
+    return (
+      <button onClick={() => setShow(true)} className="w-full mb-6 px-4 py-3 rounded-xl border border-dashed border-primary/30 bg-primary/5 text-sm text-primary hover:bg-primary/10 transition-all flex items-center justify-center gap-2">
+        + Add Revision Manually
+      </button>
+    );
+  }
+  return (
+    <div className="mb-6 bg-surface border border-primary/20 rounded-xl p-4">
+      <div className="text-sm font-semibold text-text mb-3">Add Revision Entry</div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <input
+          type="text"
+          placeholder="Topic name (e.g., Deadlocks)"
+          value={topicName}
+          onChange={(e) => setTopicName(e.target.value)}
+          className="text-sm bg-bg-2 border border-border rounded-lg px-3 py-2 text-text placeholder:text-text3 focus:outline-none focus:border-primary/40"
+        />
+        <select
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          className="text-sm bg-bg-2 border border-border rounded-lg px-3 py-2 text-text focus:outline-none focus:border-primary/40"
+        >
+          <option value="">Select subject</option>
+          {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <div className="flex gap-2">
+          <button onClick={handleSubmit} className="flex-1 text-sm bg-primary/10 border border-primary/20 text-primary px-4 py-2 rounded-lg hover:bg-primary/15">Schedule</button>
+          <button onClick={() => setShow(false)} className="text-sm bg-bg-2 border border-border text-text3 px-4 py-2 rounded-lg hover:border-white/10">Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function RevisionPage() {
   const { revisionSchedule, updateRevision } = useProgress();
 
   const grouped = useMemo(() => {
     const missed = [], today = [], upcoming = [], done = [];
+    const todayKey = new Date().toISOString().slice(0, 10);
     revisionSchedule.forEach((r) => {
       const status = r.status === 'done' ? 'done' : getRevisionStatus(r.dueDate);
-      const item = { ...r, status };
+      const weight = SUBJECT_WEIGHT[r.subject] || 5;
+      const priorityScore = computeRevisionPriority({ ...r, subject: r.subject }, todayKey);
+      const item = { ...r, status, weight, priorityScore };
       if (status === 'missed') missed.push(item);
       else if (status === 'today') today.push(item);
       else if (status === 'done') done.push(item);
       else upcoming.push(item);
     });
+    const sortByPriority = (a, b) => (b.priorityScore || 0) - (a.priorityScore || 0);
+    missed.sort(sortByPriority);
+    today.sort(sortByPriority);
+    upcoming.sort(sortByPriority);
     return { missed, today, upcoming, done };
   }, [revisionSchedule]);
 
@@ -104,14 +167,17 @@ export default function RevisionPage() {
         <div className="space-y-2">
           {items.map((r) => (
             <div key={r.id} className="bg-surface border border-border rounded-xl p-4 flex items-center justify-between gap-3">
-              <div>
+              <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-text">{r.topicName}</div>
                 <div className="text-[11px] text-text3">
                   {r.subject} · {getRevisionStageMeta(r.stage || REVISION_STEPS.find((step) => step.intervalDays === r.interval)?.stage || 1).label} → {r.interval || getRevisionStageMeta(r.stage).intervalDays} Days · Due {r.dueDate}
                 </div>
+                {r.weight >= 8 && <span className="text-[8px] px-1.5 py-0.5 rounded bg-orange-500/10 border border-orange-500/20 text-orange-400 mt-1 inline-block">HIGH WEIGHTAGE ({r.weight} marks)</span>}
+                {r.priorityScore >= 40 && <span className="text-[8px] px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400 mt-1 inline-block ml-1">🔴 HIGH PRIORITY</span>}
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span className={`text-[10px] px-2 py-1 rounded border capitalize ${STATUS_STYLE[r.status]}`}>{r.status}</span>
+                <Link to="/topics" className="text-[10px] px-2 py-1.5 rounded-lg border bg-bg-2 border-border text-text3 hover:border-white/15">Study</Link>
                 {r.status !== 'done' && (
                   <button onClick={() => markReviewed(r.id)} className="text-[10px] bg-primary/10 border border-primary/20 text-primary px-3 py-1.5 rounded-lg hover:bg-primary/15">
                     ✓ Done
@@ -133,6 +199,26 @@ export default function RevisionPage() {
         <p className="text-sm text-text3 mt-0.5">Spaced repetition — track missed, upcoming & completed revisions</p>
       </div>
 
+      {(grouped.missed.length > 0 || grouped.today.length > 0) && (
+        <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-xl p-4 mb-6">
+          <div className="text-sm font-bold text-text mb-2">
+            {grouped.missed.length > 0 ? `⚠️ ${grouped.missed.length} Forgotten Topic${grouped.missed.length > 1 ? 's' : ''}` : '📌 Revisions Due Today'}
+          </div>
+          <p className="text-xs text-text3 mb-3">
+            {grouped.missed.length > 0
+              ? 'These topics have missed their revision window. Revise them now to avoid losing retention.'
+              : `You have ${grouped.today.length} revision${grouped.today.length > 1 ? 's' : ''} due today. Keep your streak going!`}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {[...grouped.missed.slice(0, 4), ...grouped.today.slice(0, 4)].slice(0, 5).map((r) => (
+              <span key={r.id} className="text-[10px] px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-text2">
+                {r.topicName} <span className="text-text3">({r.subject.split(' ').pop()})</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {[
           { label: 'Missed', count: grouped.missed.length, color: '#ff6b6b' },
@@ -146,6 +232,24 @@ export default function RevisionPage() {
           </div>
         ))}
       </div>
+
+      <AddRevisionForm onAdd={(topicName, subject) => {
+        const today = new Date().toISOString().slice(0, 10);
+        const firstStep = REVISION_STEPS[0];
+        const newEntry = {
+          id: `manual_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          topicName,
+          subject,
+          dueDate: getNextRevisionDate(today, firstStep.intervalDays),
+          status: 'upcoming',
+          stage: firstStep.stage,
+          interval: firstStep.intervalDays,
+          lastReviewed: today,
+          source: 'manual',
+        };
+        updateRevision((prev) => [...prev, newEntry]);
+        toast.success(`📅 Revision scheduled for ${topicName}`);
+      }} />
 
       <div className="bg-surface border border-border rounded-xl p-4 mb-6">
         <div className="text-sm font-semibold text-text mb-3">GATE Revision Ladder</div>

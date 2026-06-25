@@ -39,3 +39,5 @@ resources/
 # Test files
 backend/test-*.js
 backend/src/config/test-dir.js
+
+.vercel

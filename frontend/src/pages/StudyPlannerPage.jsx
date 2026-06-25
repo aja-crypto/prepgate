@@ -32,7 +32,7 @@ export default function StudyPlannerPage() {
 
   const getPlans = (date) => {
     const key = format(date, 'yyyy-MM-dd');
-    return gateFeatures.studyPlans[key] || [];
+    return gateFeatures?.studyPlans?.[key] || [];
   };
 
   const openAdd = (date) => {
@@ -71,7 +71,7 @@ export default function StudyPlannerPage() {
         topics: topics || [],
         pyqs: pyqs || [],
         mocks: mocks || [],
-        dailyHours: gateFeatures.dailyTarget?.hours || 8,
+        dailyHours: gateFeatures?.dailyTarget?.hours || 8,
         period: 'week',
       });
       const { plan, source, aiError } = res.data?.data || {};
@@ -92,7 +92,7 @@ export default function StudyPlannerPage() {
 
   const applyAiPlan = async () => {
     const start = startOfWeek(new Date(), { weekStartsOn: 1 });
-    const newPlans = { ...gateFeatures.studyPlans };
+    const newPlans = { ...(gateFeatures?.studyPlans || {}) };
     aiPlan.forEach((day, i) => {
       const date = new Date(start);
       date.setDate(date.getDate() + i);

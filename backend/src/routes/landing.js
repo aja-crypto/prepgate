@@ -125,7 +125,7 @@ router.get('/motivation', asyncHandler(async (req, res) => {
     const quotes = [
       { quote: 'Success is not final, failure is not fatal: it is the courage to continue that counts.', author: 'Winston Churchill', category: 'daily' },
       { quote: 'The only way to do great work is to love what you do.', author: 'Steve Jobs', category: 'daily' },
-      { quote: 'GATE is not just an exam, it\'s a stepping stone to your dreams.', author: 'PrepGate Team', category: 'gate_success' },
+      { quote: 'GATE is not just an exam, it\'s a stepping stone to your dreams.', author: 'GateApex Team', category: 'gate_success' },
     ];
     const dailyQuote = quotes[Math.floor(Math.random() * quotes.length)];
     return res.json({ success: true, data: dailyQuote });
@@ -137,7 +137,7 @@ router.get('/motivation', asyncHandler(async (req, res) => {
       success: true,
       data: {
         quote: 'Every day is a new opportunity to learn something new. Make it count!',
-        author: 'PrepGate Team',
+        author: 'GateApex Team',
         category: 'daily',
       },
     });

@@ -268,9 +268,11 @@ export function getStreakHeatmap(activityLog, days = 28) {
 /** Daily target progress */
 export function getDailyTargetProgress(dailyTarget, todayProgress) {
   const key = todayKey();
-  const progress = todayProgress.date === key ? todayProgress : { hours: 0, topicsCompleted: 0, date: key };
-  const hoursPct = dailyTarget.hours ? Math.min(100, Math.round((progress.hours / dailyTarget.hours) * 100)) : 0;
-  const topicsPct = dailyTarget.topicsToComplete ? Math.min(100, Math.round((progress.topicsCompleted / dailyTarget.topicsToComplete) * 100)) : 0;
+  const dt = dailyTarget || { hours: 8, topicsToComplete: 3 };
+  const tp = todayProgress || { hours: 0, topicsCompleted: 0, date: key };
+  const progress = tp.date === key ? tp : { hours: 0, topicsCompleted: 0, date: key };
+  const hoursPct = dt.hours ? Math.min(100, Math.round((progress.hours / dt.hours) * 100)) : 0;
+  const topicsPct = dt.topicsToComplete ? Math.min(100, Math.round((progress.topicsCompleted / dt.topicsToComplete) * 100)) : 0;
   const overall = Math.round((hoursPct + topicsPct) / 2);
   return { ...progress, hoursPct, topicsPct, overall };
 }

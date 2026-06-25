@@ -1,5 +1,6 @@
 // PYQ Practice — topic/subject/year-wise browse, practice, revision
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useProgress } from '../context/ProgressContext';
 import { pyqService } from '../services/api';
 import { silentCatch } from '../utils/errorHandler';
@@ -17,7 +18,7 @@ const STATUS_FILTERS = ['All', 'Solved', 'Unsolved', 'Revision Needed', 'Difficu
 const MISTAKE_TYPES = ['Concept Mistake', 'Formula Mistake', 'Silly Mistake', 'Time Management', 'Guess'];
 
 const HowItWorks = () => {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   return (
     <div className="mb-6">
       <button
@@ -59,16 +60,31 @@ const HowItWorks = () => {
 
 export default function PYQPage() {
   const { pyqs, updatePyqs, refreshPyqs, mongoAvailable } = useProgress();
-  const [filter, setFilter] = useState('All');
-  const [topicFilter, setTopicFilter] = useState('All');
-  const [yearFilter, setYearFilter] = useState('All');
-  const [diff, setDiff] = useState('All');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [filter, setFilter] = useState(searchParams.get('subject') || 'All');
+  const [topicFilter, setTopicFilter] = useState(searchParams.get('topic') || 'All');
+  const [yearFilter, setYearFilter] = useState(searchParams.get('year') || 'All');
+  const [diff, setDiff] = useState(searchParams.get('diff') || 'All');
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'All');
   const [showStats, setShowStats] = useState(true);
   const [practiceId, setPracticeId] = useState(null);
   const [globalStats, setGlobalStats] = useState(null);
   const [browse, setBrowse] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [viewSolutionId, setViewSolutionId] = useState(null);
+  const [solutionData, setSolutionData] = useState(null);
+  const [loadingSolution, setLoadingSolution] = useState(false);
+  const [sortBy, setSortBy] = useState('default');
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filter !== 'All') params.set('subject', filter);
+    if (topicFilter !== 'All') params.set('topic', topicFilter);
+    if (yearFilter !== 'All') params.set('year', yearFilter);
+    if (diff !== 'All') params.set('diff', diff);
+    if (statusFilter !== 'All') params.set('status', statusFilter);
+    setSearchParams(params, { replace: true });
+  }, [filter, topicFilter, yearFilter, diff, statusFilter, setSearchParams]);
 
   useEffect(() => {
     setLoading(true);
@@ -95,7 +111,27 @@ export default function PYQPage() {
     if (statusFilter === 'Revision Needed' && !q.revisionNeeded) return false;
     if (statusFilter === 'Difficult' && !q.markedDifficult) return false;
     return true;
+  }).sort((a, b) => {
+    if (sortBy === 'year-desc') return b.year - a.year;
+    if (sortBy === 'year-asc') return a.year - b.year;
+    if (sortBy === 'difficulty') {
+      const order = { easy: 0, medium: 1, hard: 2 };
+      return (order[a.difficulty] || 0) - (order[b.difficulty] || 0);
+    }
+    if (sortBy === 'subject') return a.subject.localeCompare(b.subject);
+    return 0;
   });
+
+  const subjectStats = useMemo(() => {
+    const stats = {};
+    pyqs.forEach(q => {
+      if (!stats[q.subject]) stats[q.subject] = { total: 0, solved: 0, revision: 0 };
+      stats[q.subject].total++;
+      if (q.solved) stats[q.subject].solved++;
+      if (q.revisionNeeded) stats[q.subject].revision++;
+    });
+    return Object.entries(stats).sort((a, b) => b[1].total - a[1].total);
+  }, [pyqs]);
 
   const toggle = useCallback(async (q, field) => {
     const next = !q[field];
@@ -117,6 +153,21 @@ export default function PYQPage() {
   const handleAttempt = () => {
     refreshPyqs?.();
     setPracticeId(null);
+  };
+
+  const viewSolution = async (q) => {
+    if (!q.mongoId) return;
+    setLoadingSolution(true);
+    setViewSolutionId(q.mongoId);
+    try {
+      const res = await pyqService.getById(q.mongoId);
+      setSolutionData(res.data.data);
+    } catch {
+      toast.error('Failed to load solution');
+      setViewSolutionId(null);
+    } finally {
+      setLoadingSolution(false);
+    }
   };
 
   const setMistakeType = async (q, mistakeType) => {
@@ -144,9 +195,18 @@ export default function PYQPage() {
             {mongoAvailable ? ' · API synced' : ' · Local mode'}
           </p>
         </div>
-        <button type="button" onClick={() => setShowStats(!showStats)} className="text-xs bg-bg-2 border border-border text-text2 px-3 py-1.5 rounded-lg hover:border-white/15">
-          {showStats ? 'Hide Stats' : 'Show Stats'}
-        </button>
+        <div className="flex items-center gap-2">
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="text-xs bg-bg-2 border border-border text-text2 px-3 py-1.5 rounded-lg">
+            <option value="default">Default Order</option>
+            <option value="year-desc">Newest First</option>
+            <option value="year-asc">Oldest First</option>
+            <option value="difficulty">By Difficulty</option>
+            <option value="subject">By Subject</option>
+          </select>
+          <button type="button" onClick={() => setShowStats(!showStats)} className="text-xs bg-bg-2 border border-border text-text2 px-3 py-1.5 rounded-lg hover:border-white/15">
+            {showStats ? 'Hide Stats' : 'Show Stats'}
+          </button>
+        </div>
       </div>
 
       {showStats && globalStats && (
@@ -161,6 +221,26 @@ export default function PYQPage() {
               <div className="text-[10px] text-text3 uppercase">{s.label}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {showStats && subjectStats.length > 0 && (
+        <div className="bg-surface border border-border rounded-xl p-4 mb-5">
+          <div className="text-xs font-semibold text-text mb-3">Subject Progress</div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {subjectStats.map(([subject, s]) => (
+              <button key={subject} type="button" onClick={() => setFilter(filter === subject ? 'All' : subject)} className={`text-left p-2.5 rounded-lg border transition-all ${filter === subject ? 'bg-primary/10 border-primary/20' : 'bg-bg-2 border-border hover:border-white/10'}`}>
+                <div className="text-[11px] font-medium text-text truncate">{subject.split(' ').slice(-1)[0]}</div>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex-1 h-1 bg-bg-3 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${s.total ? (s.solved / s.total) * 100 : 0}%` }} />
+                  </div>
+                  <span className="text-[9px] font-mono text-text3">{s.solved}/{s.total}</span>
+                </div>
+                {s.revision > 0 && <div className="text-[8px] text-orange-400 mt-0.5">{s.revision} need revision</div>}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -234,33 +314,33 @@ export default function PYQPage() {
         </div>
       )}
 
-      <div className="flex gap-2 flex-wrap mb-2">
+      <div className="flex gap-2 mb-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
         {subjects.map((s) => (
-          <button key={s} type="button" onClick={() => setFilter(s)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${filter === s ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>
+          <button key={s} type="button" onClick={() => setFilter(s)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${filter === s ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>
             {s === 'All' ? 'All Subjects' : s.split(' ').slice(-1)[0]}
           </button>
         ))}
       </div>
-      <div className="flex gap-2 mb-2 flex-wrap">
-        {topics.slice(0, 12).map((t) => (
-          <button key={t} type="button" onClick={() => setTopicFilter(t)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${topicFilter === t ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>
+      <div className="flex gap-2 mb-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+        {topics.map((t) => (
+          <button key={t} type="button" onClick={() => setTopicFilter(t)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${topicFilter === t ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>
             {t === 'All' ? 'All Topics' : t}
           </button>
         ))}
       </div>
       <div className="flex gap-2 mb-2 flex-wrap">
         {years.map((y) => (
-          <button key={y} type="button" onClick={() => setYearFilter(y)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${yearFilter === y ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>
+          <button key={y} type="button" onClick={() => setYearFilter(y)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all whitespace-nowrap ${yearFilter === y ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>
             {y === 'All' ? 'All Years' : `GATE ${y}`}
           </button>
         ))}
         {['All', 'easy', 'medium', 'hard'].map((d) => (
-          <button key={d} type="button" onClick={() => setDiff(d)} className={`text-xs px-3 py-1.5 rounded-lg border capitalize transition-all ${diff === d ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>{d}</button>
+          <button key={d} type="button" onClick={() => setDiff(d)} className={`text-xs px-3 py-1.5 rounded-lg border capitalize transition-all whitespace-nowrap ${diff === d ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>{d}</button>
         ))}
       </div>
       <div className="flex gap-2 mb-5 flex-wrap">
         {STATUS_FILTERS.map((s) => (
-          <button key={s} type="button" onClick={() => setStatusFilter(s)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${statusFilter === s ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>{s}</button>
+          <button key={s} type="button" onClick={() => setStatusFilter(s)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all whitespace-nowrap ${statusFilter === s ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>{s}</button>
         ))}
       </div>
 
@@ -300,9 +380,14 @@ export default function PYQPage() {
             )}
             <div className="flex gap-1.5">
               {q.mongoId && q.questionText ? (
-                <button type="button" onClick={() => setPracticeId(q.mongoId)} className="flex-1 text-[10px] px-2 py-1.5 rounded-lg border bg-primary/10 border-primary/20 text-primary">
-                  Practice
-                </button>
+                <>
+                  <button type="button" onClick={() => setPracticeId(q.mongoId)} className="flex-1 text-[10px] px-2 py-1.5 rounded-lg border bg-primary/10 border-primary/20 text-primary">
+                    Practice
+                  </button>
+                  <button type="button" onClick={() => viewSolution(q)} className="text-[10px] px-2 py-1.5 rounded-lg border bg-bg-2 border-border text-text3 hover:border-white/15" title="View Solution">
+                    💡
+                  </button>
+                </>
               ) : (
                 <button type="button" onClick={() => toggle(q, 'solved')} className={`flex-1 text-[10px] px-2 py-1.5 rounded-lg border transition-all ${q.solved ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-bg-2 border-border text-text3'}`}>
                   {q.solved ? '✓ Solved' : 'Mark Solved'}
@@ -313,11 +398,65 @@ export default function PYQPage() {
             </div>
           </div>
         ))}
-        {filtered.length === 0 && !loading && <div className="col-span-3 text-center py-16 text-text3 text-sm">No PYQs match this filter</div>}
+        {filtered.length === 0 && !loading && (
+          <div className="col-span-3 text-center py-16">
+            <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12), rgba(99,102,241,0.06))', border: '1px solid rgba(168,85,247,0.15)' }}>
+              <span className="text-3xl">📝</span>
+            </div>
+            <h3 className="text-base font-bold text-text mb-1">No PYQs Match This Filter</h3>
+            <p className="text-sm text-text3 mb-4">Try adjusting your filters or check back later.</p>
+            <button onClick={() => { setFilter('All'); setTopicFilter('All'); setYearFilter('All'); setDiff('All'); setStatusFilter('All'); }} className="text-xs px-4 py-2 rounded-xl font-semibold transition-all" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', color: 'white' }}>
+              Clear All Filters
+            </button>
+          </div>
+        )}
       </div>
 
       <Modal open={!!practiceId} onClose={() => setPracticeId(null)} title="Practice Question" maxWidth="max-w-2xl">
         {practiceId && <QuestionPractice pyqId={practiceId} onClose={() => setPracticeId(null)} onAttempt={handleAttempt} />}
+      </Modal>
+
+      <Modal open={!!viewSolutionId} onClose={() => { setViewSolutionId(null); setSolutionData(null); }} title="Solution" maxWidth="max-w-2xl">
+        {loadingSolution && <div className="text-sm text-text3 p-8 text-center">Loading solution...</div>}
+        {solutionData && !loadingSolution && (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-base font-bold text-text mb-1">{solutionData.title}</h3>
+              <p className="text-xs text-text3">{solutionData.subject?.name || solutionData.subject} · GATE {solutionData.year}</p>
+            </div>
+            {solutionData.questionText && <p className="text-sm text-text2 leading-relaxed">{solutionData.questionText}</p>}
+            {solutionData.options?.length > 0 && (
+              <div className="space-y-1.5">
+                {solutionData.options.map((opt) => (
+                  <div key={opt.key} className={`text-sm px-3 py-2 rounded-lg border ${opt.key === solutionData.correctAnswer ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-bg-2 border-border text-text2'}`}>
+                    <span className="font-mono font-semibold mr-2">{opt.key}.</span>{opt.text}
+                    {opt.key === solutionData.correctAnswer && <span className="ml-2 text-[10px]">✓ Correct</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+            {solutionData.explanation && (
+              <div className="bg-bg-2 border border-border rounded-lg p-4">
+                <div className="text-[10px] uppercase tracking-wider text-text3 mb-2">Explanation</div>
+                <p className="text-sm text-text2 leading-relaxed">{solutionData.explanation}</p>
+              </div>
+            )}
+            {solutionData.questionStats && (
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: 'Correct %', value: solutionData.questionStats.correctPct, color: 'text-green-400' },
+                  { label: 'Incorrect %', value: solutionData.questionStats.incorrectPct, color: 'text-red-400' },
+                  { label: 'Skip %', value: solutionData.questionStats.skipPct, color: 'text-orange-400' },
+                ].map((s) => (
+                  <div key={s.label} className="bg-bg-2 border border-border rounded-lg p-3 text-center">
+                    <div className={`text-lg font-bold font-mono ${s.color}`}>{s.value}%</div>
+                    <div className="text-[9px] text-text3 uppercase">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   );

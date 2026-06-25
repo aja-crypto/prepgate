@@ -14,7 +14,7 @@ function isCloudinaryConfigured() {
   );
 }
 
-async function uploadPdf(fileBuffer, fileName, folder = 'prepgate/pdfs') {
+async function uploadPdf(fileBuffer, fileName, folder = 'GateApex/pdfs') {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
@@ -62,7 +62,7 @@ function generateSignedPdfPageUrls(publicId, totalPages, userId, userEmail) {
       transformation: [
         { width: 1400, crop: 'limit', page: i },
         {
-          overlay: `text:Arial_24:${encodeURIComponent('PREPGATE')}`,
+          overlay: `text:Arial_24:${encodeURIComponent('GateApex')}`,
           color: '#ffffff20',
           gravity: 'north_west',
           x: 12,
@@ -87,3 +87,4 @@ module.exports = {
   cloudinary, isCloudinaryConfigured, uploadPdf, deletePdf,
   getPdfPageCount, generateSignedPdfPageUrls,
 };
+

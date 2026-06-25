@@ -30,7 +30,7 @@ export default function SecureDocumentViewer({ pdfId, onClose }) {
   const fetchDoc = useCallback(async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       const res = await fetch(`/api/protected/pdf/${pdfId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });

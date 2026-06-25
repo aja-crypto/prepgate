@@ -36,7 +36,7 @@ export default function AdminLoginPage() {
             <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </div>
           <h1 className="text-xl font-bold text-text">Admin Login</h1>
-          <p className="text-sm text-text3 mt-1">PrepGate Admin Panel</p>
+          <p className="text-sm text-text3 mt-1">GateApex Admin Panel</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-surface border border-border rounded-2xl p-6 space-y-4">
@@ -52,7 +52,7 @@ export default function AdminLoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@prepgate.app"
+              placeholder="admin@GateApex.app"
               className="w-full bg-bg-2 border border-border rounded-xl px-3.5 py-2.5 text-sm text-text placeholder-text3 focus:outline-none focus:border-primary transition-colors"
               autoFocus
             />
@@ -82,3 +82,4 @@ export default function AdminLoginPage() {
     </div>
   );
 }
+

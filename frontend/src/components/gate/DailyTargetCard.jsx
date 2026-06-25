@@ -38,7 +38,7 @@ export default function DailyTargetCard({ compact = false }) {
   const logHours = (delta) => {
     const key = todayKey();
     updateGateFeatures((gf) => {
-      const tp = gf.todayProgress.date === key ? gf.todayProgress : { hours: 0, topicsCompleted: 0, date: key };
+      const tp = gf.todayProgress?.date === key ? gf.todayProgress : { hours: 0, topicsCompleted: 0, date: key };
       const newHours = Math.max(0, tp.hours + delta);
       const streak = updateStreak(gf.streak, newHours);
       return {
@@ -52,7 +52,7 @@ export default function DailyTargetCard({ compact = false }) {
   const logTopic = () => {
     const key = todayKey();
     updateGateFeatures((gf) => {
-      const tp = gf.todayProgress.date === key ? gf.todayProgress : { hours: 0, topicsCompleted: 0, date: key };
+      const tp = gf.todayProgress?.date === key ? gf.todayProgress : { hours: 0, topicsCompleted: 0, date: key };
       return {
         ...gf,
         todayProgress: { ...tp, topicsCompleted: tp.topicsCompleted + 1, date: key },

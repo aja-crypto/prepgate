@@ -1,5 +1,5 @@
 // src/App.jsx – Main Router
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState, useCallback, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useAdminAuth } from './context/AdminAuthContext';
@@ -8,6 +8,11 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import LandingPage from './pages/LandingPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import PremiumLoadingScreen from './components/common/PremiumLoadingScreen';
+import FocusWidget from './components/common/FocusWidget';
+import FloatingAIAssistant from './components/common/FloatingAIAssistant';
+import AmbientBackground from './components/common/AmbientBackground';
+import InstallPrompt from './components/common/InstallPrompt';
 
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
@@ -35,8 +40,8 @@ const AdminPyqPage = lazy(() => import('./pages/admin/AdminPyqPage'));
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
 const AdminAnalyticsPage = lazy(() => import('./pages/admin/AdminAnalyticsPage'));
 const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
-const AdminAiAnalyticsPage = lazy(() => import('./pages/admin/AdminAiAnalyticsPage'));
-const AdminNotificationsPage = lazy(() => import('./pages/admin/AdminNotificationsPage'));
+const AdminNotificationCenterPage = lazy(() => import('./pages/admin/AdminNotificationCenterPage'));
+const AdminFeedbackCenterPage = lazy(() => import('./pages/admin/AdminFeedbackCenterPage'));
 const AdminSystemHealthPage = lazy(() => import('./pages/admin/AdminSystemHealthPage'));
 const TopicPyqPractice = lazy(() => import('./pages/TopicPyqPractice'));
 const ProtectedViewPage = lazy(() => import('./pages/ProtectedViewPage'));
@@ -55,6 +60,8 @@ const MistakeNotebookPage = lazy(() => import('./pages/MistakeNotebookPage'));
 const WeeklyTestsPage = lazy(() => import('./pages/WeeklyTestsPage'));
 const WeeklyTestDetailPage = lazy(() => import('./pages/WeeklyTestDetailPage'));
 const ShortNotesPage = lazy(() => import('./pages/ShortNotesPage'));
+const GatePapersPage = lazy(() => import('./pages/GatePapersPage'));
+const StudySchedulePage = lazy(() => import('./pages/StudySchedulePage'));
 const FinalRevisionHubPage = lazy(() => import('./pages/FinalRevisionHubPage'));
 const DoubtSolverPage = lazy(() => import('./pages/DoubtSolverPage'));
 const DeepFocusPage = lazy(() => import('./pages/DeepFocusPage'));
@@ -64,7 +71,7 @@ const MockTestsPage = lazy(() => import('./pages/MockTestsPage'));
 const MockTestTakingPage = lazy(() => import('./pages/MockTestTakingPage'));
 const MockTestResultPage = lazy(() => import('./pages/MockTestResultPage'));
 const SubjectDetailPage = lazy(() => import('./pages/SubjectDetailPage'));
-const PrepGateAIPage = lazy(() => import('./pages/PrepGateAIPage'));
+const GateApexAIPage = lazy(() => import('./pages/GateApexAIPage'));
 const StudyHubPage = lazy(() => import('./pages/StudyHubPage'));
 const AirPredictorPage = lazy(() => import('./pages/AirPredictorPage'));
 const GateVaultPage = lazy(() => import('./pages/GateVaultPage'));
@@ -72,6 +79,14 @@ const GateVaultPracticePage = lazy(() => import('./pages/GateVaultPracticePage')
 const AdminGateVaultPage = lazy(() => import('./pages/admin/AdminGateVaultPage'));
 const AdminCmsPage = lazy(() => import('./pages/admin/AdminCmsPage'));
 const AdminQuestionBankPage = lazy(() => import('./pages/admin/AdminQuestionBankPage'));
+
+// New feature pages
+const FlashcardReviewPage = lazy(() => import('./pages/FlashcardReviewPage'));
+const FlashcardBankPage = lazy(() => import('./pages/FlashcardBankPage'));
+const CommunityPage = lazy(() => import('./pages/CommunityPage'));
+const FormulaSheetsPage = lazy(() => import('./pages/FormulaSheetsPage'));
+const VideoLecturesPage = lazy(() => import('./pages/VideoLecturesPage'));
+const PersonalizedRoadmapPage = lazy(() => import('./pages/PersonalizedRoadmapPage'));
 
 // Protected route wrapper
 const PrivateRoute = ({ children }) => {
@@ -82,7 +97,7 @@ const PrivateRoute = ({ children }) => {
         <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}>
           <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </div>
-        <div className="text-text2 text-sm font-medium">Loading PrepFlow...</div>
+        <div className="text-text2 text-sm font-medium">Loading GateApex...</div>
       </div>
     </div>
   );
@@ -120,24 +135,43 @@ const AdminPublicRoute = ({ children }) => {
   return admin ? <Navigate to="/admin/dashboard" replace /> : children;
 };
 
+// Floating widgets — mounted outside Suspense to prevent DOM reconciliation errors
+function AppFloatingWidgets() {
+  const { user } = useAuth();
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  if (!user) return null;
+  return (
+    <>
+      <AmbientBackground />
+      <FocusWidget />
+      <FloatingAIAssistant open={aiPanelOpen} setOpen={setAiPanelOpen} />
+    </>
+  );
+}
+
 // Always show landing page on "/"
 const HomePageWrapper = () => {
   return <LandingPage />;
 };
 
 export default function App() {
+  const [initialLoad, setInitialLoad] = useState(true);
+  const handleLoadComplete = useCallback(() => {
+    setInitialLoad(false);
+    document.body.classList.remove('app-loading');
+  }, []);
+
+  // Block fixed widgets during loading
+  useEffect(() => {
+    if (initialLoad) document.body.classList.add('app-loading');
+  }, [initialLoad]);
+
   return (
     <ErrorBoundary>
-      <Suspense fallback={
-        <div className="flex items-center justify-center h-screen bg-bg mesh-bg">
-          <div className="text-center animate-fade-in">
-            <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}>
-              <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </div>
-            <div className="text-text2 text-sm font-medium">Loading...</div>
-          </div>
-        </div>
-      }>
+      {initialLoad && <PremiumLoadingScreen onComplete={handleLoadComplete} />}
+      <AppFloatingWidgets />
+      <InstallPrompt />
+      <Suspense fallback={<div className="min-h-screen bg-bg" />}>
       <Routes>
       {/* Public routes */}
       <Route path="/" element={<HomePageWrapper />} />
@@ -150,7 +184,7 @@ export default function App() {
       {/* Protected layout */}
       <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="prepgate-ai" element={<PrepGateAIPage />} />
+        <Route path="GateApex-ai" element={<GateApexAIPage />} />
         <Route path="study-hub" element={<StudyHubPage />} />
         <Route path="subjects" element={<SubjectsPage />} />
         <Route path="topics" element={<TopicsPage />} />
@@ -177,6 +211,8 @@ export default function App() {
         <Route path="weekly-tests" element={<WeeklyTestsPage />} />
         <Route path="weekly-tests/:testId" element={<WeeklyTestDetailPage />} />
         <Route path="short-notes" element={<ShortNotesPage />} />
+        <Route path="gate-papers" element={<GatePapersPage />} />
+        <Route path="study-schedule" element={<StudySchedulePage />} />
         <Route path="final-revision" element={<FinalRevisionHubPage />} />
         <Route path="doubt-solver" element={<DoubtSolverPage />} />
         <Route path="subjects/:subjectId" element={<SubjectDetailPage />} />
@@ -187,6 +223,12 @@ export default function App() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="gate-vault" element={<GateVaultPage />} />
         <Route path="gate-vault/practice" element={<GateVaultPracticePage />} />
+        <Route path="flashcards" element={<FlashcardReviewPage />} />
+        <Route path="flashcard/bank" element={<FlashcardBankPage />} />
+        <Route path="community" element={<CommunityPage />} />
+        <Route path="formula-sheets" element={<FormulaSheetsPage />} />
+        <Route path="video-lectures" element={<VideoLecturesPage />} />
+        <Route path="roadmap" element={<PersonalizedRoadmapPage />} />
         <Route path="admin" element={<Navigate to="/admin/dashboard" replace />} />
       </Route>
 
@@ -203,8 +245,8 @@ export default function App() {
         <Route path="question-bank" element={<AdminQuestionBankPage />} />
         <Route path="users" element={<AdminUsersPage />} />
         <Route path="analytics" element={<AdminAnalyticsPage />} />
-        <Route path="ai-analytics" element={<AdminAiAnalyticsPage />} />
-        <Route path="notifications" element={<AdminNotificationsPage />} />
+        <Route path="notifications" element={<AdminNotificationCenterPage />} />
+        <Route path="feedback" element={<AdminFeedbackCenterPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="system-health" element={<AdminSystemHealthPage />} />
         <Route path="pyq-practice" element={<TopicPyqPractice />} />
@@ -224,3 +266,4 @@ export default function App() {
     </ErrorBoundary>
   );
 }
+

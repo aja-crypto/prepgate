@@ -243,7 +243,7 @@ const validateStartup = () => {
   // Check for admin configuration
   try {
     const localAdminStore = require('./src/store/localAdminStore');
-    const adminExists = localAdminStore.findAdminByEmail('admin@prepgate.dev');
+    const adminExists = localAdminStore.findAdminByEmail('admin@gateapex.dev');
     if (!adminExists) {
       issues.push('Default admin account not found');
     }
@@ -272,6 +272,8 @@ app.use((req, res, next) => {
   next();
 });
 
+
+
 // ─── API Routes ─────────────────────────────────────────────
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/subjects', require('./src/routes/subjects'));
@@ -284,6 +286,10 @@ app.use('/api/admin/pyq-papers', require('./src/routes/adminPyqPapers'));
 app.use('/api/pyq-papers', require('./src/routes/pyqPapers'));
 app.use('/api/mock-sessions', require('./src/routes/mockSessions'));
 app.use('/api/notes', require('./src/routes/notes'));
+app.use('/api/flashcards', require('./src/routes/flashcards'));
+app.use('/api/community', require('./src/routes/community'));
+app.use('/api/formula-sheets', require('./src/routes/formulaSheets'));
+app.use('/api/video-lectures', require('./src/routes/videoLectures'));
 app.use('/api/admin/auth', require('./src/routes/adminAuth'));
 app.use('/api/admin/pdfs', require('./src/routes/adminPdfs'));
 app.use('/api/admin/mock-tests', require('./src/routes/adminMockTests'));
@@ -292,8 +298,11 @@ app.use('/api/admin/gate-vault', require('./src/routes/adminGateVault'));
 app.use('/api/admin/live-data', require('./src/routes/adminLiveData'));
 app.use('/api/admin/cms', require('./src/routes/adminCms'));
 app.use('/api/admin/question-bank', require('./src/routes/adminQuestionBank'));
+app.use('/api/admin/notifications', require('./src/routes/adminNotifications'));
+app.use('/api/admin/feedback', require('./src/routes/adminFeedback'));
 app.use('/api/gate-vault', require('./src/routes/gateVault'));
 app.use('/api/admin', require('./src/routes/admin'));
+app.use('/api/user/feedback', require('./src/routes/userFeedback'));
 app.use('/api/live', require('./src/routes/liveData'));
 app.use('/api/cron', require('./src/routes/cron'));
 app.use('/api/ai', require('./src/routes/ai'));
@@ -308,6 +317,7 @@ app.use('/api/protected', require('./src/routes/protectedDocs'));
 app.use('/api/landing', require('./src/routes/landing'));
 app.use('/api/admin/cms', require('./src/routes/adminCms'));
 app.use('/api/cms', require('./src/routes/cms'));
+app.use('/api/gate-papers', require('./src/routes/gatePapers'));
 
 // ─── 404 Handler ────────────────────────────────────────────
 app.use('*', (req, res) => {
@@ -318,13 +328,13 @@ app.use('*', (req, res) => {
 if (!isMongoConnected() && process.env.NODE_ENV !== 'production') {
   try {
     const localAdminStore = require('./src/store/localAdminStore');
-    if (!localAdminStore.findAdminByEmail('admin@prepgate.dev')) {
+    if (!localAdminStore.findAdminByEmail('admin@gateapex.dev')) {
       localAdminStore.createAdmin({
         name: 'Dev Admin',
-        email: 'admin@prepgate.dev',
+        email: 'admin@gateapex.dev',
         password: 'admin123',
         role: 'super_admin',
-      }).then(() => console.log('👤 Dev admin seeded: admin@prepgate.dev / admin123'))
+      }).then(() => console.log('👤 Dev admin seeded: admin@gateapex.dev / admin123'))
       .catch((e) => console.error('Admin seed failed:', e.message));
     }
   } catch (e) {

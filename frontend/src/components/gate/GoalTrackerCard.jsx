@@ -25,7 +25,7 @@ export default function GoalTrackerCard({ period = 'weekly' }) {
       const goal = gateFeatures.weeklyGoal || { hours: 50, topics: 15, mocks: 1 };
       const topicsDone = topics.filter((t) => t.done).length;
       const weekMocks = mocks.filter((m) => {
-        const d = new Date(m.date);
+        const d = new Date(m.date || m.createdAt);
         const now = new Date();
         return (now - d) < 7 * 86400000;
       }).length;

@@ -283,6 +283,11 @@ export const liveDataService = {
   getTrending: () => api.get('/live/trending'),
 };
 
+export const gatePaperService = {
+  getAll: (year) => api.get('/gate-papers', { params: year ? { year } : {} }),
+  downloadUrl: (filename) => `/api/gate-papers/download/${encodeURIComponent(filename)}`,
+};
+
 export const shortNoteService = {
   getAll: () => api.get('/short-notes'),
   upload: (folder, formData) => api.post(`/short-notes/upload/${folder}`, formData, {

@@ -7,18 +7,18 @@ const NAV_ITEMS = [
   { path: '/admin/dashboard', label: 'Dashboard', icon: 'grid' },
   { section: 'CONTENT' },
   { path: '/admin/cms', label: 'CMS', icon: 'edit' },
-  { section: 'MANAGEMENT' },
-  { path: '/admin/users', label: 'Users', icon: 'users' },
-  { path: '/admin/pdfs', label: 'PDF Library', icon: 'file-text' },
+  { path: '/admin/gate-vault', label: 'Gate Vault', icon: 'vault' },
+  { path: '/admin/question-bank', label: 'Question Bank', icon: 'database' },
   { path: '/admin/mock-tests', label: 'Mock Tests', icon: 'mock-tests' },
   { path: '/admin/pyq', label: 'PYQs', icon: 'pyq' },
-  { path: '/admin/question-bank', label: 'Question Bank', icon: 'database' },
-  { path: '/admin/gate-vault', label: 'Gate Vault', icon: 'vault' },
-  { section: 'ANALYTICS' },
+  { path: '/admin/pdfs', label: 'PDFs', icon: 'file-text' },
+  { section: 'ENGAGEMENT' },
+  { path: '/admin/notifications', label: 'Notification Center', icon: 'bell' },
+  { path: '/admin/feedback', label: 'Feedback Center', icon: 'message-circle' },
+  { section: 'MANAGEMENT' },
+  { path: '/admin/users', label: 'Users', icon: 'users' },
   { path: '/admin/analytics', label: 'Analytics', icon: 'bar-chart' },
-  { path: '/admin/ai-analytics', label: 'AI Analytics', icon: 'cpu' },
   { section: 'SYSTEM' },
-  { path: '/admin/notifications', label: 'Notifications', icon: 'bell' },
   { path: '/admin/settings', label: 'Settings', icon: 'settings' },
   { path: '/admin/system-health', label: 'System Health', icon: 'activity' },
 ];
@@ -45,7 +45,7 @@ export default function AdminLayout() {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <svg viewBox="0 0 32 32" fill="none" className="w-5 h-5"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </div>
-          <span className="font-bold text-text">PrepGate Admin</span>
+          <span className="font-bold text-text">GateApex Admin</span>
         </div>
 
         <nav className="p-3 space-y-1">
@@ -113,3 +113,4 @@ export default function AdminLayout() {
     </div>
   );
 }
+

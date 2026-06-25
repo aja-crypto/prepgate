@@ -47,7 +47,7 @@ export default function SettingsPage() {
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [snapshots, setSnapshots] = useState([]);
-  const [examDate, setExamDate] = useState(gateFeatures.examDate.slice(0, 10));
+  const [examDate, setExamDate] = useState((gateFeatures?.examDate || '2027-02-07T09:00:00').slice(0, 10));
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('');
   const [pwdForm, setPwdForm] = useState({ current: '', newPwd: '', confirm: '' });
@@ -58,11 +58,17 @@ export default function SettingsPage() {
     progressService.getSnapshots().then((res) => setSnapshots(res.data?.data || [])).catch(silentCatch('Load snapshots'));
   }, []);
 
+  const [resetConfirmText, setResetConfirmText] = useState('');
   const handleReset = async () => {
+    if (resetConfirmText !== 'DELETE MY DATA') {
+      toast.error('Type "DELETE MY DATA" to confirm');
+      return;
+    }
     setResetting(true);
     await resetAllProgress();
     setResetting(false);
     setShowResetModal(false);
+    setResetConfirmText('');
   };
 
   const handleImport = (e) => {
@@ -244,7 +250,7 @@ export default function SettingsPage() {
     },
     {
       title: '📱 Install as App (PWA)',
-      desc: 'Install PrepGate on your phone or desktop for offline access.',
+      desc: 'Install GateApex on your phone or desktop for offline access.',
       action: (
         <button onClick={installPwa} className="btn-ghost text-xs">Install App</button>
       ),
@@ -304,11 +310,19 @@ export default function SettingsPage() {
         ))}
       </div>
 
-      <Modal open={showResetModal} onClose={() => setShowResetModal(false)} title="⚠️ Reset All Progress?">
-        <p className="text-sm text-text2 mb-5 leading-relaxed">This will permanently delete all study progress. Your account remains intact.</p>
+      <Modal open={showResetModal} onClose={() => { setShowResetModal(false); setResetConfirmText(''); }} title="Reset All Progress?">
+        <p className="text-sm text-text2 mb-3 leading-relaxed">This will permanently delete all study progress. Your account remains intact.</p>
+        <p className="text-xs text-text3 mb-3">Type <strong className="text-red-400">DELETE MY DATA</strong> to confirm:</p>
+        <input
+          type="text"
+          value={resetConfirmText}
+          onChange={(e) => setResetConfirmText(e.target.value)}
+          placeholder="DELETE MY DATA"
+          className="w-full bg-bg-2 border border-border rounded-lg px-4 py-2.5 text-sm text-text mb-4 focus:outline-none focus:border-red-500/50"
+        />
         <div className="flex gap-3">
-          <button onClick={() => setShowResetModal(false)} className="flex-1 bg-bg-2 border border-white/8 text-text2 py-2.5 rounded-lg text-sm">Cancel</button>
-          <button onClick={handleReset} disabled={resetting} className="flex-1 bg-red-500 text-white py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60">{resetting ? 'Resetting...' : 'Yes, Reset Everything'}</button>
+          <button onClick={() => { setShowResetModal(false); setResetConfirmText(''); }} className="flex-1 bg-bg-2 border border-white/8 text-text2 py-2.5 rounded-lg text-sm">Cancel</button>
+          <button onClick={handleReset} disabled={resetting || resetConfirmText !== 'DELETE MY DATA'} className="flex-1 bg-red-500 text-white py-2.5 rounded-lg text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed">{resetting ? 'Resetting...' : 'Reset Everything'}</button>
         </div>
       </Modal>
 
@@ -377,3 +391,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

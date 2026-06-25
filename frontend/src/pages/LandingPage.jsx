@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { BRAND } from '../design/tokens';
+import Icon from '../components/ui/Icon';
 import GlobalLivingWallpaper from '../components/common/GlobalLivingWallpaper';
 import AnimatedCounter from '../components/common/AnimatedCounter';
 import GATECountdown from '../components/common/GATECountdown';
@@ -198,9 +199,9 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2.5 group cursor-pointer">
-            <img src="/images/logo.png" alt="" className="w-10 h-10 object-contain transition-all duration-300 group-hover:scale-105" />
+            <Icon name="logo" className="w-10 h-10 transition-all duration-300 group-hover:scale-105" />
             <div>
-              <div className="text-sm font-bold text-white tracking-tight transition-colors" style={{ fontSize: '22px', lineHeight: '1.1' }}>PrepGate</div>
+              <div className="text-sm font-bold text-white tracking-tight transition-colors" style={{ fontSize: '22px', lineHeight: '1.1' }}>GateApex</div>
               <div style={{ color: '#A855F7', fontSize: '11px', fontWeight: 600, letterSpacing: '1px' }}>GATE 2027</div>
             </div>
           </div>
@@ -321,7 +322,7 @@ export default function LandingPage() {
         </StaggerChildren>
       </section>
 
-      {/* How PrepGate Fixes It */}
+      {/* How GateApex Fixes It */}
       <section className="relative z-10 px-6 py-20 max-w-6xl mx-auto">
         <AnimatedSection>
           <div className="text-center mb-14">
@@ -329,7 +330,7 @@ export default function LandingPage() {
               ✨ The Solution
             </div>
             <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3 tracking-tight leading-tight">
-              How PrepGate Fixes It All
+              How GateApex Fixes It All
             </h2>
             <p className="text-gray-400 max-w-xl mx-auto text-sm">Every feature is designed to solve these problems directly.</p>
           </div>
@@ -443,7 +444,7 @@ export default function LandingPage() {
         </AnimatedSection>
       </section>
 
-      {/* Why PrepGate - Features */}
+      {/* Why GateApex - Features */}
       <section className="relative z-10 px-6 py-20">
         <AnimatedSection>
           <div className="text-center mb-14">
@@ -885,7 +886,7 @@ export default function LandingPage() {
                       { date: 'Core Development', desc: 'Built auth, tracking, PYQ engine, mock test runner, and analytics engine.' },
                       { date: 'AI Integration', desc: 'GPT-powered mentor, personalized planner, and intelligent coach chat.' },
                       { date: 'Testing & Polish', desc: 'Responsive design, dark mode, performance optimization, UX refinement.' },
-                      { date: 'Launch', desc: 'PrepGate goes live — AI-powered unified platform for GATE aspirants.' },
+                      { date: 'Launch', desc: 'GateApex goes live — AI-powered unified platform for GATE aspirants.' },
                     ].map((t, i) => (
                       <div key={i} className="relative pl-8 group">
                         <div className={`absolute left-0 top-1 w-4 h-4 rounded-full border-2 transition-all duration-300 group-hover:scale-125`} style={{ borderColor: i < 5 ? '#8B5CF6' : '#F59E0B', background: i < 5 ? 'rgba(139,92,246,0.2)' : 'rgba(245,158,11,0.2)' }}>
@@ -909,7 +910,7 @@ export default function LandingPage() {
       <footer className="relative z-10 border-t px-6 py-12" style={{ borderColor: 'rgba(139,92,246,0.08)' }}>
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src="/images/logo.png" alt="" className="w-9 h-9 object-contain" style={{ filter: 'drop-shadow(0 0 8px rgba(168,85,247,0.15))' }} />
+            <Icon name="logo" className="w-9 h-9" style={{ filter: 'drop-shadow(0 0 8px rgba(168,85,247,0.15))' }} />
             <div>
               <div className="text-sm font-bold text-white/90" style={{ fontSize: '13px' }}>{BRAND.name}</div>
               <div style={{ color: '#A855F7', fontSize: '9px', fontWeight: 600, letterSpacing: '1px' }}>GATE 2027</div>
@@ -929,3 +930,4 @@ export default function LandingPage() {
     </div>
   );
 }
+

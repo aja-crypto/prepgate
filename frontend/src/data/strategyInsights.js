@@ -199,7 +199,7 @@ export const STRATEGY_INSIGHTS = [
     recommendations: [
       'Use spaced repetition: 3-7-15-30 day intervals',
       'Keep notes concise — one page per topic',
-      'Track revision in PrepGate',
+      'Track revision in GateApex',
       'Don\'t skip any revision cycle',
     ],
     mindset: [
@@ -209,3 +209,4 @@ export const STRATEGY_INSIGHTS = [
     tags: ['Revision', 'Spaced Repetition', 'Active Recall', 'Notes'],
   },
 ];
+

@@ -63,7 +63,7 @@ router.get('/pdf/:id', protect, requireCloudinary, async (req, res, next) => {
         watermark: {
           email: userEmail,
           timestamp: new Date().toISOString().slice(0, 16).replace('T', ' '),
-          brand: 'PREPGATE',
+          brand: 'GateApex',
         },
       },
     });
@@ -98,3 +98,4 @@ router.get('/pdf/:id/info', protect, async (req, res, next) => {
 });
 
 module.exports = router;
+

@@ -2,9 +2,9 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { COLOR_PRESETS } from '../design/tokens';
 
-const THEME_MODE_KEY = 'gate2027_theme_mode';
-const COLOR_PRESET_KEY = 'gate2027_color_preset';
-const ONBOARDING_KEY = 'gate2027_onboarding_done';
+const THEME_MODE_KEY = 'gateapex_theme_mode';
+const COLOR_PRESET_KEY = 'gateapex_color_preset';
+const ONBOARDING_KEY = 'gateapex_onboarding_done';
 
 const ThemeContext = createContext(null);
 
@@ -30,7 +30,7 @@ export const ThemeProvider = ({ children }) => {
   const [themeMode, setThemeModeState] = useState(() => {
     const saved = localStorage.getItem(THEME_MODE_KEY);
     if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
-    const legacy = localStorage.getItem('gate2027_theme');
+    const legacy = localStorage.getItem('gateapex_theme');
     return legacy === 'light' ? 'light' : 'dark';
   });
 
@@ -52,7 +52,7 @@ export const ThemeProvider = ({ children }) => {
     const resolved = applyThemeMode(themeMode);
     setResolvedTheme(resolved);
     localStorage.setItem(THEME_MODE_KEY, themeMode);
-    localStorage.setItem('gate2027_theme', resolved);
+    localStorage.setItem('gateapex_theme', resolved);
   }, [themeMode]);
 
   useEffect(() => {
@@ -109,3 +109,4 @@ export const useTheme = () => {
   if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
   return ctx;
 };
+

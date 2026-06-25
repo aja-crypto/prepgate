@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # 🎓 GATE 2027 Progress Tracker
 
 A full-stack GATE CSE preparation platform built with **React + Node.js + MongoDB Atlas + JWT Auth**.
@@ -221,7 +221,11 @@ Topic ──< PYQ (1:N)
 8. **Forum** — Doubt-solving community per topic
 9. **Formula Sheets** — LaTeX-rendered quick reference
 10. **Adaptive Mock Tests** — Questions adapt to weak areas
-=======
-# prepgate
-AI-powered GATE CSE preparation platform with progress tracking, revision planning, PYQ analysis, mock tests, notes, formula sheets, and personalized study recommendations.
->>>>>>> 846281a0cc852101548ef69f2e67e12705f36bd6
+
+
+
+
+
+
+
+

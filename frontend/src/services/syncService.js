@@ -54,7 +54,7 @@ function mergeEntities(localArr, serverArr) {
 }
 
 /** Pull full sync from server */
-export async function pullFromServer(localData, user) {
+export async function pullFromServer(localData, user, currentState = null) {
   try {
     const res = await progressService.pullSync();
     const { backup, mocks, notes, mongoAvailable } = res.data?.data || {};
@@ -63,6 +63,10 @@ export async function pullFromServer(localData, user) {
     let merged = localData;
     if (hasCloudData) {
       merged = mergeProgressData(localData, backup);
+      // Prefer current React state's studyPlans if it has data (avoids stale localStorage overwrite)
+      if (currentState?.gateFeatures?.studyPlans && Object.keys(currentState.gateFeatures.studyPlans).some(k => Array.isArray(currentState.gateFeatures.studyPlans[k]) && currentState.gateFeatures.studyPlans[k].length > 0)) {
+        merged.gateFeatures = { ...merged.gateFeatures, studyPlans: currentState.gateFeatures.studyPlans };
+      }
     } else if (user?.email !== 'demo@gate2027.in') {
       // New account — use empty state from server or local
       const { getEmptyProgressData } = await import('../data/emptyState');

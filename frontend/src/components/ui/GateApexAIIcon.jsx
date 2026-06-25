@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * Premium PrepGate AI Brand Icon - AI Robot Mind Animation
+ * Premium GateApex AI Brand Icon - AI Robot Mind Animation
  * - Bat-wing inspired silhouette with gate concept
  * - Neural network connections, brain waves
  * - Dark navy, purple, cyan theme
@@ -16,7 +16,7 @@ import React from 'react';
  * @param {boolean} [props.notification=false] - Show notification spark
  * @param {string} [props.className=''] - Additional CSS classes
  */
-const PrepGateAIIcon = ({ size = 32, thinking = false, listening = false, notification = false, className = '' }) => {
+const GateApexAIIcon = ({ size = 32, thinking = false, listening = false, notification = false, className = '' }) => {
   return (
     <div
       className={`relative inline-flex items-center justify-center ${className}`}
@@ -290,4 +290,5 @@ const PrepGateAIIcon = ({ size = 32, thinking = false, listening = false, notifi
   );
 };
 
-export default PrepGateAIIcon;
+export default GateApexAIIcon;
+

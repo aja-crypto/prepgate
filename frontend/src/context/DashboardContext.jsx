@@ -1,12 +1,12 @@
 // Dashboard widget layout — visibility, order, drag-and-drop
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import { getDefaultWidgetLayout, DEFAULT_WIDGETS } from '../design/tokens';
 
 const DashboardContext = createContext(null);
 
 function storageKey(userId) {
-  return `gate2027_dashboard_${userId || 'guest'}`;
+  return `gateapex_dashboard_${userId || 'guest'}`;
 }
 
 function loadLayout(userId) {
@@ -39,9 +39,9 @@ export const DashboardProvider = ({ children }) => {
     localStorage.setItem(storageKey(userId), JSON.stringify(widgets));
   }, [widgets, userId]);
 
-  const visibleWidgets = [...widgets]
+  const visibleWidgets = useMemo(() => [...widgets]
     .filter((w) => w.visible)
-    .sort((a, b) => a.order - b.order);
+    .sort((a, b) => a.order - b.order), [widgets]);
 
   const toggleWidget = useCallback((id) => {
     setWidgets((prev) => prev.map((w) => (w.id === id ? { ...w, visible: !w.visible } : w)));

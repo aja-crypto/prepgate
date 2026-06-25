@@ -10,7 +10,7 @@ export default function FormulaSheetPage() {
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState(null);
   const [pinned, setPinned] = useState(() => {
-    const saved = localStorage.getItem('pinned_formulas');
+    const saved = localStorage.getItem('gateapex_pinned_formulas');
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -25,7 +25,7 @@ export default function FormulaSheetPage() {
       toast.success('Added to important');
     }
     setPinned(next);
-    localStorage.setItem('pinned_formulas', JSON.stringify(next));
+    localStorage.setItem('gateapex_pinned_formulas', JSON.stringify(next));
   };
 
   const copyToClipboard = (text) => {

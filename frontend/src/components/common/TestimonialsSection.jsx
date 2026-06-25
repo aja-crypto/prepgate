@@ -35,7 +35,7 @@ export default function TestimonialsSection() {
           {'★'.repeat(Math.round(Number(avgRating)))}{'☆'.repeat(5 - Math.round(Number(avgRating)))}
         </div>
         <div className="text-2xl font-bold text-white">{avgRating} / 5</div>
-        <p className="text-xs text-gray-500 mt-1">What aspirants say about PrepGate</p>
+        <p className="text-xs text-gray-500 mt-1">What aspirants say about GateApex</p>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
@@ -61,3 +61,4 @@ export default function TestimonialsSection() {
     </div>
   );
 }
+

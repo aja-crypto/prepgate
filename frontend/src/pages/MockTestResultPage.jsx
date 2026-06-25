@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { mockTestService, mistakeService } from '../services/api';
+import { useProgress } from '../context/ProgressContext';
+import { createRevisionEntry, hasRevisionForTopic } from '../utils/gateUtils';
 import { silentCatch } from '../utils/errorHandler';
 import { PageLoading } from '../components/common/GateLoadingScreen';
 import GlassCard from '../components/ui/GlassCard';
@@ -29,6 +31,7 @@ export default function MockTestResultPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { revisionSchedule, updateRevision } = useProgress();
   const [result, setResult] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [testProgress, setTestProgress] = useState([]);
@@ -58,6 +61,31 @@ export default function MockTestResultPage() {
       toast.error(msg);
     }).finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!result) return;
+    const attempt = result.attempt || {};
+    const answers = attempt.answers || [];
+    const questions = result.questions || [];
+    const wrongAnswers = answers.filter(a => !a.isCorrect && a.selectedAnswer != null);
+    if (!wrongAnswers.length) return;
+    const subjectName = result.test?.subject || 'Unknown';
+    const topicsScheduled = new Set();
+    let count = 0;
+    for (const ans of wrongAnswers) {
+      const q = questions.find(qq => String(qq._id || qq.id) === String(ans.questionId));
+      const topicName = q?.topic?.name || q?.topic || '';
+      if (!topicName || topicsScheduled.has(topicName)) continue;
+      if (hasRevisionForTopic(revisionSchedule, topicName)) continue;
+      topicsScheduled.add(topicName);
+      const entry = createRevisionEntry({ topicName, subject: subjectName, source: 'mock-test' });
+      updateRevision((prev) => [...prev, entry]);
+      count++;
+    }
+    if (count > 0) {
+      toast(`📅 ${count} revision${count > 1 ? 's' : ''} scheduled for weak topics`, { icon: '📅', duration: 4000 });
+    }
+  }, [result, revisionSchedule, updateRevision]);
 
   const toggleQuestion = (qIndex) => {
     setExpandedQuestions(prev => {
@@ -246,6 +274,92 @@ export default function MockTestResultPage() {
         </GlassCard>
       </div>
 
+      {(() => {
+        const answers = (attempt.answers || []).filter(a => a.timeSpent > 0);
+        if (!answers.length || !timeTaken) return null;
+        const totalTime = answers.reduce((s, a) => s + a.timeSpent, 0);
+        const avgTime = Math.round(totalTime / answers.length);
+        const sorted = [...answers].sort((a, b) => a.timeSpent - b.timeSpent);
+        const fastest = sorted[0];
+        const slowest = sorted[sorted.length - 1];
+        const questions = result.questions || [];
+        const bySubject = {};
+        const byTopic = {};
+        for (const ans of answers) {
+          const q = questions.find(qq => String(qq._id || qq.id) === String(ans.questionId));
+          const subj = q?.subject || '';
+          const topic = q?.topic?.name || q?.topic || '';
+          if (subj) {
+            if (!bySubject[subj]) bySubject[subj] = { time: 0, count: 0 };
+            bySubject[subj].time += ans.timeSpent;
+            bySubject[subj].count++;
+          }
+          if (topic) {
+            if (!byTopic[topic]) byTopic[topic] = { time: 0, count: 0 };
+            byTopic[topic].time += ans.timeSpent;
+            byTopic[topic].count++;
+          }
+        }
+        return (
+          <GlassCard className="mb-6">
+            <h3 className="text-sm font-semibold text-text mb-3 flex items-center gap-1.5">
+              <Icon name="clock" className="w-4 h-4 text-cyan-400" /> Time Analytics
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <div className="bg-bg-3 rounded-lg p-3 text-center">
+                <div className="text-lg font-bold font-mono text-cyan-400">{formatTime(avgTime)}</div>
+                <div className="text-[10px] text-text3 uppercase tracking-wider">Avg per Q</div>
+              </div>
+              <div className="bg-bg-3 rounded-lg p-3 text-center">
+                <div className="text-lg font-bold font-mono text-green-400">{formatTime(fastest?.timeSpent)}</div>
+                <div className="text-[10px] text-text3 uppercase tracking-wider">Fastest</div>
+              </div>
+              <div className="bg-bg-3 rounded-lg p-3 text-center">
+                <div className="text-lg font-bold font-mono text-red-400">{formatTime(slowest?.timeSpent)}</div>
+                <div className="text-[10px] text-text3 uppercase tracking-wider">Slowest</div>
+              </div>
+              <div className="bg-bg-3 rounded-lg p-3 text-center">
+                <div className="text-lg font-bold font-mono text-amber-400">{formatTime(totalTime)}</div>
+                <div className="text-[10px] text-text3 uppercase tracking-wider">Total</div>
+              </div>
+            </div>
+            {Object.keys(byTopic).length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <div className="text-[10px] text-text3 uppercase tracking-wider mb-2">By Subject</div>
+                  <div className="space-y-1.5">
+                    {Object.entries(bySubject).map(([name, { time, count }]) => (
+                      <div key={name} className="flex items-center gap-2 text-xs">
+                        <span className="text-text3 flex-1 truncate">{name}</span>
+                        <span className="font-mono text-cyan-400">{formatTime(Math.round(time / count))}</span>
+                        <span className="text-text3 w-16 text-right">avg × {count}q</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-text3 uppercase tracking-wider mb-2">By Topic (slowest first)</div>
+                  <div className="space-y-1.5">
+                    {Object.entries(byTopic)
+                      .sort((a, b) => b[1].time / b[1].count - a[1].time / a[1].count)
+                      .slice(0, 6)
+                      .map(([name, { time, count }]) => (
+                        <div key={name} className="flex items-center gap-2 text-xs">
+                          <span className="text-text3 flex-1 truncate">{name}</span>
+                          <span className={`font-mono ${Math.round(time / count) > avgTime * 1.5 ? 'text-red-400' : 'text-cyan-400'}`}>
+                            {formatTime(Math.round(time / count))}
+                          </span>
+                          <span className="text-text3 w-16 text-right">avg × {count}q</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </GlassCard>
+        );
+      })()}
+
       {(weakAreas.length > 0 || strongAreas.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <GlassCard>
@@ -255,10 +369,14 @@ export default function MockTestResultPage() {
             {weakAreas.length === 0 ? (
               <p className="text-xs text-text3 py-3">No weak areas detected!</p>
             ) : (
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {weakAreas.map((area, i) => (
-                  <div key={i} className="text-xs px-3 py-2 rounded-lg bg-red-500/5 border border-red-500/10 text-red-300">
-                    {area}
+                  <div key={i} className="bg-red-500/5 border border-red-500/10 rounded-lg p-3">
+                    <div className="text-xs font-medium text-red-300">{area}</div>
+                    <div className="flex gap-2 mt-2">
+                      <a href="/pyq" className="text-[10px] px-2 py-1 rounded bg-primary/10 border border-primary/20 text-primary hover:bg-primary/15">Practice PYQs →</a>
+                      <a href="/topics" className="text-[10px] px-2 py-1 rounded bg-bg-2 border border-border text-text3 hover:border-white/10">Study Topic →</a>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -33,7 +33,7 @@ import PinnedNotesWidget from '../components/gate/PinnedNotesWidget';
 import EmptyDashboard from '../components/gate/EmptyDashboard';
 import DashboardMotivation from '../components/gate/DashboardMotivation';
 import AnnouncementBar from '../components/gate/AnnouncementBar';
-import PrepGateAIWidget from '../components/gate/PrepGateAIWidget';
+import GateApexAIWidget from '../components/gate/GateApexAIWidget';
 import GateVaultWidget from '../components/gate/GateVaultWidget';
 import NotesHubWidget from '../components/gate/NotesHubWidget';
 import RecommendationEngine from '../components/gate/RecommendationEngine';
@@ -66,7 +66,7 @@ export default function DashboardPage() {
     welcome: isEmptyProgress ? <EmptyDashboard userName={user?.name?.split(' ')[0]} /> : null,
     motivation: <DashboardMotivation />,
     announcements: <AnnouncementBar />,
-    "prepgate-ai": <PrepGateAIWidget />,
+    "gateapex-ai": <GateApexAIWidget />,
     "gate-vault": <GateVaultWidget />,
     "notes-hub": <NotesHubWidget />,
     "recommendation-engine": <RecommendationEngine />,
@@ -271,7 +271,7 @@ export default function DashboardPage() {
     welcome: 'col-span-full',
     motivation: 'col-span-full',
     announcements: 'col-span-full',
-    'prepgate-ai': 'col-span-full',
+    'GateApex-ai': 'col-span-full',
     'gate-vault': 'col-span-full',
     'notes-hub': 'col-span-full',
     'recommendation-engine': 'col-span-full',
@@ -285,19 +285,19 @@ export default function DashboardPage() {
     subjects: 'col-span-full',
     recommendations: 'col-span-full',
     predictions: 'col-span-full',
-    'focus-stats': 'md:col-span-1',
-    'action-center': 'md:col-span-1',
-    'today-plan': 'md:col-span-1',
-    'success-hub': 'md:col-span-1',
-    'revision-schedule': 'md:col-span-1',
-    'progress-heatmap': 'md:col-span-1',
-    'live-news': 'md:col-span-1',
-    'exam-schedule': 'md:col-span-1',
-    'exam-timeline': 'md:col-span-1',
-    recruitment: 'md:col-span-1',
-    trending: 'md:col-span-1',
-    analysis: 'md:col-span-1',
-    resources: 'md:col-span-1',
+    'focus-stats': 'col-span-1',
+    'action-center': 'col-span-1',
+    'today-plan': 'col-span-1',
+    'success-hub': 'col-span-1',
+    'revision-schedule': 'col-span-1',
+    'progress-heatmap': 'col-span-1',
+    'live-news': 'col-span-1',
+    'exam-schedule': 'col-span-1',
+    'exam-timeline': 'col-span-1',
+    recruitment: 'col-span-1',
+    trending: 'col-span-1',
+    analysis: 'col-span-1',
+    resources: 'col-span-1',
   };
 
   const pairedRow = ['live-news', 'exam-schedule', 'exam-timeline', 'recruitment', 'trending', 'analysis', 'resources'];
@@ -371,7 +371,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {rendered}
       </div>
 
@@ -386,3 +386,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

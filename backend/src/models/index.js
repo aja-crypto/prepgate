@@ -3,9 +3,10 @@ const mongoose = require('mongoose');
 try {
 // Import models from individual files
 const Subject = require('./Subject');
+const Flashcard = require('./Flashcard');
+const UserFlashcard = require('./UserFlashcard');
 // ─────────────────────────────────────────────────────────────
 // src/models/Topic.js
-
 const topicSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -439,12 +440,12 @@ const sessionSchema = new mongoose.Schema({
 const StudySession = mongoose.model('StudySession', sessionSchema);
 
 // ─────────────────────────────────────────────────────────────
-module.exports = { Topic, Subject, Progress, StudyLog, MockTest, PYQ, UserPYQ, MockSession, Note, Mistake, StudySession };
+module.exports = { Topic, Subject, Progress, StudyLog, MockTest, PYQ, UserPYQ, MockSession, Note, Mistake, StudySession, Flashcard, UserFlashcard };
 } catch (e) {
   // Models unavailable — routes will use local data store instead
   module.exports = { 
     Topic: {}, Subject: {}, Progress: {}, StudyLog: {}, 
     MockTest: {}, PYQ: {}, UserPYQ: {}, MockSession: {}, 
-    Note: {}, Mistake: {}, StudySession: {} 
+    Note: {}, Mistake: {}, StudySession: {}, Flashcard: {}, UserFlashcard: {} 
   };
 }

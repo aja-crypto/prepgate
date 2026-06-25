@@ -29,7 +29,7 @@ export default function ExamScheduleCard({ schedule = [], examDate }) {
       </div>
       <div className="space-y-2">
         {schedule.map((ev) => {
-          const date = new Date(ev.date);
+          const date = new Date(ev.date || ev.startDate);
           const isPast = date < now;
           const isUpcoming = !isPast && date - now < 30 * 86400000;
           return (

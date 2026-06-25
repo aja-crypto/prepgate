@@ -79,7 +79,7 @@ export default function StrategyInsightCard({ insight }) {
 
           <div className="mt-4 pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             <p className="text-[10px] text-gray-500 text-center">
-              Track this strategy in PrepGate → 
+              Track this strategy in GateApex → 
               <span className="text-primary ml-1">Dashboard</span>
             </p>
           </div>
@@ -88,3 +88,4 @@ export default function StrategyInsightCard({ insight }) {
     </div>
   );
 }
+

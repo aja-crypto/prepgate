@@ -11,18 +11,18 @@ const BG_OPTIONS = [
 ];
 
 const MOTIVATION_QUOTES = [
-  { quote: 'Consistency beats intensity. Small daily progress becomes a big rank.', author: 'PrepGate' },
-  { quote: 'Every question you solve today is one step closer to your IIT dream.', author: 'PrepGate' },
-  { quote: 'The best time to start was yesterday. The next best time is now.', author: 'PrepGate' },
-  { quote: 'Focus on the process, not the outcome. The rank will follow.', author: 'PrepGate' },
-  { quote: 'Discipline is doing what needs to be done, even when you don\'t feel like it.', author: 'PrepGate' },
-  { quote: 'Your only competition is the version of yourself who gave up yesterday.', author: 'PrepGate' },
-  { quote: 'One hour of focused study beats four hours of distracted browsing.', author: 'PrepGate' },
-  { quote: 'GATE is not about being the smartest. It\'s about being the most prepared.', author: 'PrepGate' },
-  { quote: 'Study smart, revise often, practice relentlessly.', author: 'PrepGate' },
-  { quote: 'The sweat of today waters the success of tomorrow.', author: 'PrepGate' },
-  { quote: 'Quiet rooms and focused minds build ranks and futures.', author: 'PrepGate' },
-  { quote: 'Every hour of deep work is a vote for your future self.', author: 'PrepGate' },
+  { quote: 'Consistency beats intensity. Small daily progress becomes a big rank.', author: 'GateApex' },
+  { quote: 'Every question you solve today is one step closer to your IIT dream.', author: 'GateApex' },
+  { quote: 'The best time to start was yesterday. The next best time is now.', author: 'GateApex' },
+  { quote: 'Focus on the process, not the outcome. The rank will follow.', author: 'GateApex' },
+  { quote: 'Discipline is doing what needs to be done, even when you don\'t feel like it.', author: 'GateApex' },
+  { quote: 'Your only competition is the version of yourself who gave up yesterday.', author: 'GateApex' },
+  { quote: 'One hour of focused study beats four hours of distracted browsing.', author: 'GateApex' },
+  { quote: 'GATE is not about being the smartest. It\'s about being the most prepared.', author: 'GateApex' },
+  { quote: 'Study smart, revise often, practice relentlessly.', author: 'GateApex' },
+  { quote: 'The sweat of today waters the success of tomorrow.', author: 'GateApex' },
+  { quote: 'Quiet rooms and focused minds build ranks and futures.', author: 'GateApex' },
+  { quote: 'Every hour of deep work is a vote for your future self.', author: 'GateApex' },
 ];
 
 const GATE_FORMULAS = [
@@ -40,7 +40,7 @@ const DURATIONS = [
   { label: '90 min', value: 90 * 60 },
 ];
 
-const DEEP_FOCUS_SESSIONS_KEY = 'gate2027_deep_focus_sessions';
+const DEEP_FOCUS_SESSIONS_KEY = 'gateapex_deep_focus_sessions';
 
 function loadDeepSessions() {
   try { return JSON.parse(localStorage.getItem(DEEP_FOCUS_SESSIONS_KEY)) || []; }

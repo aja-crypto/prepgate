@@ -41,9 +41,9 @@ export default function RegisterPage() {
       <div className="w-full max-w-[420px] animate-slide-up">
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-3">
-            <img src="/images/logo.png" alt="" className="w-10 h-10 object-contain" />
+            <Icon name="logo" className="w-10 h-10" />
             <div>
-              <div className="font-bold text-text tracking-tight" style={{ fontSize: '20px', lineHeight: '1.1' }}>PrepGate</div>
+              <div className="font-bold text-text tracking-tight" style={{ fontSize: '20px', lineHeight: '1.1' }}>GateApex</div>
               <div style={{ color: '#A855F7', fontSize: '10px', fontWeight: 600, letterSpacing: '1px' }}>GATE 2027</div>
             </div>
           </div>
@@ -98,3 +98,4 @@ export default function RegisterPage() {
     </div>
   );
 }
+

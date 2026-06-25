@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import Icon from '../ui/Icon';
 
 const MESSAGES = [
   'Loading PYQs...',
@@ -94,8 +95,8 @@ export default function GateLoadingScreen({
 
       {/* Logo */}
       <div className="relative z-10 flex flex-col items-center" style={{ animation: 'pg-fade-in 0.8s ease-out both' }}>
-        <img src="/images/logo.png" alt="" className="w-14 h-14 object-contain mb-3" />
-        <div className="text-white text-center" style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '6px' }}>PREPGATE</div>
+        <Icon name="logo" className="w-14 h-14 mb-3" />
+        <div className="text-white text-center" style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '6px' }}>GateApex</div>
         <div style={{ color: '#A855F7', fontSize: '11px', fontWeight: 600, letterSpacing: '3px', marginTop: '4px' }}>GATE 2027</div>
       </div>
 
@@ -236,3 +237,4 @@ export function MentorLoading() {
 export function MockExamLoading() {
   return <PageLoading title="Preparing Exam..." />;
 }
+

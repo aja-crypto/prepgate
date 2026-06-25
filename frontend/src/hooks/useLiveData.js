@@ -4,7 +4,7 @@ import { liveDataService } from '../services/api';
 
 export function useLiveData(refreshInterval = 1800000) { // Default to 30 mins
   const [data, setData] = useState(() => {
-    const cached = localStorage.getItem('cachedLiveData');
+    const cached = localStorage.getItem('gateapex_cached_live_data');
     return cached ? JSON.parse(cached) : null;
   });
   const [loading, setLoading] = useState(!data);
@@ -27,7 +27,7 @@ export function useLiveData(refreshInterval = 1800000) { // Default to 30 mins
           }
         }
         
-        localStorage.setItem('cachedLiveData', JSON.stringify(freshData));
+        localStorage.setItem('gateapex_cached_live_data', JSON.stringify(freshData));
         return freshData;
       });
       setError(null);

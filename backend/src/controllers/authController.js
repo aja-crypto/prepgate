@@ -25,9 +25,14 @@ const mockUserResponse = (user) => ({
 
 async function verifyGoogleToken(idToken) {
   const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
-  if (!res.ok) throw new Error('Invalid Google token');
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    console.error('[Google TokenInfo] Status:', res.status, 'Body:', body);
+    throw new Error(`Invalid Google token (status ${res.status}): ${body}`);
+  }
   const payload = await res.json();
   if (process.env.GOOGLE_CLIENT_ID && payload.aud !== process.env.GOOGLE_CLIENT_ID) {
+    console.error('[Google TokenInfo] Audience mismatch:', { expected: process.env.GOOGLE_CLIENT_ID, got: payload.aud });
     throw new Error('Google token audience mismatch');
   }
   return payload;
@@ -154,24 +159,27 @@ exports.googleAuth = async (req, res, next) => {
 
     if (isMockAuthEnabled()) {
       let user = mockStore.findByEmail(email);
+      let isNewUser = false;
       if (!user) {
+        isNewUser = true;
         user = await mockStore.createMockUser({
           name: name || email.split('@')[0],
           email,
           password: crypto.randomBytes(16).toString('hex'),
         });
-        user.googleId = googleId;
-        user.authProvider = 'google';
-      user.isVerified = true;
-      user.avatar = picture;
       }
+      // Always sync Google profile fields (covers both new and existing users)
+      user.googleId = googleId;
+      user.authProvider = 'google';
+      user.isVerified = true;
+      if (picture) user.avatar = picture;
       user.lastLogin = new Date();
       await user.save();
       const { accessToken, refreshToken } = generateTokens(user._id);
       return res.json({
         success: true,
         message: 'Google sign-in successful!',
-        data: { user: mockUserResponse(user), accessToken, refreshToken, isNewUser: !user.progressBackup?.data },
+        data: { user: mockUserResponse(user), accessToken, refreshToken, isNewUser },
       });
     }
 
@@ -209,7 +217,8 @@ exports.googleAuth = async (req, res, next) => {
       data: { user: mockUserResponse(user), accessToken, refreshToken, isNewUser },
     });
   } catch (error) {
-    return res.status(401).json({ success: false, message: 'Google authentication failed.' });
+    console.error('[Google Auth Error]', error.message || error);
+    return res.status(401).json({ success: false, message: 'Google authentication failed.', detail: error.message });
   }
 };
 

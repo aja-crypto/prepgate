@@ -1,5 +1,5 @@
 // Analytics: weekly/monthly graphs, accuracy, mock trends, completion forecast
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import { Chart, registerables } from 'chart.js';
 import { useProgress } from '../context/ProgressContext';
 import {
@@ -25,6 +25,31 @@ Chart.register(...registerables);
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
+function useInView(options = {}) {
+  const ref = useRef(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setInView(true); obs.disconnect(); }
+    }, { threshold: 0.05, rootMargin: '200px', ...options });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, inView];
+}
+
+function ChartContainer({ title, children, className = '' }) {
+  const [ref, inView] = useInView();
+  return (
+    <div ref={ref} className={`bg-surface border border-border rounded-xl p-5 ${className}`}>
+      <div className="text-sm font-semibold text-text mb-3">{title}</div>
+      {inView ? children : <div className="relative h-48 bg-bg-2 rounded-lg animate-pulse" />}
+    </div>
+  );
+}
+
 export default function AnalyticsPage() {
   const { studyStats, topics, pyqs, mocks, gateFeatures, revisionSchedule } = useProgress();
   const radarRef = useRef(null);
@@ -37,13 +62,46 @@ export default function AnalyticsPage() {
   const mockTrendRef = useRef(null);
   const charts = useRef({});
 
+  const hasData = (studyStats.subjects || []).length > 0 || topics.length > 0 || pyqs.length > 0 || mocks.length > 0;
+
   const subjects = useMemo(
     () => computeSubjectCompletion(studyStats.subjects, topics, pyqs),
     [studyStats.subjects, topics, pyqs]
   );
+
+  if (!hasData) {
+    return (
+      <div>
+        <div className="mb-6">
+          <h1 className="text-xl font-bold text-text">Analytics</h1>
+          <p className="text-sm text-text3 mt-0.5">Deep insights into your preparation</p>
+        </div>
+        <div className="bg-surface border border-border rounded-xl p-12 text-center">
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-primary/10 border border-primary/20">
+            <span className="text-3xl">📊</span>
+          </div>
+          <h2 className="text-lg font-bold text-text mb-2">No Analytics Yet</h2>
+          <p className="text-sm text-text3 max-w-md mx-auto mb-6 leading-relaxed">
+            Complete focus sessions, solve PYQs, and take mock tests to see your progress analytics here. Your data will appear as you study.
+          </p>
+          <div className="flex justify-center gap-3">
+            <a href="/focus" className="text-xs font-medium text-primary bg-primary/10 hover:bg-primary/15 px-5 py-2.5 rounded-xl border border-primary/20 transition-colors">
+              Start Focus Session
+            </a>
+            <a href="/pyq" className="text-xs font-medium text-text2 bg-bg-2 hover:bg-bg-3 px-5 py-2.5 rounded-xl border border-border transition-colors">
+              Practice PYQs
+            </a>
+            <a href="/mocks" className="text-xs font-medium text-text2 bg-bg-2 hover:bg-bg-3 px-5 py-2.5 rounded-xl border border-border transition-colors">
+              Take a Mock
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const labels = subjects.map((s) => s.name.split(' ')[0]);
   const scores = subjects.map((s) => s.progress);
-  const readiness = computeReadinessScore(topics, pyqs, mocks, gateFeatures.streak);
+  const readiness = computeReadinessScore(topics, pyqs, mocks, gateFeatures?.streak);
   const forecast = computeCompletionForecast(topics, gateFeatures);
   const priorities = getSubjectPriorities(studyStats.subjects, topics, pyqs);
   const recentScore = mocks.length ? mocks.slice(-3).reduce((sum, m) => sum + (m.score || 0), 0) / Math.min(3, mocks.length) : 0;
@@ -103,7 +161,7 @@ export default function AnalyticsPage() {
         type: 'bar',
         data: {
           labels: MONTH_LABELS,
-          datasets: [{ data: gateFeatures.monthlyHours || [38, 42, 45, 40, 48, 42], backgroundColor: '#06d6a0cc', borderRadius: 4 }],
+          datasets: [{ data: gateFeatures?.monthlyHours || [38, 42, 45, 40, 48, 42], backgroundColor: '#06d6a0cc', borderRadius: 4 }],
         },
         options: { ...chartOpts, scales: { y: { grid: { color: '#ffffff08' }, ticks: { color: '#636b82' } }, x: { grid: { display: false }, ticks: { color: '#636b82' } } } },
       });
@@ -115,7 +173,7 @@ export default function AnalyticsPage() {
         type: 'line',
         data: {
           labels: DAY_LABELS,
-          datasets: [{ data: gateFeatures.weeklyAccuracy || [72, 75, 78, 74, 80, 82, 79], borderColor: '#a855f7', backgroundColor: '#a855f720', fill: true, tension: 0.4, pointRadius: 3 }],
+          datasets: [{ data: gateFeatures?.weeklyAccuracy || [72, 75, 78, 74, 80, 82, 79], borderColor: '#a855f7', backgroundColor: '#a855f720', fill: true, tension: 0.4, pointRadius: 3 }],
         },
         options: { ...chartOpts, scales: { y: { min: 0, max: 100, grid: { color: '#ffffff08' }, ticks: { color: '#636b82' } }, x: { grid: { display: false }, ticks: { color: '#636b82' } } } },
       });
@@ -154,14 +212,15 @@ export default function AnalyticsPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
         {[
-          { label: 'Readiness Score', value: `${readiness}/100`, color: '#4f8dff' },
-          { label: 'Expected Score', value: Math.round(recentScore || readiness), color: '#06d6a0' },
-          { label: 'Expected Rank', value: rankRange.label, color: '#ff9f43' },
-          { label: 'Consistency', value: `${consistencyScore}/100`, color: '#a855f7' },
+          { label: 'Readiness Score', value: `${readiness}/100`, color: '#4f8dff', tip: readiness >= 70 ? 'Strong preparation' : readiness >= 40 ? 'Needs improvement' : 'Start studying' },
+          { label: 'Expected Score', value: Math.round(recentScore || readiness), color: '#06d6a0', tip: 'Based on recent mock tests' },
+          { label: 'Expected Rank', value: rankRange.label, color: '#ff9f43', tip: 'Approximate GATE rank range' },
+          { label: 'Consistency', value: `${consistencyScore}/100`, color: '#a855f7', tip: consistencyScore >= 70 ? 'Very consistent' : 'Study more regularly' },
         ].map((s) => (
-          <div key={s.label} className="bg-surface border border-border rounded-xl p-4">
+          <div key={s.label} className="bg-surface border border-border rounded-xl p-4 group relative">
             <div className="text-lg font-bold font-mono truncate" style={{ color: s.color }}>{s.value}</div>
             <div className="text-[10px] text-text3 uppercase tracking-wider mt-1">{s.label}</div>
+            {s.tip && <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-bg-2 border border-border rounded-lg px-3 py-1.5 text-[10px] text-text2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">{s.tip}</div>}
           </div>
         ))}
       </div>
@@ -214,6 +273,7 @@ export default function AnalyticsPage() {
                 <div className="flex flex-wrap gap-2 mt-2">
                   {item.plan.map((step) => <span key={step} className="text-[10px] px-2 py-1 rounded bg-primary/10 text-primary border border-primary/20">{step}</span>)}
                 </div>
+                <a href={`/topics`} className="mt-2 inline-block text-[10px] text-primary hover:underline">Study this topic →</a>
               </div>
             ))}
           </div>
@@ -233,54 +293,46 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-4 mb-4">
-        <div className="bg-surface border border-border rounded-xl p-5">
-          <div className="text-sm font-semibold text-text mb-3">Weekly Study Graph</div>
+        <ChartContainer title="Weekly Study Graph">
           <div className="relative h-48"><canvas ref={weeklyRef} /></div>
-        </div>
-        <div className="bg-surface border border-border rounded-xl p-5">
-          <div className="text-sm font-semibold text-text mb-3">Monthly Study Graph</div>
+        </ChartContainer>
+        <ChartContainer title="Monthly Study Graph">
           <div className="relative h-48"><canvas ref={monthlyRef} /></div>
-        </div>
+        </ChartContainer>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4 mb-4">
-        <div className="bg-surface border border-border rounded-xl p-5">
-          <div className="text-sm font-semibold text-text mb-3">Subject Comparison</div>
+        <ChartContainer title="Subject Comparison">
           <div className="relative h-48"><canvas ref={barRef} /></div>
-        </div>
-        <div className="bg-surface border border-border rounded-xl p-5">
-          <div className="text-sm font-semibold text-text mb-3">Accuracy Graph</div>
+        </ChartContainer>
+        <ChartContainer title="Accuracy Graph">
           <div className="relative h-48"><canvas ref={accuracyRef} /></div>
-        </div>
+        </ChartContainer>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4 mb-4">
-        <div className="bg-surface border border-border rounded-xl p-5">
-          <div className="text-sm font-semibold text-text mb-3">Mock Test Trend</div>
+        <ChartContainer title="Mock Test Trend">
           <div className="relative h-48"><canvas ref={mockTrendRef} /></div>
-        </div>
-        <div className="bg-surface border border-border rounded-xl p-5">
-          <div className="text-sm font-semibold text-text mb-3">Time Spent Per Subject</div>
+        </ChartContainer>
+        <ChartContainer title="Time Spent Per Subject">
           <div className="relative h-48"><canvas ref={pieRef} /></div>
-        </div>
+        </ChartContainer>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4 mb-4">
-        <div className="bg-surface border border-border rounded-xl p-5">
-          <div className="text-sm font-semibold text-text mb-1">Subject Accuracy</div>
-          <div className="text-[10px] text-text3 uppercase mb-4">PYQ performance by subject</div>
+        <ChartContainer title="Subject Accuracy" className="">
+          <div className="text-[10px] text-text3 uppercase mb-2">PYQ performance by subject</div>
           <div className="h-64">
             <canvas ref={subAccuracyRef} />
           </div>
-        </div>
+        </ChartContainer>
 
-        <div className="bg-surface border border-border rounded-xl p-5">
-          <div className="text-sm font-semibold text-text mb-1">Topic Analysis</div>
-          <div className="text-[10px] text-text3 uppercase mb-4">Mastery across categories</div>
+        <ChartContainer title="Topic Analysis" className="">
+          <div className="text-[10px] text-text3 uppercase mb-2">Mastery across categories</div>
           <div className="h-64">
             <canvas ref={radarRef} />
           </div>
-        </div>
+        </ChartContainer>
         <div className="bg-surface border border-border rounded-xl p-5">
           <div className="text-sm font-semibold text-text mb-3">Subject Priority Suggestions</div>
           <div className="space-y-2">

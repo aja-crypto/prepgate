@@ -141,28 +141,45 @@ export function FocusProvider({ children }) {
     }
   }, []);
 
-  // Master tick — uses Date.now() based calculation (no setInterval drift)
+  const isActiveRef = useRef(isActive);
+  const isPausedRef = useRef(isPaused);
+  const endTimeRef = useRef(endTime);
+  const modeRef = useRef(mode);
+  const sessionDurationRef = useRef(sessionDuration);
+  const sessionsCompletedRef = useRef(sessionsCompleted);
+  const currentSubjectRef = useRef(currentSubject);
+
+  isActiveRef.current = isActive;
+  isPausedRef.current = isPaused;
+  endTimeRef.current = endTime;
+  modeRef.current = mode;
+  sessionDurationRef.current = sessionDuration;
+  sessionsCompletedRef.current = sessionsCompleted;
+  currentSubjectRef.current = currentSubject;
+
+  // Master tick — uses refs to avoid re-creating interval on every state change
   useEffect(() => {
     if (!isActive || isPaused) {
       if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
       return;
     }
     intervalRef.current = setInterval(() => {
-      const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
-      setTimeRemaining(remaining);
+      const end = endTimeRef.current;
+      const rem = Math.max(0, Math.floor((end - Date.now()) / 1000));
+      setTimeRemaining(rem);
       persistState({
-        isActive: true, isPaused: false, mode, sessionDuration, endTime,
-        sessionsCompleted, currentSubject,
+        isActive: true, isPaused: false, mode: modeRef.current, sessionDuration: sessionDurationRef.current, endTime: end,
+        sessionsCompleted: sessionsCompletedRef.current, currentSubject: currentSubjectRef.current,
         sessionStart: sessionStartRef.current,
       });
-      if (remaining <= 0) {
+      if (rem <= 0) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
-        if (mode === 'work') {
-          const elapsed = sessionDuration;
-          const focusMins = elapsed / 60;
+        if (modeRef.current === 'work') {
+          const dur = sessionDurationRef.current;
+          const focusMins = dur / 60;
           setFocusHours((h) => h + focusMins / 60);
-          const totalSessions = sessionsCompleted + 1;
+          const totalSessions = sessionsCompletedRef.current + 1;
           setSessionsCompleted(totalSessions);
 
           updateProductivity((p) => ({ ...p, pomodoroSessions: (p.pomodoroSessions || 0) + 1 }));
@@ -199,8 +216,8 @@ export function FocusProvider({ children }) {
           const historyEntry = {
             id: Date.now(),
             date: new Date().toISOString(),
-            duration: sessionDuration,
-            subject: currentSubject || 'General',
+            duration: dur,
+            subject: currentSubjectRef.current || 'General',
             type: 'pomodoro',
             sessionsAtEnd: totalSessions,
           };
@@ -216,8 +233,8 @@ export function FocusProvider({ children }) {
           setTimeRemaining(BREAK_DURATION);
           setIsMinimized(false);
           persistState({
-            isActive: true, isPaused: false, mode: 'break', sessionDuration,
-            endTime: breakEnd, sessionsCompleted: totalSessions, currentSubject,
+            isActive: true, isPaused: false, mode: 'break', sessionDuration: dur,
+            endTime: breakEnd, sessionsCompleted: totalSessions, currentSubject: currentSubjectRef.current,
             sessionStart: sessionStartRef.current,
           });
         } else {
@@ -225,30 +242,30 @@ export function FocusProvider({ children }) {
           setIsActive(false);
           setIsPaused(false);
           setMode('work');
-          setTimeRemaining(sessionDuration);
+          setTimeRemaining(sessionDurationRef.current);
           setEndTime(null);
           setIsMinimized(false);
-          persistState({ isActive: false, isPaused: false, mode: 'work', sessionDuration, endTime: null, sessionsCompleted, currentSubject, sessionStart: null });
+          persistState({ isActive: false, isPaused: false, mode: 'work', sessionDuration: sessionDurationRef.current, endTime: null, sessionsCompleted: sessionsCompletedRef.current, currentSubject: currentSubjectRef.current, sessionStart: null });
         }
       }
     }, 500);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [isActive, isPaused, endTime, mode, sessionDuration, sessionsCompleted, currentSubject, updateStudyStats, updateProductivity]);
+  }, [isActive, isPaused, updateStudyStats, updateProductivity]);
 
   // Visibility API — recalculate remaining time when tab returns from background
   useEffect(() => {
     if (!isActive || isPaused) return;
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && endTime) {
-        const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
-        setTimeRemaining(remaining);
-        if (remaining <= 0) {
-          // Session expired while in background — trigger completion
+      if (document.visibilityState === 'visible' && endTimeRef.current) {
+        const rem = Math.max(0, Math.floor((endTimeRef.current - Date.now()) / 1000));
+        setTimeRemaining(rem);
+        if (rem <= 0) {
           if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
-          if (mode === 'work') {
-            const focusMins = sessionDuration / 60;
+          if (modeRef.current === 'work') {
+            const dur = sessionDurationRef.current;
+            const focusMins = dur / 60;
             setFocusHours((h) => h + focusMins / 60);
-            const totalSessions = sessionsCompleted + 1;
+            const totalSessions = sessionsCompletedRef.current + 1;
             setSessionsCompleted(totalSessions);
             updateProductivity((p) => ({ ...p, pomodoroSessions: (p.pomodoroSessions || 0) + 1 }));
             updateStudyStats((s) => ({
@@ -262,24 +279,24 @@ export function FocusProvider({ children }) {
             setEndTime(breakEnd);
             setTimeRemaining(BREAK_DURATION);
             persistState({
-              isActive: true, isPaused: false, mode: 'break', sessionDuration,
-              endTime: breakEnd, sessionsCompleted: totalSessions, currentSubject,
+              isActive: true, isPaused: false, mode: 'break', sessionDuration: dur,
+              endTime: breakEnd, sessionsCompleted: totalSessions, currentSubject: currentSubjectRef.current,
               sessionStart: sessionStartRef.current,
             });
           } else {
             sendNotification('Break Over', 'Ready for another focus session?');
             setIsActive(false);
             setMode('work');
-            setTimeRemaining(sessionDuration);
+            setTimeRemaining(sessionDurationRef.current);
             setEndTime(null);
-            persistState({ isActive: false, isPaused: false, mode: 'work', sessionDuration, endTime: null, sessionsCompleted, currentSubject, sessionStart: null });
+            persistState({ isActive: false, isPaused: false, mode: 'work', sessionDuration: sessionDurationRef.current, endTime: null, sessionsCompleted: sessionsCompletedRef.current, currentSubject: currentSubjectRef.current, sessionStart: null });
           }
         }
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [isActive, isPaused, endTime, mode, sessionDuration, sessionsCompleted, currentSubject, updateStudyStats, updateProductivity]);
+  }, [isActive, isPaused, updateStudyStats, updateProductivity]);
 
   const requestNotificationPermission = useCallback(() => {
     if (!('Notification' in window)) return;

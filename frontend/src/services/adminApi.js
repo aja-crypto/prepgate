@@ -155,4 +155,32 @@ export const questionBankService = {
   bulkDifficulty: (ids, difficulty) => adminApi.post('/admin/question-bank/bulk/difficulty', { ids, difficulty }),
 };
 
+// ─── Notification Center ────────────────────────────────────
+export const adminNotificationService = {
+  getStats: () => adminApi.get('/admin/notifications/stats'),
+  list: (params) => adminApi.get('/admin/notifications', { params }),
+  getOne: (id) => adminApi.get(`/admin/notifications/${id}`),
+  create: (data) => adminApi.post('/admin/notifications', data),
+  update: (id, data) => adminApi.put(`/admin/notifications/${id}`, data),
+  delete: (id) => adminApi.delete(`/admin/notifications/${id}`),
+  send: (id) => adminApi.post(`/admin/notifications/${id}/send`),
+  schedule: (id, scheduledAt) => adminApi.post(`/admin/notifications/${id}/schedule`, { scheduledAt }),
+  getAnalytics: (period) => adminApi.get('/admin/notifications/analytics/overview', { params: { period } }),
+};
+
+// ─── Feedback Center ────────────────────────────────────────
+export const adminFeedbackService = {
+  getStats: () => adminApi.get('/admin/feedback/stats'),
+  list: (params) => adminApi.get('/admin/feedback', { params }),
+  getOne: (id) => adminApi.get(`/admin/feedback/${id}`),
+  update: (id, data) => adminApi.put(`/admin/feedback/${id}`, data),
+  delete: (id) => adminApi.delete(`/admin/feedback/${id}`),
+  reply: (id, message) => adminApi.post(`/admin/feedback/${id}/reply`, { message }),
+  getAnalytics: () => adminApi.get('/admin/feedback/analytics/overview'),
+  listRequests: () => adminApi.get('/admin/feedback/requests/all'),
+  createRequest: (data) => adminApi.post('/admin/feedback/requests', data),
+  updateRequest: (id, data) => adminApi.put(`/admin/feedback/requests/${id}`, data),
+  deleteRequest: (id) => adminApi.delete(`/admin/feedback/requests/${id}`),
+};
+
 export default adminApi;

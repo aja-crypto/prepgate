@@ -48,7 +48,7 @@ exports.sendEmail = async ({ to, subject, html, text }) => {
   const transporter = createTransporter();
 
   const info = await transporter.sendMail({
-    from: `"GATE 2027 Tracker" <${process.env.FROM_EMAIL || 'noreply@gate2027.in'}>`,
+    from: `"GateApex.in" <${process.env.FROM_EMAIL || 'noreply@gateapex.in'}>`,
     to,
     subject,
     text,

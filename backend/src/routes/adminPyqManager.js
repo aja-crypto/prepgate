@@ -231,7 +231,7 @@ router.post('/pyq/upload-pdf', adminProtect, requirePermission('mocks.manage'), 
 
     // Upload to Cloudinary for OCR access (if configured)
     if (isCloudinaryConfigured()) {
-      const result = await cloudinaryUpload(req.file.buffer, req.file.originalname, 'prepgate/ocr_temp');
+      const result = await cloudinaryUpload(req.file.buffer, req.file.originalname, 'GateApex/ocr_temp');
       pdfUrl = result.secure_url;
     }
 
@@ -331,3 +331,4 @@ router.post('/pyq/save-extracted', adminProtect, requirePermission('mocks.manage
 });
 
 module.exports = router;
+

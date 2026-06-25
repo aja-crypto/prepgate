@@ -1,4 +1,4 @@
-# PrepGate — Backup Checklist
+# GateApex — Backup Checklist
 
 **Date:** June 19, 2026
 **Last Verified:** June 19, 2026
@@ -51,10 +51,10 @@ Untracked files: CmsContent.js, GateVault.js, LandingContent.js, Topic.js,
                  AdminQuestionBankPage.jsx, AmbientBackground.jsx, ErrorBoundary.jsx,
                  FloatingAIOrb.jsx, AnnouncementBar.jsx, DashboardMotivation.jsx,
                  ExamTimeline.jsx, GateVaultAnimations.jsx, GateVaultWidget.jsx,
-                 MotivationCard.jsx, NotesHubWidget.jsx, PrepGateAIWidget.jsx,
+                 MotivationCard.jsx, NotesHubWidget.jsx, GateApexAIWidget.jsx,
                  RecommendationEngine.jsx, vercel.json, start_bg.ps1, + more
 
-ACTION REQUIRED: git add . && git commit -m "PrepGate backup before break" && git push origin main
+ACTION REQUIRED: git add . && git commit -m "GateApex backup before break" && git push origin main
 ```
 
 ---
@@ -66,7 +66,7 @@ ACTION REQUIRED: git add . && git commit -m "PrepGate backup before break" && gi
 Backend .env:
   NODE_ENV=development
   PORT=5000
-  MONGO_URI=mongodb://monkeydajay0911_db_user:prepgate0911@ac-pmpdzxm-shard-00-00.sa6kujd.mongodb.net:27017,ac-pmpdzxm-shard-00-01.sa6kujd.mongodb.net:27017,ac-pmpdzxm-shard-00-02.sa6kujd.mongodb.net:27017/gate2027?ssl=true&replicaSet=atlas-1nod4h-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Cluster0
+  MONGO_URI=mongodb://monkeydajay0911_db_user:GateApex0911@ac-pmpdzxm-shard-00-00.sa6kujd.mongodb.net:27017,ac-pmpdzxm-shard-00-01.sa6kujd.mongodb.net:27017,ac-pmpdzxm-shard-00-02.sa6kujd.mongodb.net:27017/gate2027?ssl=true&replicaSet=atlas-1nod4h-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Cluster0
   USE_MOCK_AUTH=false
   JWT_SECRET=51ee4a703252d6fb86f93e2445ab7dccdc0d10493e178545ff8920ba2f610c0fa5573dfbe01e66a56b251e36362d272e939bd6b4e5022392464163daef472960
   JWT_REFRESH_SECRET=c6bc7e95d2f5f047646aaa7e2ee3d08f8fb3a20978eab2342e69a3b5ac4d53c9b45a29a5118b07d50f9b388e7576a2d74c6f1c17e6b13d0e7e698d70a6e53e20
@@ -89,7 +89,7 @@ Backend .env:
 
 Frontend .env:
   VITE_API_URL=/api
-  VITE_APP_NAME=PrepGate
+  VITE_APP_NAME=GateApex
   Firebase vars: all commented out (not configured)
 ```
 
@@ -103,7 +103,7 @@ Frontend .env:
 - GET  /api/admin/stats      → 401 without credentials (expected)
 - POST /api/admin/auth/login with valid credentials → 200 + JWT token
 
-Admin credentials: admin@prepgate.app / Admin@123
+Admin credentials: admin@GateApex.app / Admin@123
 
 Routes confirmed working (all protected):
   /admin/login, /admin/dashboard, /admin/pdfs, /admin/mock-tests,
@@ -166,14 +166,14 @@ To test:
 ⚠️ PARTIALLY CONFIGURED
 
 Vercel (Frontend): vercel.json configured but not deployed
-Render (Backend): https://prepgate-api.onrender.com configured but not deployed
+Render (Backend): https://GateApex-api.onrender.com configured but not deployed
 
 Production proxy configured in vercel.json:
-  /api/(.*) → https://prepgate-api.onrender.com/api/$1
+  /api/(.*) → https://GateApex-api.onrender.com/api/$1
 
 MISSING for production:
-- FRONTEND_URL=https://prepgate.vercel.app (not set in backend .env)
-- CORS_ORIGIN=https://prepgate.vercel.app (not set)
+- FRONTEND_URL=https://GateApex.vercel.app (not set in backend .env)
+- CORS_ORIGIN=https://GateApex.vercel.app (not set)
 - Backend production CORS whitelist not configured
 - SMTP_PASS still placeholder (needs real SendGrid key)
 
@@ -193,14 +193,14 @@ ACTION REQUIRED: Push to GitHub → trigger Vercel/Render deploy
 - [ ] AI Mentor Working? ⚠️ PARTIALLY — heuristic active, needs real user test
 - [ ] Focus Mode Working? ✅ BUILT — needs visual testing
 - [ ] Deployment Status? ⚠️ PARTIALLY — proxy configured, not deployed
-- [ ] Secrets Backed Up? ✅ Saved to PrepGate-Secrets.txt (do NOT commit to GitHub)
-- [ ] Backend .env backed up? ✅ (in PrepGate-Secrets.txt)
+- [ ] Secrets Backed Up? ✅ Saved to GateApex-Secrets.txt (do NOT commit to GitHub)
+- [ ] Backend .env backed up? ✅ (in GateApex-Secrets.txt)
 
 ---
 
 ## 📁 Secrets File Location
 
-`PrepGate-Secrets.txt` — Stored locally. Do NOT upload to GitHub.
+`GateApex-Secrets.txt` — Stored locally. Do NOT upload to GitHub.
 
 Contains:
 - MongoDB Atlas login credentials
@@ -218,14 +218,14 @@ Contains:
 1. **Run immediately:**
    ```bash
    git add .
-   git commit -m "PrepGate backup before break"
+   git commit -m "GateApex backup before break"
    git push origin main
    ```
 
 2. **Update backend/.env for production** (when ready to deploy):
    ```
-   FRONTEND_URL=https://prepgate.vercel.app
-   CORS_ORIGIN=https://prepgate.vercel.app
+   FRONTEND_URL=https://GateApex.vercel.app
+   CORS_ORIGIN=https://GateApex.vercel.app
    ```
 
 3. **Get real SMTP credentials** (replace `your_sendgrid_api_key` placeholder)
@@ -242,3 +242,4 @@ Contains:
 ---
 
 *Last updated: June 19, 2026*
+

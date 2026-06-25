@@ -31,6 +31,36 @@ const resolveMediaUrl = (url) => {
   return url.startsWith('/') ? url : `/${url}`;
 };
 
+const DRAFT_KEY = 'gateapex_notes_draft';
+const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+function saveDraft(form, file) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+      form,
+      fileName: file?.name || null,
+      savedAt: Date.now(),
+    }));
+  } catch {}
+}
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (Date.now() - data.savedAt > DRAFT_TTL_MS) {
+      localStorage.removeItem(DRAFT_KEY);
+      return null;
+    }
+    return data;
+  } catch { return null; }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch {}
+}
+
 export default function NotesPage() {
   const { mongoAvailable } = useProgress();
   const [notes, setNotes] = useState([]);
@@ -78,6 +108,34 @@ export default function NotesPage() {
     fetchNotes();
   }, [selectedSubject, search]);
 
+  // Recover draft on mount
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft?.form && (draft.form.title || draft.form.content)) {
+      setForm(draft.form);
+      if (draft.fileName) {
+        toast((t) => (
+          <span>
+            Draft recovered — <strong>{draft.fileName}</strong> was not saved. Please re-select the file to finish uploading.
+          </span>
+        ), { duration: 6000, icon: '⚠️' });
+      } else {
+        toast.success('Draft recovered — continue where you left off');
+      }
+    }
+  }, []);
+
+  // Autosave form to localStorage on changes (debounced 1s)
+  const draftTimer = useRef(null);
+  useEffect(() => {
+    if (!showModal) return;
+    clearTimeout(draftTimer.current);
+    draftTimer.current = setTimeout(() => {
+      if (form.title || form.content) saveDraft(form, file);
+    }, 1000);
+    return () => clearTimeout(draftTimer.current);
+  }, [form, file, showModal]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title.trim()) return toast.error('Title is required');
@@ -103,6 +161,7 @@ export default function NotesPage() {
         setShowModal(false);
         setForm({ title: '', subject: SUBJECTS[0], content: '', type: 'text', isPinned: false });
         setFile(null);
+        clearDraft();
         fetchNotes();
       } else {
         throw new Error(res.data.message || 'Server error');
@@ -202,6 +261,23 @@ export default function NotesPage() {
 
       <NotesHub />
 
+      {/* Mobile subject filter — horizontal scroll */}
+      <div className="lg:hidden mb-4">
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+          {['All', ...SUBJECTS].map(s => (
+            <button
+              key={s}
+              onClick={() => setSelectedSubject(s)}
+              className={`text-xs px-3 py-1.5 rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${
+                selectedSubject === s ? 'bg-primary/15 border-primary/30 text-primary font-bold' : 'bg-bg-2 border-border text-text3 hover:border-white/10'
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Quick Access / Pinned Formulas */}
       {pinnedFormulas.length > 0 && (
         <section>
@@ -242,7 +318,7 @@ export default function NotesPage() {
                         alt={f.title} 
                         className="w-full h-full object-cover group-hover/img:scale-105 transition-transform"
                         onError={(e) => {
-                          e.target.src = 'https://placehold.co/600x400/1a1a1a/4f8dff?text=Image+Not+Found';
+                          e.target.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" fill="%231a1a2e"><rect width="600" height="400"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="%234f8dff" font-family="sans-serif" font-size="16">Image Not Available</text></svg>');
                         }}
                       />
                     )}
@@ -263,8 +339,8 @@ export default function NotesPage() {
 
       {/* Main Content Area */}
       <div className="grid lg:grid-cols-4 gap-8">
-        {/* Sidebar Filters */}
-        <div className="space-y-6">
+        {/* Sidebar Filters — hidden on mobile, visible lg+ */}
+        <div className="hidden lg:block space-y-6">
           <section>
             <h3 className="text-xs font-bold uppercase tracking-widest text-text3 mb-4">Subjects</h3>
             <div className="space-y-1">

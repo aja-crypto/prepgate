@@ -39,7 +39,7 @@ questionOfMonthSchema.index({ month: 1, year: 1, isActive: 1 });
 
 const motivationQuoteSchema = new mongoose.Schema({
   quote: { type: String, required: true },
-  author: { type: String, default: 'PrepGate Team' },
+  author: { type: String, default: 'GateApex Team' },
   category: { type: String, enum: ['motivation', 'study_tips', 'success_mindset', 'gate_success', 'daily'], default: 'daily' },
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });

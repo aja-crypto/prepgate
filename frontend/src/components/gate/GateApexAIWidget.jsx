@@ -13,7 +13,7 @@ const TABS = [
   { id: 'recommendations', label: 'AI Recommendations' },
 ];
 
-export default function PrepGateAIWidget() {
+export default function GateApexAIWidget() {
   const [tab, setTab] = useState('today');
   const { studyStats, topics, pyqs, gateFeatures } = useProgress();
   const [insights, setInsights] = useState(null);
@@ -23,7 +23,7 @@ export default function PrepGateAIWidget() {
       const data = r.data?.data;
       if (Array.isArray(data) && data.length) setInsights(data[0]);
       else if (data) setInsights(data);
-    }).catch(e => console.warn('[PrepGateAIWidget] insights fetch failed', e?.message));
+    }).catch(e => console.warn('[GateApexAIWidget] insights fetch failed', e?.message));
   }, []);
 
   const safeTopics = topics || [];
@@ -54,7 +54,7 @@ export default function PrepGateAIWidget() {
                 <p className="text-sm text-gray-400 italic">Great job! No weak topics detected.</p>
               )}
             </div>
-            <Link to="/prepgate-ai" className="inline-block text-xs font-medium" style={{ color: '#A78BFA' }}>
+            <Link to="/gateapex-ai" className="inline-block text-xs font-medium" style={{ color: '#A78BFA' }}>
               View full AI analysis →
             </Link>
           </div>
@@ -182,7 +182,7 @@ export default function PrepGateAIWidget() {
                 <p className="text-xs text-gray-300">{r}</p>
               </div>
             ))}
-            <Link to="/prepgate-ai" className="inline-block text-xs font-medium mt-2" style={{ color: '#34D399' }}>
+            <Link to="/gateapex-ai" className="inline-block text-xs font-medium mt-2" style={{ color: '#34D399' }}>
               Get personalized AI recommendations →
             </Link>
           </div>
@@ -202,7 +202,7 @@ export default function PrepGateAIWidget() {
           🤖
         </div>
         <div>
-          <h3 className="text-sm font-bold text-white">PrepGate AI</h3>
+          <h3 className="text-sm font-bold text-white">GateApex AI</h3>
           <p className="text-[10px] text-gray-400">Personalized GATE guidance</p>
         </div>
       </div>

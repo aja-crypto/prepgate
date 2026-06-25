@@ -44,7 +44,7 @@ const API = 'http://localhost:5000';
     await check('Landing page loads', async () => {
       await goto(FRONTEND);
       const title = await page.title();
-      if (!title.includes('PrepFlow')) throw new Error('Wrong title: ' + title);
+      if (!title.includes('GateApex')) throw new Error('Wrong title: ' + title);
     });
 
     await check('Register page loads', async () => {

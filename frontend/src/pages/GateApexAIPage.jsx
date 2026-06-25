@@ -6,7 +6,7 @@ import DailyCoachPage from './DailyCoachPage';
 import WeakTopicsPage from './WeakTopicsPage';
 import InsightsPage from './InsightsPage';
 import DoubtSolverPage from './DoubtSolverPage';
-import PrepGateAIIcon from '../components/ui/PrepGateAIIcon';
+import GateApexAIIcon from '../components/ui/GateApexAIIcon';
 
 const TABS = [
   { id: 'mentor', label: 'Ask AI' },
@@ -25,7 +25,7 @@ const HowItWorks = () => {
         className="w-full text-left mb-4 px-4 py-3 rounded-xl border border-purple-500/30 bg-purple-500/10"
       >
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-purple-400">🤖 How PrepGate AI Works</span>
+          <span className="text-sm font-semibold text-purple-400">🤖 How GateApex AI Works</span>
           <span className="text-gray-400 text-xs">{expanded ? 'Hide' : 'Show'}</span>
         </div>
       </button>
@@ -57,7 +57,7 @@ const HowItWorks = () => {
   );
 };
 
-export default function PrepGateAIPage() {
+export default function GateApexAIPage() {
   const [activeTab, setActiveTab] = useState('mentor');
 
   return (
@@ -68,14 +68,14 @@ export default function PrepGateAIPage() {
           <Link to="/dashboard" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">← Dashboard</Link>
           <div className="flex-1" />
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-medium" style={{ background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.2)', color: '#A855F7' }}>
-            🤖 PrepGate AI
+            🤖 GateApex AI
           </div>
         </div>
 
         <div className="mb-8 flex items-center gap-4">
-          <PrepGateAIIcon size={64} />
+          <GateApexAIIcon size={64} />
           <div>
-            <h1 className="text-3xl font-bold mb-2">PrepGate AI</h1>
+            <h1 className="text-3xl font-bold mb-2">GateApex AI</h1>
             <p className="text-gray-400 text-sm">Your GATE 2027 Co-Pilot</p>
           </div>
         </div>
@@ -109,3 +109,4 @@ export default function PrepGateAIPage() {
     </div>
   );
 }
+

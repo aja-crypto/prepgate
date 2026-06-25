@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { api } from '../../services/api';
 
 const QUOTES = [
-  { quote: 'Success in GATE Starts With Knowing What to Do Today.', author: 'PrepGate Team' },
-  { quote: 'Consistency beats intensity. Small daily progress becomes a big rank.', author: 'PrepGate Team' },
-  { quote: 'Every question you solve today is one step closer to your IIT dream.', author: 'PrepGate Team' },
-  { quote: 'The best time to start was yesterday. The next best time is now.', author: 'PrepGate Team' },
-  { quote: 'Don\'t count the days, make the days count.', author: 'PrepGate Team' },
+  { quote: 'Success in GATE Starts With Knowing What to Do Today.', author: 'GateApex Team' },
+  { quote: 'Consistency beats intensity. Small daily progress becomes a big rank.', author: 'GateApex Team' },
+  { quote: 'Every question you solve today is one step closer to your IIT dream.', author: 'GateApex Team' },
+  { quote: 'The best time to start was yesterday. The next best time is now.', author: 'GateApex Team' },
+  { quote: 'Don\'t count the days, make the days count.', author: 'GateApex Team' },
 ];
 
 export default function DashboardMotivation() {
@@ -72,7 +72,7 @@ export default function DashboardMotivation() {
           <p className="text-base sm:text-lg font-bold text-white leading-snug tracking-tight">
             &ldquo;{item.quote}&rdquo;
           </p>
-          <p className="text-xs text-gray-400 mt-2">— {item.author || 'PrepGate Team'}</p>
+          <p className="text-xs text-gray-400 mt-2">— {item.author || 'GateApex Team'}</p>
         </div>
         <div className="flex gap-1.5 shrink-0 self-center">
           {items.map((_, i) => (
@@ -86,3 +86,4 @@ export default function DashboardMotivation() {
     </div>
   );
 }
+

@@ -1,6 +1,8 @@
 // Single PYQ practice with attempt, solution, and stats
 import { useState, useEffect } from 'react';
+import { useProgress } from '../../context/ProgressContext';
 import { pyqService, mistakeService, getApiErrorMessage } from '../../services/api';
+import { createRevisionEntry, hasRevisionForTopic } from '../../utils/gateUtils';
 import toast from 'react-hot-toast';
 
 const DIFF_STYLE = {
@@ -18,6 +20,7 @@ const MISTAKE_CATEGORIES = [
 ];
 
 export default function QuestionPractice({ pyqId, onClose, onAttempt }) {
+  const { revisionSchedule, updateRevision } = useProgress();
   const [question, setQuestion] = useState(null);
   const [selected, setSelected] = useState('');
   const [result, setResult] = useState(null);
@@ -67,6 +70,15 @@ export default function QuestionPractice({ pyqId, onClose, onAttempt }) {
       });
       setResult(res.data.data);
       onAttempt?.(res.data.data);
+      if (res.data.data.status === 'incorrect') {
+        const subjectName = question.subject?.name || question.subject || 'Unknown';
+        const topicName = question.topic?.name || question.topic || '';
+        if (topicName && !hasRevisionForTopic(revisionSchedule, topicName)) {
+          const entry = createRevisionEntry({ topicName, subject: subjectName, source: 'pyq' });
+          updateRevision((prev) => [...prev, entry]);
+          toast(`📅 Revision scheduled for ${topicName}`, { icon: '📅', duration: 4000 });
+        }
+      }
     } catch (err) {
       toast.error(getApiErrorMessage(err, 'Submit failed'));
     } finally {

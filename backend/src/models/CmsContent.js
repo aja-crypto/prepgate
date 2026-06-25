@@ -47,7 +47,7 @@ challengeSchema.index({ isDeleted: 1 });
 // ─── 3. Daily Motivation ────────────────────────────────────
 const motivationQuoteSchema = new mongoose.Schema({
   quote: { type: String, required: true },
-  author: { type: String, default: 'PrepGate Team' },
+  author: { type: String, default: 'GateApex Team' },
   category: {
     type: String,
     enum: ['daily', 'study_tips', 'success_mindset', 'gate_success', 'motivation'],
@@ -130,3 +130,4 @@ const FeaturedContent = mongoose.models.FeaturedContent || mongoose.model('Featu
 const Announcement = mongoose.models.Announcement || mongoose.model('Announcement', announcementSchema);
 
 module.exports = { Insight, Challenge, MotivationQuote, CmsFeaturedResource, FeaturedContent, Announcement };
+

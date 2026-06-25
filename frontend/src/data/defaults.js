@@ -50,15 +50,15 @@ export const DEFAULT_MOCKS = [
 export const DEFAULT_SUBJECTS = [
   { name: 'Engineering Mathematics', icon: '🔢', progress: 75, color: '#4f8dff' },
   { name: 'Digital Logic', icon: '💻', progress: 80, color: '#7c5cfc' },
-  { name: 'Computer Organization', icon: '🖥', progress: 55, color: '#06d6a0' },
-  { name: 'Programming & DS', icon: '🐍', progress: 70, color: '#ff9f43' },
+  { name: 'Computer Organization & Architecture', icon: '🖥', progress: 55, color: '#06d6a0' },
+  { name: 'Programming & Data Structures', icon: '🐍', progress: 70, color: '#ff9f43' },
   { name: 'Algorithms', icon: '⚡', progress: 60, color: '#ff6b6b' },
   { name: 'Operating Systems', icon: '⚙️', progress: 65, color: '#a855f7' },
   { name: 'DBMS', icon: '🗄', progress: 72, color: '#06b6d4' },
   { name: 'Computer Networks', icon: '🌐', progress: 50, color: '#ffd166' },
   { name: 'Theory of Computation', icon: '🤖', progress: 45, color: '#f72585' },
   { name: 'Compiler Design', icon: '🔧', progress: 40, color: '#4cc9f0' },
-  { name: 'Aptitude', icon: '🧮', progress: 82, color: '#43aa8b' },
+  { name: 'General Aptitude', icon: '🧮', progress: 82, color: '#43aa8b' },
 ];
 
 function buildDefaultActivityLog() {

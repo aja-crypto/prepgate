@@ -52,6 +52,7 @@ function loadUsersFromDisk() {
 }
 
 loadUsersFromDisk();
+seedDemoUser();
 
 const formatUser = (user) => ({
   id: user._id,
@@ -116,19 +117,48 @@ const deleteUser = (id) => {
   }
 };
 
-const seedDemoUser = async () => {
+const PREHASHED_DEMO_PW = '$2a$12$HD8WplzisrDSCM4iXuQ.KOTOrB94IfmovV1Vg6UzsZD0pT.wpdVOG';
+
+function seedDemoUser() {
   const existing = usersByEmail.get('demo@gate2027.in');
   if (existing) {
     existing.isVerified = true;
     return;
   }
-  await createMockUser({
+  const _id = crypto.randomUUID();
+  const emptyData = getEmptyProgressData();
+  const user = {
+    _id,
     name: 'Demo Student',
     email: 'demo@gate2027.in',
-    password: 'password123',
+    password: PREHASHED_DEMO_PW,
     role: 'admin',
-  });
-  // Demo user ready silently
+    authProvider: 'local',
+    isVerified: true,
+    googleId: null,
+    streak: { current: 0, longest: 0, lastStudyDate: null },
+    preferences: { theme: 'dark', notifications: true },
+    targetYear: 2027,
+    studyGoalHours: 8,
+    progressBackup: { data: emptyData, updatedAt: new Date() },
+    fcmToken: null,
+    comparePassword: async (entered) => bcrypt.compare(entered, PREHASHED_DEMO_PW),
+    updateStreak() {
+      const today = new Date().setHours(0, 0, 0, 0);
+      const lastDate = this.streak.lastStudyDate
+        ? new Date(this.streak.lastStudyDate).setHours(0, 0, 0, 0)
+        : null;
+      if (lastDate === today) return;
+      const yesterday = today - 86400000;
+      this.streak.current = lastDate === yesterday ? this.streak.current + 1 : 1;
+      if (this.streak.current > this.streak.longest) this.streak.longest = this.streak.current;
+      this.streak.lastStudyDate = new Date();
+    },
+    save: async function () { saveUsersToDisk(); return this; },
+  };
+  usersByEmail.set(user.email, user);
+  usersById.set(_id, user);
+  saveUsersToDisk();
 };
 
 const findByEmail = (email) => usersByEmail.get(email.toLowerCase()) || null;

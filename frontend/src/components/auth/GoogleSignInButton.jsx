@@ -1,20 +1,23 @@
-// Google Sign-In button using Google Identity Services
-import React, { useEffect, useRef, useCallback } from 'react';
+// Google Sign-In — uses renderButton() for reliable flow
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-// Better check for placeholder or missing ID
-const IS_PLACEHOLDER = !CLIENT_ID || 
-                        CLIENT_ID === '' || 
-                        CLIENT_ID.includes('your_google_client_id') || 
-                        CLIENT_ID === 'undefined';
+const IS_PLACEHOLDER = !CLIENT_ID ||
+  CLIENT_ID === '' ||
+  CLIENT_ID.includes('your_google_client_id') ||
+  CLIENT_ID === 'undefined';
 
-export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_with' }) {
+export default function GoogleSignInButton({ onSuccess, onError }) {
   const { loginAsGuest } = useAuth();
   const navigate = useNavigate();
   const btnRef = useRef(null);
   const scriptLoaded = useRef(false);
+  const [loading, setLoading] = useState(false);
+  const [scriptReady, setScriptReady] = useState(false);
+  const [promptFailed, setPromptFailed] = useState(false);
 
   const handleDemoMode = () => {
     loginAsGuest();
@@ -22,6 +25,7 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
   };
 
   const handleCredential = useCallback(async (response) => {
+    setLoading(false);
     try {
       await onSuccess(response.credential);
     } catch (err) {
@@ -30,29 +34,19 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
   }, [onSuccess, onError]);
 
   useEffect(() => {
-    // If it's a placeholder, don't even try to load the script
     if (IS_PLACEHOLDER) return;
 
     let mounted = true;
 
     const initGoogleSignIn = () => {
-      if (!mounted || !window.google?.accounts?.id || !btnRef.current) return;
-      
+      if (!mounted || !window.google?.accounts?.id) return;
       try {
         window.google.accounts.id.initialize({
           client_id: CLIENT_ID,
           callback: handleCredential,
-          auto_select: false, // Prevent automatic prompts that cause removeChild errors
+          auto_select: false,
         });
-        
-        window.google.accounts.id.renderButton(btnRef.current, {
-          type: 'standard',
-          theme: 'filled_black',
-          size: 'large',
-          text,
-          width: 320,
-          shape: 'rectangular',
-        });
+        if (mounted) setScriptReady(true);
       } catch (err) {
         console.error('Google Sign-In initialization failed:', err);
       }
@@ -67,24 +61,58 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
       script.async = true;
       script.defer = true;
       script.onload = initGoogleSignIn;
+      script.onerror = () => {
+        console.error('Failed to load Google Sign-In script');
+        if (mounted) setPromptFailed(true);
+      };
       document.body.appendChild(script);
     }
 
-    return () => {
-      mounted = false;
-      // Note: We don't remove the script globally, but we stop the init flow
-    };
-  }, [handleCredential, text]);
+    return () => { mounted = false; };
+  }, [handleCredential]);
+
+  // Render the native Google button inside our container
+  useEffect(() => {
+    if (!scriptReady || !btnRef.current || !window.google?.accounts?.id) return;
+
+    try {
+      window.google.accounts.id.renderButton(btnRef.current, {
+        theme: 'outline',
+        size: 'large',
+        width: btnRef.current.offsetWidth || 380,
+        text: 'signin_with',
+        shape: 'rectangular',
+      });
+    } catch (err) {
+      console.error('Google renderButton failed:', err);
+      setPromptFailed(true);
+    }
+  }, [scriptReady]);
 
   if (IS_PLACEHOLDER) {
     return (
-      <button 
+      <button
         onClick={handleDemoMode}
         className="w-full group text-[11px] text-text3 text-center py-4 px-4 border border-dashed border-border rounded-xl bg-bg-3/30 hover:border-primary/50 hover:bg-primary/5 transition-all"
       >
         <p className="font-bold text-text mb-1 group-hover:text-primary transition-colors italic">Google Sign-In Disabled</p>
         <p className="mb-2 opacity-70">Set VITE_GOOGLE_CLIENT_ID in .env</p>
-        <div className="text-primary font-bold uppercase tracking-widest text-[10px] bg-primary/10 py-1.5 rounded-lg border border-primary/20">
+        <div className="text-primary font-bold uppercase tracking-widest text-[10px] bg-primary/10 py-1.5 rounded-xl border border-primary/20">
+          Enter Demo Mode instead →
+        </div>
+      </button>
+    );
+  }
+
+  if (promptFailed) {
+    return (
+      <button
+        onClick={handleDemoMode}
+        className="w-full group text-[11px] text-text3 text-center py-4 px-4 border border-dashed border-border rounded-xl bg-bg-3/30 hover:border-primary/50 hover:bg-primary/5 transition-all"
+      >
+        <p className="font-bold text-text mb-1 group-hover:text-primary transition-colors italic">Google Sign-In Unavailable</p>
+        <p className="mb-2 opacity-70">Could not load Google services. Check your connection.</p>
+        <div className="text-primary font-bold uppercase tracking-widest text-[10px] bg-primary/10 py-1.5 rounded-xl border border-primary/20">
           Enter Demo Mode instead →
         </div>
       </button>
@@ -92,8 +120,19 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
   }
 
   return (
-    <div className="flex justify-center w-full min-h-[44px]">
-      <div ref={btnRef} />
+    <div className="w-full relative">
+      {/* Native Google button rendered here */}
+      <div
+        ref={btnRef}
+        className="w-full [&>div]:w-full [&>div>div]:w-full"
+      />
+      {/* Loading overlay while script loads */}
+      {!scriptReady && (
+        <div className="absolute inset-0 flex items-center justify-center py-3.5 px-4 rounded-xl border border-border bg-surface/60 backdrop-blur-md">
+          <div className="w-5 h-5 border-2 border-white/20 border-t-primary rounded-full animate-spin mr-3" />
+          <span className="text-sm text-text3">Loading Google Sign-In...</span>
+        </div>
+      )}
     </div>
   );
 }

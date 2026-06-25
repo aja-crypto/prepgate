@@ -177,10 +177,10 @@ const icons = {
     </svg>
   ),
   logo: (
-    <img src="/images/logo.png" alt="PrepGate" className="w-8 h-8 object-contain" />
+    <img src="/images/logo.png" alt="GateApex" className="w-8 h-8 object-contain" />
   ),
   logoFull: (
-    <img src="/images/logo 2.png" alt="PrepGate" className="h-8 object-contain" />
+    <img src="/images/logo.png" alt="GateApex" className="h-8 object-contain" />
   ),
   feedback: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="w-[18px] h-[18px]">
@@ -294,3 +294,4 @@ export default function Icon({ name, className = '' }) {
 }
 
 export { icons };
+

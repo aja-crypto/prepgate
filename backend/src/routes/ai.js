@@ -46,7 +46,7 @@ async function callAiApi(messages, options = {}) {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
-          ...(isOpenRouter ? { 'HTTP-Referer': 'https://prepgate.app', 'X-Title': 'PrepGate' } : {}),
+          ...(isOpenRouter ? { 'HTTP-Referer': 'https://GateApex.app', 'X-Title': 'GateApex' } : {}),
         },
         signal: controller.signal,
         body: JSON.stringify({
@@ -659,7 +659,7 @@ function localCoachResponse(message, context) {
     text = `**GATE Score → Rank estimates (general category):**\n\n🏆 **AIR < 100:** 75+ marks (IIT Bombay/Delhi CSE)\n🥇 **AIR < 500:** 65+ marks (Top IITs)\n🥈 **AIR < 2000:** 55+ marks (IITs, NITs)\n🥉 **AIR < 5000:** 45+ marks (Good NITs, IIITs)\n\n**Your current path:** ${progress > 70 ? 'You\'re on track for a strong rank!' : progress > 40 ? 'Good progress — keep building!' : 'Early stage — focus on learning, not ranks yet!'}\n\nYou can track your predicted rank in the Analytics page!`;
     suggestions = ["Predict my AIR", "Show college cutoffs", "What score for IIT Madras?"];
   } else if (bestGroup === 'RESOURCE') {
-    text = `**Best free resources for GATE CSE:**\n\n📺 **YouTube:** NPTEL (IIT professors), Gate Smashers, Knowledge Gate\n📘 **Books:** CLRS (Algorithms), Tanenbaum (OS/CN), Korth (DBMS), Ullman (TOC)\n🧠 **Practice:** PrepGate PYQ browser + Mock tests\n📝 **Notes:** Create your own short notes (10-15 pages per subject)\n\n💡 **Rule:** Stick to **1-2 resources per subject**. Hoarding resources wastes time!`;
+    text = `**Best free resources for GATE CSE:**\n\n📺 **YouTube:** NPTEL (IIT professors), Gate Smashers, Knowledge Gate\n📘 **Books:** CLRS (Algorithms), Tanenbaum (OS/CN), Korth (DBMS), Ullman (TOC)\n🧠 **Practice:** GateApex PYQ browser + Mock tests\n📝 **Notes:** Create your own short notes (10-15 pages per subject)\n\n💡 **Rule:** Stick to **1-2 resources per subject**. Hoarding resources wastes time!`;
     suggestions = ["Best YouTube channels", "Recommended textbooks", "Free mock test sources"];
   } else if (bestGroup === 'MATH') {
     text = `**Mathematics for GATE CSE — Priority order:**\n\n1. **Discrete Mathematics** — Graph Theory, Combinatorics, Set Theory (highest weightage)\n2. **Linear Algebra** — Matrices, Vector Spaces, Eigenvalues\n3. **Probability & Statistics** — Random Variables, Distributions\n4. **Calculus** — Limits, Continuity, Differentiation\n\n📈 **Strategy:** Solve **5 math problems daily** — consistency matters more than intensity. Most math questions in GATE are moderate difficulty but need practice.`;
@@ -713,7 +713,7 @@ async function getAiCoachResponse(message, context, user) {
       console.log('[AI Coach] API key found, calling callAiApi...');
       lastAiError = null;
       
-      const systemPrompt = `You are PrepGate AI Mentor.
+      const systemPrompt = `You are GateApex AI Mentor.
 
 You help GATE CSE aspirants.
 
@@ -975,3 +975,4 @@ router.get('/doubt-subjects', protect, (req, res, next) => {
 });
 
 module.exports = router;
+

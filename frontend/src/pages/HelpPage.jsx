@@ -4,8 +4,8 @@ const FAQ = [
   { q: 'How do I track my GATE preparation?', a: 'Go to Dashboard → Topics to mark syllabus topics as completed. Your progress updates automatically.' },
   { q: 'How do I practice previous year questions?', a: 'Navigate to PYQ Practice → select subject/topic → filter by year/difficulty → start solving.' },
   { q: 'How do mock tests work?', a: 'Go to Mock Tests → pick a test → start with timer → submit → review detailed analysis.' },
-  { q: 'Can I use PrepGate on my phone?', a: 'Yes. PrepGate is fully responsive and works on any device with a browser.' },
-  { q: 'How does the AI Mentor work?', a: 'Navigate to PrepGate AI → ask questions about GATE topics, get personalized study advice.' },
+  { q: 'Can I use GateApex on my phone?', a: 'Yes. GateApex is fully responsive and works on any device with a browser.' },
+  { q: 'How does the AI Mentor work?', a: 'Navigate to GateApex AI → ask questions about GATE topics, get personalized study advice.' },
   { q: 'How do I report a bug or request a feature?', a: 'Go to Profile dropdown → Feedback → describe your issue or suggestion.' },
 ];
 
@@ -14,7 +14,7 @@ export default function HelpPage() {
     <div className="max-w-3xl mx-auto space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-text">Help & Support</h1>
-        <p className="text-text3 mt-1">Everything you need to know about using PrepGate.</p>
+        <p className="text-text3 mt-1">Everything you need to know about using GateApex.</p>
       </div>
 
       <div className="space-y-4">
@@ -31,7 +31,7 @@ export default function HelpPage() {
         <h2 className="text-lg font-semibold text-text">Contact Support</h2>
         <p className="text-sm text-text2">Still need help? Reach out to us:</p>
         <div className="flex flex-col sm:flex-row gap-3">
-          <a href="mailto:support@prepgate.dev" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm font-semibold hover:bg-primary/20 transition-all">
+          <a href="mailto:support@GateApex.dev" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm font-semibold hover:bg-primary/20 transition-all">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
             Email Support
           </a>
@@ -44,3 +44,4 @@ export default function HelpPage() {
     </div>
   );
 }
+

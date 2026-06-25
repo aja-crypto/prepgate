@@ -62,7 +62,7 @@ export default function AICoachPage() {
     const timer = setTimeout(async () => {
       const ctx = buildContext(user);
       const result = await aiService.askCoach("hello", ctx).catch(() => null);
-      const text = result?.data?.data?.text || `Hey! I'm your PrepGate AI Mentor. Ask me anything about your GATE prep — study plans, weak topics, PYQs, revision, or motivation.`;
+      const text = result?.data?.data?.text || `Hey! I'm your GateApex AI Mentor. Ask me anything about your GATE prep — study plans, weak topics, PYQs, revision, or motivation.`;
       setMessages([{ role: 'assistant', text }]);
     }, 400);
     return () => clearTimeout(timer);
@@ -107,7 +107,7 @@ export default function AICoachPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary mb-1">PrepGate AI</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary mb-1">GateApex AI</p>
           <h1 className="text-2xl sm:text-3xl font-bold text-text tracking-tight">AI Mentor</h1>
           <p className="text-sm text-text3 mt-1">Your personal GATE assistant — chat, analyze, plan, motivate</p>
         </div>
@@ -167,7 +167,7 @@ export default function AICoachPage() {
                       {msg.role === 'user' ? (
                         <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-primary"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/></svg>
                       ) : (
-                        <img src="/images/logo.png" alt="" className="w-5 h-5 object-contain" />
+                        <Icon name="logo" className="w-5 h-5" />
                       )}
                     </div>
                     <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user' ? 'bg-primary/10 border border-primary/20 rounded-tr-none' : 'bg-white/[0.03] border border-white/[0.06] rounded-tl-none'}`}>
@@ -346,3 +346,4 @@ export default function AICoachPage() {
     </div>
   );
 }
+

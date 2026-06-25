@@ -29,10 +29,6 @@ function PwaSetup() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(silentCatch('Service worker registration'));
     }
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      window.deferredPrompt = e;
-    });
     if (isFirebaseConfigured()) {
       initFirebasePush().catch(silentCatch('Firebase push init'));
     }

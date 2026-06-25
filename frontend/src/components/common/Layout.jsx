@@ -9,10 +9,7 @@ import GlobalSearch, { useGlobalSearchShortcut } from './GlobalSearch';
 import Icon from '../ui/Icon';
 import OnboardingFlow from '../onboarding/OnboardingFlow';
 import VirtualCalculator from './VirtualCalculator';
-import FocusWidget from './FocusWidget';
 import NotificationBell from './NotificationBell';
-import FloatingAIAssistant from './FloatingAIAssistant';
-import AmbientBackground from './AmbientBackground';
 
 function BackToTop() {
   const [show, setShow] = useState(false);
@@ -42,6 +39,7 @@ const NAV = [
   { label: 'Subjects', icon: 'subjects', to: '/subjects' },
   { label: 'Topics', icon: 'topics', to: '/topics' },
   { label: 'Planner', icon: 'planner', to: '/planner' },
+  { label: 'Study Schedule', icon: 'planner', to: '/study-schedule' },
   { label: 'Notes Hub', icon: 'notes', to: '/study-hub' },
   { label: 'Focus Sessions', icon: 'productivity', to: '/productivity' },
   { section: 'PRACTICE' },
@@ -49,6 +47,7 @@ const NAV = [
   { label: 'Mock Tests', icon: 'mocks', to: '/mocks' },
   { label: 'Mistake Notebook', icon: 'target', to: '/mistakes' },
   { label: 'Gate Vault', icon: 'folder', to: '/gate-vault' },
+  { label: 'GATE Papers', icon: 'pyq', to: '/gate-papers' },
   { section: 'ANALYTICS' },
   { label: 'Progress Analytics', icon: 'analytics', to: '/analytics' },
   { label: 'AIR Predictor', icon: 'analytics', to: '/air-predictor' },
@@ -88,7 +87,7 @@ export default function Layout() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [navigate]);
-  const [aiPanelOpen, setAiPanelOpen] = useState(false);
+
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
@@ -220,7 +219,7 @@ export default function Layout() {
         </div>
       </aside>
 
-      <main className={`flex-1 overflow-y-auto flex flex-col min-w-0 relative z-10 transition-all duration-300 ${aiPanelOpen ? 'ai-panel-open' : ''}`}>
+      <main className="flex-1 overflow-y-auto flex flex-col min-w-0 relative z-10 transition-all duration-300">
         <header className="sticky top-0 z-30 flex items-center gap-2 md:gap-4 px-3 md:px-6 py-3 md:py-4 glass-header">
           {/* Mobile sidebar toggle */}
           <button
@@ -423,8 +422,6 @@ export default function Layout() {
         </div>
       </main>
       <BackToTop />
-      <FocusWidget />
-      <FloatingAIAssistant open={aiPanelOpen} setOpen={setAiPanelOpen} />
     </div>
   );
 }
