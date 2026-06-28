@@ -7,7 +7,7 @@ const QUOTES = [
   { quote: 'Don\'t count the days, make the days count.', author: 'GateNexa Team' },
   { quote: 'Hard work beats talent. When talent doesn\'t work hard, hard work wins.', author: 'Unknown' },
   { quote: 'Every question you solve today is one step closer to your IIT dream.', author: 'GateNexa Team' },
-];n
+];
 export default function MotivationCard() {
   const [quote, setQuote] = useState(QUOTES[0]);
   const [visible, setVisible] = useState(true);
@@ -39,7 +39,7 @@ export default function MotivationCard() {
   return (
     <div className="hidden md:flex items-center gap-3 px-5 py-3 rounded-full bg-gradient-to-r from-rose-500/10 to-orange-500/10 border border-rose-500/20 backdrop-blur-md shadow-lg animate-fade-in" style={{ backdropFilter: 'blur(12px)' }}>
       <span className="text-xl">🔥</span>
-      <div classB="flex-1 min-w-0">
+      <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-white truncate" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>{quote.quote}</p>
         <p className="text-xs text-gray-300 truncate">— {quote.author}</p>
       </div>

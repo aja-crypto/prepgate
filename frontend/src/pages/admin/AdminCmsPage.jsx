@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlassCard from '../../components/ui/GlassCard';
 import Icon from '../../components/ui/Icon';
-import { cmsService } from '../../services/adminApi';
+import adminApi, { cmsService } from '../../services/adminApi';
 import toast from 'react-hot-toast';
 
 const PAGE_SIZE = 15;

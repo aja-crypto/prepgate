@@ -315,7 +315,6 @@ app.use('/api/notifications', require('./src/routes/notifications'));
 app.use('/api/study-plan', require('./src/routes/studyPlan'));
 app.use('/api/protected', require('./src/routes/protectedDocs'));
 app.use('/api/landing', require('./src/routes/landing'));
-app.use('/api/admin/cms', require('./src/routes/adminCms'));
 app.use('/api/cms', require('./src/routes/cms'));
 app.use('/api/gate-papers', require('./src/routes/gatePapers'));
 
