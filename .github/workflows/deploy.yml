@@ -40,14 +40,14 @@ jobs:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
       
-       - name: Deploy to Vercel
-         run: |
-           npm i -g vercel @vercel/ncc
-           cd frontend
-           npx vercel --prod --token $VERCEL_TOKEN --yes
-         env:
-           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-           NODE_ENV: 'production'
+      - name: Deploy to Vercel
+        run: |
+          npm i -g vercel
+          cd frontend
+          npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes --scope purruajaykumar-1251s-projects --project gatenexa
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          NODE_ENV: 'production'
       
       - name: Verify deployment
         run: |

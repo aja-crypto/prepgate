@@ -483,7 +483,7 @@ export default function DashboardPage() {
 
       {/* Quick Actions Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <Link to="/focus" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] transition-all duration-200 group">
+        <Link to="/focus" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-200" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(124,58,237,0.15))' }}>
             🎯
           </div>
@@ -492,7 +492,7 @@ export default function DashboardPage() {
             <div className="text-[10px] text-text3">Start focus session</div>
           </div>
         </Link>
-        <Link to="/mocks" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] transition-all duration-200 group">
+        <Link to="/mocks" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-200" style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.15))' }}>
             📝
           </div>
@@ -501,7 +501,7 @@ export default function DashboardPage() {
             <div className="text-[10px] text-text3">Practice test</div>
           </div>
         </Link>
-        <Link to="/pyq" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] transition-all duration-200 group">
+        <Link to="/pyq" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-200" style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.2), rgba(22,163,74,0.15))' }}>
             📄
           </div>
@@ -510,7 +510,7 @@ export default function DashboardPage() {
             <div className="text-[10px] text-text3">Previous year questions</div>
           </div>
         </Link>
-        <Link to="/planner" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] transition-all duration-200 group">
+        <Link to="/planner" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-200" style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.2), rgba(6,182,212,0.15))' }}>
             📅
           </div>

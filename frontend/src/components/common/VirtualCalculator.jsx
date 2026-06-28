@@ -231,12 +231,13 @@ export default function VirtualCalculator({ isOpen, onClose }) {
   };
 
   // Explicit inline styles to override any conflicting CSS
+  const isMobileCalc = typeof window !== 'undefined' && window.innerWidth < 640;
   const btnBaseStyle = {
-    height: '36px',
+    height: isMobileCalc ? '44px' : '36px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '11px',
+    fontSize: isMobileCalc ? '13px' : '11px',
     fontWeight: '700',
     borderRadius: '4px',
     border: '1px solid #999999',
@@ -244,6 +245,7 @@ export default function VirtualCalculator({ isOpen, onClose }) {
     cursor: 'pointer',
     transition: 'all 0.1s',
     userSelect: 'none',
+    minWidth: isMobileCalc ? '32px' : 'auto',
   };
 
   const standardBtnStyle = { ...btnBaseStyle, backgroundColor: '#eeeeee', color: '#333333' };
@@ -276,7 +278,7 @@ export default function VirtualCalculator({ isOpen, onClose }) {
       
       <div 
         ref={calculatorRef}
-        className="w-full max-w-[520px] sm:w-[520px] bg-[#cccccc] border-2 border-[#666666] shadow-2xl rounded-sm flex flex-col overflow-hidden"
+        className="w-full max-w-[95vw] sm:max-w-[520px] bg-[#cccccc] border-2 border-[#666666] shadow-2xl rounded-sm flex flex-col overflow-hidden"
         style={{ 
           pointerEvents: 'auto', 
           position: 'relative',
@@ -297,7 +299,7 @@ export default function VirtualCalculator({ isOpen, onClose }) {
                 e.stopPropagation();
                 onClose();
               }} 
-              className="hover:bg-red-500 p-1 rounded-sm transition-colors"
+              className="hover:bg-red-500 p-1.5 rounded-sm transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
             >
               <Icon name="close" className="w-4 h-4" />
             </button>

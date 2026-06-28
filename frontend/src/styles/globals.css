@@ -53,6 +53,12 @@
 
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    overscroll-behavior: contain;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
@@ -63,7 +69,7 @@
       radial-gradient(ellipse 70% 50% at 110% 10%, var(--color-mesh-2), transparent),
       radial-gradient(ellipse 60% 40% at -10% 90%, var(--color-mesh-3), transparent),
       radial-gradient(ellipse 80% 40% at 50% 110%, rgba(139,92,246,0.04), transparent);
-    background-attachment: fixed;
+    background-attachment: scroll;
     background-size: 100% 100%;
     animation: bg-breathe 12s ease-in-out infinite alternate;
     overflow-x: hidden;
@@ -75,12 +81,23 @@
       -webkit-tap-highlight-color: transparent;
       overflow-x: hidden;
       width: 100%;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
     }
     input, textarea, select { font-size: 16px !important; }
     * { max-width: 100vw; }
     img, svg, canvas, video { max-width: 100%; height: auto; }
     table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+
+    /* Prevent double-tap zoom on interactive elements */
+    button, a, input, select, textarea, [role="button"], [tabindex] {
+      touch-action: manipulation;
+    }
+
+    /* Momentum scrolling for iOS */
+    .custom-scrollbar, .scrollbar-thin, [class*="overflow-y"] {
+      -webkit-overflow-scrolling: touch;
+    }
   }
 
   /* Reduced motion support */
@@ -126,6 +143,18 @@
     
     .btn-ghost:hover {
       transform: none !important;
+    }
+  }
+
+  /* Disable hover transforms on touch devices */
+  @media (hover: none) and (pointer: coarse) {
+    .glass-card:hover,
+    .widget-card:hover,
+    .btn-primary:hover,
+    .btn-ghost:hover,
+    .glow-border:hover::before {
+      transform: none !important;
+      box-shadow: inherit !important;
     }
   }
 

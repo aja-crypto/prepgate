@@ -46,12 +46,12 @@ export default function FocusWidget() {
     return (
       <div className="fixed right-5 z-[100000] flex flex-col items-end gap-2" style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}>
         {showDurationPicker && (
-          <div ref={pickerRef} className="bg-surface backdrop-blur-xl border border-border rounded-xl p-2 shadow-2xl flex gap-1">
+          <div ref={pickerRef} className="bg-surface backdrop-blur-xl border border-border rounded-xl p-2 shadow-2xl flex gap-1 overflow-x-auto max-w-[calc(100vw-2rem)] sm:max-w-none">
             {DURATIONS.map((d) => (
               <button
                 key={d.value}
                 onClick={() => { selectDuration(d.value); setShowDurationPicker(false); startSession(d.value, null); }}
-                className="text-[11px] px-2.5 py-1.5 rounded-lg border border-border text-text2 hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all"
+                className="text-[11px] px-2.5 py-2 min-h-[36px] rounded-lg border border-border text-text2 hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all whitespace-nowrap"
               >
                 {d.label}
               </button>
@@ -193,7 +193,7 @@ export default function FocusWidget() {
               )}
               <button
                 onClick={stopSession}
-                className="flex items-center gap-1.5 bg-danger/10 border border-danger/20 text-danger text-xs font-semibold px-4 py-2 rounded-lg hover:bg-danger/15 transition-all"
+                className="flex items-center gap-1.5 bg-danger/10 border border-danger/20 text-danger text-xs font-semibold px-4 py-2.5 min-h-[44px] rounded-lg hover:bg-danger/15 transition-all"
               >
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" /></svg>
                 Stop

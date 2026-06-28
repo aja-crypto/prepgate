@@ -438,7 +438,7 @@ export default function MockTestTakingPage() {
                   <button
                     type="button"
                     onClick={toggleMarkForReview}
-                    className={`text-xs px-4 py-2 rounded-lg border transition-all ${
+                    className={`text-xs px-4 py-2.5 min-h-[44px] rounded-lg border transition-all ${
                       markedForReview.has(qId(currentQuestion, currentIndex))
                         ? 'bg-purple-500/15 border-purple-500/30 text-purple-400'
                         : 'bg-bg-2 border-border text-text3 hover:border-white/20'
@@ -452,7 +452,7 @@ export default function MockTestTakingPage() {
                     type="button"
                     onClick={clearResponse}
                     disabled={answers[qId(currentQuestion, currentIndex)] === undefined}
-                    className="text-xs px-4 py-2 rounded-lg border bg-bg-2 border-border text-text3 hover:border-white/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="text-xs px-4 py-2.5 min-h-[44px] rounded-lg border bg-bg-2 border-border text-text3 hover:border-white/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     Clear Response
                   </button>
@@ -460,7 +460,7 @@ export default function MockTestTakingPage() {
                     type="button"
                     onClick={() => goToQuestion(currentIndex + 1)}
                     disabled={currentIndex >= totalQuestions - 1}
-                    className="text-xs px-5 py-2 rounded-lg border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all disabled:opacity-50 ml-auto"
+                    className="text-xs px-5 py-2.5 min-h-[44px] rounded-lg border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all disabled:opacity-50 ml-auto"
                   >
                     Save & Next
                   </button>
@@ -474,7 +474,7 @@ export default function MockTestTakingPage() {
               type="button"
               onClick={() => goToQuestion(currentIndex - 1)}
               disabled={currentIndex === 0}
-              className="text-xs px-4 py-2.5 rounded-lg border bg-bg-2 border-border text-text3 hover:border-white/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              className="text-xs px-4 py-2.5 min-h-[44px] rounded-lg border bg-bg-2 border-border text-text3 hover:border-white/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Previous
             </button>
@@ -485,7 +485,7 @@ export default function MockTestTakingPage() {
               type="button"
               onClick={() => goToQuestion(currentIndex + 1)}
               disabled={currentIndex >= totalQuestions - 1}
-              className="text-xs px-4 py-2.5 rounded-lg border bg-bg-2 border-border text-text3 hover:border-white/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              className="text-xs px-4 py-2.5 min-h-[44px] rounded-lg border bg-bg-2 border-border text-text3 hover:border-white/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Next
             </button>
@@ -577,7 +577,7 @@ export default function MockTestTakingPage() {
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="fixed right-3 top-1/2 -translate-y-1/2 z-50 w-8 h-12 rounded-l-lg bg-surface border border-border border-r-0 flex items-center justify-center text-text3 hover:text-text transition-colors shadow-lg lg:hidden"
+            className="fixed right-3 top-1/2 -translate-y-1/2 z-50 w-10 h-14 rounded-l-lg bg-surface border border-border border-r-0 flex items-center justify-center text-text3 hover:text-text transition-colors shadow-lg lg:hidden"
           >
             <Icon name="chevron-right" className="w-4 h-4" />
           </button>

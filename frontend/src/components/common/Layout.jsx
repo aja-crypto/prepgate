@@ -76,6 +76,8 @@ export default function Layout() {
   useEffect(() => {
     const handler = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+      // Skip keyboard shortcuts on mobile devices
+      if (window.innerWidth < 768 || ('ontouchstart' in window && !window.matchMedia('(pointer: fine)').matches)) return;
       const key = e.key.toLowerCase();
       if (key === 'f' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); navigate('/productivity'); }
       else if (key === 'n' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); navigate('/study-hub'); }
@@ -209,7 +211,7 @@ export default function Layout() {
             <button
               onClick={() => { logout(); navigate('/login'); }}
               title="Logout"
-              className="text-text3 hover:text-danger transition-colors p-2.5"
+              className="text-text3 hover:text-danger transition-colors p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                 <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
@@ -224,7 +226,7 @@ export default function Layout() {
           {/* Mobile sidebar toggle */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="md:hidden flex items-center justify-center w-9 h-9 rounded-xl text-text2 hover:text-text hover:bg-white/5 transition-all"
+            className="md:hidden flex items-center justify-center w-11 h-11 rounded-xl text-text2 hover:text-text hover:bg-white/5 transition-all"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-5 h-5">
               <path d="M3 12h18M3 6h18M3 18h18" strokeLinecap="round" />

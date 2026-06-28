@@ -145,17 +145,17 @@ export default function NotificationBell() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="fixed right-4 top-[72px] w-[340px] max-h-[480px] rounded-2xl overflow-hidden z-50 shadow-2xl border border-white/[0.08] backdrop-blur-2xl animate-card-entrance" style={{ background: 'rgba(15,17,25,0.95)' }}>
+          <div className="fixed right-4 top-[72px] max-h-[480px] rounded-2xl overflow-hidden z-50 shadow-2xl border border-white/[0.08] backdrop-blur-2xl animate-card-entrance" style={{ background: 'rgba(15,17,25,0.95)', width: 'min(340px, calc(100vw - 32px))' }}>
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
             <h3 className="text-sm font-bold text-white">Notifications</h3>
             <div className="flex items-center gap-2">
               {unread > 0 && (
-                <button onClick={markAllRead} className="text-[9px] px-2 py-1 rounded-lg font-medium transition-colors" style={{ background: 'rgba(124,58,237,0.1)', color: '#A78BFA' }}>
+                <button onClick={markAllRead} className="text-[11px] px-3 py-1.5 rounded-lg font-medium transition-colors min-h-[32px]" style={{ background: 'rgba(124,58,237,0.1)', color: '#A78BFA' }}>
                   Mark all read
                 </button>
               )}
-              <button onClick={fetchNotifications} className="text-gray-500 hover:text-white transition-colors p-2" title="Refresh">
-                <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" /></svg>
+              <button onClick={fetchNotifications} className="text-gray-500 hover:text-white transition-colors p-2 min-w-[36px] min-h-[36px] flex items-center justify-center" title="Refresh">
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" /></svg>
               </button>
             </div>
           </div>
@@ -180,22 +180,22 @@ export default function NotificationBell() {
                       <span className="text-base mt-0.5">{n.icon}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-0.5">
-                          <span className="text-[10px] font-semibold text-white truncate">{n.title}</span>
-                          <span className="text-[8px] text-gray-500 flex-shrink-0">{timeAgo(n.createdAt)}</span>
+                          <span className="text-xs font-semibold text-white truncate">{n.title}</span>
+                          <span className="text-[10px] text-gray-500 flex-shrink-0">{timeAgo(n.createdAt)}</span>
                         </div>
-                        <p className="text-[10px] text-gray-400 leading-relaxed">{n.message}</p>
+                        <p className="text-[11px] text-gray-400 leading-relaxed">{n.message}</p>
                         <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-[7px] px-1 py-0.5 rounded-full capitalize" style={{ background: style.bg, color: style.color, border: `1px solid ${style.border}` }}>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full capitalize" style={{ background: style.bg, color: style.color, border: `1px solid ${style.border}` }}>
                             {n.type.replace('_', ' ')}
                           </span>
                           {n.actionUrl && (
-                            <Link to={n.actionUrl} className="text-[8px] font-medium" style={{ color: style.color }} onClick={(e) => e.stopPropagation()}>
+                            <Link to={n.actionUrl} className="text-[10px] font-medium" style={{ color: style.color }} onClick={(e) => e.stopPropagation()}>
                               View →
                             </Link>
                           )}
                           <button
                             onClick={(e) => { e.stopPropagation(); deleteNote(n.id); }}
-                            className="text-[8px] text-gray-600 hover:text-gray-400 ml-auto transition-colors"
+                            className="text-[10px] text-gray-600 hover:text-gray-400 ml-auto transition-colors p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center"
                           >
                             ✕
                           </button>

@@ -330,7 +330,7 @@ const ctx = {
         </div>
 
         {/* Chat Content */}
-        <div className="overflow-y-auto p-3 space-y-3" style={{ maxHeight: '400px' }}>
+        <div className="overflow-y-auto p-3 space-y-3" style={{ maxHeight: 'min(400px, 70vh)' }}>
           {messages.length === 0 ? (
             <div className="text-center py-4">
               <GateNexaAIIcon size={48} className="mx-auto mb-3 opacity-60" />
@@ -506,13 +506,25 @@ const ctx = {
           .chat-panel { width: clamp(340px, 38vw, 420px); }
         }
         @media (max-width: 768px) {
-          .chat-panel { width: 100%; right: 0; left: 0; bottom: 0; max-height: 80vh; border-radius: 20px 20px 0 0; }
+          .chat-panel {
+            width: 100%;
+            right: 0;
+            left: 0;
+            bottom: 0;
+            max-height: 85vh;
+            border-radius: 20px 20px 0 0;
+          }
+          .ai-tooltip {
+            right: auto;
+            left: calc(100% + 14px);
+          }
         }
         @media (max-width: 639px) {
-          .ai-assistant { width: 60px; height: 60px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); right: 20px; }
-          .ai-tooltip { right: calc(100% + 10px); padding: 8px 12px; }
-          .ai-tooltip-title { font-size: 12px; }
-          .ai-tooltip-sub { font-size: 10px; }
+          .ai-assistant { width: 56px; height: 56px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); right: 16px; }
+          .ai-tooltip { display: none; }
+        }
+        @media (max-width: 380px) {
+          .ai-assistant { width: 48px; height: 48px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); right: 12px; }
         }
       `}</style>
     </>
