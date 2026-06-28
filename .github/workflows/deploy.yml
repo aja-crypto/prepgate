@@ -40,26 +40,14 @@ jobs:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
       
-      - name: Configure AWS credentials (if needed for S3 uploads)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-          
-      - name: Deploy to Vercel
-        run: |
-          cd frontend
-          npm i -g vercel @vercel/ncc
-          # Deploy using Vercel CLI with production settings
-          npx vercel --prod \
-            --token $VERCEL_TOKEN \
-            --team-id $VERCEL_PROJECT_ID \
-            --yes
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          NODE_ENV: 'production'
+       - name: Deploy to Vercel
+         run: |
+           npm i -g vercel @vercel/ncc
+           cd frontend
+           npx vercel --prod --token $VERCEL_TOKEN --yes
+         env:
+           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+           NODE_ENV: 'production'
       
       - name: Verify deployment
         run: |
