@@ -73,7 +73,7 @@ export default function SuccessHubPage() {
     : GATE_FACTS.filter((f) => f.category === factFilter);
 
   return (
-    <div className="dark min-h-screen bg-[#050816] text-[#F8FAFC] overflow-x-hidden">
+    <div className="min-h-screen bg-bg text-text overflow-x-hidden">
       <nav className="relative z-10 flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
         <Link to="/" className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #7C3AED, #4F46E5)' }}>

@@ -54,9 +54,8 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden"
+      className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-bg"
       onMouseMove={handleMouseMove}
-      style={{ background: '#060A14' }}
     >
       <CinematicBackground />
 

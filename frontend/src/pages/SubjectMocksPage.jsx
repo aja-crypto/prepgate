@@ -37,12 +37,12 @@ export default function SubjectMocksPage() {
   }), { total: 0, done: 0, best: 0, avgTotal: 0, avgCount: 0 });
 
   return (
-    <div className="min-h-screen bg-[#050816] text-[#F8FAFC] relative">
+    <div className="min-h-screen bg-bg text-text relative">
       <NeuralBackground />
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-6">
-          <Link to="/dashboard" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">← Dashboard</Link>
+          <Link to="/dashboard" className="text-xs text-text3 hover:text-text2 transition-colors">← Dashboard</Link>
           <div className="flex-1" />
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-medium" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#34D399' }}>
             Subject-wise Mock Tests

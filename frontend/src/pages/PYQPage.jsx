@@ -30,30 +30,30 @@ const HowItWorks = () => {
       >
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-purple-400">🎯 How PYQ Practice Works</span>
-          <span className="text-gray-400 text-xs">{expanded ? 'Hide' : 'Show'}</span>
+          <span className="text-text3 text-xs">{expanded ? 'Hide' : 'Show'}</span>
         </div>
       </button>
       {expanded && (
         <div className="grid md:grid-cols-3 gap-4 text-sm">
           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
             <div className="text-purple-400 font-bold mb-2">Choose Year</div>
-            <p className="text-gray-400">Select from previous year GATE questions</p>
+            <p className="text-text3">Select from previous year GATE questions</p>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
             <div className="text-purple-400 font-bold mb-2">Solve Questions</div>
-            <p className="text-gray-400">Practice questions topic-wise or year-wise</p>
+            <p className="text-text3">Practice questions topic-wise or year-wise</p>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
             <div className="text-purple-400 font-bold mb-2">View Explanations</div>
-            <p className="text-gray-400">Check detailed solutions and explanations</p>
+            <p className="text-text3">Check detailed solutions and explanations</p>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
             <div className="text-purple-400 font-bold mb-2">Track Accuracy</div>
-            <p className="text-gray-400">Monitor your solving accuracy over time</p>
+            <p className="text-text3">Monitor your solving accuracy over time</p>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
             <div className="text-purple-400 font-bold mb-2">Identify Weak Areas</div>
-            <p className="text-gray-400">Find topics where you need more practice</p>
+            <p className="text-text3">Find topics where you need more practice</p>
           </div>
         </div>
       )}

@@ -131,7 +131,7 @@ export default function NotificationBell() {
         className="relative p-2.5 rounded-xl transition-all hover:bg-white/5"
         title="Notifications"
       >
-        <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-gray-400">
+        <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-text3">
           <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -154,7 +154,7 @@ export default function NotificationBell() {
                   Mark all read
                 </button>
               )}
-              <button onClick={fetchNotifications} className="text-gray-500 hover:text-white transition-colors p-2 min-w-[36px] min-h-[36px] flex items-center justify-center" title="Refresh">
+              <button onClick={fetchNotifications} className="text-text3 hover:text-text transition-colors p-2 min-w-[36px] min-h-[36px] flex items-center justify-center" title="Refresh">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" /></svg>
               </button>
             </div>
@@ -164,7 +164,7 @@ export default function NotificationBell() {
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center px-6">
                 <div className="text-3xl mb-3">🔔</div>
-                <p className="text-xs text-gray-500">No notifications yet. Start studying to get personalized tips and motivation!</p>
+                <p className="text-xs text-text3">No notifications yet. Start studying to get personalized tips and motivation!</p>
               </div>
             ) : (
               notifications.map((n) => {
@@ -181,9 +181,9 @@ export default function NotificationBell() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-0.5">
                           <span className="text-xs font-semibold text-white truncate">{n.title}</span>
-                          <span className="text-[10px] text-gray-500 flex-shrink-0">{timeAgo(n.createdAt)}</span>
+                          <span className="text-[10px] text-text3 flex-shrink-0">{timeAgo(n.createdAt)}</span>
                         </div>
-                        <p className="text-[11px] text-gray-400 leading-relaxed">{n.message}</p>
+                        <p className="text-[11px] text-text3 leading-relaxed">{n.message}</p>
                         <div className="flex items-center gap-2 mt-1.5">
                           <span className="text-[9px] px-1.5 py-0.5 rounded-full capitalize" style={{ background: style.bg, color: style.color, border: `1px solid ${style.border}` }}>
                             {n.type.replace('_', ' ')}
@@ -195,7 +195,7 @@ export default function NotificationBell() {
                           )}
                           <button
                             onClick={(e) => { e.stopPropagation(); deleteNote(n.id); }}
-                            className="text-[10px] text-gray-600 hover:text-gray-400 ml-auto transition-colors p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center"
+                            className="text-[10px] text-text3 hover:text-text ml-auto transition-colors p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center"
                           >
                             ✕
                           </button>

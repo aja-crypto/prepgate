@@ -41,7 +41,7 @@ export default function MotivationCard() {
       <span className="text-xl">🔥</span>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-white truncate" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>{quote.quote}</p>
-        <p className="text-xs text-gray-300 truncate">— {quote.author}</p>
+        <p className="text-xs text-text2 truncate">— {quote.author}</p>
       </div>
     </div>
   );

@@ -335,8 +335,8 @@ const ctx = {
             <div className="text-center py-4">
               <GateNexaAIIcon size={48} className="mx-auto mb-3 opacity-60" />
               <p className="text-sm font-semibold text-white mb-1">Welcome to GateNexa AI</p>
-              <p className="text-xs text-gray-400 mb-4">Your Personal GATE Assistant</p>
-              <p className="text-[11px] text-gray-500 mb-4 leading-relaxed max-w-[90%] mx-auto">
+              <p className="text-xs text-text3 mb-4">Your Personal GATE Assistant</p>
+              <p className="text-[11px] text-text3 mb-4 leading-relaxed max-w-[90%] mx-auto">
                 I can help with:<br />
                 • Subject Planning<br />
                 • PYQ Strategy<br />
@@ -346,7 +346,7 @@ const ctx = {
                 • Resource Recommendations<br />
                 • Study Plans
               </p>
-              <p className="text-[11px] text-gray-500 mb-3">Quick actions:</p>
+              <p className="text-[11px] text-text3 mb-3">Quick actions:</p>
               <div className="flex flex-col gap-2">
                 {QUICK_ACTIONS.map((action) => (
                   <button key={action.label} onClick={() => handleSend(action.prompt)}
@@ -357,7 +357,7 @@ const ctx = {
                   </button>
                 ))}
               </div>
-              <p className="text-[11px] text-gray-500 mt-3">Or ask me anything about GATE 2027.</p>
+              <p className="text-[11px] text-text3 mt-3">Or ask me anything about GATE 2027.</p>
             </div>
           ) : (
             <>
@@ -372,7 +372,7 @@ const ctx = {
                       )}
                     </div>
                     <div className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed ${
-                      msg.role === 'user' ? 'rounded-tr-none text-white' : 'rounded-tl-none text-gray-200'
+                      msg.role === 'user' ? 'rounded-tr-none text-white' : 'rounded-tl-none text-text2'
                     }`} style={{
                       background: msg.role === 'user' ? 'linear-gradient(135deg, #8B5CF6, #6D28D9)' : 'rgba(255,255,255,0.04)',
                       border: msg.role === 'assistant' ? '1px solid rgba(255,255,255,0.06)' : 'none',
@@ -382,7 +382,7 @@ const ctx = {
                   </div>
                   {msg.role === 'assistant' && suggestions && i === messages.length - 1 && (
                     <div className="mt-3 ml-11">
-                      <p className="text-[10px] font-medium text-gray-500 mb-2">Suggested Questions</p>
+                      <p className="text-[10px] font-medium text-text3 mb-2">Suggested Questions</p>
                       <div className="flex flex-col gap-1.5">
                         {suggestions.map((s, si) => (
                           <button key={si} onClick={() => handleSend(s)}

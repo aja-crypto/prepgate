@@ -21,12 +21,12 @@ export default function WeakTopicsPage() {
   const avgScore = filtered.length > 0 ? Math.round(filtered.reduce((s, t) => s + t.score, 0) / filtered.length) : 0;
 
   return (
-    <div className="min-h-screen bg-[#050816] text-[#F8FAFC] relative">
+    <div className="min-h-screen bg-bg text-text relative">
       <NeuralBackground />
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-6">
-          <Link to="/dashboard" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">← Dashboard</Link>
+          <Link to="/dashboard" className="text-xs text-text3 hover:text-text2 transition-colors">← Dashboard</Link>
           <div className="flex-1" />
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-medium" style={{ background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)', color: '#F43F5E' }}>
             Weak Topic Detector
@@ -42,7 +42,7 @@ export default function WeakTopicsPage() {
           ].map((s) => (
             <div key={s.label} className="rounded-xl p-4 text-center" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <div className="text-xl font-bold" style={{ color: s.color }}>{s.value}</div>
-              <div className="text-[10px] text-gray-400 mt-1">{s.label}</div>
+              <div className="text-[10px] text-text3 mt-1">{s.label}</div>
             </div>
           ))}
         </div>
@@ -64,7 +64,7 @@ export default function WeakTopicsPage() {
           <h2 className="text-sm font-bold text-white">Detected Weak Areas</h2>
           {filtered.length === 0 ? (
             <div className="rounded-xl p-8 text-center" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <p className="text-xs text-gray-400">No weak topics detected. Keep up the good work!</p>
+              <p className="text-xs text-text3">No weak topics detected. Keep up the good work!</p>
             </div>
           ) : (
             filtered.map((t, i) => (
@@ -76,7 +76,7 @@ export default function WeakTopicsPage() {
                       <span className="text-[9px] text-gray-500">{t.reason}</span>
                     </div>
                     <h3 className="text-sm font-bold text-white">{t.name}</h3>
-                    <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">{t.recommendation}</p>
+                    <p className="text-[10px] text-text3 mt-1 leading-relaxed">{t.recommendation}</p>
                   </div>
                   <div className="flex flex-col items-center flex-shrink-0">
                     <div className="relative w-12 h-12">
@@ -101,10 +101,10 @@ export default function WeakTopicsPage() {
           <div className="mt-6 rounded-xl p-4" style={{ background: 'linear-gradient(135deg, rgba(244,63,94,0.06), rgba(124,58,237,0.04))', border: '1px solid rgba(244,63,94,0.12)' }}>
             <h3 className="text-xs font-bold text-white mb-2">Recommended Action Plan</h3>
             <ol className="space-y-1.5">
-              <li className="text-[10px] text-gray-400 flex items-start gap-2"><span className="text-primary">1.</span> Focus on <strong className="text-white">Critical</strong> topics first (score &lt; 40%) — they cost you the most marks.</li>
-              <li className="text-[10px] text-gray-400 flex items-start gap-2"><span className="text-primary">2.</span> Spend <strong className="text-white">2 hours daily</strong> on weak areas until scores reach 70%+.</li>
-              <li className="text-[10px] text-gray-400 flex items-start gap-2"><span className="text-primary">3.</span> Solve <strong className="text-white">10+ PYQs</strong> per weak topic after revising concepts.</li>
-              <li className="text-[10px] text-gray-400 flex items-start gap-2"><span className="text-primary">4.</span> Re-test with a <strong className="text-white">subject-wise mock</strong> after 5 days of focused practice.</li>
+              <li className="text-[10px] text-text3 flex items-start gap-2"><span className="text-primary">1.</span> Focus on <strong className="text-white">Critical</strong> topics first (score &lt; 40%) — they cost you the most marks.</li>
+              <li className="text-[10px] text-text3 flex items-start gap-2"><span className="text-primary">2.</span> Spend <strong className="text-white">2 hours daily</strong> on weak areas until scores reach 70%+.</li>
+              <li className="text-[10px] text-text3 flex items-start gap-2"><span className="text-primary">3.</span> Solve <strong className="text-white">10+ PYQs</strong> per weak topic after revising concepts.</li>
+              <li className="text-[10px] text-text3 flex items-start gap-2"><span className="text-primary">4.</span> Re-test with a <strong className="text-white">subject-wise mock</strong> after 5 days of focused practice.</li>
             </ol>
           </div>
         )}

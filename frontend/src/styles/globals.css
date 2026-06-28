@@ -258,9 +258,14 @@
   .glass-sidebar {
     @apply backdrop-blur-2xl border-r;
     border-color: var(--color-border);
-    background: linear-gradient(180deg, rgba(12,15,35,0.88), rgba(8,11,28,0.95));
+    background: var(--color-surface-2);
     backdrop-filter: blur(28px) saturate(1.4);
     -webkit-backdrop-filter: blur(28px) saturate(1.4);
+    box-shadow: 4px 0 32px -8px rgba(0,0,0,0.1);
+  }
+
+  :root.dark .glass-sidebar {
+    background: linear-gradient(180deg, rgba(12,15,35,0.88), rgba(8,11,28,0.95));
     box-shadow: 4px 0 32px -8px rgba(0,0,0,0.3);
   }
 
@@ -306,8 +311,12 @@
 
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all duration-300;
-    background: linear-gradient(135deg, var(--color-primary), #6D28D9);
+    background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 70%, #000));
     box-shadow: 0 4px 16px -4px rgba(139, 92, 246, 0.3), 0 8px 32px -8px rgba(139, 92, 246, 0.1);
+  }
+
+  .btn-gradient {
+    background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 70%, #000));
   }
 
   .btn-primary:hover {
@@ -335,10 +344,16 @@
   }
 
   .glass-header {
-    background: linear-gradient(135deg, rgba(10,15,44,0.92), rgba(5,8,22,0.95));
+    background: var(--color-surface-2);
     backdrop-filter: blur(24px) saturate(1.4);
     -webkit-backdrop-filter: blur(24px) saturate(1.4);
-    border-bottom: 1px solid rgba(139, 92, 246, 0.15);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 4px 24px -8px rgba(0, 0, 0, 0.08);
+  }
+
+  :root.dark .glass-header {
+    background: linear-gradient(135deg, rgba(10,15,44,0.92), rgba(5,8,22,0.95));
+    border-bottom-color: rgba(139, 92, 246, 0.15);
     box-shadow: 0 4px 24px -8px rgba(0, 0, 0, 0.3), 0 0 40px -20px rgba(139, 92, 246, 0.08);
   }
 

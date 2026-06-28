@@ -61,11 +61,11 @@ export default function GateNexaAIPage() {
   const [activeTab, setActiveTab] = useState('mentor');
 
   return (
-    <div className="min-h-screen bg-[#050816] text-[#F8FAFC] relative">
+    <div className="min-h-screen bg-bg text-text relative">
       <NeuralBackground />
       <div className="relative z-10 max-w-6xl mx-auto px-4 py-6 sm:py-8">
         <div className="flex items-center gap-4 mb-6">
-          <Link to="/dashboard" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">← Dashboard</Link>
+          <Link to="/dashboard" className="text-xs text-text3 hover:text-text2 transition-colors">← Dashboard</Link>
           <div className="flex-1" />
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-medium" style={{ background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.2)', color: '#A855F7' }}>
             🤖 GateNexa AI
@@ -90,7 +90,7 @@ export default function GateNexaAIPage() {
               className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
                 activeTab === tab.id
                   ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                  : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                  : 'text-text3 hover:text-text2 hover:bg-white/5'
               }`}
             >
               {tab.label}

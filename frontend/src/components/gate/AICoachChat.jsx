@@ -165,8 +165,8 @@ export default function AICoachChat({ initialPrompt }) {
           <div className="text-center py-6">
             <GateNexaAIIcon size={48} className="mx-auto mb-3 opacity-60" />
             <p className="text-sm font-semibold text-white mb-1">Welcome to <BrandText /> AI</p>
-            <p className="text-xs text-gray-400 mb-4">Your Personal GATE Assistant</p>
-            <p className="text-[11px] text-gray-500 mb-4 leading-relaxed max-w-[85%] mx-auto">
+            <p className="text-xs text-text3 mb-4">Your Personal GATE Assistant</p>
+            <p className="text-[11px] text-text3 mb-4 leading-relaxed max-w-[85%] mx-auto">
               I can help with:<br />
               • Subject Planning<br />
               • PYQ Strategy<br />
@@ -174,7 +174,7 @@ export default function AICoachChat({ initialPrompt }) {
               • Mock Test Analysis<br />
               • GATE Preparation Guidance
             </p>
-            <p className="text-[11px] text-gray-500 mb-3">Ask me anything about GATE 2027.</p>
+            <p className="text-[11px] text-text3 mb-3">Ask me anything about GATE 2027.</p>
             <div className="grid grid-cols-2 gap-2 max-w-[90%] mx-auto">
               {WELCOME_SUGGESTIONS.map((s) => (
                 <button key={s} onClick={() => handleSend(s)}
@@ -222,7 +222,7 @@ export default function AICoachChat({ initialPrompt }) {
                 )}
                 {msg.role === 'assistant' && suggestions && i === messages.length - 1 && (
                   <div className="mt-2 ml-2">
-                    <p className="text-[10px] font-medium text-gray-500 mb-1.5">Suggested Questions</p>
+                    <p className="text-[10px] font-medium text-text3 mb-1.5">Suggested Questions</p>
                     <div className="flex flex-wrap gap-1.5">
                       {suggestions.map((s, si) => (
                         <button key={si} onClick={() => handleSend(s)}
