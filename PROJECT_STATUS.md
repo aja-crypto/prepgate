@@ -1,8 +1,8 @@
-# GateApex — Project Status Report
+﻿# GateNexa — Project Status Report
 
 **Generated:** June 19, 2026
 **Branch:** main
-**Last Commit:** `49e669d` — "fix P0: StreakTracker undefined crash, TopicPyqPractice наш typo, MockTestsPage undefined state setters"
+**Last Commit:** `49e669d` — "fix P0: StreakTracker undefined crash, TopicPyqPractice Ð½Ð°Ñˆ typo, MockTestsPage undefined state setters"
 
 ---
 
@@ -105,7 +105,7 @@ The project is in a mature, production-ready state with 48 modified files and 54
 - DashboardMotivation widget (CMS-driven quotes)
 - AnnouncementBar widget
 - NotesHubWidget
-- GateApexAIWidget (5-tab command center)
+- GateNexaAIWidget (5-tab command center)
 - RecommendationEngine widget
 - ExamTimeline rewritten as personalized success roadmap
 - CMS-driven content for all dashboard widgets
@@ -131,12 +131,12 @@ The project is in a mature, production-ready state with 48 modified files and 54
 
 ---
 
-## In-Progress Modules (⚠️)
+## In-Progress Modules (âš ï¸)
 
 ### Vercel Deployment Configuration
-- `vercel.json` rewrites `/api/(.*)` → `https://GateApex-api.onrender.com/api/$1`
+- `vercel.json` rewrites `/api/(.*)` → `https://GateNexa-api.onrender.com/api/$1`
 - Frontend `.env`: `VITE_API_URL=/api` is correct for Vite proxy in dev
-- Production deployment needs `FRONTEND_URL=https://GateApex.vercel.app` and `CORS_ORIGIN=https://GateApex.vercel.app` added to backend `.env`
+- Production deployment needs `FRONTEND_URL=https://GateNexa.vercel.app` and `CORS_ORIGIN=https://GateNexa.vercel.app` added to backend `.env`
 - **Status:** Build passes, proxy configured, but production URL not updated in backend `.env`
 
 ### Firebase Push Notifications
@@ -207,11 +207,11 @@ The project is in a mature, production-ready state with 48 modified files and 54
 | System Health | ✅ Working | `/admin/system-health` |
 | Settings | ✅ Working | `/admin/settings` |
 
-Admin credentials: `admin@GateApex.app` / `Admin@123`
+Admin credentials: `admin@GateNexa.app` / `Admin@123`
 
 ---
 
-## AI Mentor Status ⚠️
+## AI Mentor Status âš ï¸
 
 | Component | Status |
 |-----------|--------|
@@ -222,8 +222,8 @@ Admin credentials: `admin@GateApex.app` / `Admin@123`
 | Doubt Solver | ✅ Working (heuristic fallback + AI option) |
 | AI Recommendations | ✅ Working (heuristic) |
 | AI Daily Planner | ✅ Working (heuristic) |
-| AI Mentor Page | ⚠️ Stale data bug (useMemo deps empty) |
-| Rank Formula | ⚠️ Frontend and backend formulas differ |
+| AI Mentor Page | âš ï¸ Stale data bug (useMemo deps empty) |
+| Rank Formula | âš ï¸ Frontend and backend formulas differ |
 
 ---
 
@@ -261,14 +261,14 @@ Admin credentials: `admin@GateApex.app` / `Admin@123`
 
 ---
 
-## Deployment Status ⚠️
+## Deployment Status âš ï¸
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Frontend (Vercel) | ⚠️ Not verified | `vercel.json` configured, proxy to Render |
-| Backend (Render) | ⚠️ Not verified | `GateApex-api.onrender.com` in proxy |
+| Frontend (Vercel) | âš ï¸ Not verified | `vercel.json` configured, proxy to Render |
+| Backend (Render) | âš ï¸ Not verified | `GateNexa-api.onrender.com` in proxy |
 | API Proxy | ✅ Working | Vite dev proxy → localhost:5000 |
-| Vercel Proxy | ✅ Configured | `/api/*` → `https://GateApex-api.onrender.com/api/*` |
+| Vercel Proxy | ✅ Configured | `/api/*` → `https://GateNexa-api.onrender.com/api/*` |
 | FRONTEND_URL | 🔴 Not updated | Still `http://localhost:5173` in `.env` |
 | CORS_ORIGIN | 🔴 Not updated | Not set for production |
 | JWT Secret | ✅ 64-char hex | Changed from placeholder |
@@ -296,7 +296,7 @@ Admin credentials: `admin@GateApex.app` / `Admin@123`
 
 **Frontend admin pages:** `AdminDashboardPage.jsx`, `AdminPdfsPage.jsx`, `AdminPyqPage.jsx`, `AdminUsersPage.jsx`, `AdminAnalyticsPage.jsx`, `AdminSystemHealthPage.jsx`, `AdminAiAnalyticsPage.jsx`
 
-**Frontend components:** `AdminLayout.jsx`, `AdminPYQTab.jsx`, `Icon.jsx`, `TodayPlan.jsx`, `MockTestBuilder.jsx`, `PageState.jsx`, `AmbientBackground.jsx`, `ErrorBoundary.jsx`, `FloatingAIOrb.jsx`, `AnnouncementBar.jsx`, `DashboardMotivation.jsx`, `ExamTimeline.jsx`, `GateVaultAnimations.jsx`, `GateVaultWidget.jsx`, `MotivationCard.jsx`, `NotesHubWidget.jsx`, `GateApexAIWidget.jsx`, `RecommendationEngine.jsx`, `AnnouncementBanner.jsx`, `landing/*`
+**Frontend components:** `AdminLayout.jsx`, `AdminPYQTab.jsx`, `Icon.jsx`, `TodayPlan.jsx`, `MockTestBuilder.jsx`, `PageState.jsx`, `AmbientBackground.jsx`, `ErrorBoundary.jsx`, `FloatingAIOrb.jsx`, `AnnouncementBar.jsx`, `DashboardMotivation.jsx`, `ExamTimeline.jsx`, `GateVaultAnimations.jsx`, `GateVaultWidget.jsx`, `MotivationCard.jsx`, `NotesHubWidget.jsx`, `GateNexaAIWidget.jsx`, `RecommendationEngine.jsx`, `AnnouncementBanner.jsx`, `landing/*`
 
 **Frontend services:** `api.js`, `adminApi.js`
 

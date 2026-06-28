@@ -1,4 +1,4 @@
-const router = require('express').Router();
+﻿const router = require('express').Router();
 const mongoose = require('mongoose');
 const AdminPdf = require('../models/AdminPdf');
 const { protect } = require('../middleware/auth');
@@ -63,7 +63,7 @@ router.get('/pdf/:id', protect, requireCloudinary, async (req, res, next) => {
         watermark: {
           email: userEmail,
           timestamp: new Date().toISOString().slice(0, 16).replace('T', ' '),
-          brand: 'GateApex',
+          brand: 'GateNexa',
         },
       },
     });

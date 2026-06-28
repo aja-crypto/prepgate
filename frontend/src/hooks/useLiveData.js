@@ -1,11 +1,15 @@
-// Hook for fetching live GATE data
+﻿// Hook for fetching live GATE data
 import { useState, useEffect, useCallback } from 'react';
 import { liveDataService } from '../services/api';
 
 export function useLiveData(refreshInterval = 1800000) { // Default to 30 mins
   const [data, setData] = useState(() => {
-    const cached = localStorage.getItem('gateapex_cached_live_data');
-    return cached ? JSON.parse(cached) : null;
+    try {
+      const cached = localStorage.getItem('gatenexa_cached_live_data');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
   });
   const [loading, setLoading] = useState(!data);
   const [error, setError] = useState(null);
@@ -27,7 +31,7 @@ export function useLiveData(refreshInterval = 1800000) { // Default to 30 mins
           }
         }
         
-        localStorage.setItem('gateapex_cached_live_data', JSON.stringify(freshData));
+        try { localStorage.setItem('gatenexa_cached_live_data', JSON.stringify(freshData)); } catch {}
         return freshData;
       });
       setError(null);

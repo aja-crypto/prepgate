@@ -1,4 +1,4 @@
-// src/context/ProgressContext.jsx – Central progress store with MongoDB hybrid sync
+﻿// src/context/ProgressContext.jsx – Central progress store with MongoDB hybrid sync
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import {
@@ -13,7 +13,7 @@ import { mergePyqLists } from '../utils/pyqMapper';
 import toast from 'react-hot-toast';
 
 const ProgressContext = createContext(null);
-const storageKey = (userId) => `gateapex_progress_${userId || 'guest'}`;
+const storageKey = (userId) => `gatenexa_progress_${userId || 'guest'}`;
 const BACKUP_INTERVAL_MS = 5 * 60 * 1000;
 const PUSH_DEBOUNCE_MS = 2000;
 
@@ -49,6 +49,7 @@ export const ProgressProvider = ({ children }) => {
   const wakeSyncTimer = useRef(null);
   const dataRef = useRef(data);
   dataRef.current = data;
+  const syncReturnedRef = useRef(false);
 
   // Load local storage on user change — prefer server on login
   useEffect(() => {
@@ -135,6 +136,7 @@ export const ProgressProvider = ({ children }) => {
         setCloudBackupStatus('offline');
       } else {
         if (result.data?.mocks || result.data?.notes) {
+          syncReturnedRef.current = true;
           setData((prev) => {
             const next = { ...prev };
             if (result.data.mocks) next.mocks = result.data.mocks;
@@ -152,9 +154,13 @@ export const ProgressProvider = ({ children }) => {
     }
   }, [user, userId]);
 
-  // Debounced cloud push — data is read via dataRef, so no dep needed
+  // Debounced cloud push — skip if this data change was caused by a sync response — data is read via dataRef, so no dep needed
   useEffect(() => {
     if (!user || userId === 'guest') return;
+    if (syncReturnedRef.current) {
+      syncReturnedRef.current = false;
+      return;
+    }
     if (pushTimer.current) clearTimeout(pushTimer.current);
     pushTimer.current = setTimeout(syncToCloud, PUSH_DEBOUNCE_MS);
     return () => clearTimeout(pushTimer.current);
@@ -366,7 +372,7 @@ export const ProgressProvider = ({ children }) => {
   useEffect(() => {
     const newBadges = checkNewBadges(data.gamification, data);
     if (newBadges.length) awardBadges(newBadges);
-  }, [data.gateFeatures?.streak?.current, data.pyqs, data.mocks.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data.gateFeatures?.streak?.current, data.pyqs, data.mocks.length, awardBadges]);
 
   return (
     <ProgressContext.Provider value={{

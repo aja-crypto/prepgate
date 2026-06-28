@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+﻿const mongoose = require('mongoose');
 
-// ─── 1. Monthly GATE Insights ───────────────────────────────
+// â”€â”€─ 1. Monthly GATE Insights â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
 const insightSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
   month: { type: String, required: true }, // "YYYY-MM"
@@ -21,7 +21,7 @@ const insightSchema = new mongoose.Schema({
 insightSchema.index({ month: -1, priority: -1 });
 insightSchema.index({ isPublished: 1, isDeleted: 1 });
 
-// ─── 2. Challenges ─────────────────────────────────────────
+// â”€â”€─ 2. Challenges â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
 const challengeSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
   description: { type: String, required: true },
@@ -44,10 +44,10 @@ const challengeSchema = new mongoose.Schema({
 challengeSchema.index({ isPublished: 1, startDate: -1 });
 challengeSchema.index({ isDeleted: 1 });
 
-// ─── 3. Daily Motivation ────────────────────────────────────
+// â”€â”€─ 3. Daily Motivation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
 const motivationQuoteSchema = new mongoose.Schema({
   quote: { type: String, required: true },
-  author: { type: String, default: 'GateApex Team' },
+  author: { type: String, default: 'GateNexa Team' },
   category: {
     type: String,
     enum: ['daily', 'study_tips', 'success_mindset', 'gate_success', 'motivation'],
@@ -61,7 +61,7 @@ const motivationQuoteSchema = new mongoose.Schema({
 motivationQuoteSchema.index({ isActive: 1 });
 motivationQuoteSchema.index({ isDeleted: 1 });
 
-// ─── 4. Featured Resources ──────────────────────────────────
+// â”€â”€─ 4. Featured Resources â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
 const featuredResourceSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
   description: { type: String, default: '' },
@@ -84,7 +84,7 @@ featuredResourceSchema.index({ isFeatured: 1, priority: -1 });
 featuredResourceSchema.index({ resourceType: 1, isPublished: 1 });
 featuredResourceSchema.index({ isDeleted: 1 });
 
-// ─── 5. Featured Content ────────────────────────────────────
+// â”€â”€─ 5. Featured Content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
 const featuredContentSchema = new mongoose.Schema({
   contentType: {
     type: String,
@@ -106,7 +106,7 @@ featuredContentSchema.index({ isFeatured: 1, priority: -1 });
 featuredContentSchema.index({ contentType: 1, isPublished: 1 });
 featuredContentSchema.index({ isDeleted: 1 });
 
-// ─── 6. Announcements ───────────────────────────────────────
+// â”€â”€─ 6. Announcements â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
 const announcementSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
   message: { type: String, required: true },
@@ -121,7 +121,7 @@ const announcementSchema = new mongoose.Schema({
 announcementSchema.index({ isPublished: 1, startDate: -1, priority: -1 });
 announcementSchema.index({ isDeleted: 1 });
 
-// ─── Export all models ──────────────────────────────────────
+// â”€â”€─ Export all models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
 const Insight = mongoose.models.Insight || mongoose.model('Insight', insightSchema);
 const Challenge = mongoose.models.Challenge || mongoose.model('Challenge', challengeSchema);
 const MotivationQuote = mongoose.models.MotivationQuote || mongoose.model('MotivationQuote', motivationQuoteSchema);

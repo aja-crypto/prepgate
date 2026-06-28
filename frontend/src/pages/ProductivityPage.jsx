@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+﻿import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProgress } from '../context/ProgressContext';
 import { useFocus } from '../context/FocusContext';
@@ -27,7 +28,7 @@ const QUOTES = [
   { text: "It always seems impossible until it's done.", author: "Nelson Mandela" },
   { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
   { text: "Study hard what interests you the most in the most undisciplined way possible.", author: "Richard Feynman" },
-  { text: "GATE is not just an exam, it is a commitment to yourself.", author: "GateApex" },
+  { text: "GATE is not just an exam, it is a commitment to yourself.", author: "GateNexa" },
   { text: "The expert in anything was once a beginner.", author: "Helen Hayes" },
   { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
   { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
@@ -37,7 +38,7 @@ const FORMULAS = [
   'T(n) = O(n log n)', 'P = NP?', '∑i = n(n+1)/2', 'E = mc²',
   'Fib(n) = Fib(n-1) + Fib(n-2)', 'Dijkstra O(V²)', 'NP ⊂ EXP',
   'log₂(n)', 'O(2ⁿ)', 'KMP: O(n+m)', 'BFS: O(V+E)', 'DP[i][j]',
-  'Δ = b²-4ac', 'P(A|B) = P(B|A)·P(A)/P(B)', 'V-E+F=2',
+  'Î” = b²-4ac', 'P(A|B) = P(B|A)·P(A)/P(B)', 'V-E+F=2',
 ];
 
 const GOALS = ['Finish Notes', 'Revise Weak Topics', 'Solve PYQs', 'Mock Test Practice', 'Formula Revision', 'Topic Completion'];
@@ -284,6 +285,7 @@ function StopwatchTimer() {
 }
 
 export default function ProductivityPage() {
+  const navigate = useNavigate();
   const { productivity, updateProductivity, topics, pyqs, studyStats } = useProgress();
   const {
     isActive, isPaused, timeRemaining, mode, sessionsCompleted, dailyStreak,
@@ -535,7 +537,7 @@ export default function ProductivityPage() {
                       style={{ backgroundSize: '200% 100%', animation: 'shimmer 3s linear infinite' }}>
                       ⚡ Start Focus Session
                     </button>
-                    <button onClick={() => window.location.href = '/deep-focus'}
+                    <button onClick={() => navigate('/deep-focus')}
                       className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] text-text3 text-xs font-medium hover:text-text hover:border-primary/20 hover:bg-white/[0.05] transition-all">
                       <span>🌑</span> Deep Focus Mode
                     </button>

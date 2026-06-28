@@ -1,9 +1,9 @@
-# GateApex — Resume After Break
+﻿# GateNexa — Resume After Break
 
 **Generated:** June 19, 2026
-**Last Commit:** `bf026e9` — "GateApex backup before break" (130 files, 10,939 insertions)
+**Last Commit:** `bf026e9` — "GateNexa backup before break" (130 files, 10,939 insertions)
 **Branch:** main
-**GitHub Status:** ⚠️ **NOT PUSHED** — No remote configured. Run: `git remote add origin <your-github-url> && git push origin main`
+**GitHub Status:** âš ï¸ **NOT PUSHED** — No remote configured. Run: `git remote add origin <your-github-url> && git push origin main`
 
 ---
 
@@ -32,7 +32,7 @@ The project is in a mature, production-ready state with all major features imple
 - Exam countdown (GATE 2027: Feb 7, 2027)
 - DashboardMotivation widget (CMS-driven quotes)
 - AnnouncementBar widget (CMS banners)
-- GateApexAIWidget (5-tab AI command center)
+- GateNexaAIWidget (5-tab AI command center)
 - GateVaultWidget (4-tab challenges/progress/badges)
 - NotesHubWidget (featured resources)
 - RecommendationEngine (priority-ranked tasks)
@@ -71,7 +71,7 @@ The project is in a mature, production-ready state with all major features imple
 - Secure document viewer with signed Cloudinary URLs + watermark
 - Question Bank with JSON/CSV bulk import
 - System Health monitoring (uptime, memory, heap)
-- Admin login: `admin@GateApex.app` / `Admin@123`
+- Admin login: `admin@GateNexa.app` / `Admin@123`
 
 ### Focus Mode
 - FocusContext: full timer state machine, break timer, localStorage persistence
@@ -116,7 +116,7 @@ The project is in a mature, production-ready state with all major features imple
 
 ---
 
-## Features Partially Completed ⚠️
+## Features Partially Completed âš ï¸
 
 ### AI Mentor (Partial Quality)
 - **Status:** Working but has formula mismatches
@@ -129,7 +129,7 @@ The project is in a mature, production-ready state with all major features imple
 ### Vercel Deployment (Partially Configured)
 - **Status:** `vercel.json` proxy configured, build passes, but not deployed
 - **Missing:** Production `FRONTEND_URL` and `CORS_ORIGIN` not set in backend `.env`
-- **Fix:** Add `FRONTEND_URL=https://GateApex.vercel.app` and `CORS_ORIGIN=https://GateApex.vercel.app` to backend `.env`, then trigger deploy
+- **Fix:** Add `FRONTEND_URL=https://GateNexa.vercel.app` and `CORS_ORIGIN=https://GateNexa.vercel.app` to backend `.env`, then trigger deploy
 
 ### Firebase Push Notifications (Configured but Inactive)
 - **Status:** All 6 Firebase env vars commented out in frontend `.env`
@@ -195,10 +195,10 @@ The project is in a mature, production-ready state with all major features imple
 
 | # | Bug | Severity | Status |
 |---|-----|----------|--------|
-| 1 | VITE_API_URL + no Vercel proxy | P0 Blocking | ⚠️ vercel.json proxy configured, not deployed |
+| 1 | VITE_API_URL + no Vercel proxy | P0 Blocking | âš ï¸ vercel.json proxy configured, not deployed |
 | 2 | NotificationBell localhost hardcode | P0 Fixed | ✅ Fixed to relative paths |
 | 3 | JWT secrets are placeholders | P1 Fixed | ✅ 64-char hex secrets set |
-| 4 | validateInput.js never used | P2 | ⚠️ Dead code, needs wiring |
+| 4 | validateInput.js never used | P2 | âš ï¸ Dead code, needs wiring |
 | 5 | adminOnly crashes on null req.user | P1 Fixed | ✅ Null guard added |
 | 6 | Mock filter tabs broken | P1 Fixed | ✅ Fixed in Phase 6 |
 | 7 | Mock retake overwrites | P1 | 🔴 Not started |
@@ -209,10 +209,10 @@ The project is in a mature, production-ready state with all major features imple
 | 12 | Timer ignores test.duration (some paths) | P1 Fixed | ✅ Fixed in Phase 7 |
 | 13 | Score Tracker data lost | P1 | 🔴 Not started |
 | 14 | Notes image URL broken in production | P0 | 🔴 Not started |
-| 15 | AIMentorPage stale data | P1 | ⚠️ Partially documented |
-| 16 | Admin panel auth routes need verification | P1 | ⚠️ Needs real admin login test |
+| 15 | AIMentorPage stale data | P1 | âš ï¸ Partially documented |
+| 16 | Admin panel auth routes need verification | P1 | âš ï¸ Needs real admin login test |
 | 17 | GitHub remote not configured | — | 🔴 Needs `git remote add origin` |
-| 18 | OpenRouter key is exposed in code | P1 | ⚠️ Rotate when returning |
+| 18 | OpenRouter key is exposed in code | P1 | âš ï¸ Rotate when returning |
 
 ---
 
@@ -224,11 +224,11 @@ The project is in a mature, production-ready state with all major features imple
 | Backend starts | ✅ Passes |
 | MongoDB connected | ✅ Connected |
 | Vercel proxy | ✅ Configured |
-| Vercel deploy | ⚠️ Not triggered |
+| Vercel deploy | âš ï¸ Not triggered |
 | Production URLs | 🔴 `FRONTEND_URL`/`CORS_ORIGIN` not set in backend `.env` |
 | SMTP credentials | 🔴 Placeholder only |
 | GitHub synced | 🔴 No remote configured |
-| Secrets rotated | ⚠️ Not yet (exposed in code) |
+| Secrets rotated | âš ï¸ Not yet (exposed in code) |
 
 ---
 
@@ -251,15 +251,15 @@ Reason: Current key is exposed in commit history (bf026e9)
 
 TASK 3 — Update Backend .env for Production
 Add these lines to backend/.env:
-  FRONTEND_URL=https://GateApex.vercel.app
-  CORS_ORIGIN=https://GateApex.vercel.app
+  FRONTEND_URL=https://GateNexa.vercel.app
+  CORS_ORIGIN=https://GateNexa.vercel.app
 Then commit and push to trigger Render redeploy
 
 TASK 4 — Verify Admin Login
 1. Start frontend: cd frontend && npm run dev
 2. Start backend: cd backend && node server.js
 3. Navigate to http://localhost:5173/admin/login
-4. Login: admin@GateApex.app / Admin@123
+4. Login: admin@GateNexa.app / Admin@123
 5. Verify all 15 admin pages load
 
 TASK 5 — Verify MongoDB Connection
@@ -311,14 +311,14 @@ Then verify scores persist across page refresh
 |------|-------|
 | Frontend Dev | `cd frontend && npm run dev` → http://localhost:5173 |
 | Backend Dev | `cd backend && node server.js` → http://localhost:5000 |
-| Admin Login | admin@GateApex.app / Admin@123 |
-| Demo User | demo@GateApex.app / demo123456 |
+| Admin Login | admin@GateNexa.app / Admin@123 |
+| Demo User | demo@GateNexa.app / demo123456 |
 | MongoDB | Atlas Cluster0, database: gate2027 |
 | OpenRouter Model | openai/gpt-4o-mini (no vision) |
 | Cloudinary | cloud name: dpp9estoy |
 | Last Build | ✅ 0 errors, 2720 modules, 12.69s |
-| Last Commit | bf026e9 "GateApex backup before break" |
-| GitHub | ⚠️ Not connected — must run `git remote add origin` |
+| Last Commit | bf026e9 "GateNexa backup before break" |
+| GitHub | âš ï¸ Not connected — must run `git remote add origin` |
 
 ---
 
@@ -328,7 +328,7 @@ Then verify scores persist across page refresh
 |------|---------|
 | `PROJECT_STATUS.md` | Full technical status report |
 | `BACKUP_CHECKLIST.md` | Pre-break verification checklist |
-| `GateApex-Secrets.txt` | All credentials (NEVER commit) |
+| `GateNexa-Secrets.txt` | All credentials (NEVER commit) |
 | `MongoDB-Backup.txt` | MongoDB Atlas connection info |
 | `AGENTS.md` | Session history and decisions |
 

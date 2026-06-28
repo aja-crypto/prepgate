@@ -1,4 +1,4 @@
-// src/App.jsx – Main Router
+﻿// src/App.jsx – Main Router
 import React, { Suspense, lazy, useState, useCallback, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
@@ -71,7 +71,7 @@ const MockTestsPage = lazy(() => import('./pages/MockTestsPage'));
 const MockTestTakingPage = lazy(() => import('./pages/MockTestTakingPage'));
 const MockTestResultPage = lazy(() => import('./pages/MockTestResultPage'));
 const SubjectDetailPage = lazy(() => import('./pages/SubjectDetailPage'));
-const GateApexAIPage = lazy(() => import('./pages/GateApexAIPage'));
+const GateNexaAIPage = lazy(() => import('./pages/GateNexaAIPage'));
 const StudyHubPage = lazy(() => import('./pages/StudyHubPage'));
 const AirPredictorPage = lazy(() => import('./pages/AirPredictorPage'));
 const GateVaultPage = lazy(() => import('./pages/GateVaultPage'));
@@ -97,7 +97,7 @@ const PrivateRoute = ({ children }) => {
         <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}>
           <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </div>
-        <div className="text-text2 text-sm font-medium">Loading GateApex...</div>
+        <div className="text-text2 text-sm font-medium">Loading GateNexa...</div>
       </div>
     </div>
   );
@@ -140,6 +140,9 @@ function AppFloatingWidgets() {
   const { user } = useAuth();
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   if (!user) return null;
+  // Don't show on landing page or public auth pages
+  const hideOn = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/verify-email'];
+  if (hideOn.includes(window.location.pathname)) return null;
   return (
     <>
       <AmbientBackground />
@@ -184,7 +187,7 @@ export default function App() {
       {/* Protected layout */}
       <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="GateApex-ai" element={<GateApexAIPage />} />
+        <Route path="GateNexa-ai" element={<GateNexaAIPage />} />
         <Route path="study-hub" element={<StudyHubPage />} />
         <Route path="subjects" element={<SubjectsPage />} />
         <Route path="topics" element={<TopicsPage />} />

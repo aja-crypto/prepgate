@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 
 export default function SuccessBlueprintCard({ principle, featured }) {
   const [expanded, setExpanded] = useState(false);
@@ -58,13 +58,13 @@ export default function SuccessBlueprintCard({ principle, featured }) {
                   ))}
                 </ul>
               )}
-              {principle.gateapexTip && (
+              {principle.gatenexaTip && (
                 <div
                   className="rounded-xl p-3 text-[10px] leading-relaxed"
                   style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.15)' }}
                 >
-                  <span className="font-semibold" style={{ color: '#22D3EE' }}>GateApex Tip: </span>
-                  <span className="text-gray-300">{principle.gateapexTip}</span>
+                  <span className="font-semibold" style={{ color: '#22D3EE' }}>GateNexa Tip: </span>
+                  <span className="text-gray-300">{principle.gatenexaTip}</span>
                 </div>
               )}
             </div>

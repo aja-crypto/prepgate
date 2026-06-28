@@ -1,34 +1,40 @@
-// src/context/AuthContext.jsx
+﻿// src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api, { authService } from '../services/api';
 import toast from 'react-hot-toast';
+import { safeGet } from '../utils/storage';
 
 const AuthContext = createContext(null);
-const progressKey = (userId) => `gateapex_progress_${userId}`;
+const progressKey = (userId) => `gatenexa_progress_${userId}`;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const isGuest = localStorage.getItem('isGuest') === 'true';
+    const token = safeGet('accessToken');
+    const isGuest = safeGet('isGuest') === 'true';
 
-    // Timeout: stop showing loading after 30s to prevent permanent blank screen (was 15s)
+    // Timeout: stop showing loading after 30s to prevent permanent blank screen
     const timeoutId = setTimeout(() => setLoading(false), 30000);
 
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      authService.getMe()
-        .then((res) => setUser(res.data.data.user))
-        .catch(() => {
-          // Don't delete token here — api.js interceptor handles 401 refresh + cleanup
-          // Only clear on explicit 401 from getMe after interceptor already tried refresh
-        })
-        .finally(() => {
-          clearTimeout(timeoutId);
-          setLoading(false);
-        });
+      const attempt = () => authService.getMe()
+        .then((res) => { setUser(res.data.data.user); return true; })
+        .catch(() => false);
+      attempt().then((ok) => {
+        if (!ok) {
+          // Retry once on transient failure
+          const tokenStillExists = safeGet('accessToken');
+          if (tokenStillExists && tokenStillExists === token) {
+            return attempt();
+          }
+        }
+      }).finally(() => {
+        clearTimeout(timeoutId);
+        setLoading(false);
+      });
     } else if (isGuest) {
       clearTimeout(timeoutId);
       setUser({
@@ -44,6 +50,14 @@ export const AuthProvider = ({ children }) => {
       delete api.defaults.headers.common['Authorization'];
       setLoading(false);
     }
+
+    // Listen for auth:expired from api interceptor — avoids full page reload
+    const handleAuthExpired = () => {
+      setUser(null);
+      toast.error('Session expired. Please log in again.');
+    };
+    window.addEventListener('auth:expired', handleAuthExpired);
+    return () => window.removeEventListener('auth:expired', handleAuthExpired);
   }, []);
 
   const storeSession = useCallback((userData, accessToken, refreshToken) => {

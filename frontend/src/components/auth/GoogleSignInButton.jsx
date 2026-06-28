@@ -8,7 +8,9 @@ const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const IS_PLACEHOLDER = !CLIENT_ID ||
   CLIENT_ID === '' ||
   CLIENT_ID.includes('your_google_client_id') ||
-  CLIENT_ID === 'undefined';
+  CLIENT_ID === 'undefined' ||
+  CLIENT_ID.includes('purruajaykumar') ||
+  CLIENT_ID.includes('PLACEHOLDER');
 
 export default function GoogleSignInButton({ onSuccess, onError }) {
   const { loginAsGuest } = useAuth();

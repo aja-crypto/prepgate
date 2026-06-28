@@ -1,4 +1,4 @@
-// Dashboard widget layout — visibility, order, drag-and-drop
+﻿// Dashboard widget layout — visibility, order, drag-and-drop
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 import { getDefaultWidgetLayout, DEFAULT_WIDGETS } from '../design/tokens';
@@ -6,7 +6,7 @@ import { getDefaultWidgetLayout, DEFAULT_WIDGETS } from '../design/tokens';
 const DashboardContext = createContext(null);
 
 function storageKey(userId) {
-  return `gateapex_dashboard_${userId || 'guest'}`;
+  return `gatenexa_dashboard_${userId || 'guest'}`;
 }
 
 function loadLayout(userId) {

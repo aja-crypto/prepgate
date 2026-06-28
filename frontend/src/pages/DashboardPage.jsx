@@ -1,6 +1,6 @@
-// Premium customizable dashboard with drag-and-drop widgets
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+﻿// Premium customizable dashboard with drag-and-drop widgets
+import { useMemo, useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useProgress } from '../context/ProgressContext';
@@ -33,19 +33,39 @@ import PinnedNotesWidget from '../components/gate/PinnedNotesWidget';
 import EmptyDashboard from '../components/gate/EmptyDashboard';
 import DashboardMotivation from '../components/gate/DashboardMotivation';
 import AnnouncementBar from '../components/gate/AnnouncementBar';
-import GateApexAIWidget from '../components/gate/GateApexAIWidget';
+import GateNexaAIWidget from '../components/gate/GateNexaAIWidget';
 import GateVaultWidget from '../components/gate/GateVaultWidget';
 import NotesHubWidget from '../components/gate/NotesHubWidget';
 import RecommendationEngine from '../components/gate/RecommendationEngine';
 import ExamTimeline from '../components/gate/ExamTimeline';
 import FocusStatsCard from '../components/gate/FocusStatsCard';
 
+const FOCUS_STORAGE_KEY = 'gatenexa_focus_session';
+
+function getInterruptedSession() {
+  try {
+    const raw = localStorage.getItem(FOCUS_STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data.isActive && !data.isPaused) return null;
+    if (data.mode !== 'work') return null;
+    if (data.endTime && Date.now() > data.endTime) return null;
+    return data;
+  } catch { return null; }
+}
+
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { studyStats, topics, pyqs, mocks, gateFeatures, gamification, isEmptyProgress, mongoAvailable } = useProgress();
   const { data: liveData, loading: liveLoading, refresh: refreshLive } = useLiveData();
   const { visibleWidgets, editMode, setEditMode } = useDashboard();
   const [customizerOpen, setCustomizerOpen] = useState(false);
+  const [interruptedSession, setInterruptedSession] = useState(null);
+
+  useEffect(() => {
+    setInterruptedSession(getInterruptedSession());
+  }, []);
 
   const safeSS = studyStats || {};
   const safeGF = gateFeatures || {};
@@ -66,7 +86,7 @@ export default function DashboardPage() {
     welcome: isEmptyProgress ? <EmptyDashboard userName={user?.name?.split(' ')[0]} /> : null,
     motivation: <DashboardMotivation />,
     announcements: <AnnouncementBar />,
-    "gateapex-ai": <GateApexAIWidget />,
+    "gatenexa-ai": <GateNexaAIWidget />,
     "gate-vault": <GateVaultWidget />,
     "notes-hub": <NotesHubWidget />,
     "recommendation-engine": <RecommendationEngine />,
@@ -271,7 +291,7 @@ export default function DashboardPage() {
     welcome: 'col-span-full',
     motivation: 'col-span-full',
     announcements: 'col-span-full',
-    'GateApex-ai': 'col-span-full',
+    'GateNexa-ai': 'col-span-full',
     'gate-vault': 'col-span-full',
     'notes-hub': 'col-span-full',
     'recommendation-engine': 'col-span-full',
@@ -370,6 +390,136 @@ export default function DashboardPage() {
           Edit mode — drag widgets to reorder. Use &quot;Widgets&quot; to show or hide sections.
         </div>
       )}
+
+      {/* Interrupted Session Reminder */}
+      {interruptedSession && (
+        <div className="mb-4 rounded-2xl border border-cyan-500/20 bg-gradient-to-r from-cyan-500/10 to-purple-500/8 p-4 sm:p-5 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="text-2xl">⏳</div>
+              <div>
+                <div className="text-sm font-bold text-text">Unfinished Focus Session</div>
+                <div className="text-[11px] text-text3">
+                  {interruptedSession.currentSubject
+                    ? `You were studying ${interruptedSession.currentSubject}`
+                    : 'You have an interrupted session'}
+                </div>
+              </div>
+            </div>
+            <div className="sm:ml-auto flex gap-2">
+              <button
+                onClick={() => { navigate('/focus'); }}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.02]"
+                style={{ background: 'linear-gradient(135deg, #7C3AED, #06B6D4)' }}
+              >
+                Continue Session
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem(FOCUS_STORAGE_KEY);
+                  setInterruptedSession(null);
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-text3 border border-border hover:bg-bg-2 transition-all"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Today's Focus — Priority Section */}
+      <div className="mb-6 rounded-2xl border border-purple-500/15 bg-gradient-to-r from-purple-500/8 to-cyan-500/5 p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          {/* Streak */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="text-2xl">{streakCurrent > 0 ? '🔥' : '✨'}</div>
+            <div>
+              <div className="text-lg font-bold text-text">{streakCurrent > 0 ? `Day ${streakCurrent}` : 'Start Today'}</div>
+              <div className="text-[10px] text-text3 uppercase tracking-wider">
+                {streakCurrent > 0 ? 'Study Streak' : 'Begin your streak'}
+              </div>
+            </div>
+          </div>
+
+          <div className="hidden sm:block w-px h-10 bg-white/5" />
+
+          {/* Today's Goal */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-medium text-text2">Today's Goal</span>
+              <span className="text-xs font-bold text-text">
+                {dailyProgress?.hours || 0}h / {gateFeatures?.dailyTarget?.hours || 2}h
+              </span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min(100, ((dailyProgress?.hours || 0) / (gateFeatures?.dailyTarget?.hours || 2)) * 100)}%`,
+                  background: 'linear-gradient(90deg, #7C3AED, #06B6D4)',
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="hidden sm:block w-px h-10 bg-white/5" />
+
+          {/* Next Action */}
+          <div className="shrink-0">
+            <Link
+              to={subjects.length > 0 && subjects.some(s => s.progress < 50) ? '/subjects' : '/pyq'}
+              className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-medium text-white transition-all duration-200 hover:scale-[1.02]"
+              style={{ background: 'linear-gradient(135deg, #7C3AED, #06B6D4)' }}
+            >
+              {subjects.length > 0 && subjects.some(s => s.progress < 50)
+                ? 'Review Weak Subjects'
+                : 'Practice PYQs'}
+              <span className="text-white/70">→</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions Bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <Link to="/focus" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] transition-all duration-200 group">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-200" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(124,58,237,0.15))' }}>
+            🎯
+          </div>
+          <div className="text-left">
+            <div className="text-xs font-bold text-text">Resume Study</div>
+            <div className="text-[10px] text-text3">Start focus session</div>
+          </div>
+        </Link>
+        <Link to="/mocks" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] transition-all duration-200 group">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-200" style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.15))' }}>
+            📝
+          </div>
+          <div className="text-left">
+            <div className="text-xs font-bold text-text">Take Mock</div>
+            <div className="text-[10px] text-text3">Practice test</div>
+          </div>
+        </Link>
+        <Link to="/pyq" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] transition-all duration-200 group">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-200" style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.2), rgba(22,163,74,0.15))' }}>
+            📄
+          </div>
+          <div className="text-left">
+            <div className="text-xs font-bold text-text">Practice PYQs</div>
+            <div className="text-[10px] text-text3">Previous year questions</div>
+          </div>
+        </Link>
+        <Link to="/planner" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] transition-all duration-200 group">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-200" style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.2), rgba(6,182,212,0.15))' }}>
+            📅
+          </div>
+          <div className="text-left">
+            <div className="text-xs font-bold text-text">Study Plan</div>
+            <div className="text-[10px] text-text3">View schedule</div>
+          </div>
+        </Link>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {rendered}

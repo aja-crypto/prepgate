@@ -1,8 +1,15 @@
 // Subject progress with rings instead of bars
+import { useMemo } from 'react';
 import { useProgress } from '../../context/ProgressContext';
 import { computeSubjectCompletion, getSubjectAccuracy } from '../../utils/gateUtils';
 import GlassCard from '../ui/GlassCard';
 import { ProgressRingMini } from '../ui/ProgressRing';
+
+function getProgressColor(value) {
+  if (value < 30) return '#EF4444';
+  if (value < 70) return '#F59E0B';
+  return '#22C55E';
+}
 
 export default function SubjectCompletionRings({ limit }) {
   const { studyStats, topics, pyqs } = useProgress();
@@ -45,9 +52,13 @@ export default function SubjectCompletionRings({ limit }) {
         {display.map((s, idx) => (
           <div
             key={s.name}
-            className="flex items-center gap-3 rounded-xl border border-border bg-bg-2/40 p-3 hover:border-primary/20 transition-all duration-200 group"
+            className="flex items-center gap-3 rounded-xl border p-3 transition-all duration-200 group"
+            style={{
+              borderColor: s.progress < 30 ? 'rgba(239,68,68,0.2)' : s.progress < 70 ? 'rgba(245,158,11,0.2)' : 'rgba(34,197,94,0.2)',
+              background: s.progress < 30 ? 'rgba(239,68,68,0.04)' : s.progress < 70 ? 'rgba(245,158,11,0.04)' : 'rgba(34,197,94,0.04)',
+            }}
           >
-            <ProgressRingMini value={s.progress} size={40} stroke={3.5} color={s.color || 'var(--color-primary)'} />
+            <ProgressRingMini value={s.progress} size={40} stroke={3.5} color={getProgressColor(s.progress)} />
             <div className="min-w-0 flex-1">
               <div className="text-[11px] font-medium text-text truncate" title={s.name}>{s.name}</div>
               <div className="flex items-center justify-between">

@@ -1,4 +1,4 @@
-// Premium registration page
+﻿// Premium registration page
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,7 @@ import GoogleSignInButton from '../components/auth/GoogleSignInButton';
 import Icon from '../components/ui/Icon';
 import GlassCard from '../components/ui/GlassCard';
 import { BRAND } from '../design/tokens';
+import { BrandName } from '../components/ui/BrandText';
 import { getApiErrorMessage } from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -43,7 +44,7 @@ export default function RegisterPage() {
           <div className="flex items-center gap-3">
             <Icon name="logo" className="w-10 h-10" />
             <div>
-              <div className="font-bold text-text tracking-tight" style={{ fontSize: '20px', lineHeight: '1.1' }}>GateApex</div>
+              <BrandName size="20px" />
               <div style={{ color: '#A855F7', fontSize: '10px', fontWeight: 600, letterSpacing: '1px' }}>GATE 2027</div>
             </div>
           </div>

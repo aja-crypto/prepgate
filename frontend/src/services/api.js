@@ -12,7 +12,7 @@ export function getApiErrorMessage(error, fallback = 'Something went wrong') {
   if (error.response?.data?.message) return error.response.data.message;
   if (error.code === 'ECONNABORTED') return 'Request timed out. Check your connection and try again.';
   if (error.message === 'Network Error' || !error.response) {
-    return 'Cannot reach the server. Make sure the backend is running on port 5000.';
+    return 'Cannot reach the server. Check your connection and try again.';
   }
   return fallback;
 }
@@ -92,7 +92,7 @@ api.interceptors.response.use(
       localStorage.removeItem('refreshToken');
       delete api.defaults.headers.common['Authorization'];
       if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+        window.dispatchEvent(new CustomEvent('auth:expired'));
       }
       return Promise.reject(error);
     }
@@ -105,13 +105,12 @@ api.interceptors.response.use(
         localStorage.removeItem('refreshToken');
         delete api.defaults.headers.common['Authorization'];
         if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
+          window.dispatchEvent(new CustomEvent('auth:expired'));
         }
         return Promise.reject(error);
       }
 
       if (isRefreshing) {
-        // Wait for ongoing refresh
         try {
           const token = await new Promise((resolve, reject) => {
             failedQueue.push({ resolve, reject });
@@ -136,7 +135,7 @@ api.interceptors.response.use(
         localStorage.removeItem('refreshToken');
         delete api.defaults.headers.common['Authorization'];
         if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
+          window.dispatchEvent(new CustomEvent('auth:expired'));
         }
         return Promise.reject(refreshError);
       } finally {

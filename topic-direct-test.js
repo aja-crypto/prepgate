@@ -1,4 +1,4 @@
-const { chromium } = require('playwright');
+﻿const { chromium } = require('playwright');
 (async () => {
   const browser = await chromium.launch({ headless: false, slowMo: 80 });
   const page = await browser.newPage();
@@ -111,7 +111,7 @@ const { chromium } = require('playwright');
   // We need to check what ProgressContext.topics contains
   const localTopicsCheck = await page.evaluate(() => {
     try {
-      const stored = localStorage.getItem('prepgate_progress');
+      const stored = localStorage.getItem('gatenexa_progress');
       if (stored) {
         const parsed = JSON.parse(stored);
         const topics = parsed?.gateFeatures?.studyProgress || {};

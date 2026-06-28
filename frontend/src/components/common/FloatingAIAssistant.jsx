@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useProgress } from '../../context/ProgressContext';
 import { aiService } from '../../services/api';
-import GateApexAIIcon from '../ui/GateApexAIIcon';
+import GateNexaAIIcon from '../ui/GateNexaAIIcon';
 import Icon from '../ui/Icon';
 
 
@@ -69,10 +70,43 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
   const navigate = useNavigate();
 
   const ds = useRef({ x: 0, y: 0, ox: 0, oy: 0, moved: false, dragging: false });
-  const { user } = useProgress();
+  const { user } = useAuth();
+  const { topics, pyqs, mocks, studyStats, gateFeatures } = useProgress();
+
+  const weakSubjects = (() => {
+    if (!topics?.length || !pyqs?.length) return [];
+    const subjectAccuracy = {};
+    pyqs.forEach(p => {
+      if (!subjectAccuracy[p.subject]) subjectAccuracy[p.subject] = { correct: 0, total: 0 };
+      subjectAccuracy[p.subject].total++;
+      if (p.isCorrect) subjectAccuracy[p.subject].correct++;
+    });
+    return Object.entries(subjectAccuracy)
+      .filter(([, d]) => d.total >= 3 && (d.correct / d.total) < 0.6)
+      .map(([s]) => s);
+  })();
+
+  const strongSubjects = (() => {
+    if (!topics?.length || !pyqs?.length) return [];
+    const subjectAccuracy = {};
+    pyqs.forEach(p => {
+      if (!subjectAccuracy[p.subject]) subjectAccuracy[p.subject] = { correct: 0, total: 0 };
+      subjectAccuracy[p.subject].total++;
+      if (p.isCorrect) subjectAccuracy[p.subject].correct++;
+    });
+    return Object.entries(subjectAccuracy)
+      .filter(([, d]) => d.total >= 3 && (d.correct / d.total) >= 0.75)
+      .map(([s]) => s);
+  })();
+
+  const overallProgress = topics?.length
+    ? Math.round(topics.reduce((s, t) => s + (t.completed ? 100 : 0), 0) / topics.length)
+    : 0;
+  const avgMock = mocks?.length ? Math.round(mocks.reduce((s, m) => s + (m.score || 0), 0) / mocks.length) : 0;
+  const streak = gateFeatures?.streak?.current || 0;
 
   useEffect(() => {
-    const saved = localStorage.getItem('gateapex_ai_pos');
+    const saved = localStorage.getItem('gatenexa_ai_pos');
     if (!saved) return;
     const el = elRef.current;
     if (!el) return;
@@ -141,15 +175,15 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     setLoading(true);
     setSuggestions(null);
 
-    const ctx = {
-      weakSubjects: user?.weakSubjects || [],
-      strongSubjects: user?.strongSubjects || [],
-      weakTopics: (user?.weakTopics || []).slice(0, 5),
-      overallProgress: user?.overallProgress || 0,
-      mockAvg: user?.mockAvg || 0,
-      streak: user?.streak || 0,
-      overdueTopics: user?.overdueTopics || 0,
-      recentAccuracy: user?.recentAccuracy || 0,
+const ctx = {
+      weakSubjects,
+      strongSubjects,
+      weakTopics: (topics || []).slice(0, 5).map(t => t.name),
+      overallProgress,
+      mockAvg,
+      streak,
+      overdueTopics: (pyqs || []).filter(p => p.revisionNeeded).length,
+      recentAccuracy: avgMock,
     };
 
     setMessages(prev => [...prev, { role: 'user', text: msg }]);
@@ -158,7 +192,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     const reply = result?.data?.data?.text || null;
 
     if (!reply) {
-      setMessages(prev => [...prev, { role: 'assistant', text: "Unable to connect to GateApex AI. Please try again in a moment." }]);
+      setMessages(prev => [...prev, { role: 'assistant', text: "Unable to connect to GateNexa AI. Please try again in a moment." }]);
       setLoading(false);
       return;
     }
@@ -176,7 +210,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     const left = r.left + r.width / 2 < vw / 2;
     const nx = left ? 20 : vw - r.width - 20;
     const ny = Math.max(20, Math.min(r.top, window.innerHeight - r.height - 20));
-    localStorage.setItem('gateapex_ai_pos', JSON.stringify({ left: nx, top: ny }));
+    localStorage.setItem('gatenexa_ai_pos', JSON.stringify({ left: nx, top: ny }));
     el.style.transition = 'left 0.3s ease, top 0.3s ease';
     el.style.left = nx + 'px';
     el.style.top = ny + 'px';
@@ -267,7 +301,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
         width: 'clamp(340px, 32vw, 480px)',
         maxWidth: 'calc(100vw - 32px)',
         right: '20px',
-        bottom: '110px',
+        bottom: 'calc(110px + env(safe-area-inset-bottom, 0px))',
         background: 'rgba(5,8,22,0.96)',
         border: '1px solid rgba(139,92,246,0.25)',
         boxShadow: '0 0 60px rgba(139,92,246,0.15)',
@@ -277,9 +311,9 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'rgba(139,92,246,0.15)' }}>
           <div className="flex items-center gap-3">
-            <GateApexAIIcon size={32} thinking={loading} />
+            <GateNexaAIIcon size={32} thinking={loading} />
             <div>
-              <div className="text-sm font-bold text-white leading-tight">GateApex AI</div>
+              <div className="text-sm font-bold text-white leading-tight">GateNexa AI</div>
               <div className="text-[9px] font-semibold" style={{ color: '#A855F7', letterSpacing: '0.5px' }}>
                 Your Personal GATE Assistant
               </div>
@@ -299,8 +333,8 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
         <div className="overflow-y-auto p-3 space-y-3" style={{ maxHeight: '400px' }}>
           {messages.length === 0 ? (
             <div className="text-center py-4">
-              <GateApexAIIcon size={48} className="mx-auto mb-3 opacity-60" />
-              <p className="text-sm font-semibold text-white mb-1">Welcome to GateApex AI</p>
+              <GateNexaAIIcon size={48} className="mx-auto mb-3 opacity-60" />
+              <p className="text-sm font-semibold text-white mb-1">Welcome to GateNexa AI</p>
               <p className="text-xs text-gray-400 mb-4">Your Personal GATE Assistant</p>
               <p className="text-[11px] text-gray-500 mb-4 leading-relaxed max-w-[90%] mx-auto">
                 I can help with:<br />
@@ -334,7 +368,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
                       {msg.role === 'user' ? (
                         <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-primary"><path fillRule="evenodd" d="M10 9a3 3 0 100-6a3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/></svg>
                       ) : (
-                        <GateApexAIIcon size={20} thinking={loading && i === messages.length - 1} />
+                        <GateNexaAIIcon size={20} thinking={loading && i === messages.length - 1} />
                       )}
                     </div>
                     <div className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed ${
@@ -403,13 +437,13 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
       <div className="ai-assistant-wrapper"
         onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       >
-        <div className="ai-shortcut">Ask GateApex AI</div>
+        <div className="ai-shortcut">Ask GateNexa AI</div>
         <div ref={elRef} className="ai-assistant" onClick={handleClick}>
-          <GateApexAIIcon size={46} thinking={hover} />
+          <GateNexaAIIcon size={46} thinking={hover} />
         </div>
         {hover && (
           <div className="ai-tooltip">
-            <div className="ai-tooltip-title">GateApex AI</div>
+            <div className="ai-tooltip-title">GateNexa AI</div>
             <div className="ai-tooltip-sub">Ask anything about GATE 2027</div>
           </div>
         )}
@@ -423,7 +457,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
         }
         .ai-assistant {
           position: fixed;
-          bottom: 30px;
+          bottom: calc(30px + env(safe-area-inset-bottom, 0px));
           right: 30px;
           width: 70px;
           height: 70px;
@@ -475,7 +509,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
           .chat-panel { width: 100%; right: 0; left: 0; bottom: 0; max-height: 80vh; border-radius: 20px 20px 0 0; }
         }
         @media (max-width: 639px) {
-          .ai-assistant { width: 60px; height: 60px; bottom: 20px; right: 20px; }
+          .ai-assistant { width: 60px; height: 60px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); right: 20px; }
           .ai-tooltip { right: calc(100% + 10px); padding: 8px 12px; }
           .ai-tooltip-title { font-size: 12px; }
           .ai-tooltip-sub { font-size: 10px; }

@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BrandName } from '../ui/BrandText';
 
 const QUOTES = [
   'Every second counts. Every step matters.',
@@ -198,14 +199,9 @@ export default function PremiumLoadingScreen({ onComplete }) {
         >
           <h1
             className="text-2xl font-bold tracking-[5px] uppercase"
-            style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, #a78bfa 50%, #818cf8 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              textShadow: '0 0 40px rgba(139,92,246,0.15)',
-            }}
+            style={{ textShadow: '0 0 40px rgba(139,92,246,0.15)' }}
           >
-            GateApex
+            <BrandName />
           </h1>
         </motion.div>
 

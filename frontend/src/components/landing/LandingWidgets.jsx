@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { GlassCard, AnimatedCounter, AnimatedProgressBar } from './LandingAnimations';
 import { api } from '../../services/api';
@@ -215,7 +215,7 @@ export function DailyMotivation() {
     <GlassCard className="p-6 text-center" glowColor="#6366f1">
       <div className="text-4xl mb-3">💭</div>
       <p className="text-sm italic text-text mb-3">"{quote?.quote || 'Loading...'}"</p>
-      <p className="text-xs text-purple-400">— {quote?.author || 'GateApex'}</p>
+      <p className="text-xs text-purple-400">— {quote?.author || 'GateNexa'}</p>
     </GlassCard>
   );
 }

@@ -1,4 +1,4 @@
-export const TESTIMONIALS = [
+﻿export const TESTIMONIALS = [
   {
     quote: 'Helped me stay consistent with daily study targets. The revision reminders are a game changer.',
     author: 'Rahul S.',
@@ -35,7 +35,7 @@ export default function TestimonialsSection() {
           {'★'.repeat(Math.round(Number(avgRating)))}{'☆'.repeat(5 - Math.round(Number(avgRating)))}
         </div>
         <div className="text-2xl font-bold text-white">{avgRating} / 5</div>
-        <p className="text-xs text-gray-500 mt-1">What aspirants say about GateApex</p>
+        <p className="text-xs text-gray-500 mt-1">What aspirants say about GateNexa</p>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">

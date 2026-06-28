@@ -1,8 +1,12 @@
-// AI study planner — GPT when OPENAI_API_KEY is set, heuristic fallback otherwise
+﻿// AI study planner — GPT when OPENAI_API_KEY is set, heuristic fallback otherwise
 const router = require('express').Router();
 const { protect } = require('../middleware/auth');
 const { validateFields } = require('../middleware/validateInput');
 const aiUsage = require('../services/aiUsageTracker');
+
+let lastAiError = null;
+
+// Last error is now declared at the top of this file
 
 /**
  * Generic AI API caller supporting OpenAI and DashScope (Aliyun)
@@ -46,7 +50,7 @@ async function callAiApi(messages, options = {}) {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
-          ...(isOpenRouter ? { 'HTTP-Referer': 'https://GateApex.app', 'X-Title': 'GateApex' } : {}),
+          ...(isOpenRouter ? { 'HTTP-Referer': 'https://GateNexa.app', 'X-Title': 'GateNexa' } : {}),
         },
         signal: controller.signal,
         body: JSON.stringify({
@@ -511,17 +515,17 @@ router.post('/chat', protect, validateFields([
     const response = await getAiCoachResponse(message.trim(), context, req.user);
     aiUsage.increment(true, Date.now() - chatStart);
     res.json({ success: true, data: response });
-  } catch (e) {
+} catch (e) {
     aiUsage.increment(false, Date.now() - chatStart);
     console.error('[AI Coach] Unhandled error:', e.message);
     console.error('[AI Coach] Stack:', e.stack);
-    res.json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: 'AI chat error',
-      data: { 
+      data: {
         text: "I'm here to help! Based on your preparation data, focus on completing your weak subjects and solving PYQs daily. What specific topic would you like advice on?",
         suggestions: ["What should I study today?", "Show my weak topics", "How to improve accuracy?"]
-      } 
+      }
     });
   }
 });
@@ -561,7 +565,7 @@ function buildHeuristicAnalysis(data) {
   };
 }
 
-// ─── Local GATE Coach (no API key needed) ──────────────────────
+// ─── Local GATE Coach (no API key needed) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 // Scoring system: each group has specific keywords. The group with the most
 // keyword matches wins, avoiding the ordering bug where a generic group
 // (e.g., STUDY) catches queries meant for a more specific group.
@@ -659,7 +663,7 @@ function localCoachResponse(message, context) {
     text = `**GATE Score → Rank estimates (general category):**\n\n🏆 **AIR < 100:** 75+ marks (IIT Bombay/Delhi CSE)\n🥇 **AIR < 500:** 65+ marks (Top IITs)\n🥈 **AIR < 2000:** 55+ marks (IITs, NITs)\n🥉 **AIR < 5000:** 45+ marks (Good NITs, IIITs)\n\n**Your current path:** ${progress > 70 ? 'You\'re on track for a strong rank!' : progress > 40 ? 'Good progress — keep building!' : 'Early stage — focus on learning, not ranks yet!'}\n\nYou can track your predicted rank in the Analytics page!`;
     suggestions = ["Predict my AIR", "Show college cutoffs", "What score for IIT Madras?"];
   } else if (bestGroup === 'RESOURCE') {
-    text = `**Best free resources for GATE CSE:**\n\n📺 **YouTube:** NPTEL (IIT professors), Gate Smashers, Knowledge Gate\n📘 **Books:** CLRS (Algorithms), Tanenbaum (OS/CN), Korth (DBMS), Ullman (TOC)\n🧠 **Practice:** GateApex PYQ browser + Mock tests\n📝 **Notes:** Create your own short notes (10-15 pages per subject)\n\n💡 **Rule:** Stick to **1-2 resources per subject**. Hoarding resources wastes time!`;
+    text = `**Best free resources for GATE CSE:**\n\n📺 **YouTube:** NPTEL (IIT professors), Gate Smashers, Knowledge Gate\n📘 **Books:** CLRS (Algorithms), Tanenbaum (OS/CN), Korth (DBMS), Ullman (TOC)\n🧠 **Practice:** GateNexa PYQ browser + Mock tests\n📝 **Notes:** Create your own short notes (10-15 pages per subject)\n\n💡 **Rule:** Stick to **1-2 resources per subject**. Hoarding resources wastes time!`;
     suggestions = ["Best YouTube channels", "Recommended textbooks", "Free mock test sources"];
   } else if (bestGroup === 'MATH') {
     text = `**Mathematics for GATE CSE — Priority order:**\n\n1. **Discrete Mathematics** — Graph Theory, Combinatorics, Set Theory (highest weightage)\n2. **Linear Algebra** — Matrices, Vector Spaces, Eigenvalues\n3. **Probability & Statistics** — Random Variables, Distributions\n4. **Calculus** — Limits, Continuity, Differentiation\n\n📈 **Strategy:** Solve **5 math problems daily** — consistency matters more than intensity. Most math questions in GATE are moderate difficulty but need practice.`;
@@ -693,9 +697,6 @@ function localCoachResponse(message, context) {
   return { text, suggestions };
 }
 
-// Store the last AI error to show to the user
-let lastAiError = null;
-
 async function getAiCoachResponse(message, context, user) {
   console.log('[AI Coach] Starting getAiCoachResponse');
   console.log('[AI Coach] User message:', message);
@@ -707,13 +708,14 @@ async function getAiCoachResponse(message, context, user) {
   console.log('[AI Coach] DASHSCOPE_API_KEY present:', !!process.env.DASHSCOPE_API_KEY);
   console.log('[AI Coach] OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);
 
-  try {
+try {
+    lastAiError = null; // Clear stale errors at start of each request
     const apiKey = process.env.OPENROUTER_API_KEY || process.env.DASHSCOPE_API_KEY || process.env.OPENAI_API_KEY;
     if (apiKey) {
       console.log('[AI Coach] API key found, calling callAiApi...');
       lastAiError = null;
       
-      const systemPrompt = `You are GateApex AI Mentor.
+      const systemPrompt = `You are GateNexa AI Mentor.
 
 You help GATE CSE aspirants.
 
@@ -838,7 +840,7 @@ Provide specific, motivating, GATE-focused advice.`;
   }
 }
 
-// ─── Doubt Solver ──────────────────────────────────────────────
+// ─── Doubt Solver â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 
 const DOUBT_SUBJECTS = ['AL', 'DS', 'DB', 'OS', 'CN', 'CO', 'TOC', 'CD', 'DL', 'EM', 'APT'];
 
@@ -967,7 +969,7 @@ router.post('/doubt-solver', protect, validateFields([
   }
 });
 
-// ─── Subject list for doubt solver ────────────────────────────
+// ─── Subject list for doubt solver â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 router.get('/doubt-subjects', protect, (req, res, next) => {
   try {
     res.json({ success: true, data: DOUBT_SUBJECTS });

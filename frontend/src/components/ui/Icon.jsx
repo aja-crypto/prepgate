@@ -1,4 +1,4 @@
-// Custom SVG icons — premium nav (no emoji clones)
+﻿// Custom SVG icons — premium nav (no emoji clones)
 const icons = {
   dashboard: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="w-[18px] h-[18px]">
@@ -177,10 +177,10 @@ const icons = {
     </svg>
   ),
   logo: (
-    <img src="/images/logo.png" alt="GateApex" className="w-8 h-8 object-contain" />
+    <img src="/images/logo.png" alt="GateNexa" className="w-full h-full object-contain" style={{ minWidth: '32px', minHeight: '32px' }} />
   ),
   logoFull: (
-    <img src="/images/logo.png" alt="GateApex" className="h-8 object-contain" />
+    <img src="/images/logo.png" alt="GateNexa" className="h-full object-contain" style={{ minWidth: '32px' }} />
   ),
   feedback: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="w-[18px] h-[18px]">
@@ -283,6 +283,11 @@ const icons = {
       <path d="M12 12L3 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
       <path d="M12 12l9-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
       <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  ),
+  edit: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="w-[18px] h-[18px]">
+      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
     </svg>
   ),
 };

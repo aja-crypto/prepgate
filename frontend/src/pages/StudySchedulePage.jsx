@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+﻿import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, addDays, startOfWeek, isToday, isSameDay } from 'date-fns';
 import { useProgress } from '../context/ProgressContext';
@@ -155,7 +155,7 @@ function requestNotificationPermission() {
 function notifyBlock(block) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   const bt = getBlockType(block.type);
-  new Notification(`PrepGate: ${bt.label} in 5 min`, {
+  new Notification(`GateNexa: ${bt.label} in 5 min`, {
     body: `${block.subject || bt.label} at ${block.startTime}`,
     icon: '/favicon.ico',
     tag: `block-reminder-${block.id}`,
@@ -597,7 +597,7 @@ export default function StudySchedulePage() {
                       <div key={hour}>
                         <div className="absolute left-0 right-0 flex items-start pointer-events-none" style={{ top: `${topPx}px` }}>
                           <div className="w-[52px] shrink-0 text-right pr-2 -mt-2">
-                            <span className="text-[9px] text-text3 font-mono">{formatTime12(hour, 0)}</span>
+                            <span className="text-[10px] text-text2 font-mono font-medium">{formatTime12(hour, 0)}</span>
                           </div>
                           <div className="flex-1 border-t border-white/[0.04]" />
                         </div>
@@ -618,7 +618,7 @@ export default function StudySchedulePage() {
                     <div className="absolute left-0 right-0 z-20 pointer-events-none" style={{ top: `${currentTimeTopPx}px` }}>
                       <div className="flex items-center">
                         <div className="w-[52px] shrink-0 flex justify-end pr-1.5 -mt-2">
-                          <span className="text-[9px] font-mono font-bold text-red-400">{format(now, 'h:mm')}</span>
+                          <span className="text-[11px] font-mono font-bold text-red-400">{format(now, 'h:mm')}</span>
                         </div>
                         <div className="flex items-center flex-1">
                           <div className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0 shadow-lg shadow-red-500/50 animate-pulse" />
@@ -689,11 +689,11 @@ export default function StudySchedulePage() {
                             )}
                           </div>
 
-                          {/* Actions */}
-                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                            <button onClick={() => openEdit(b)} className="w-6 h-6 rounded-md flex items-center justify-center text-[9px] bg-white/[0.06] text-text3 hover:text-text hover:bg-white/[0.1] transition-all">✏</button>
-                            <button onClick={() => handleDuplicateBlock(b)} className="w-6 h-6 rounded-md flex items-center justify-center text-[9px] bg-white/[0.06] text-text3 hover:text-text hover:bg-white/[0.1] transition-all">⧉</button>
-                            <button onClick={() => handleDeleteBlock(b.id)} className="w-6 h-6 rounded-md flex items-center justify-center text-[9px] bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all">✕</button>
+                          {/* Actions — always visible on mobile, hover-only on desktop */}
+                          <div className="flex items-center gap-0.5 shrink-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => openEdit(b)} className="w-6 h-6 rounded-md flex items-center justify-center text-[9px] bg-white/[0.06] text-text3 hover:text-text hover:bg-white/[0.1] transition-all" aria-label="Edit block">✏</button>
+                            <button onClick={() => handleDuplicateBlock(b)} className="hidden sm:flex w-6 h-6 rounded-md items-center justify-center text-[9px] bg-white/[0.06] text-text3 hover:text-text hover:bg-white/[0.1] transition-all" aria-label="Duplicate block">⧉</button>
+                            <button onClick={() => handleDeleteBlock(b.id)} className="w-6 h-6 rounded-md flex items-center justify-center text-[9px] bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all" aria-label="Delete block">✕</button>
                           </div>
                         </div>
                       </div>

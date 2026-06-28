@@ -21,6 +21,13 @@ const topicIdMap = new Map();   // id -> topic doc
 
 let localFlashcards = [];
 const FLASHCARDS_FILE = path.join(__dirname, '../../data/gatevault_flashcards.json');
+const MOCK_ATTEMPTS_FILE = path.join(__dirname, '../../data/mock_attempts.json');
+
+let localExternalMocks = [];
+const EXTERNAL_MOCKS_FILE = path.join(__dirname, '../../data/external_mocks.json');
+
+let localCalendarEvents = [];
+const CALENDAR_EVENTS_FILE = path.join(__dirname, '../../data/calendar_events.json');
 
 function loadLocalFlashcards() {
   try {
@@ -28,6 +35,38 @@ function loadLocalFlashcards() {
       localFlashcards = JSON.parse(fs.readFileSync(FLASHCARDS_FILE, 'utf8'));
     }
   } catch {}
+}
+
+function loadLocalMockAttempts() {
+  try {
+    if (fs.existsSync(MOCK_ATTEMPTS_FILE)) {
+      const arr = JSON.parse(fs.readFileSync(MOCK_ATTEMPTS_FILE, 'utf8'));
+      arr.forEach(a => localMockAttempts.set(`${a.user}:${a.test}:${a.attemptNumber}`, a));
+    }
+  } catch {}
+}
+
+function loadLocalExternalMocks() {
+  try {
+    if (fs.existsSync(EXTERNAL_MOCKS_FILE)) {
+      localExternalMocks = JSON.parse(fs.readFileSync(EXTERNAL_MOCKS_FILE, 'utf8'));
+    }
+  } catch {}
+}
+
+function loadLocalCalendarEvents() {
+  try {
+    if (fs.existsSync(CALENDAR_EVENTS_FILE)) {
+      localCalendarEvents = JSON.parse(fs.readFileSync(CALENDAR_EVENTS_FILE, 'utf8'));
+    }
+  } catch {}
+}
+
+function saveLocalMockAttemptsToDisk() {
+  try {
+    const data = Array.from(localMockAttempts.values());
+    fs.writeFileSync(MOCK_ATTEMPTS_FILE, JSON.stringify(data, null, 2));
+  } catch (err) { console.error('Mock attempts save failed:', err.message); }
 }
 
 function saveLocalFlashcardsToDisk() {
@@ -94,7 +133,66 @@ function bulkSaveLocalFlashcards(cards) {
   return created;
 }
 
+// External Mock Tests (Score Tracker)
+function saveLocalExternalMock(data) {
+  const mock = {
+    _id: oid(),
+    createdAt: new Date().toISOString(),
+    ...data,
+  };
+  localExternalMocks.push(mock);
+  saveToDisk();
+  return mock;
+}
+
+function getLocalExternalMocks(userId) {
+  return localExternalMocks.filter(m => m.user === userId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+function deleteLocalExternalMock(id, userId) {
+  const idx = localExternalMocks.findIndex(m => m._id === id && m.user === userId);
+  if (idx === -1) return false;
+  localExternalMocks.splice(idx, 1);
+  saveToDisk();
+  return true;
+}
+
+// Calendar Events (Study Planner)
+function saveLocalCalendarEvent(data) {
+  const event = {
+    _id: oid(),
+    createdAt: new Date().toISOString(),
+    ...data,
+  };
+  localCalendarEvents.push(event);
+  saveToDisk();
+  return event;
+}
+
+function getLocalCalendarEvents(userId) {
+  return localCalendarEvents.filter(e => e.user === userId).sort((a, b) => new Date(a.start) - new Date(b.start));
+}
+
+function updateLocalCalendarEvent(id, userId, data) {
+  const idx = localCalendarEvents.findIndex(e => e._id === id && e.user === userId);
+  if (idx === -1) return null;
+  localCalendarEvents[idx] = { ...localCalendarEvents[idx], ...data, updatedAt: new Date().toISOString() };
+  saveToDisk();
+  return localCalendarEvents[idx];
+}
+
+function deleteLocalCalendarEvent(id, userId) {
+  const idx = localCalendarEvents.findIndex(e => e._id === id && e.user === userId);
+  if (idx === -1) return false;
+  localCalendarEvents.splice(idx, 1);
+  saveToDisk();
+  return true;
+}
+
 loadLocalFlashcards();
+loadLocalMockAttempts();
+loadLocalExternalMocks();
+loadLocalCalendarEvents();
 
 function oid() {
   return crypto.randomBytes(12).toString('hex');
@@ -130,6 +228,8 @@ function saveToDisk(immediate = false) {
       localProgress.forEach((v, k) => { progressObj[k] = v; });
       const data = JSON.stringify({ notes: localNotes, progress: progressObj }, null, 2);
       fs.writeFileSync(DATA_FILE, data);
+      fs.writeFileSync(EXTERNAL_MOCKS_FILE, JSON.stringify(localExternalMocks, null, 2));
+      fs.writeFileSync(CALENDAR_EVENTS_FILE, JSON.stringify(localCalendarEvents, null, 2));
       console.log('--- Local Data Saved to Disk ---');
     } catch (err) {
       console.error('Failed to save local data store:', err.message);
@@ -183,10 +283,12 @@ function getLocalNotes(filter = {}) {
   
   if (filter.search) {
     const s = filter.search.toLowerCase();
-    list = list.filter(n => 
-      n.title?.toLowerCase().includes(s) || 
+    list = list.filter(n =>
+      n.title?.toLowerCase().includes(s) ||
       n.content?.toLowerCase().includes(s) ||
-      n.ocrText?.toLowerCase().includes(s)
+      n.ocrText?.toLowerCase().includes(s) ||
+      n.subject?.toLowerCase().includes(s) ||
+      n.topic?.toLowerCase().includes(s)
     );
   }
   return list.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0) || b.updatedAt - a.updatedAt);
@@ -196,13 +298,13 @@ function updateLocalNote(id, data) {
   const idx = localNotes.findIndex(n => n._id === id);
   if (idx === -1) return null;
   localNotes[idx] = { ...localNotes[idx], ...data, updatedAt: new Date() };
-  saveToDisk();
+  saveToDisk(true); // Persist immediately to prevent data loss on crash
   return localNotes[idx];
 }
 
 function deleteLocalNote(id) {
   localNotes = localNotes.filter(n => n._id !== id);
-  saveToDisk();
+  saveToDisk(true); // Persist immediately to prevent data loss on crash
   return true;
 }
 
@@ -322,7 +424,7 @@ function updateProgress(userId, topicId, updates) {
   const next = { ...prev, ...updates };
   if (updates.studyTimeMinutes) next.studyTimeMinutes = (prev.studyTimeMinutes || 0) + updates.studyTimeMinutes;
   localProgress.set(key, next);
-  saveToDisk();
+  saveToDisk(true);
   return next;
 }
 
@@ -457,10 +559,14 @@ function seedLocalMockData(seedData) {
     let pool = localMockQuestions.filter(q => q.subject === t.subject);
 
     if (t.testType === 'topic') {
-      const exact = pool.filter(q => q.topic === t.topic);
-      pool = exact.length >= 2 ? exact : pool.filter(q =>
-        t.topic?.split('&').some(kw => q.topic?.toLowerCase().includes(kw.trim().toLowerCase()))
-      );
+      let topicPool = pool.filter(q => q.topic === t.topic);
+      if (topicPool.length < 2) {
+        topicPool = pool.filter(q =>
+          t.topic?.split('&').some(kw => q.topic?.toLowerCase().includes(kw.trim().toLowerCase()))
+        );
+      }
+      const byDiff = topicPool.filter(q => q.difficulty === t.difficulty);
+      pool = byDiff.length >= 3 ? byDiff : topicPool;
     } else {
       const byDiff = pool.filter(q => q.difficulty === t.difficulty);
       pool = byDiff.length >= 3 ? byDiff : pool;
@@ -526,6 +632,7 @@ function saveLocalMockAttempt(userId, data) {
   const key = `${userId}:${data.test}:${nextAttempt}`;
   const attempt = { _id: oid(), user: userId, attemptNumber: nextAttempt, ...data, createdAt: new Date().toISOString() };
   localMockAttempts.set(key, attempt);
+  saveLocalMockAttemptsToDisk(); // Persist immediately to prevent data loss
   return attempt;
 }
 
@@ -728,4 +835,11 @@ module.exports = {
   updateLocalFlashcard,
   deleteLocalFlashcard,
   bulkSaveLocalFlashcards,
+  saveLocalExternalMock,
+  getLocalExternalMocks,
+  deleteLocalExternalMock,
+  saveLocalCalendarEvent,
+  getLocalCalendarEvents,
+  updateLocalCalendarEvent,
+  deleteLocalCalendarEvent,
 };

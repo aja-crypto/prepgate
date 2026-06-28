@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 
 const QUOTES = [
-  { quote: 'Success in GATE Starts With Knowing What to Do Today.', author: 'GateApex Team' },
-  { quote: 'Consistency beats intensity. Small daily progress becomes a big rank.', author: 'GateApex Team' },
-  { quote: 'Don\'t count the days, make the days count.', author: 'GateApex Team' },
+  { quote: 'Success in GATE Starts With Knowing What to Do Today.', author: 'GateNexa Team' },
+  { quote: 'Consistency beats intensity. Small daily progress becomes a big rank.', author: 'GateNexa Team' },
+  { quote: 'Don\'t count the days, make the days count.', author: 'GateNexa Team' },
   { quote: 'Hard work beats talent. When talent doesn\'t work hard, hard work wins.', author: 'Unknown' },
-  { quote: 'Every question you solve today is one step closer to your IIT dream.', author: 'GateApex Team' },
+  { quote: 'Every question you solve today is one step closer to your IIT dream.', author: 'GateNexa Team' },
 ];n
 export default function MotivationCard() {
   const [quote, setQuote] = useState(QUOTES[0]);

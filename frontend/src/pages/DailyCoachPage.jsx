@@ -14,17 +14,24 @@ const SUGGESTIONS = [
   "How should I revise effectively?",
 ];
 
-function buildContext(user) {
-  if (!user) return {};
+function buildContext(progress) {
+  if (!progress) return {};
+  const { topics = [], pyqs = [], mocks = [], gateFeatures = {} } = progress;
+  const weakSubjects = topics.filter(t => t.progress < 50).map(t => t.subject);
+  const strongSubjects = topics.filter(t => t.progress >= 80).map(t => t.subject);
+  const weakTopics = topics.filter(t => !t.done).slice(0, 5).map(t => t.name);
+  const overallProgress = topics.length ? Math.round(topics.reduce((s, t) => s + (t.progress || 0), 0) / topics.length) : 0;
+  const mockAvg = mocks.length ? Math.round(mocks.reduce((s, m) => s + (m.score || 0), 0) / mocks.length) : 0;
+  const streak = gateFeatures?.streak?.current || 0;
   return {
-    weakSubjects: user.weakSubjects || [],
-    strongSubjects: user.strongSubjects || [],
-    weakTopics: (user.progressBackup?.weakTopics || user.weakTopics || []).slice(0, 5),
-    overallProgress: user.progressBackup?.overallProgress || user.overallProgress || 0,
-    mockAvg: user.progressBackup?.mockAvg || user.mockAvg || 0,
-    streak: user.streak || 0,
-    overdueTopics: user.overdueTopics || 0,
-    recentAccuracy: user.recentAccuracy || 0,
+    weakSubjects: [...new Set(weakSubjects)],
+    strongSubjects: [...new Set(strongSubjects)],
+    weakTopics,
+    overallProgress,
+    mockAvg,
+    streak,
+    overdueTopics: pyqs.filter(p => p.revisionNeeded).length,
+    recentAccuracy: pyqs.length ? Math.round((pyqs.filter(p => p.isCorrect).length / pyqs.length) * 100) : 0,
   };
 }
 
@@ -39,7 +46,7 @@ const DAILY_TIPS = [
 
 export default function DailyCoachPage() {
   const { user } = useAuth();
-  const { refreshUser } = useProgress();
+  const { topics, pyqs, mocks, gateFeatures } = useProgress();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -51,13 +58,13 @@ export default function DailyCoachPage() {
     if (welcomeSent.current) return;
     welcomeSent.current = true;
     const timer = setTimeout(async () => {
-      const ctx = buildContext(user);
+      const ctx = buildContext({ topics, pyqs, mocks, gateFeatures });
       const result = await aiService.askCoach("hello", ctx).catch(() => null);
       const text = result?.data?.data?.text || `Good ${new Date().getHours() < 12 ? 'morning' : 'afternoon'}, ${user?.name?.split(' ')[0] || 'there'}! 👋\n\nI'm your Daily Coach. Ask me anything about your GATE preparation — study plans, weak topics, PYQs, or revision.`;
       setMessages([{ role: 'coach', text }]);
     }, 500);
     return () => clearTimeout(timer);
-  }, [user]);
+  }, [user, topics, pyqs, mocks, gateFeatures]);
 
   useEffect(() => {
     chatEnd.current?.scrollIntoView({ behavior: 'smooth' });
@@ -70,14 +77,13 @@ export default function DailyCoachPage() {
     setInput('');
     setMessages((m) => [...m, { role: 'user', text: userMsg }]);
     setLoading(true);
-    await refreshUser?.();
 
-    const ctx = buildContext(user);
+    const ctx = buildContext({ topics, pyqs, mocks, gateFeatures });
     const result = await aiService.askCoach(userMsg, ctx).catch(() => null);
     const text = result?.data?.data?.text || "I'm here to help! Based on your preparation data, focus on completing your weak subjects and solving PYQs daily. What specific topic would you like advice on?";
     setMessages((m) => [...m, { role: 'coach', text }]);
     setLoading(false);
-  }, [input, loading, user]);
+  }, [input, loading, topics, pyqs, mocks, gateFeatures]);
 
   return (
     <div className="min-h-screen bg-[#050816] text-[#F8FAFC] relative">

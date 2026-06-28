@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+﻿import { useState, useEffect, useMemo, useRef } from 'react';
 import { useProgress } from '../context/ProgressContext';
 import { aiService } from '../services/api';
 import { computeSubjectCompletion, computeReadinessScore } from '../utils/gateUtils';
@@ -62,7 +62,7 @@ export default function AICoachPage() {
     const timer = setTimeout(async () => {
       const ctx = buildContext(user);
       const result = await aiService.askCoach("hello", ctx).catch(() => null);
-      const text = result?.data?.data?.text || `Hey! I'm your GateApex AI Mentor. Ask me anything about your GATE prep — study plans, weak topics, PYQs, revision, or motivation.`;
+      const text = result?.data?.data?.text || `Hey! I'm your GateNexa AI Mentor. Ask me anything about your GATE prep — study plans, weak topics, PYQs, revision, or motivation.`;
       setMessages([{ role: 'assistant', text }]);
     }, 400);
     return () => clearTimeout(timer);
@@ -107,7 +107,7 @@ export default function AICoachPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary mb-1">GateApex AI</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary mb-1">GateNexa AI</p>
           <h1 className="text-2xl sm:text-3xl font-bold text-text tracking-tight">AI Mentor</h1>
           <p className="text-sm text-text3 mt-1">Your personal GATE assistant — chat, analyze, plan, motivate</p>
         </div>

@@ -1,28 +1,26 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import Icon from '../ui/Icon';
+import BrandText from '../ui/BrandText';
 
-const LS_KEY = 'gateapex_install_dismissed';
+const LS_KEY = 'gatenexa_install_dismissed';
 
 export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [show, setShow] = useState(false);
   const [dismissed, setDismissed] = useState(() => localStorage.getItem(LS_KEY));
-  const [visitCount, setVisitCount] = useState(() => parseInt(sessionStorage.getItem('gateapex_visit') || '0', 10));
 
   useEffect(() => {
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      if (!dismissed && visitCount >= 1) {
+      const d = localStorage.getItem(LS_KEY);
+      if (!d) {
         setTimeout(() => setShow(true), 2000);
       }
     };
     window.addEventListener('beforeinstallprompt', handler);
-    const count = parseInt(sessionStorage.getItem('gateapex_visit') || '0', 10) + 1;
-    sessionStorage.setItem('gateapex_visit', count.toString());
-    setVisitCount(count);
     return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, [dismissed, visitCount]);
+  }, []);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
@@ -37,7 +35,7 @@ export default function InstallPrompt() {
 
   const handleLater = () => {
     setShow(false);
-    sessionStorage.setItem('gateapex_install_later', Date.now().toString());
+    sessionStorage.setItem('gatenexa_install_later', Date.now().toString());
   };
 
   const handleDontShow = () => {
@@ -46,17 +44,7 @@ export default function InstallPrompt() {
     setDismissed('permanent');
   };
 
-  const checkLater = () => {
-    const laterTime = sessionStorage.getItem('gateapex_install_later');
-    if (laterTime) {
-      const daysSince = (Date.now() - parseInt(laterTime, 10)) / 86400000;
-      if (daysSince < 3) return;
-    }
-    return true;
-  };
-
   if (!show || dismissed === 'permanent' || dismissed === 'installed') return null;
-  if (!checkLater()) return null;
 
   return (
     <div className="fixed bottom-24 right-4 md:right-6 z-[99999] animate-slide-up">
@@ -64,7 +52,7 @@ export default function InstallPrompt() {
         <div className="flex items-start gap-3 mb-3">
           <Icon name="logo" className="w-10 h-10 shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-bold text-text">Install GateApex</div>
+            <div className="text-sm font-bold text-text">Install <BrandText /></div>
             <div className="text-xs text-text3 mt-0.5 leading-relaxed">
               Install for faster access, offline support, and a native app experience.
             </div>

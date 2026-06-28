@@ -48,7 +48,7 @@ export async function initFirebasePush(onForegroundMessage) {
       const title = payload.notification?.title || 'GATE 2027';
       const body = payload.notification?.body || '';
       if (onForegroundMessage) onForegroundMessage(title, body);
-      else new Notification(title, { body, icon: '/favicon.svg' });
+      else new Notification(title, { body, icon: '/favicon.ico' });
     });
     return true;
   } catch {

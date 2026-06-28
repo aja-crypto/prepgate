@@ -1,10 +1,11 @@
-// src/context/ThemeContext.jsx — dark / light / system + custom accent colors
+﻿// src/context/ThemeContext.jsx — dark / light / system + custom accent colors
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { COLOR_PRESETS } from '../design/tokens';
+import { safeGet } from '../utils/storage';
 
-const THEME_MODE_KEY = 'gateapex_theme_mode';
-const COLOR_PRESET_KEY = 'gateapex_color_preset';
-const ONBOARDING_KEY = 'gateapex_onboarding_done';
+const THEME_MODE_KEY = 'gatenexa_theme_mode';
+const COLOR_PRESET_KEY = 'gatenexa_color_preset';
+const ONBOARDING_KEY = 'gatenexa_onboarding_done';
 
 const ThemeContext = createContext(null);
 
@@ -28,19 +29,19 @@ function applyThemeMode(mode) {
 
 export const ThemeProvider = ({ children }) => {
   const [themeMode, setThemeModeState] = useState(() => {
-    const saved = localStorage.getItem(THEME_MODE_KEY);
+    const saved = safeGet(THEME_MODE_KEY);
     if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
-    const legacy = localStorage.getItem('gateapex_theme');
+    const legacy = safeGet('gatenexa_theme');
     return legacy === 'light' ? 'light' : 'dark';
   });
 
   const [colorPreset, setColorPresetState] = useState(() => {
-    return localStorage.getItem(COLOR_PRESET_KEY) || 'violet';
+    return safeGet(COLOR_PRESET_KEY) || 'violet';
   });
 
   const [resolvedTheme, setResolvedTheme] = useState('dark');
   const [onboardingDone, setOnboardingDone] = useState(() => {
-    return localStorage.getItem(ONBOARDING_KEY) === 'true';
+    return safeGet(ONBOARDING_KEY) === 'true';
   });
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export const ThemeProvider = ({ children }) => {
     const resolved = applyThemeMode(themeMode);
     setResolvedTheme(resolved);
     localStorage.setItem(THEME_MODE_KEY, themeMode);
-    localStorage.setItem('gateapex_theme', resolved);
+    localStorage.setItem('gatenexa_theme', resolved);
   }, [themeMode]);
 
   useEffect(() => {

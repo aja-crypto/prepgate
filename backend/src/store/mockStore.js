@@ -20,6 +20,7 @@ function saveUsersToDisk() {
     fs.writeFileSync(USERS_FILE, JSON.stringify(data, null, 2));
   } catch (err) {
     console.error('Failed to save mock users:', err.message);
+    throw err;
   }
 }
 

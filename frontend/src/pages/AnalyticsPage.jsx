@@ -99,8 +99,8 @@ export default function AnalyticsPage() {
       </div>
     );
   }
-  const labels = subjects.map((s) => s.name.split(' ')[0]);
-  const scores = subjects.map((s) => s.progress);
+  const labels = subjects.map((s) => s?.name?.split(' ')[0] || '');
+  const scores = subjects.map((s) => s?.progress ?? 0);
   const readiness = computeReadinessScore(topics, pyqs, mocks, gateFeatures?.streak);
   const forecast = computeCompletionForecast(topics, gateFeatures);
   const priorities = getSubjectPriorities(studyStats.subjects, topics, pyqs);
@@ -129,7 +129,7 @@ export default function AnalyticsPage() {
       destroy('pie');
       charts.current.pie = new Chart(pieRef.current, {
         type: 'doughnut',
-        data: { labels, datasets: [{ data: studyStats.weeklyHours, backgroundColor: subjects.map((s) => s.color), borderWidth: 0 }] },
+        data: { labels, datasets: [{ data: (studyStats.weeklyHours || []), backgroundColor: subjects.map((s) => s.color), borderWidth: 0 }] },
         options: { ...chartOpts, cutout: '65%' },
       });
     }
@@ -149,7 +149,7 @@ export default function AnalyticsPage() {
         type: 'line',
         data: {
           labels: DAY_LABELS,
-          datasets: [{ data: studyStats.weeklyHours, borderColor: '#4f8dff', backgroundColor: '#4f8dff20', fill: true, tension: 0.4, pointRadius: 4 }],
+          datasets: [{ data: (studyStats.weeklyHours || []), borderColor: '#4f8dff', backgroundColor: '#4f8dff20', fill: true, tension: 0.4, pointRadius: 4 }],
         },
         options: { ...chartOpts, scales: { y: { grid: { color: '#ffffff08' }, ticks: { color: '#636b82' } }, x: { grid: { display: false }, ticks: { color: '#636b82' } } } },
       });
@@ -264,7 +264,14 @@ export default function AnalyticsPage() {
         <div className="bg-surface border border-border rounded-xl p-5">
           <div className="text-sm font-semibold text-text mb-3">Weak Topic Recovery Plan</div>
           <div className="space-y-3">
-            {recoveryPlans.map((item) => (
+            {recoveryPlans.length === 0 ? (
+              <div className="text-center py-6">
+                <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12), rgba(99,102,241,0.06))', border: '1px solid rgba(168,85,247,0.15)' }}>
+                  <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-primary"><path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/></svg>
+                </div>
+                <p className="text-sm text-text3">Complete more topics and PYQs to get personalized recovery plans.</p>
+              </div>
+            ) : recoveryPlans.map((item) => (
               <div key={`${item.subject}-${item.topic}`} className="bg-bg-2 border border-border rounded-lg p-3">
                 <div className="flex justify-between gap-3">
                   <div className="text-sm font-medium text-text">{item.topic}</div>
@@ -336,7 +343,14 @@ export default function AnalyticsPage() {
         <div className="bg-surface border border-border rounded-xl p-5">
           <div className="text-sm font-semibold text-text mb-3">Subject Priority Suggestions</div>
           <div className="space-y-2">
-            {priorities.map((p) => (
+            {priorities.length === 0 ? (
+              <div className="text-center py-6">
+                <div className="w-10 h-10 rounded-xl mx-auto mb-3 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12), rgba(99,102,241,0.06))', border: '1px solid rgba(168,85,247,0.15)' }}>
+                  <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-primary"><path d="M3 12h4l2 3 4-9 3 6h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                </div>
+                <p className="text-sm text-text3">Start tracking subjects to see priority suggestions.</p>
+              </div>
+            ) : priorities.map((p) => (
               <div key={p.name} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-mono text-primary w-4">#{p.priority}</span>

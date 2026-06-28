@@ -1,4 +1,4 @@
-/* GateApex Design System — premium SaaS aesthetic */
+﻿/* GateNexa Design System — premium SaaS aesthetic */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -81,6 +81,52 @@
     img, svg, canvas, video { max-width: 100%; height: auto; }
     table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+    
+    body {
+      animation: none !important;
+    }
+    
+    .glass-card {
+      transition: none !important;
+    }
+    
+    .glass-card:hover {
+      transform: none !important;
+    }
+    
+    .widget-card {
+      transition: none !important;
+    }
+    
+    .widget-card:hover {
+      transform: none !important;
+    }
+    
+    .btn-primary {
+      transition: none !important;
+    }
+    
+    .btn-primary:hover {
+      transform: none !important;
+    }
+    
+    .btn-ghost {
+      transition: none !important;
+    }
+    
+    .btn-ghost:hover {
+      transform: none !important;
+    }
   }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }

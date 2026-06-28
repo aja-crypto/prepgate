@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -15,12 +15,17 @@ import { silentCatch } from './utils/errorHandler';
 import './styles/globals.css';
 
 function ReminderScheduler() {
-  const context = useProgress();
+  const { notifications, data } = useProgress();
+  const notificationsRef = useRef(notifications);
+  const dataRef = useRef(data);
+  notificationsRef.current = notifications;
+  dataRef.current = data;
   useEffect(() => {
-    if (!context) return;
-    const interval = setInterval(() => checkReminders(context.notifications, context.data), 60000);
+    const interval = setInterval(() => {
+      checkReminders(notificationsRef.current, dataRef.current);
+    }, 60000);
     return () => clearInterval(interval);
-  }, [context]);
+  }, []);
   return null;
 }
 

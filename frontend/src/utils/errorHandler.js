@@ -1,4 +1,4 @@
-import toast from 'react-hot-toast';
+﻿import toast from 'react-hot-toast';
 
 let toastThrottle = {};
 const THROTTLE_MS = 5000;
@@ -12,13 +12,13 @@ function shouldShowToast(key) {
 
 export function warn(...args) {
   if (process.env.NODE_ENV !== 'production') {
-    console.warn('[GateApex]', ...args);
+    console.warn('[GateNexa]', ...args);
   }
 }
 
 export function logError(operation, error, context = {}) {
   const msg = error?.response?.data?.message || error?.message || String(error);
-  console.error(`[GateApex] ${operation} failed:`, msg, Object.keys(context).length ? context : '');
+  console.error(`[GateNexa] ${operation} failed:`, msg, Object.keys(context).length ? context : '');
   return msg;
 }
 

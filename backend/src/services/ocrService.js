@@ -22,13 +22,18 @@ function retryWithBackoff(fn, maxRetries = 3, baseDelayMs = 1000) {
       } catch (error) {
         lastError = error;
         if (attempt === maxRetries - 1) break;
-        // Exponential backoff with jitter
-        const delay = baseDelayMs * Math.pow(2, attempt) + Math.random() * 500;
+        const delay = Math.min(baseDelayMs * Math.pow(2, attempt) + Math.random() * 500, 30000);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
     throw lastError;
   };
+}
+
+// ─── Transient error check ─────────────────────────────────
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+function isRetryableError(status) {
+  return RETRYABLE_STATUS.has(status);
 }
 
 // ─── Mistral OCR ────────────────────────────────────────────
@@ -47,6 +52,9 @@ const callMistralOcr = retryWithBackoff(async (pdfUrl) => {
   });
 
   if (!response.ok) {
+    if (!isRetryableError(response.status)) {
+      throw new Error(`Mistral OCR failed (${response.status}): non-retryable`);
+    }
     const err = await response.text();
     throw new Error(`Mistral OCR failed (${response.status}): ${err}`);
   }

@@ -27,7 +27,7 @@ adminApi.interceptors.response.use(
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminUser');
       if (window.location.pathname !== '/admin/login') {
-        window.location.href = '/admin/login';
+        window.dispatchEvent(new CustomEvent('admin:expired'));
       }
     }
     return Promise.reject(error);

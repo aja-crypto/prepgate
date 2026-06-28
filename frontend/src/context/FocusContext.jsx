@@ -1,11 +1,11 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+﻿import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useProgress } from './ProgressContext';
 import { useAuth } from './AuthContext';
 import { progressService } from '../services/api';
 
-const FOCUS_STORAGE_KEY = 'gateapex_focus_session';
-const DAILY_FOCUS_KEY = 'gateapex_daily_focus';
-const FOCUS_HISTORY_KEY = 'gateapex_focus_history';
+const FOCUS_STORAGE_KEY = 'gatenexa_focus_session';
+const DAILY_FOCUS_KEY = 'gatenexa_daily_focus';
+const FOCUS_HISTORY_KEY = 'gatenexa_focus_history';
 
 const DURATIONS = [
   { label: '25 min', value: 25 * 60 },
@@ -64,7 +64,7 @@ function sendNotification(title, body) {
   try {
     if (navigator.serviceWorker?.ready) {
       navigator.serviceWorker.ready.then((reg) => {
-        reg.showNotification(title, { body, icon: '/favicon.ico', badge: '/favicon.ico', tag: 'gateapex-focus' });
+        reg.showNotification(title, { body, icon: '/favicon.ico', badge: '/favicon.ico', tag: 'gatenexa-focus' });
       });
     } else {
       new Notification(title, { body, icon: '/favicon.ico' });

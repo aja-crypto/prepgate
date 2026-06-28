@@ -147,6 +147,38 @@ exports.register = async (req, res, next) => {
  * @desc   Sign in / register with Google ID token
  * @access Public
  */
+exports.demoLogin = async (req, res, next) => {
+  try {
+    const email = 'demo@gate2027.in';
+    if (isMockAuthEnabled()) {
+      const user = mockStore.findByEmail(email);
+      if (!user) {
+        return res.status(500).json({ success: false, message: 'Demo account not found. Run seed first.' });
+      }
+      user.updateStreak();
+      user.lastLogin = new Date();
+      await user.save();
+      const { accessToken, refreshToken } = generateTokens(user._id);
+      return res.status(200).json({
+        success: true, message: 'Demo login successful!',
+        data: { user: mockUserResponse(user), accessToken, refreshToken },
+      });
+    }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(500).json({ success: false, message: 'Demo account not configured.' });
+    }
+    user.updateStreak();
+    user.lastLogin = new Date();
+    await user.save({ validateBeforeSave: false });
+    const { accessToken, refreshToken } = generateTokens(user._id);
+    res.status(200).json({
+      success: true, message: 'Demo login successful!',
+      data: { user: mockUserResponse(user), accessToken, refreshToken },
+    });
+  } catch (error) { next(error); }
+};
+
 exports.googleAuth = async (req, res, next) => {
   try {
     const { idToken } = req.body;
@@ -485,6 +517,7 @@ exports.refreshToken = async (req, res, next) => {
       data: { accessToken, refreshToken: newRefreshToken },
     });
   } catch (error) {
+    console.error('[refreshToken]', error.message);
     return res.status(401).json({ success: false, message: 'Invalid or expired refresh token.' });
   }
 };
@@ -494,7 +527,7 @@ exports.refreshToken = async (req, res, next) => {
  * @desc   Get current logged-in user
  * @access Private
  */
-exports.getMe = async (req, res) => {
+exports.getMe = (req, res) => {
   res.json({
     success: true,
     data: { user: req.user },
@@ -519,6 +552,7 @@ exports.updateProfile = async (req, res, next) => {
       if (studyGoalHours !== undefined) user.studyGoalHours = studyGoalHours;
       if (targetYear !== undefined) user.targetYear = targetYear;
       if (preferences) user.preferences = { ...user.preferences, ...preferences };
+      await user.save();
       return res.json({ success: true, data: { user: mockStore.formatUser(user) } });
     }
 
@@ -541,7 +575,10 @@ exports.registerFcmToken = async (req, res, next) => {
 
     if (isMockAuthEnabled()) {
       const user = mockStore.findById(req.user._id);
-      if (user) user.fcmToken = token;
+      if (user) {
+        user.fcmToken = token;
+        await user.save();
+      }
       return res.json({ success: true, message: 'FCM token registered (mock mode)' });
     }
 

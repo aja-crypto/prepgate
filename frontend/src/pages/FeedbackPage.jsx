@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { feedbackService, getApiErrorMessage } from '../services/api';
 import { silentCatch } from '../utils/errorHandler';
@@ -157,7 +157,7 @@ export default function FeedbackPage() {
             🎉
           </div>
           <h2 className="text-xl font-bold text-text mb-2">Thank You for Your Feedback!</h2>
-          <p className="text-sm text-text3 mb-6">Your input helps make GateApex better for every GATE aspirant.</p>
+          <p className="text-sm text-text3 mb-6">Your input helps make GateNexa better for every GATE aspirant.</p>
           <button onClick={() => setSubmitted(false)} className="btn-primary text-sm">Submit Again</button>
         </div>
       </div>
@@ -172,7 +172,7 @@ export default function FeedbackPage() {
           <span className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: '#818CF8' }}>Community</span>
         </div>
         <h1 className="text-2xl font-bold text-text tracking-tight">Feedback & Suggestions</h1>
-        <p className="text-sm text-text3 mt-1">Help shape GateApex. Share your thoughts, report bugs, or request features.</p>
+        <p className="text-sm text-text3 mt-1">Help shape GateNexa. Share your thoughts, report bugs, or request features.</p>
       </div>
 
       {/* Admin Analytics */}
@@ -334,8 +334,8 @@ export default function FeedbackPage() {
       )}
 
       <div className="space-y-6">
-        {/* 1. Rate GateApex */}
-        <Section icon="⭐" title="Rate GateApex" desc="Your ratings help us improve">
+        {/* 1. Rate GateNexa */}
+        <Section icon="⭐" title="Rate GateNexa" desc="Your ratings help us improve">
           <div className="space-y-4">
             {[
               { key: 'overall', label: 'Overall Rating' },
@@ -466,10 +466,10 @@ export default function FeedbackPage() {
         </Section>
 
         {/* 5. Recommendation Section */}
-        <Section icon="💬" title="Your Recommendation" desc="Would you recommend GateApex?">
+        <Section icon="💬" title="Your Recommendation" desc="Would you recommend GateNexa?">
           <div className="space-y-4">
             <div>
-              <label className="block text-[10px] font-semibold text-text2 uppercase tracking-wider mb-2">Would you recommend GateApex to a friend?</label>
+              <label className="block text-[10px] font-semibold text-text2 uppercase tracking-wider mb-2">Would you recommend GateNexa to a friend?</label>
               <div className="flex gap-3">
                 {['yes', 'no', 'maybe'].map((opt) => (
                   <button key={opt} type="button" onClick={() => setRec({ ...rec, wouldRecommend: opt })}

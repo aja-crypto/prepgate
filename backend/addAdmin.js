@@ -1,4 +1,4 @@
-// Quick script to add admin to MongoDB
+﻿// Quick script to add admin to MongoDB
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 require('./src/config/loadEnv');
@@ -24,7 +24,7 @@ async function addAdmin() {
       { email: 'apex@admin' },
       {
         email: 'apex@admin',
-        name: 'PrepGate Admin',
+        name: 'GateNexa Admin',
         password: passwordHash,
         role: 'super_admin',
         permissions: ['users.manage', 'content.manage', 'mocks.manage', 'analytics.view', 'settings.manage'],

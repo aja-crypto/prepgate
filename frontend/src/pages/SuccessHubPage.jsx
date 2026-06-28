@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BRAND } from '../design/tokens';
 import { GATE_FACTS, FACT_CATEGORIES, getDailyFact } from '../data/gateFacts';
@@ -292,13 +292,13 @@ export default function SuccessHubPage() {
               <p className="text-[10px] text-gray-500 mt-1">Adjust based on your target and current progress</p>
             </div>
 
-            {/* GateApex Promise */}
+            {/* GateNexa Promise */}
             <div className="mt-8 p-4 rounded-2xl" style={{ background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.1)' }}>
               <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
-                <span>📜</span> GateApex Promise
+                <span>📜</span> GateNexa Promise
               </h3>
               <p className="text-[11px] text-gray-400 leading-relaxed">
-                GateApex does not claim ownership of all educational resources. Resources are collected and organized 
+                GateNexa does not claim ownership of all educational resources. Resources are collected and organized 
                 from various publicly available educational sources to help aspirants save time and study efficiently. 
                 Wherever possible, credit will be given to the original creators, websites, and educators. If any 
                 creator wishes to modify attribution or remove content, they can contact us and we will review the 
@@ -312,7 +312,7 @@ export default function SuccessHubPage() {
               <p className="text-[11px] text-gray-400 leading-relaxed">
                 Stay Consistent. Trust The Process. Keep Revising. Keep Solving PYQs.
               </p>
-              <p className="text-[11px] text-gray-500 mt-2">GateApex Will Handle The Organization. 🚀</p>
+              <p className="text-[11px] text-gray-500 mt-2">GateNexa Will Handle The Organization. 🚀</p>
             </div>
           </div>
         )}
@@ -353,7 +353,7 @@ export default function SuccessHubPage() {
         {/* === AI MENTOR MESSAGES === */}
         {section === 'ai' && (
           <div className="space-y-4">
-            <p className="text-sm text-gray-400 mb-4">Personalized messages GateApex's AI Mentor might send you based on your progress.</p>
+            <p className="text-sm text-gray-400 mb-4">Personalized messages GateNexa's AI Mentor might send you based on your progress.</p>
             <div className="space-y-2">
               {AI_MENTOR_MESSAGES.map((msg, i) => (
                 <div

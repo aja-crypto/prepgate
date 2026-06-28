@@ -1,12 +1,15 @@
-const CACHE_NAME = 'gateapex-v2';
-const STATIC_CACHE = 'gateapex-static-v2';
-const DYNAMIC_CACHE = 'gateapex-dynamic-v2';
+﻿const CACHE_NAME = 'gatenexa-v2';
+const STATIC_CACHE = 'gatenexa-static-v2';
+const DYNAMIC_CACHE = 'gatenexa-dynamic-v2';
 
 const APP_SHELL = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/favicon.ico',
   '/favicon.svg',
+  '/favicon-16x16.png',
+  '/favicon-32x32.png',
   '/images/logo.png',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
@@ -37,10 +40,13 @@ self.addEventListener('fetch', (event) => {
 
   if (request.method !== 'GET') return;
 
+  // Skip non-http(s) schemes (chrome-extension, data, blob)
+  if (!url.protocol.startsWith('http')) return;
+
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request).catch(() =>
-        new Response(JSON.stringify({ error: 'Offline', message: "You're offline. GateApex will automatically sync your progress when you're back online." }), {
+        new Response(JSON.stringify({ error: 'Offline', message: "You're offline. GateNexa will automatically sync your progress when you're back online." }), {
           status: 503,
           headers: { 'Content-Type': 'application/json' },
         })

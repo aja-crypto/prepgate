@@ -1,4 +1,4 @@
-// src/pages/NotesPage.jsx
+﻿// src/pages/NotesPage.jsx
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProgress } from '../context/ProgressContext';
@@ -25,13 +25,16 @@ const NOTE_TYPES = [
   { id: 'image', label: 'Image/Diagram', icon: 'note' }
 ];
 
+const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
 const resolveMediaUrl = (url) => {
   if (!url) return '';
   if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
-  return url.startsWith('/') ? url : `/${url}`;
+  const relative = url.startsWith('/') ? url : `/${url}`;
+  return `${API_BASE}${relative}`;
 };
 
-const DRAFT_KEY = 'gateapex_notes_draft';
+const DRAFT_KEY = 'gatenexa_notes_draft';
+const EDIT_DRAFT_KEY = 'gatenexa_notes_edit_draft';
 const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function saveDraft(form, file) {
@@ -61,6 +64,34 @@ function clearDraft() {
   try { localStorage.removeItem(DRAFT_KEY); } catch {}
 }
 
+function saveEditDraft(noteId, form, file) {
+  try {
+    localStorage.setItem(EDIT_DRAFT_KEY, JSON.stringify({
+      noteId,
+      form,
+      fileName: file?.name || null,
+      savedAt: Date.now(),
+    }));
+  } catch {}
+}
+
+function loadEditDraft() {
+  try {
+    const raw = localStorage.getItem(EDIT_DRAFT_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (Date.now() - data.savedAt > DRAFT_TTL_MS) {
+      localStorage.removeItem(EDIT_DRAFT_KEY);
+      return null;
+    }
+    return data;
+  } catch { return null; }
+}
+
+function clearEditDraft() {
+  try { localStorage.removeItem(EDIT_DRAFT_KEY); } catch {}
+}
+
 export default function NotesPage() {
   const { mongoAvailable } = useProgress();
   const [notes, setNotes] = useState([]);
@@ -81,6 +112,33 @@ export default function NotesPage() {
     isPinned: false
   });
   const [file, setFile] = useState(null);
+  const [editingNote, setEditingNote] = useState(null);
+
+  const openEditNote = (note) => {
+    setEditingNote(note);
+    setForm({
+      title: note.title || '',
+      subject: note.subject || SUBJECTS[0],
+      content: note.content || '',
+      type: note.type || 'text',
+      isPinned: note.isPinned || false,
+    });
+    setFile(null);
+    const draft = loadEditDraft();
+    if (draft?.noteId === note._id && draft.form) {
+      setForm(draft.form);
+      if (draft.fileName) {
+        toast('Unsaved edits recovered', { duration: 3000, icon: '📝' });
+      }
+    }
+  };
+
+  const closeEditModal = () => {
+    setEditingNote(null);
+    setForm({ title: '', subject: SUBJECTS[0], content: '', type: 'text', isPinned: false });
+    setFile(null);
+    clearEditDraft();
+  };
 
   const fetchNotes = async () => {
     try {
@@ -125,7 +183,7 @@ export default function NotesPage() {
     }
   }, []);
 
-  // Autosave form to localStorage on changes (debounced 1s)
+  // Autosave new note form to localStorage (debounced 1s)
   const draftTimer = useRef(null);
   useEffect(() => {
     if (!showModal) return;
@@ -135,6 +193,17 @@ export default function NotesPage() {
     }, 1000);
     return () => clearTimeout(draftTimer.current);
   }, [form, file, showModal]);
+
+  // Autosave edit form to localStorage (debounced 1s)
+  const editDraftTimer = useRef(null);
+  useEffect(() => {
+    if (!editingNote) return;
+    clearTimeout(editDraftTimer.current);
+    editDraftTimer.current = setTimeout(() => {
+      if (form.title || form.content) saveEditDraft(editingNote._id, form, file);
+    }, 1000);
+    return () => clearTimeout(editDraftTimer.current);
+  }, [form, file, editingNote]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -170,6 +239,37 @@ export default function NotesPage() {
       console.error('Save Note Error:', err);
       const msg = err.response?.data?.message || err.message;
       toast.error(`Failed to save note: ${msg}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.title.trim()) return toast.error('Title is required');
+    if (!editingNote?._id) return;
+
+    const formData = new FormData();
+    formData.append('title', form.title);
+    formData.append('subject', form.subject);
+    formData.append('content', form.content || '');
+    formData.append('type', form.type);
+    formData.append('isPinned', String(form.isPinned));
+    if (file) formData.append('file', file);
+
+    try {
+      setLoading(true);
+      const res = await noteService.update(editingNote._id, formData);
+      if (res.data.success) {
+        toast.success('Note updated');
+        closeEditModal();
+        fetchNotes();
+      } else {
+        throw new Error(res.data.message || 'Server error');
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message;
+      toast.error(`Failed to update: ${msg}`);
     } finally {
       setLoading(false);
     }
@@ -421,6 +521,9 @@ export default function NotesPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => openEditNote(n)} className="p-1.5 rounded-lg hover:bg-bg-3 text-text3 hover:text-primary" title="Edit">
+                        <Icon name="edit" className="w-3.5 h-3.5" />
+                      </button>
                       <button onClick={() => togglePin(n)} className={`p-1.5 rounded-lg hover:bg-bg-3 ${n.isPinned ? 'text-yellow-500' : 'text-text3'}`}>
                         <Icon name="star" className={`w-3.5 h-3.5 ${n.isPinned ? 'fill-current' : ''}`} />
                       </button>
@@ -591,7 +694,7 @@ export default function NotesPage() {
                       type="file" 
                       onChange={e => setFile(e.target.files[0])}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
-                      accept={form.type === 'pdf' ? '.pdf' : 'image/*'}
+                      accept={form.type === 'pdf' ? '.pdf' : 'image/png,image/jpeg,image/jpg,image/gif,image/webp'}
                     />
                     <div className="bg-bg-3 border-2 border-dashed border-border group-hover:border-primary/50 rounded-2xl p-6 text-center transition-all">
                       <Icon name="upload" className="w-8 h-8 text-text3 group-hover:text-primary mx-auto mb-2" />
@@ -633,6 +736,119 @@ export default function NotesPage() {
             >
               {loading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
               Save Resource
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Resource Modal */}
+      <Modal open={!!editingNote} onClose={closeEditModal} title="✏️ Edit Resource" maxWidth="max-w-2xl">
+        <form onSubmit={handleEditSubmit} className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-text3 mb-1.5 block">Title</label>
+                <input
+                  required
+                  value={form.title}
+                  onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                  placeholder="e.g. Dijkstra's Algorithm Summary"
+                  className="w-full bg-bg-2 border border-border rounded-xl px-4 py-3 text-sm text-text focus:outline-none focus:border-primary/60"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-text3 mb-1.5 block">Subject</label>
+                <select
+                  value={form.subject}
+                  onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
+                  className="w-full bg-bg-2 border border-border rounded-xl px-4 py-3 text-sm text-text focus:outline-none"
+                >
+                  {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-text3 mb-1.5 block">Resource Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {NOTE_TYPES.map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, type: t.id }))}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-[11px] font-bold transition-all ${
+                        form.type === t.id ? 'bg-primary/10 border-primary text-primary shadow-sm' : 'bg-bg-2 border-border text-text3 hover:border-text3/30'
+                      }`}
+                    >
+                      <Icon name={t.icon} className="w-3.5 h-3.5" /> {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-text3 mb-1.5 block">
+                  {form.type === 'text' ? 'Content' : 'Optional Description'}
+                </label>
+                <textarea
+                  value={form.content}
+                  onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
+                  placeholder={form.type === 'text' ? "Write your notes here..." : "Add a brief description of the uploaded file..."}
+                  rows={form.type === 'text' ? 10 : 4}
+                  className="w-full bg-bg-2 border border-border rounded-xl px-4 py-3 text-sm text-text focus:outline-none focus:border-primary/60 resize-none font-mono"
+                />
+              </div>
+
+              {form.type !== 'text' && (
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-text3 mb-1.5 block">File Upload</label>
+                  <div className="relative group">
+                    <input
+                      type="file"
+                      onChange={e => setFile(e.target.files[0])}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      accept={form.type === 'pdf' ? '.pdf' : 'image/png,image/jpeg,image/jpg,image/gif,image/webp'}
+                    />
+                    <div className="bg-bg-3 border-2 border-dashed border-border group-hover:border-primary/50 rounded-2xl p-6 text-center transition-all">
+                      <Icon name="upload" className="w-8 h-8 text-text3 group-hover:text-primary mx-auto mb-2" />
+                      <div className="text-xs font-bold text-text2">
+                        {file ? file.name : 'Replace file (optional)'}
+                      </div>
+                      <div className="text-[10px] text-text3 mt-1">PDF or Images up to 10MB</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={form.isPinned}
+                    onChange={e => setForm(f => ({ ...f, isPinned: e.target.checked }))}
+                    className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 bg-bg-2"
+                  />
+                  <span className="text-xs font-bold text-text2 group-hover:text-text">Pin to Top / Dashboard</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={closeEditModal}
+              className="flex-1 px-6 py-3 rounded-xl border border-border text-text3 font-bold text-sm hover:bg-bg-2 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-[2] bg-primary text-white py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+            >
+              {loading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+              Update Resource
             </button>
           </div>
         </form>

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import Icon from '../ui/Icon';
+import BrandText from '../ui/BrandText';
 
 const NAV_ITEMS = [
   { path: '/admin/dashboard', label: 'Dashboard', icon: 'grid' },
@@ -45,7 +46,7 @@ export default function AdminLayout() {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <svg viewBox="0 0 32 32" fill="none" className="w-5 h-5"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </div>
-          <span className="font-bold text-text">GateApex Admin</span>
+          <span className="font-bold text-text"><BrandText /> Admin</span>
         </div>
 
         <nav className="p-3 space-y-1">

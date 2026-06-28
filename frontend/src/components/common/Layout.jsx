@@ -1,4 +1,4 @@
-// Premium app shell — glass sidebar, modern nav
+﻿// Premium app shell — glass sidebar, modern nav
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -7,6 +7,7 @@ import { useProgress } from '../../context/ProgressContext';
 import { BRAND } from '../../design/tokens';
 import GlobalSearch, { useGlobalSearchShortcut } from './GlobalSearch';
 import Icon from '../ui/Icon';
+import BrandText from '../ui/BrandText';
 import OnboardingFlow from '../onboarding/OnboardingFlow';
 import VirtualCalculator from './VirtualCalculator';
 import NotificationBell from './NotificationBell';
@@ -34,7 +35,7 @@ function BackToTop() {
 
 const NAV = [
   { label: 'Dashboard', icon: 'dashboard', to: '/dashboard' },
-  { label: 'GateApex AI', icon: 'zap', to: '/gateapex-ai' },
+  { label: 'GateNexa AI', icon: 'zap', to: '/gatenexa-ai' },
   { section: 'STUDY' },
   { label: 'Subjects', icon: 'subjects', to: '/subjects' },
   { label: 'Topics', icon: 'topics', to: '/topics' },
@@ -112,7 +113,6 @@ export default function Layout() {
 
   return (
     <div className="flex h-screen bg-bg overflow-hidden relative">
-      <AmbientBackground />
       {!onboardingDone && <OnboardingFlow />}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
       <VirtualCalculator isOpen={calcOpen} onClose={() => setCalcOpen(false)} />
@@ -128,7 +128,7 @@ export default function Layout() {
       `}>
         <div className="p-5 border-b border-border">
           <div className="flex items-center gap-3">
-            <Icon name="logo" />
+            <Icon name="logo" className="w-10 h-10" />
             <div>
               <div className="text-sm font-bold text-text tracking-tight">{BRAND.name}</div>
               <div className="text-[10px] text-text3 font-medium">{BRAND.product}</div>
@@ -231,7 +231,7 @@ export default function Layout() {
             </svg>
           </button>
 
-          {/* Left: GateApex AI Emblem - smaller on mobile */}
+          {/* Left: GateNexa AI Emblem - smaller on mobile */}
           <div className="flex-shrink-0 hidden sm:block">
             <svg 
               viewBox="0 0 120 80" 
@@ -327,7 +327,7 @@ export default function Layout() {
               <span className="text-xs font-semibold">Focus</span>
             </NavLink>
 
-            <NavLink to="/GateApex-ai" className={({ isActive }) => `flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all relative ${isActive ? 'text-primary bg-primary/10 border-b-2 border-primary' : 'text-text2 hover:text-primary hover:bg-hover/50'}`}>
+            <NavLink to="/GateNexa-ai" className={({ isActive }) => `flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all relative ${isActive ? 'text-primary bg-primary/10 border-b-2 border-primary' : 'text-text2 hover:text-primary hover:bg-hover/50'}`}>
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7" style={{filter: 'drop-shadow(0 0 8px rgba(34,211,238,0.4)) drop-shadow(0 0 4px rgba(168,85,247,0.3))'}}>
                 <path d="M4 11 C7 6 17 6 20 11 L22 13 L20 16 L17 19 L15 17 L13 19 L11 17 L9 19 L7 17 L4 16 L2 13 Z" fill="rgba(30,27,75,0.95)" stroke="#22D3EE" strokeWidth="1.6" />
                 <rect x="9" y="4" width="6" height="13" rx="2" fill="rgba(30,27,75,0.9)" stroke="#A855F7" strokeWidth="2" />
@@ -339,7 +339,7 @@ export default function Layout() {
                 <circle cx="12" cy="11" r="1" fill="white" />
               </svg>
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full animate-pulse" />
-              <span className="text-xs font-semibold">GateApex AI</span>
+              <span className="text-xs font-semibold"><BrandText /> AI</span>
             </NavLink>
 
             <button

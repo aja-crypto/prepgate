@@ -28,6 +28,10 @@ export function AdminAuthProvider({ children }) {
   useEffect(() => {
     const timeoutId = setTimeout(() => setLoading(false), 15000);
     loadAdmin().finally(() => clearTimeout(timeoutId));
+
+    const handleExpired = () => { setAdmin(null); };
+    window.addEventListener('admin:expired', handleExpired);
+    return () => window.removeEventListener('admin:expired', handleExpired);
   }, [loadAdmin]);
 
   const login = async (email, password) => {

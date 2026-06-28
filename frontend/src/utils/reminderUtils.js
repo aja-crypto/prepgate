@@ -10,7 +10,7 @@ export function requestNotificationPermission() {
 export function sendNotification(title, body, tag) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   try {
-    new Notification(title, { body, tag, icon: '/favicon.svg' });
+    new Notification(title, { body, tag, icon: '/favicon.ico' });
   } catch { /* ignore */ }
 }
 

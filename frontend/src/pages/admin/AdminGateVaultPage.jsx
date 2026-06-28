@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import adminApi, { adminFlashcardService, adminPyqService, adminMockTestService } from '../../services/adminApi';
 import toast from 'react-hot-toast';
 
@@ -43,7 +43,7 @@ function detectCategory(fileName) {
 function detectTopic(fileName) {
   const cleaned = fileName.replace(/\.\w+$/, '').replace(/[_-]/g, ' ');
   const parts = cleaned.split(/\s+/);
-  const skipWords = new Set(['notes', 'pyq', 'formula', 'sheet', 'short', 'gate', 'GateApex', 'apt', 'em', 'ds', 'al', 'db', 'os', 'cn', 'toc', 'cd', 'co', 'dl', 'se', 'pdf', 'questions', 'question', 'bank']);
+  const skipWords = new Set(['notes', 'pyq', 'formula', 'sheet', 'short', 'gate', 'GateNexa', 'apt', 'em', 'ds', 'al', 'db', 'os', 'cn', 'toc', 'cd', 'co', 'dl', 'se', 'pdf', 'questions', 'question', 'bank']);
   const filtered = parts.filter(p => p.length > 2 && !skipWords.has(p.toLowerCase()));
   if (filtered.length > 0) {
     return filtered.slice(0, 3).join(' ');
@@ -597,7 +597,7 @@ export default function AdminGateVaultPage() {
         </>
 ) : activeTab === 'smart-upload' ? (
         <>
-          {/* ─── Smart Upload Text Area ─── */}
+          {/* â”€â”€─ Smart Upload Text Area â”€â”€─ */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -622,7 +622,7 @@ export default function AdminGateVaultPage() {
             />
           </div>
 
-          {/* ─── Stats + Bulk Apply (only when questions parsed) ─── */}
+          {/* â”€â”€─ Stats + Bulk Apply (only when questions parsed) â”€â”€─ */}
           {smartImportPreview.length > 0 && (
             <>
               {/* Statistics row */}

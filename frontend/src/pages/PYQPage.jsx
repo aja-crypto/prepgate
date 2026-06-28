@@ -1,4 +1,4 @@
-// PYQ Practice — topic/subject/year-wise browse, practice, revision
+// PYQ Practice — PDF subject browser + topic/subject/year-wise browse, practice, revision
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useProgress } from '../context/ProgressContext';
@@ -6,8 +6,11 @@ import { pyqService } from '../services/api';
 import { silentCatch } from '../utils/errorHandler';
 import { computePyqStats, getMistakePatternSummary } from '../utils/gateUtils';
 import QuestionPractice from '../components/pyq/QuestionPractice';
+import PYQPdfViewer from '../components/pyq/PYQPdfViewer';
 import Modal from '../components/common/Modal';
 import toast from 'react-hot-toast';
+import { SUBJECTS, PYQ_PDF_FILENAME } from '../config/pyqIndex';
+import { BookOpen } from 'lucide-react';
 
 const DIFF_STYLE = {
   easy: 'bg-green-500/10 border-green-500/20 text-green-400',
@@ -75,6 +78,7 @@ export default function PYQPage() {
   const [solutionData, setSolutionData] = useState(null);
   const [loadingSolution, setLoadingSolution] = useState(false);
   const [sortBy, setSortBy] = useState('default');
+  const [pdfSubject, setPdfSubject] = useState(null); // { subject, startPage, endPage } or null
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -93,7 +97,7 @@ export default function PYQPage() {
       pyqService.getStats().then((r) => setGlobalStats(r.data.data)).catch(silentCatch('Load PYQ stats')),
       pyqService.getBrowse().then((r) => setBrowse(r.data.data)).catch(silentCatch('Load PYQ browse')),
     ]).finally(() => setLoading(false));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshPyqs]);
 
   const subjects = useMemo(() => ['All', ...new Set(pyqs.map((q) => q.subject))], [pyqs]);
   const topics = useMemo(() => ['All', ...new Set(pyqs.map((q) => q.topic).filter(Boolean))], [pyqs]);
@@ -184,9 +188,71 @@ export default function PYQPage() {
     }
   };
 
+  // Subject color palette for PDF cards
+  const subjectColors = [
+    { bg: '#7C3AED', name: 'Engineering Mathematics' },
+    { bg: '#EC4899', name: 'General Aptitude' },
+    { bg: '#F59E0B', name: 'Digital Logic' },
+    { bg: '#10B981', name: 'Computer Organization' },
+    { bg: '#3B82F6', name: 'Programming' },
+    { bg: '#8B5CF6', name: 'Data Structures' },
+    { bg: '#EF4444', name: 'Algorithms' },
+    { bg: '#06B6D4', name: 'Operating Systems' },
+    { bg: '#22C55E', name: 'DBMS' },
+    { bg: '#F97316', name: 'Computer Networks' },
+    { bg: '#A855F7', name: 'Theory of Computation' },
+    { bg: '#6B7280', name: 'Compiler Design' },
+  ];
+
+  // If PDF subject selected, show only the PDF viewer
+  if (pdfSubject) {
+    return (
+      <div className="min-h-[80vh]">
+        <PYQPdfViewer
+          subject={pdfSubject.subject}
+          pdfUrl={PYQ_PDF_FILENAME}
+          startPage={pdfSubject.startPage}
+          endPage={pdfSubject.endPage}
+          onBack={() => setPdfSubject(null)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       <HowItWorks />
+
+      {/* PDF Subject Browser */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <BookOpen size={18} className="text-primary" />
+          <h2 className="text-base font-bold text-text">Browse PYQ PDF by Subject</h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-3 -mx-1 px-1 scrollbar-thin snap-x">
+          {SUBJECTS.map((sub, i) => {
+            const color = subjectColors[i]?.bg || '#7C3AED';
+            return (
+              <button
+                key={sub.id}
+                type="button"
+                onClick={() => setPdfSubject({ subject: sub, startPage: sub.startPage, endPage: sub.endPage })}
+                className="snap-start flex-shrink-0 w-40 bg-surface border border-border rounded-xl p-4 text-left hover:border-white/15 hover:-translate-y-0.5 transition-all group"
+              >
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center mb-2 text-white text-xs font-bold"
+                  style={{ background: color }}
+                >
+                  {sub.short.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="text-xs font-semibold text-text mb-0.5 group-hover:text-primary transition-colors">{sub.short}</div>
+                <div className="text-[10px] text-text3">{sub.endPage - sub.startPage + 1} pages</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-text">PYQ Practice</h1>

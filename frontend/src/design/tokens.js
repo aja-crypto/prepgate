@@ -1,7 +1,7 @@
-// GateApex design system — original palette (not generic GATE blue-green)
+﻿// GateNexa design system — original palette (not generic GATE blue-green)
 
 export const BRAND = {
-  name: 'GateApex',
+  name: 'GateNexa',
   tagline: 'GATE CSE Intelligence',
   product: 'GATE 2027',
 };
@@ -69,7 +69,7 @@ export const DEFAULT_WIDGETS = [
   { id: 'announcements', label: 'Announcements', defaultVisible: true, category: 'overview' },
   { id: 'focus-stats', label: 'Focus Session Stats', defaultVisible: true, category: 'progress' },
   { id: 'action-center', label: 'Am I Ready for GATE?', defaultVisible: true, category: 'overview' },
-  { id: 'gateapex-ai', label: 'GateApex AI', defaultVisible: true, category: 'overview' },
+  { id: 'gatenexa-ai', label: 'GateNexa AI', defaultVisible: true, category: 'overview' },
   { id: 'gate-vault', label: 'Gate Vault', defaultVisible: true, category: 'overview' },
   { id: 'notes-hub', label: 'Notes Hub', defaultVisible: true, category: 'overview' },
   { id: 'recommendation-engine', label: 'Recommendation Engine', defaultVisible: true, category: 'overview' },

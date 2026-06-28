@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import Icon from '../ui/Icon';
+import { BrandName } from '../ui/BrandText';
 
 const MESSAGES = [
   'Loading PYQs...',
@@ -96,7 +97,7 @@ export default function GateLoadingScreen({
       {/* Logo */}
       <div className="relative z-10 flex flex-col items-center" style={{ animation: 'pg-fade-in 0.8s ease-out both' }}>
         <Icon name="logo" className="w-14 h-14 mb-3" />
-        <div className="text-white text-center" style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '6px' }}>GateApex</div>
+        <BrandName size="22px" letterSpacing="6px" />
         <div style={{ color: '#A855F7', fontSize: '11px', fontWeight: 600, letterSpacing: '3px', marginTop: '4px' }}>GATE 2027</div>
       </div>
 

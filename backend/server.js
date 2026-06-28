@@ -1,4 +1,4 @@
-// server.js – GATE 2027 Backend Entry Point
+﻿// server.js – GATE 2027 Backend Entry Point
 require('./src/config/loadEnv');
 
 const express = require('express');
@@ -14,7 +14,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 
 const app = express();
 
-// ─── Server start tracking ────────────────────────────────
+// ─── Server start tracking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 const SERVER_START_TIME = Date.now();
 let isShuttingDown = false;
 
@@ -53,7 +53,7 @@ process.on('uncaughtException', (err) => {
   // For all other uncaught exceptions, attempt graceful recovery
 });
 
-// ─── Security Middleware ────────────────────────────────────
+// ─── Security Middleware â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 const isViteDev = process.env.NODE_ENV !== 'production';
 const cspDirectives = {
   defaultSrc: ["'self'"],
@@ -98,7 +98,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Demo-User']
 }));
 
-// ─── Rate Limiting ──────────────────────────────────────────
+// ─── Rate Limiting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 const isDev = process.env.NODE_ENV !== 'production';
 
 const limiter = rateLimit({
@@ -136,19 +136,19 @@ app.use('/api/ai/', aiLimiter);
 
 const path = require('path');
 
-// ─── Middleware ─────────────────────────────────────────────
+// ─── Middleware â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 app.use(mongoSanitize());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/resources', express.static(path.join(__dirname, '..', 'resources')));
 
-// ─── Logging ────────────────────────────────────────────────
+// ─── Logging â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// ─── Health Check ───────────────────────────────────────────
+// ─── Health Check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 app.get('/api/health', (req, res) => {
   const mem = process.memoryUsage();
   res.json({
@@ -182,7 +182,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ─── Admin Health Check ─────────────────────────────────────
+// ─── Admin Health Check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 app.get('/admin/health', (req, res) => {
   const mem = process.memoryUsage();
   res.json({
@@ -201,7 +201,7 @@ app.get('/admin/health', (req, res) => {
   });
 });
 
-// ─── Admin API Health Check ─────────────────────────────────
+// ─── Admin API Health Check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 app.get('/api/admin/health', (req, res) => {
   const mem = process.memoryUsage();
   res.json({
@@ -221,7 +221,7 @@ app.get('/api/admin/health', (req, res) => {
   });
 });
 
-// ─── Startup Validation ──────────────────────────────────────
+// ─── Startup Validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 const validateStartup = () => {
   console.log('🔍 Validating startup configuration...');
   
@@ -243,7 +243,7 @@ const validateStartup = () => {
   // Check for admin configuration
   try {
     const localAdminStore = require('./src/store/localAdminStore');
-    const adminExists = localAdminStore.findAdminByEmail('admin@gateapex.dev');
+    const adminExists = localAdminStore.findAdminByEmail('admin@gatenexa.dev');
     if (!adminExists) {
       issues.push('Default admin account not found');
     }
@@ -264,7 +264,7 @@ const validateStartup = () => {
 // Run startup validation after health checks
 validateStartup();
 
-// ─── Middleware: reject requests during shutdown ────────────
+// ─── Middleware: reject requests during shutdown â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 app.use((req, res, next) => {
   if (isShuttingDown) {
     return res.status(503).json({ success: false, message: 'Server is shutting down. Try again shortly.' });
@@ -274,7 +274,7 @@ app.use((req, res, next) => {
 
 
 
-// ─── API Routes ─────────────────────────────────────────────
+// ─── API Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/subjects', require('./src/routes/subjects'));
 app.use('/api/topics', require('./src/routes/topics'));
@@ -319,22 +319,22 @@ app.use('/api/admin/cms', require('./src/routes/adminCms'));
 app.use('/api/cms', require('./src/routes/cms'));
 app.use('/api/gate-papers', require('./src/routes/gatePapers'));
 
-// ─── 404 Handler ────────────────────────────────────────────
+// ─── 404 Handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 app.use('*', (req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
 });
 
-// ─── Seed default dev admin ─────────────────────────────────
+// ─── Seed default dev admin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 if (!isMongoConnected() && process.env.NODE_ENV !== 'production') {
   try {
     const localAdminStore = require('./src/store/localAdminStore');
-    if (!localAdminStore.findAdminByEmail('admin@gateapex.dev')) {
+    if (!localAdminStore.findAdminByEmail('admin@gatenexa.dev')) {
       localAdminStore.createAdmin({
         name: 'Dev Admin',
-        email: 'admin@gateapex.dev',
+        email: 'admin@gatenexa.dev',
         password: 'admin123',
         role: 'super_admin',
-      }).then(() => console.log('👤 Dev admin seeded: admin@gateapex.dev / admin123'))
+      }).then(() => console.log('👤 Dev admin seeded: admin@gatenexa.dev / admin123'))
       .catch((e) => console.error('Admin seed failed:', e.message));
     }
   } catch (e) {
@@ -342,7 +342,7 @@ if (!isMongoConnected() && process.env.NODE_ENV !== 'production') {
   }
 }
 
-// ─── Global Error Handler ───────────────────────────────────
+// ─── Global Error Handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 app.use((err, req, res, next) => {
   console.error('❌ Global error caught:', err.message);
   console.error(err.stack);
@@ -364,7 +364,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ─── Error handling for validation middleware ────────────────
+// ─── Error handling for validation middleware â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 app.use((err, req, res, next) => {
   if (err.name === 'ValidationError' || (err.message && err.message.includes('validation failed'))) {
     console.error('Validation error:', err.message);
@@ -379,7 +379,7 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// ─── Start Server ───────────────────────────────────────────
+// ─── Start Server â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
 const PORT = process.env.PORT || 5000;
 let server = null;
 
@@ -407,7 +407,7 @@ connectDB().then(() => {
     }
   });
 
-  // ─── Graceful shutdown ─────────────────────────────────────
+  // ─── Graceful shutdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
   const shutdown = async (signal) => {
     if (isShuttingDown) return;
     isShuttingDown = true;

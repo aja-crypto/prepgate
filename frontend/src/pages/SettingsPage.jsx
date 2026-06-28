@@ -1,4 +1,4 @@
-// Settings: exports, backups, resets, theme, notifications, PWA
+﻿// Settings: exports, backups, resets, theme, notifications, PWA
 import { useState, useRef, useEffect } from 'react';
 import { useProgress } from '../context/ProgressContext';
 import { useTheme } from '../context/ThemeContext';
@@ -8,6 +8,7 @@ import { exportToCsv, exportToExcel } from '../utils/exportUtils';
 import { requestNotificationPermission } from '../utils/reminderUtils';
 import { authService, progressService, getApiErrorMessage } from '../services/api';
 import { silentCatch } from '../utils/errorHandler';
+import BrandText from '../components/ui/BrandText';
 import toast from 'react-hot-toast';
 
 function BackupIndicator({ status, lastBackupAt }) {
@@ -250,7 +251,7 @@ export default function SettingsPage() {
     },
     {
       title: '📱 Install as App (PWA)',
-      desc: 'Install GateApex on your phone or desktop for offline access.',
+      desc: 'Install GateNexa on your phone or desktop for offline access.',
       action: (
         <button onClick={installPwa} className="btn-ghost text-xs">Install App</button>
       ),

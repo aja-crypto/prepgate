@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+﻿import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFocus } from '../context/FocusContext';
 import { useProgress } from '../context/ProgressContext';
@@ -11,24 +11,24 @@ const BG_OPTIONS = [
 ];
 
 const MOTIVATION_QUOTES = [
-  { quote: 'Consistency beats intensity. Small daily progress becomes a big rank.', author: 'GateApex' },
-  { quote: 'Every question you solve today is one step closer to your IIT dream.', author: 'GateApex' },
-  { quote: 'The best time to start was yesterday. The next best time is now.', author: 'GateApex' },
-  { quote: 'Focus on the process, not the outcome. The rank will follow.', author: 'GateApex' },
-  { quote: 'Discipline is doing what needs to be done, even when you don\'t feel like it.', author: 'GateApex' },
-  { quote: 'Your only competition is the version of yourself who gave up yesterday.', author: 'GateApex' },
-  { quote: 'One hour of focused study beats four hours of distracted browsing.', author: 'GateApex' },
-  { quote: 'GATE is not about being the smartest. It\'s about being the most prepared.', author: 'GateApex' },
-  { quote: 'Study smart, revise often, practice relentlessly.', author: 'GateApex' },
-  { quote: 'The sweat of today waters the success of tomorrow.', author: 'GateApex' },
-  { quote: 'Quiet rooms and focused minds build ranks and futures.', author: 'GateApex' },
-  { quote: 'Every hour of deep work is a vote for your future self.', author: 'GateApex' },
+  { quote: 'Consistency beats intensity. Small daily progress becomes a big rank.', author: 'GateNexa' },
+  { quote: 'Every question you solve today is one step closer to your IIT dream.', author: 'GateNexa' },
+  { quote: 'The best time to start was yesterday. The next best time is now.', author: 'GateNexa' },
+  { quote: 'Focus on the process, not the outcome. The rank will follow.', author: 'GateNexa' },
+  { quote: 'Discipline is doing what needs to be done, even when you don\'t feel like it.', author: 'GateNexa' },
+  { quote: 'Your only competition is the version of yourself who gave up yesterday.', author: 'GateNexa' },
+  { quote: 'One hour of focused study beats four hours of distracted browsing.', author: 'GateNexa' },
+  { quote: 'GATE is not about being the smartest. It\'s about being the most prepared.', author: 'GateNexa' },
+  { quote: 'Study smart, revise often, practice relentlessly.', author: 'GateNexa' },
+  { quote: 'The sweat of today waters the success of tomorrow.', author: 'GateNexa' },
+  { quote: 'Quiet rooms and focused minds build ranks and futures.', author: 'GateNexa' },
+  { quote: 'Every hour of deep work is a vote for your future self.', author: 'GateNexa' },
 ];
 
 const GATE_FORMULAS = [
   'O(log n)', '∑ i=1ⁿ i = n(n+1)/2', 'E=mc²', 'P(A∪B) = P(A)+P(B)−P(A∩B)',
-  '∫eˣdx = eˣ+C', 'TCP/IP', 'F = ma', 'λ = h/p', 'V−IR=0', 'n! ∼ √2πn (n/e)ⁿ',
-  'limₓ→₀ sin x/x = 1', 'XOR = A̅B + AB̅', 'S = ½at²', 'AM ≥ GM ≥ HM',
+  '∫eË£dx = eË£+C', 'TCP/IP', 'F = ma', 'Î» = h/p', 'V−IR=0', 'n! ∼ √2Ï€n (n/e)ⁿ',
+  'limâ‚“â†’₀ sin x/x = 1', 'XOR = AÌ…B + ABÌ…', 'S = ½at²', 'AM ≥ GM ≥ HM',
   'Cache: L1→L2→RAM', 'DB: ACID', 'OS: FCFS | SJF | RR',
 ];
 
@@ -40,7 +40,7 @@ const DURATIONS = [
   { label: '90 min', value: 90 * 60 },
 ];
 
-const DEEP_FOCUS_SESSIONS_KEY = 'gateapex_deep_focus_sessions';
+const DEEP_FOCUS_SESSIONS_KEY = 'gatenexa_deep_focus_sessions';
 
 function loadDeepSessions() {
   try { return JSON.parse(localStorage.getItem(DEEP_FOCUS_SESSIONS_KEY)) || []; }
@@ -56,7 +56,7 @@ function formatTime(secs) {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-// ─── NEON TIMER RING ─────────────────────────────────────────────────────────
+// â”€â”€─ NEON TIMER RING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
 function TimerRing({ timeRemaining, sessionDuration, mode, isActive, isPaused }) {
   const radius = 140;
   const stroke = 7;
@@ -208,7 +208,7 @@ function TimerRing({ timeRemaining, sessionDuration, mode, isActive, isPaused })
   );
 }
 
-// ─── PARTICLE BACKGROUND ──────────────────────────────────────────────────────
+// â”€â”€─ PARTICLE BACKGROUND â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
 function ParticleBackground() {
   const canvasRef = useRef(null);
   const animRef = useRef(null);
@@ -264,7 +264,7 @@ function ParticleBackground() {
   return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ opacity: 0.7 }} />;
 }
 
-// ─── FORMULA BACKGROUND ───────────────────────────────────────────────────────
+// â”€â”€─ FORMULA BACKGROUND â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
 function FormulaBackground() {
   const containerRef = useRef(null);
 
@@ -307,7 +307,7 @@ function FormulaBackground() {
   );
 }
 
-// ─── ANIMATED STUDY ROOM ─────────────────────────────────────────────────────
+// â”€â”€─ ANIMATED STUDY ROOM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
 function StudyRoomBackground() {
   const canvasRef = useRef(null);
 
@@ -353,14 +353,14 @@ function StudyRoomBackground() {
       const cx = w / 2;
       const floorY = h * 0.78;
 
-      // ── Ambient wall glow (top) ──────────────────────────────────────────
+      // â”€─ Ambient wall glow (top) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
       const wallGrad = ctx.createLinearGradient(0, 0, 0, h * 0.6);
       wallGrad.addColorStop(0, 'rgba(15,8,35,0.98)');
       wallGrad.addColorStop(1, 'rgba(10,5,20,1)');
       ctx.fillStyle = wallGrad;
       ctx.fillRect(0, 0, w, h);
 
-      // ── Window with moonlight (left side) ───────────────────────────────
+      // â”€─ Window with moonlight (left side) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
       const winX = w * 0.08, winY = h * 0.12, winW = w * 0.18, winH = h * 0.35;
       const winGrad = ctx.createLinearGradient(winX, winY, winX + winW, winY + winH);
       winGrad.addColorStop(0, 'rgba(60,80,160,0.25)');
@@ -383,7 +383,7 @@ function StudyRoomBackground() {
       ctx.fillStyle = moonGlow;
       ctx.fillRect(winX, winY, winW, winH);
 
-      // ── Desk ──────────────────────────────────────────────────────────────
+      // â”€─ Desk â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
       const deskX = w * 0.1, deskW = w * 0.8, deskY = floorY, deskH = h * 0.08;
       // Desk surface
       const deskGrad = ctx.createLinearGradient(deskX, deskY - deskH, deskX, deskY);
@@ -401,7 +401,7 @@ function StudyRoomBackground() {
       ctx.lineTo(deskX + deskW - 2, deskY - deskH);
       ctx.stroke();
 
-      // ── Desk lamp (left) ─────────────────────────────────────────────────
+      // â”€─ Desk lamp (left) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
       lampPulse = Math.sin(t * 0.001) * 0.02;
       const lampX = w * 0.18, lampY = deskY - deskH - 5;
       const lampGlowR = 80 + lampPulse * 20;
@@ -424,7 +424,7 @@ function StudyRoomBackground() {
       ctx.lineTo(lampX, lampY + 35);
       ctx.stroke();
 
-      // ── Coffee mug + steam (left on desk) ───────────────────────────────
+      // â”€─ Coffee mug + steam (left on desk) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
       const mugX = w * 0.22, mugY = deskY - deskH - 2;
       ctx.fillStyle = 'rgba(40,30,25,0.8)';
       ctx.beginPath();
@@ -452,7 +452,7 @@ function StudyRoomBackground() {
         }
       });
 
-      // ── Books (stack on right) ─────────────────────────────────────────
+      // â”€─ Books (stack on right) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
       const bookX = w * 0.7, bookY = deskY - deskH - 2;
       const bookColors = ['rgba(120,50,30,0.7)', 'rgba(30,60,100,0.7)', 'rgba(60,40,80,0.7)', 'rgba(40,80,50,0.7)'];
       for (let b = 0; b < 4; b++) {
@@ -463,7 +463,7 @@ function StudyRoomBackground() {
         ctx.strokeRect(bookX - 18, bookY - (b + 1) * 10, 36, 9);
       }
 
-      // ── Floating notes/pages ──────────────────────────────────────────────
+      // â”€─ Floating notes/pages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
       const pages = [
         { x: w * 0.38, y: h * 0.38, rot: -15, w: 28, h: 36, alpha: 0.07, page: 0 },
         { x: w * 0.52, y: h * 0.28, rot: 10, w: 24, h: 32, alpha: 0.05, page: 1 },
@@ -485,14 +485,14 @@ function StudyRoomBackground() {
         ctx.restore();
       });
 
-      // ── Floor ─────────────────────────────────────────────────────────────
+      // â”€─ Floor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
       const floorGrad = ctx.createLinearGradient(0, floorY, 0, h);
       floorGrad.addColorStop(0, 'rgba(20,12,8,0.95)');
       floorGrad.addColorStop(1, 'rgba(10,6,4,1)');
       ctx.fillStyle = floorGrad;
       ctx.fillRect(0, floorY, w, h - floorY);
 
-      // ── Floating dust in moonlight ────────────────────────────────────────
+      // â”€─ Floating dust in moonlight â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
       dust.forEach((d) => {
         d.x += d.vx; d.y += d.vy;
         if (d.y < -10) { d.y = h + 10; d.x = Math.random() * w; }
@@ -504,8 +504,8 @@ function StudyRoomBackground() {
         ctx.fill();
       });
 
-      // ── Floating GATE formulas (subtle) ──────────────────────────────────
-      const fmls = ['O(log n)', 'Σ', '∫', 'λ', '∇', 'δ', '⊕', '⊗'];
+      // â”€─ Floating GATE formulas (subtle) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
+      const fmls = ['O(log n)', 'Î£', '∫', 'Î»', '∇', 'Î´', '⊕', '⊗'];
       ctx.font = '10px monospace';
       fmls.forEach((fm, fi) => {
         const tx = cx + Math.sin(t * 0.0003 + fi * 0.9) * w * 0.3;
@@ -538,7 +538,7 @@ function StudyRoomBackground() {
   );
 }
 
-// ─── CONFETTI SYSTEM ─────────────────────────────────────────────────────────
+// â”€â”€─ CONFETTI SYSTEM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
 function Confetti() {
   const canvasRef = useRef(null);
   const [pieces] = useState(() =>
@@ -591,7 +591,7 @@ function Confetti() {
   return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-[200]" />;
 }
 
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
+// â”€â”€─ MAIN PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
 export default function DeepFocusPage() {
   const navigate = useNavigate();
   const { user } = useAuth();

@@ -28,7 +28,7 @@ function AIRTipsRotator() {
 
   const tip = AIR_TIPS[index];
   return (
-    <div className={`transition-all duration-500 ${fade ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+    <div className={`transition-all duration-200 ${fade ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
       <div className="flex items-center gap-3 justify-center">
         <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: `${tip.color}15`, border: `1px solid ${tip.color}30`, color: tip.color }}>
           {tip.rank}
@@ -98,9 +98,18 @@ export default function FuturisticHero() {
   const [visible, setVisible] = useState(false);
   const sectionRef = useRef(null);
   const [heroOpacity, setHeroOpacity] = useState(1);
+  const prefersReducedMotion = useRef(
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
 
-  // Show content immediately
-  useEffect(() => { setVisible(true); }, []);
+  // Show content immediately, skip animation if reduced motion preferred
+  useEffect(() => {
+    if (prefersReducedMotion.current) {
+      setVisible(true);
+    } else {
+      setVisible(true);
+    }
+  }, []);
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -120,7 +129,7 @@ export default function FuturisticHero() {
       style={{ opacity: heroOpacity, background: 'transparent' }}
     >
       {/* ═══ FULL-SCREEN NEURAL BRAIN BACKGROUND (dimmed) ═══ */}
-      <div className={`absolute inset-0 z-0 transition-opacity duration-1000 ${visible ? 'opacity-25' : 'opacity-0'}`}>
+      <div className={`absolute inset-0 z-0 transition-opacity duration-300 ${visible ? 'opacity-25' : 'opacity-0'}`}>
         <AIBrainScene />
       </div>
 
@@ -133,13 +142,13 @@ export default function FuturisticHero() {
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen py-16 px-4">
 
         {/* Top badge */}
-        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-medium mb-6 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`} style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)', color: '#C4B5FD', backdropFilter: 'blur(16px)', boxShadow: '0 0 30px rgba(139,92,246,0.06)' }}>
+        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-medium mb-6 transition-all duration-200 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`} style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)', color: '#C4B5FD', backdropFilter: 'blur(16px)', boxShadow: '0 0 30px rgba(139,92,246,0.06)' }}>
           <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
           AI-Powered GATE 2027 Preparation Platform
         </div>
 
         {/* Headline — centered, big */}
-        <div className={`text-center mb-8 transition-all duration-800 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-6'}`}>
+        <div className={`text-center mb-8 transition-all duration-250 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-6'}`}>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-tight" style={{ textShadow: '0 0 40px rgba(139,92,246,0.15), 0 0 80px rgba(139,92,246,0.06), 0 0 120px rgba(34,211,238,0.03)' }}>
             <span className="text-[#F8FAFC]">Build Your </span>
             <GradientText gradient="linear-gradient(135deg, #F0E8FF, #C4B5FD, #8B5CF6, #22D3EE)">
@@ -160,7 +169,7 @@ export default function FuturisticHero() {
         </div>
 
         {/* CTA */}
-        <div className={`flex flex-wrap items-center justify-center gap-3 mb-8 transition-all duration-800 ease-out delay-200 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <div className={`flex flex-wrap items-center justify-center gap-3 mb-8 transition-all duration-250 ease-out delay-100 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           {!user ? (
             <>
               <Link
@@ -191,7 +200,7 @@ export default function FuturisticHero() {
         </div>
 
         {/* AIR Tips */}
-        <div className={`text-center mb-4 transition-all duration-800 ease-out delay-300 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`text-center mb-4 transition-all duration-250 ease-out delay-150 ${visible ? 'opacity-100' : 'opacity-0'}`}>
           <div className="text-[8px] uppercase tracking-[0.3em] mb-1.5" style={{ color: 'rgba(139,92,246,0.4)' }}>
             Topper Wisdom
           </div>
@@ -199,12 +208,12 @@ export default function FuturisticHero() {
         </div>
 
         {/* Countdown */}
-        <div className={`flex items-center justify-center mb-4 transition-all duration-800 ease-out delay-400 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`flex items-center justify-center mb-4 transition-all duration-250 ease-out delay-200 ${visible ? 'opacity-100' : 'opacity-0'}`}>
           <AnimatedCountdown />
         </div>
 
         {/* Hover hint */}
-        <div className={`text-center transition-all duration-800 ease-out delay-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`text-center transition-all duration-250 ease-out delay-250 ${visible ? 'opacity-100' : 'opacity-0'}`}>
           <span className="text-[9px]" style={{ color: 'rgba(139,92,246,0.35)' }}>
             Hover over the brain to explore subject regions
           </span>

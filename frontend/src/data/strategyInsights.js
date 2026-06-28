@@ -1,4 +1,4 @@
-export const STRATEGY_INSIGHTS = [
+﻿export const STRATEGY_INSIGHTS = [
   {
     id: 'air100-oneyear',
     title: 'One-Year AIR < 100 Strategy',
@@ -199,7 +199,7 @@ export const STRATEGY_INSIGHTS = [
     recommendations: [
       'Use spaced repetition: 3-7-15-30 day intervals',
       'Keep notes concise — one page per topic',
-      'Track revision in GateApex',
+      'Track revision in GateNexa',
       'Don\'t skip any revision cycle',
     ],
     mindset: [

@@ -436,4 +436,104 @@ router.get('/streak', protect, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// GET external mock tests (Score Tracker)
+router.get('/mocks', protect, async (req, res, next) => {
+  try {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
+      const mocks = localStore.getLocalExternalMocks ? localStore.getLocalExternalMocks(req.user._id) : [];
+      return res.json({ success: true, count: mocks.length, data: mocks });
+    }
+    // MongoDB mode - would need a separate collection; for now return empty
+    return res.json({ success: true, count: 0, data: [] });
+  } catch (e) { next(e); }
+});
+
+// POST external mock test (Score Tracker)
+router.post('/mocks', protect, async (req, res, next) => {
+  try {
+    const { name, score, rank, notes, date, provider, maxScore } = req.body;
+    if (!name || typeof score !== 'number') {
+      return res.status(400).json({ success: false, message: 'Name and score are required' });
+    }
+    const mockData = {
+      user: req.user._id,
+      name,
+      score,
+      rank: rank || null,
+      notes: notes || '',
+      date: date || new Date().toISOString(),
+      provider: provider || 'External',
+      maxScore: maxScore || 100,
+    };
+
+    if (!isMongoConnected() || isMockAuthEnabled()) {
+      const mock = localStore.saveLocalExternalMock ? localStore.saveLocalExternalMock(mockData) : { ...mockData, _id: 'local-' + Date.now() };
+      return res.status(201).json({ success: true, data: mock });
+    }
+    // MongoDB mode - would need a separate collection
+    return res.status(501).json({ success: false, message: 'Not implemented for MongoDB yet' });
+  } catch (e) { next(e); }
+});
+
+// GET calendar events (Study Planner)
+router.get('/calendar/events', protect, async (req, res, next) => {
+  try {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
+      const events = localStore.getLocalCalendarEvents ? localStore.getLocalCalendarEvents(req.user._id) : [];
+      return res.json({ success: true, count: events.length, data: events });
+    }
+    return res.json({ success: true, count: 0, data: [] });
+  } catch (e) { next(e); }
+});
+
+// POST calendar event (Study Planner)
+router.post('/calendar/events', protect, async (req, res, next) => {
+  try {
+    const { title, start, end, subject, type, color, description, allDay } = req.body;
+    if (!title || !start) {
+      return res.status(400).json({ success: false, message: 'Title and start time are required' });
+    }
+    const eventData = {
+      user: req.user._id,
+      title,
+      start,
+      end: end || start,
+      subject: subject || null,
+      type: type || 'study',
+      color: color || '#4f8dff',
+      description: description || '',
+    };
+
+    if (!isMongoConnected() || isMockAuthEnabled()) {
+      const event = localStore.saveLocalCalendarEvent ? localStore.saveLocalCalendarEvent(eventData) : { ...eventData, _id: 'local-' + Date.now() };
+      return res.status(201).json({ success: true, data: event });
+    }
+    return res.status(501).json({ success: false, message: 'Not implemented for MongoDB yet' });
+  } catch (e) { next(e); }
+});
+
+// PUT calendar event (Study Planner)
+router.put('/calendar/events/:id', protect, async (req, res, next) => {
+  try {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
+      const event = localStore.updateLocalCalendarEvent ? localStore.updateLocalCalendarEvent(req.params.id, req.user._id, req.body) : null;
+      if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
+      return res.json({ success: true, data: event });
+    }
+    return res.status(501).json({ success: false, message: 'Not implemented for MongoDB yet' });
+  } catch (e) { next(e); }
+});
+
+// DELETE calendar event (Study Planner)
+router.delete('/calendar/events/:id', protect, async (req, res, next) => {
+  try {
+    if (!isMongoConnected() || isMockAuthEnabled()) {
+      const deleted = localStore.deleteLocalCalendarEvent ? localStore.deleteLocalCalendarEvent(req.params.id, req.user._id) : false;
+      if (!deleted) return res.status(404).json({ success: false, message: 'Event not found' });
+      return res.json({ success: true, message: 'Event deleted' });
+    }
+    return res.status(501).json({ success: false, message: 'Not implemented for MongoDB yet' });
+  } catch (e) { next(e); }
+});
+
 module.exports = router;

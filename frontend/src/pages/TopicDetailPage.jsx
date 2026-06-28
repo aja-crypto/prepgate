@@ -1,4 +1,4 @@
-// GateForge topic learning hub — full GATE 2027 preparation per topic
+﻿// GateForge topic learning hub — full GATE 2027 preparation per topic
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { topicService, mockSessionService, getApiErrorMessage } from '../services/api';
@@ -142,13 +142,13 @@ export default function TopicDetailPage() {
         <span className="text-5xl">📚</span>
       </div>
       <h2 className="text-2xl font-bold text-text mb-3">Topic Not Available</h2>
-      <p className="text-sm text-text3 max-w-md mb-8 leading-relaxed">This topic may have been removed or is still being prepared. Browse all topics or ask GateApex AI for guidance.</p>
+      <p className="text-sm text-text3 max-w-md mb-8 leading-relaxed">This topic may have been removed or is still being prepared. Browse all topics or ask GateNexa AI for guidance.</p>
       <div className="flex flex-wrap gap-3 justify-center">
         <Link to="/topics" className="inline-flex items-center gap-2 text-sm px-6 py-3 rounded-xl font-semibold transition-all hover:scale-[1.02]" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', color: 'white', boxShadow: '0 0 20px rgba(168,85,247,0.3)' }}>
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11a1 1 0 11-2 0V9a1 1 0 112 0v4zm-1-6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /></svg>
           Browse Topics
         </Link>
-        <button onClick={() => navigate('/GateApex-ai')} className="inline-flex items-center gap-2 text-sm px-6 py-3 rounded-xl font-semibold transition-all hover:scale-[1.02]" style={{ background: 'rgba(168,85,247,0.1)', color: '#A78BFA', border: '1px solid rgba(168,85,247,0.3)', boxShadow: '0 0 15px rgba(168,85,247,0.1)' }}>
+        <button onClick={() => navigate('/GateNexa-ai')} className="inline-flex items-center gap-2 text-sm px-6 py-3 rounded-xl font-semibold transition-all hover:scale-[1.02]" style={{ background: 'rgba(168,85,247,0.1)', color: '#A78BFA', border: '1px solid rgba(168,85,247,0.3)', boxShadow: '0 0 15px rgba(168,85,247,0.1)' }}>
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
           Ask AI Mentor
         </button>

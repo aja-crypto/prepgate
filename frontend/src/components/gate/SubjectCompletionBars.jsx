@@ -6,7 +6,7 @@ export default function SubjectCompletionBars({ limit, showChart = false }) {
   const { studyStats, topics, pyqs } = useProgress();
   const subjects = computeSubjectCompletion(studyStats.subjects, topics, pyqs);
   const display = limit ? subjects.slice(0, limit) : subjects;
-  const overall = Math.round(subjects.reduce((s, x) => s + x.progress, 0) / subjects.length);
+  const overall = subjects.length ? Math.round(subjects.reduce((s, x) => s + x.progress, 0) / subjects.length) : 0;
 
   return (
     <div className="bg-surface border border-border rounded-xl p-5">

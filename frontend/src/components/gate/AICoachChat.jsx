@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { useProgress } from '../../context/ProgressContext';
 import { aiService, noteService } from '../../services/api';
 import Icon from '../ui/Icon';
 import GlassCard from '../ui/GlassCard';
-import GateApexAIIcon from '../ui/GateApexAIIcon';
+import GateNexaAIIcon from '../ui/GateNexaAIIcon';
+import BrandText from '../ui/BrandText';
 import toast from 'react-hot-toast';
 
 const WELCOME_SUGGESTIONS = [
@@ -28,7 +29,7 @@ const generateSmartSuggestions = (userMessage, aiReply) => {
   return ['What should I study today?', 'Create a weekly study plan', 'Analyze my mock performance', 'Which PYQs should I solve?'];
 };
 
-const AI_COACH_STORAGE = 'gateapex_ai_coach_chat';
+const AI_COACH_STORAGE = 'gatenexa_ai_coach_chat';
 
 function loadCoachHistory() {
   try {
@@ -48,6 +49,22 @@ function saveCoachHistory(messages) {
   } catch {}
 }
 
+function deriveLastTopic(messages) {
+  const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+  if (!lastAssistant) return null;
+  const content = lastAssistant.content.toLowerCase();
+  const subjects = ['Operating Systems', 'Computer Networks', 'DBMS', 'Data Structures', 'Algorithms',
+    'Computer Organization', 'TOC', 'Compiler Design', 'Digital Logic', 'Engineering Mathematics', 'Aptitude'];
+  for (const s of subjects) {
+    if (content.includes(s.toLowerCase())) return s;
+  }
+  if (content.includes('plan') || content.includes('schedule')) return 'study planning';
+  if (content.includes('mock') || content.includes('test')) return 'mock tests';
+  if (content.includes('pyq') || content.includes('previous year')) return 'PYQs';
+  if (content.includes('weak') || content.includes('improve')) return 'weak subjects';
+  return null;
+}
+
 export default function AICoachChat({ initialPrompt }) {
   const { topics, pyqs, mocks, studyStats, gateFeatures } = useProgress();
   const [messages, setMessages] = useState(() => {
@@ -57,9 +74,21 @@ export default function AICoachChat({ initialPrompt }) {
   const [input, setFormInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
+  const [welcomeBack, setWelcomeBack] = useState(null);
   const scrollRef = useRef(null);
   const weeklyHours = Array.isArray(studyStats?.weeklyHours) ? studyStats.weeklyHours : [];
   const promptRef = useRef(initialPrompt);
+  const loadedFromHistory = useRef(messages.length > 0);
+
+  useEffect(() => {
+    if (loadedFromHistory.current && messages.length > 0) {
+      const lastTopic = deriveLastTopic(messages);
+      const greeting = lastTopic
+        ? `Welcome back! You were discussing **${lastTopic}** — want to continue or switch topics?`
+        : 'Welcome back! Ready to continue your GATE preparation?';
+      setWelcomeBack(greeting);
+    }
+  }, []);
 
   useEffect(() => {
     if (promptRef.current && messages.length === 0) {
@@ -121,7 +150,7 @@ export default function AICoachChat({ initialPrompt }) {
     } catch (error) {
       console.error('AI Coach Error:', error);
       const errorMsg = error.response?.data?.message || error.message;
-      let displayMsg = "Unable to connect to GateApex AI. Please try again in a moment.";
+      let displayMsg = "Unable to connect to GateNexa AI. Please try again in a moment.";
 
       if (errorMsg?.includes('rate limit')) {
         displayMsg = "You're asking questions too fast! Please wait a moment.";
@@ -136,11 +165,11 @@ export default function AICoachChat({ initialPrompt }) {
   };
 
   return (
-    <GlassCard className="flex flex-col h-[500px]" padding="p-0">
+    <GlassCard className="flex flex-col h-[400px] sm:h-[500px]" padding="p-0">
       <div className="p-4 border-b border-border flex items-center gap-3 bg-primary/5">
-        <GateApexAIIcon size={32} thinking={loading} />
+        <GateNexaAIIcon size={32} thinking={loading} />
         <div>
-          <div className="text-sm font-bold text-text">GateApex AI</div>
+          <div className="text-sm font-bold text-text"><BrandText /> AI</div>
           <div className="text-[10px] text-success font-bold uppercase tracking-wider flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
             Your Personal GATE Assistant
@@ -151,8 +180,8 @@ export default function AICoachChat({ initialPrompt }) {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="text-center py-6">
-            <GateApexAIIcon size={48} className="mx-auto mb-3 opacity-60" />
-            <p className="text-sm font-semibold text-white mb-1">Welcome to GateApex AI</p>
+            <GateNexaAIIcon size={48} className="mx-auto mb-3 opacity-60" />
+            <p className="text-sm font-semibold text-white mb-1">Welcome to <BrandText /> AI</p>
             <p className="text-xs text-gray-400 mb-4">Your Personal GATE Assistant</p>
             <p className="text-[11px] text-gray-500 mb-4 leading-relaxed max-w-[85%] mx-auto">
               I can help with:<br />
@@ -175,6 +204,15 @@ export default function AICoachChat({ initialPrompt }) {
           </div>
         ) : (
           <>
+            {welcomeBack && (
+              <div className="flex justify-center mb-3 animate-fade-in">
+                <div className="bg-gradient-to-r from-primary/10 to-cyan-500/10 border border-primary/20 rounded-xl px-4 py-2.5 text-xs text-text2 text-center max-w-[90%]">
+                  {welcomeBack.split('**').map((part, i) =>
+                    i % 2 === 1 ? <strong key={i} className="text-primary">{part}</strong> : part
+                  )}
+                </div>
+              </div>
+            )}
             {messages.map((msg, i) => (
               <div key={i}>
                 <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>

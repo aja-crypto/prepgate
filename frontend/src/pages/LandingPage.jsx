@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { BRAND } from '../design/tokens';
@@ -9,6 +9,7 @@ import GATECountdown from '../components/common/GATECountdown';
 import StudyWorkflow from '../components/common/StudyWorkflow';
 import TestimonialsSection from '../components/common/TestimonialsSection';
 import FuturisticHero from '../components/common/FuturisticHero';
+import { BrandName } from '../components/ui/BrandText';
 import { ROADMAP_PHASES, AIR_ROADMAPS } from '../data/successRoadmap';
 import { COMMUNITY_INSIGHTS } from '../data/communityInsights';
 
@@ -19,18 +20,21 @@ function StaggerChildren({ children, className = '' }) {
 function StaggerItem({ children, index = 0 }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
+  const prefersReducedMotion = useRef(
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const o = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setTimeout(() => setVisible(true), index * 80); o.disconnect(); } },
+      ([entry]) => { if (entry.isIntersecting) { setTimeout(() => setVisible(true), prefersReducedMotion.current ? 0 : index * 40); o.disconnect(); } },
       { threshold: 0.1 }
     );
     o.observe(el);
     return () => o.disconnect();
   }, [index]);
   return (
-    <div ref={ref} className={`transition-all duration-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+    <div ref={ref} className={`transition-all duration-200 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
       {children}
     </div>
   );
@@ -60,23 +64,23 @@ function FeatureCard({ feature, colors }) {
     <div
       ref={cardRef}
       onMouseMove={onMove}
-      className="group relative rounded-2xl p-6 transition-all duration-500 hover:-translate-y-1.5 overflow-hidden"
+      className="group relative rounded-2xl p-6 transition-all duration-250 hover:-translate-y-1.5 overflow-hidden"
       style={{ background: 'rgba(139,92,246,0.02)', border: `1px solid rgba(139,92,246,0.08)` }}
     >
       {/* Hover glow */}
       <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none"
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-250 rounded-2xl pointer-events-none"
         style={{
           background: `radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%), ${colors.glow}, transparent 60%)`,
         }}
       />
 
       {/* Top accent line */}
-      <div className="absolute top-0 left-8 right-8 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `linear-gradient(90deg, transparent, ${colors.text}, transparent)` }} />
+      <div className="absolute top-0 left-8 right-8 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-250" style={{ background: `linear-gradient(90deg, transparent, ${colors.text}, transparent)` }} />
 
       {/* Icon */}
       <div
-        className="relative w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-4 transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-0.5"
+        className="relative w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-4 transition-all duration-250 group-hover:scale-110 group-hover:-translate-y-0.5"
         style={{
           background: colors.bg,
           border: `1px solid ${colors.border}`,
@@ -86,11 +90,11 @@ function FeatureCard({ feature, colors }) {
         {feature.icon}
       </div>
 
-      <h3 className="relative text-sm font-bold text-white mb-2">{feature.title}</h3>
-      <p className="relative text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>{feature.desc}</p>
+      <h3 className="relative text-sm font-bold text-white mb-2 transition-colors duration-200">{feature.title}</h3>
+      <p className="relative text-xs leading-relaxed transition-colors duration-200" style={{ color: 'rgba(255,255,255,0.4)' }}>{feature.desc}</p>
 
       {/* Bottom decorative dot */}
-      <div className="absolute bottom-3 right-3 w-1 h-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: colors.text, boxShadow: `0 0 6px ${colors.text}` }} />
+      <div className="absolute bottom-3 right-3 w-1 h-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-250" style={{ background: colors.text, boxShadow: `0 0 6px ${colors.text}` }} />
     </div>
   );
 }
@@ -98,6 +102,9 @@ function FeatureCard({ feature, colors }) {
 function AnimatedSection({ children, className = '' }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
+  const prefersReducedMotion = useRef(
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -109,7 +116,7 @@ function AnimatedSection({ children, className = '' }) {
     return () => observer.disconnect();
   }, []);
   return (
-    <div ref={ref} className={`transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'} ${className}`}>
+    <div ref={ref} className={`transition-all duration-250 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${className}`}>
       {children}
     </div>
   );
@@ -131,7 +138,7 @@ function DemoBell() {
   ];
   return (
     <div ref={ref} className="relative hidden sm:block">
-      <button onClick={() => setOpen(!open)} className="relative p-2 rounded-xl hover:bg-white/5 transition-colors">
+      <button onClick={() => setOpen(!open)} className="relative p-2 rounded-xl hover:bg-white/5 transition-colors duration-200">
         <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-gray-400"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
         <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white" style={{ background: '#F43F5E' }}>4</span>
       </button>
@@ -198,28 +205,49 @@ export default function LandingPage() {
       }}>
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-2.5 group cursor-pointer">
-            <Icon name="logo" className="w-10 h-10 transition-all duration-300 group-hover:scale-105" />
-            <div>
-              <div className="text-sm font-bold text-white tracking-tight transition-colors" style={{ fontSize: '22px', lineHeight: '1.1' }}>GateApex</div>
-              <div style={{ color: '#A855F7', fontSize: '11px', fontWeight: 600, letterSpacing: '1px' }}>GATE 2027</div>
+          <div className="flex items-center gap-4 group cursor-pointer">
+            <div className="w-12 h-12 transition-all duration-300 group-hover:scale-105">
+              <Icon name="logo" className="w-full h-full" />
+            </div>
+            <div className="flex flex-col justify-center">
+              <BrandName size="24px" fontWeight={600} letterSpacing="4px" />
+              <div className="text-[10px] font-semibold tracking-[2px] mt-0.5" style={{ color: '#A855F7' }}>GATE 2027</div>
             </div>
           </div>
 
           {/* Nav Links */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link to="/insights" className="relative text-[10px] font-medium transition-all duration-300 hover:-translate-y-0.5 hidden sm:inline-block group" style={{ color: '#A78BFA' }}>
-              <span className="group-hover:text-white transition-colors">📚 Insights</span>
-              <span className="absolute bottom-0 left-0 w-0 h-px group-hover:w-full transition-all duration-300" style={{ background: 'linear-gradient(90deg, #8B5CF6, #22D3EE)' }} />
-            </Link>
-            <Link to="/success-hub" className="relative text-[10px] font-medium transition-all duration-300 hover:-translate-y-0.5 hidden sm:inline-block group" style={{ color: '#FBBF24' }}>
-              <span className="group-hover:text-white transition-colors">🗺️ Success Hub</span>
-              <span className="absolute bottom-0 left-0 w-0 h-px group-hover:w-full transition-all duration-300" style={{ background: 'linear-gradient(90deg, #FBBF24, #8B5CF6)' }} />
-            </Link>
-            <Link to="/about" className="relative text-[10px] font-medium transition-all duration-300 hover:-translate-y-0.5 hidden sm:block group" style={{ color: '#A78BFA' }}>
-              <span className="group-hover:text-white transition-colors">About</span>
-              <span className="absolute bottom-0 left-0 w-0 h-px group-hover:w-full transition-all duration-300" style={{ background: 'linear-gradient(90deg, #8B5CF6, #22D3EE)' }} />
-            </Link>
+            {user ? (
+              <>
+                <Link to="/dashboard" className="relative text-[10px] font-medium transition-all duration-300 hover:-translate-y-0.5 hidden sm:inline-block group" style={{ color: '#A78BFA' }}>
+                  <span className="group-hover:text-white transition-colors">Dashboard</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-px group-hover:w-full transition-all duration-300" style={{ background: 'linear-gradient(90deg, #8B5CF6, #22D3EE)' }} />
+                </Link>
+                <Link to="/insights" className="relative text-[10px] font-medium transition-all duration-300 hover:-translate-y-0.5 hidden sm:inline-block group" style={{ color: '#A78BFA' }}>
+                  <span className="group-hover:text-white transition-colors">Insights</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-px group-hover:w-full transition-all duration-300" style={{ background: 'linear-gradient(90deg, #8B5CF6, #22D3EE)' }} />
+                </Link>
+                <Link to="/settings" className="relative text-[10px] font-medium transition-all duration-300 hover:-translate-y-0.5 hidden sm:inline-block group" style={{ color: '#A78BFA' }}>
+                  <span className="group-hover:text-white transition-colors">Profile</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-px group-hover:w-full transition-all duration-300" style={{ background: 'linear-gradient(90deg, #8B5CF6, #22D3EE)' }} />
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/insights" className="relative text-[10px] font-medium transition-all duration-300 hover:-translate-y-0.5 hidden sm:inline-block group" style={{ color: '#A78BFA' }}>
+                  <span className="group-hover:text-white transition-colors">Insights</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-px group-hover:w-full transition-all duration-300" style={{ background: 'linear-gradient(90deg, #8B5CF6, #22D3EE)' }} />
+                </Link>
+                <Link to="/success-hub" className="relative text-[10px] font-medium transition-all duration-300 hover:-translate-y-0.5 hidden sm:inline-block group" style={{ color: '#FBBF24' }}>
+                  <span className="group-hover:text-white transition-colors">Success Hub</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-px group-hover:w-full transition-all duration-300" style={{ background: 'linear-gradient(90deg, #FBBF24, #8B5CF6)' }} />
+                </Link>
+                <Link to="/about" className="relative text-[10px] font-medium transition-all duration-300 hover:-translate-y-0.5 hidden sm:block group" style={{ color: '#A78BFA' }}>
+                  <span className="group-hover:text-white transition-colors">About</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-px group-hover:w-full transition-all duration-300" style={{ background: 'linear-gradient(90deg, #8B5CF6, #22D3EE)' }} />
+                </Link>
+              </>
+            )}
 
             {/* Separator */}
             <div className="w-px h-4 mx-1 hidden sm:block" style={{ background: 'rgba(139,92,246,0.15)' }} />
@@ -322,7 +350,7 @@ export default function LandingPage() {
         </StaggerChildren>
       </section>
 
-      {/* How GateApex Fixes It */}
+      {/* How GateNexa Fixes It */}
       <section className="relative z-10 px-6 py-20 max-w-6xl mx-auto">
         <AnimatedSection>
           <div className="text-center mb-14">
@@ -330,7 +358,7 @@ export default function LandingPage() {
               ✨ The Solution
             </div>
             <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3 tracking-tight leading-tight">
-              How GateApex Fixes It All
+              How GateNexa Fixes It All
             </h2>
             <p className="text-gray-400 max-w-xl mx-auto text-sm">Every feature is designed to solve these problems directly.</p>
           </div>
@@ -381,54 +409,7 @@ export default function LandingPage() {
         </StaggerChildren>
       </section>
 
-      {/* Interactive Dashboard Preview */}
-      <section className="relative z-10 px-6 py-20 max-w-6xl mx-auto">
-        <AnimatedSection>
-          <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-medium mb-4" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)', color: '#A78BFA' }}>
-              📊 Live Preview
-            </div>
-            <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3 tracking-tight leading-tight">
-              See Your Progress in Real-Time
-            </h2>
-            <p className="text-gray-400 max-w-xl mx-auto text-sm">Everything you need in one beautiful dashboard.</p>
-          </div>
-        </AnimatedSection>
-        <AnimatedSection>
-          <div className="rounded-3xl overflow-hidden border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-cyan-500/5 p-4 sm:p-6">
-            <div className="bg-bg-1 rounded-2xl p-4 sm:p-6 border border-border">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-white">Your GATE Dashboard</h3>
-                <div className="text-[10px] text-gray-400">Updated just now</div>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                {[
-                  { label: 'Overall Progress', value: '62%', color: '#A78BFA' },
-                  { label: 'Mock Score', value: '74%', color: '#4ADE80' },
-                  { label: 'Streak', value: '12 Days', color: '#FBBF24' },
-                  { label: 'PYQs Solved', value: '342', color: '#22D3EE' }
-                ].map((stat, i) => (
-                  <div key={i} className="bg-bg-2 border border-border rounded-xl p-3 text-center">
-                    <div className="text-xl font-bold" style={{ color: stat.color }}>{stat.value}</div>
-                    <div className="text-[10px] text-gray-400 uppercase tracking-wider">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="bg-bg-2 border border-border rounded-xl p-4">
-                <h4 className="text-xs font-semibold text-white mb-3">Today's Tasks</h4>
-                <div className="space-y-2">
-                  {['Revision: Deadlocks (OS)', 'Solve 20 PYQs from 2023', 'Watch 2 videos on Sorting'].map((task, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="w-4 h-4 rounded-full border-2 border-purple-500/50" />
-                      <span className="text-xs text-gray-300">{task}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </AnimatedSection>
-      </section>
+
 
       {/* Gradient Divider */}
       <div className="relative z-10 max-w-4xl mx-auto px-6">
@@ -444,7 +425,7 @@ export default function LandingPage() {
         </AnimatedSection>
       </section>
 
-      {/* Why GateApex - Features */}
+      {/* Why GateNexa - Features */}
       <section className="relative z-10 px-6 py-20">
         <AnimatedSection>
           <div className="text-center mb-14">
@@ -886,7 +867,7 @@ export default function LandingPage() {
                       { date: 'Core Development', desc: 'Built auth, tracking, PYQ engine, mock test runner, and analytics engine.' },
                       { date: 'AI Integration', desc: 'GPT-powered mentor, personalized planner, and intelligent coach chat.' },
                       { date: 'Testing & Polish', desc: 'Responsive design, dark mode, performance optimization, UX refinement.' },
-                      { date: 'Launch', desc: 'GateApex goes live — AI-powered unified platform for GATE aspirants.' },
+                      { date: 'Launch', desc: 'GateNexa goes live — AI-powered unified platform for GATE aspirants.' },
                     ].map((t, i) => (
                       <div key={i} className="relative pl-8 group">
                         <div className={`absolute left-0 top-1 w-4 h-4 rounded-full border-2 transition-all duration-300 group-hover:scale-125`} style={{ borderColor: i < 5 ? '#8B5CF6' : '#F59E0B', background: i < 5 ? 'rgba(139,92,246,0.2)' : 'rgba(245,158,11,0.2)' }}>
@@ -917,9 +898,9 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Link to="/insights" className="text-[10px] font-medium transition-colors" style={{ color: '#A78BFA' }}>📚 Insights</Link>
+            <Link to="/insights" className="text-[10px] font-medium transition-colors" style={{ color: '#A78BFA' }}>Insights</Link>
             <span className="text-[10px] text-gray-600">·</span>
-            <Link to="/success-hub" className="text-[10px] font-medium transition-colors" style={{ color: '#FBBF24' }}>🗺️ Success Hub</Link>
+            <Link to="/success-hub" className="text-[10px] font-medium transition-colors" style={{ color: '#FBBF24' }}>Success Hub</Link>
             <span className="text-[10px] text-gray-600">·</span>
             <Link to="/about" className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors">About</Link>
             <span className="text-[10px] text-gray-600">|</span>

@@ -184,10 +184,10 @@ export default function FocusSessionPage() {
     isActive, isPaused, mode, sessionDuration, timeRemaining,
     sessionsCompleted, dailyStreak, currentSubject,
     startSession, pauseSession, resumeSession, stopSession,
-    formatTime,
+    formatTime, history,
   } = useFocus();
   
-  const { data: progressData } = useProgress();
+  const { data: progressData, studyStats } = useProgress();
   const [selectedDuration, setSelectedDuration] = useState(25);
   const [showPicker, setShowPicker] = useState(false);
   
@@ -199,6 +199,19 @@ export default function FocusSessionPage() {
   ];
   
   const progress = sessionDuration > 0 ? ((sessionDuration * 60 - timeRemaining) / (sessionDuration * 60)) * 100 : 0;
+  
+  // Calculate today's total focus time and weekly average
+  const todayKey = new Date().toISOString().split('T')[0];
+  const todayTotal = (history || [])
+    .filter(h => h.date === todayKey)
+    .reduce((sum, h) => sum + (h.duration || 0), 0);
+  const todayHours = Math.floor(todayTotal / 3600);
+  const todayMinutes = Math.floor((todayTotal % 3600) / 60);
+  
+  const weeklyData = (history || []).slice(-7);
+  const weeklyAvg = weeklyData.length > 0
+    ? Math.round(weeklyData.reduce((sum, h) => sum + (h.duration || 0), 0) / weeklyData.length / 60)
+    : 0;
   
   const handleStart = (duration) => {
     setSelectedDuration(duration);
@@ -288,6 +301,13 @@ export default function FocusSessionPage() {
               </div>
             ) : (
               <div className="space-y-8">
+                {/* Motivational Quote */}
+                <div className="text-center">
+                  <p className="text-sm italic" style={{ color: '#94A3B8' }}>
+                    "{QUOTES[Math.floor(Math.random() * QUOTES.length)]}"
+                  </p>
+                </div>
+                
                 <div className="relative">
                   <svg className="w-52 h-52 mx-auto" viewBox="0 0 100 100">
                     <circle
@@ -371,9 +391,25 @@ export default function FocusSessionPage() {
                 </div>
                 
                 <div className="pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-                  <p className="text-xs" style={{ color: '#64748B' }}>
-                    Sessions completed today: {sessionsCompleted}
-                  </p>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-lg font-bold text-white">{sessionsCompleted}</p>
+                      <p className="text-[10px]" style={{ color: '#64748B' }}>Sessions</p>
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-white">{todayHours}h {todayMinutes}m</p>
+                      <p className="text-[10px]" style={{ color: '#64748B' }}>Today</p>
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-white">{weeklyAvg}h</p>
+                      <p className="text-[10px]" style={{ color: '#64748B' }}>Avg/Day</p>
+                    </div>
+                  </div>
+                  {dailyStreak > 0 && (
+                    <p className="text-xs mt-3 text-center" style={{ color: '#F59E0B' }}>
+                      🔥 {dailyStreak} day streak — keep going!
+                    </p>
+                  )}
                 </div>
               </div>
             )}

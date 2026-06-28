@@ -1,4 +1,4 @@
-const router = require('express').Router();
+﻿const router = require('express').Router();
 const mongoose = require('mongoose');
 const multer = require('multer');
 const { adminProtect, requirePermission } = require('../middleware/adminAuth');
@@ -231,7 +231,7 @@ router.post('/pyq/upload-pdf', adminProtect, requirePermission('mocks.manage'), 
 
     // Upload to Cloudinary for OCR access (if configured)
     if (isCloudinaryConfigured()) {
-      const result = await cloudinaryUpload(req.file.buffer, req.file.originalname, 'GateApex/ocr_temp');
+      const result = await cloudinaryUpload(req.file.buffer, req.file.originalname, 'GateNexa/ocr_temp');
       pdfUrl = result.secure_url;
     }
 

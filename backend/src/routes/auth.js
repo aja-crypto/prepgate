@@ -3,7 +3,7 @@ const router = require('express').Router();
 const {
   register, login, refreshToken, getMe,
   updateProfile, registerFcmToken, forgotPassword, resetPassword,
-  googleAuth, verifyEmail, resendVerification, changePassword, deleteAccount,
+  googleAuth, demoLogin, verifyEmail, resendVerification, changePassword, deleteAccount,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 const { validateFields } = require('../middleware/validateInput');
@@ -20,6 +20,7 @@ router.post('/login', validateFields([
   { name: 'password', type: 'string', required: true },
 ]), login);
 router.post('/google', googleAuth);
+router.post('/demo', demoLogin);
 router.post('/refresh', refreshToken);
 router.post('/forgot-password', validateFields([
   { name: 'email', type: 'string', required: true, pattern: EMAIL_RE },

@@ -14,6 +14,6 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   const title = payload.notification?.title || 'GATE 2027';
-  const options = { body: payload.notification?.body || '', icon: '/favicon.svg' };
+  const options = { body: payload.notification?.body || '', icon: '/favicon.ico' };
   self.registration.showNotification(title, options);
 });

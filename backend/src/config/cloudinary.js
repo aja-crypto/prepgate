@@ -1,4 +1,4 @@
-const cloudinary = require('cloudinary').v2;
+﻿const cloudinary = require('cloudinary').v2;
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -14,7 +14,7 @@ function isCloudinaryConfigured() {
   );
 }
 
-async function uploadPdf(fileBuffer, fileName, folder = 'GateApex/pdfs') {
+async function uploadPdf(fileBuffer, fileName, folder = 'GateNexa/pdfs') {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
@@ -62,7 +62,7 @@ function generateSignedPdfPageUrls(publicId, totalPages, userId, userEmail) {
       transformation: [
         { width: 1400, crop: 'limit', page: i },
         {
-          overlay: `text:Arial_24:${encodeURIComponent('GateApex')}`,
+          overlay: `text:Arial_24:${encodeURIComponent('GateNexa')}`,
           color: '#ffffff20',
           gravity: 'north_west',
           x: 12,

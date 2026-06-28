@@ -1,85 +1,98 @@
-// Premium auth — GateApex branding
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import PasswordInput from '../components/common/PasswordInput';
-import GoogleSignInButton from '../components/auth/GoogleSignInButton';
-import Icon from '../components/ui/Icon';
-import GlassCard from '../components/ui/GlassCard';
-import { BRAND } from '../design/tokens';
-import { getApiErrorMessage } from '../services/api';
-import toast from 'react-hot-toast';
+﻿import { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import CinematicBackground from '../components/login/CinematicBackground';
+import GlassLoginCard from '../components/login/GlassLoginCard';
 
-export default function LoginPage() {
-  const { login, googleLogin } = useAuth();
-  const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '' });
-  const [loading, setLoading] = useState(false);
+const EXAM_DATE = new Date('2027-02-07T09:00:00');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.email || !form.password) return toast.error('Please fill all fields');
-    setLoading(true);
-    try {
-      await login(form.email, form.password);
-      navigate('/dashboard');
-    } catch (err) {
-      toast.error(getApiErrorMessage(err, 'Login failed'));
-    } finally {
-      setLoading(false);
-    }
-  };
+function CountdownBadge() {
+  const [days, setDays] = useState(0);
+  useEffect(() => {
+    const calc = () => {
+      const diff = EXAM_DATE - new Date();
+      setDays(Math.max(0, Math.ceil(diff / 86400000)));
+    };
+    calc();
+    const id = setInterval(calc, 60000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
-    <div className="min-h-screen login-wallpaper-bg flex items-center justify-center p-4">
-      <div className="w-full max-w-[420px] animate-slide-up relative z-10">
-        <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-3">
-            <Icon name="logo" className="w-10 h-10" />
-            <div>
-              <div className="font-bold text-text tracking-tight" style={{ fontSize: '20px', lineHeight: '1.1' }}>GateApex</div>
-              <div style={{ color: '#A855F7', fontSize: '10px', fontWeight: 600, letterSpacing: '1px' }}>GATE 2027</div>
-            </div>
-          </div>
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.6, duration: 0.5 }}
+      className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+      style={{
+        background: 'rgba(255, 255, 255, 0.04)',
+        border: '1px solid rgba(255, 255, 255, 0.06)',
+        backdropFilter: 'blur(20px)',
+      }}
+    >
+      <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+      <span className="text-[11px] text-white/40 font-light">
+        <span className="text-white/60 font-normal">GATE 2027</span> &middot; {days} days left
+      </span>
+    </motion.div>
+  );
+}
+
+export default function LoginPage() {
+  const navigate = useNavigate();
+  const [loginStatus, setLoginStatus] = useState('idle');
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const handleLoginSuccess = useCallback(() => {
+    navigate('/dashboard', { replace: true });
+  }, [navigate]);
+
+  const handleMouseMove = useCallback((e) => {
+    const x = (e.clientX / window.innerWidth) * 2 - 1;
+    const y = -(e.clientY / window.innerHeight) * 2 + 1;
+    setMouse({ x, y });
+  }, []);
+
+  return (
+    <div
+      className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden"
+      onMouseMove={handleMouseMove}
+      style={{ background: '#060A14' }}
+    >
+      <CinematicBackground />
+
+      {/* Top-left: Logo */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="fixed top-5 left-5 z-20 flex items-center gap-2.5"
+      >
+        <div
+          className="w-8 h-8 rounded-xl flex items-center justify-center"
+          style={{
+            background: 'linear-gradient(135deg, rgba(124,58,237,0.2), rgba(6,182,212,0.1))',
+            border: '1px solid rgba(124,58,237,0.15)',
+          }}
+        >
+          <img src="/images/logo.png" alt="GateNexa" className="w-5 h-5" />
         </div>
+        <span
+          className="text-sm font-medium text-white/70 hidden sm:block"
+          style={{ fontFamily: "'Inter', -apple-system, sans-serif", letterSpacing: '0.02em' }}
+        >
+          GateNexa
+        </span>
+      </motion.div>
 
-        <GlassCard hover={false} padding="p-8">
-          <h2 className="text-xl font-bold text-text tracking-tight mb-1">Welcome back</h2>
-          <p className="text-sm text-text2 mb-6">Sign in to continue your preparation</p>
+      {/* Top-right: Countdown */}
+      <div className="fixed top-5 right-5 z-20">
+        <CountdownBadge />
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-[11px] font-semibold text-text2 uppercase tracking-wider mb-2">Email</label>
-              <input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="you@example.com" className="input-field" />
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold text-text2 uppercase tracking-wider mb-2">Password</label>
-              <PasswordInput value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} autoComplete="current-password" />
-            </div>
-            <div className="flex justify-end">
-              <Link to="/forgot-password" className="text-xs text-primary hover:opacity-80">Forgot password?</Link>
-            </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full">
-              {loading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </form>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-            <div className="relative flex justify-center"><span className="bg-glass px-3 text-[10px] uppercase tracking-wider text-text3">or continue with</span></div>
-          </div>
-
-          <GoogleSignInButton
-            onSuccess={async (token) => { await googleLogin(token); navigate('/dashboard'); }}
-            onError={() => toast.error('Google sign-in failed')}
-          />
-
-          <p className="text-center text-sm text-text3 mt-6">
-            No account? <Link to="/register" className="text-primary font-medium hover:opacity-80">Create one</Link>
-          </p>
-        </GlassCard>
+      {/* Centered login card */}
+      <div className="relative z-10 w-full px-6">
+        <GlassLoginCard onStatusChange={setLoginStatus} mouse={mouse} onLoginSuccess={handleLoginSuccess} />
       </div>
     </div>
   );
 }
-
