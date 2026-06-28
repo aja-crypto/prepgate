@@ -18,8 +18,12 @@ function localHeuristicRecommendations(data) {
   const weakSubjects = subjects.filter(s => s.progress < 50).sort((a, b) => a.progress - b.progress);
   const incomplete = topics.filter(t => !t.done);
   const avgMock = mocks.length > 0 ? mocks.reduce((a, m) => a + (m.score || 0), 0) / mocks.length : 0;
+  const pyqAccuracy = pyqs.length > 0 ? (pyqs.filter(p => p.status === 'correct').length / pyqs.length) * 100 : 0;
   const weeklyHours = studyStats.weeklyHours || [];
   const totalHours = weeklyHours.reduce((a, b) => a + b, 0);
+  const consistency = Math.min(100, (weeklyHours.filter(h => h > 0).length / 7) * 100);
+
+  const predictedScore = Math.min(100, Math.max(0, (overall * 0.4) + (avgMock * 0.4) + (pyqAccuracy * 0.2)));
 
   return {
     recommendations: [
@@ -57,18 +61,18 @@ function localHeuristicRecommendations(data) {
     ],
     analysis: {
       scores: {
-        mentor: Math.round((overall + (avgMock || overall)) / 2),
-        readiness: Math.round(overall),
-        consistency: Math.round(Math.min(100, (weeklyHours.filter(h => h > 0).length / 7) * 100)),
+        mentor: Math.round((predictedScore + consistency) / 2),
+        readiness: Math.round(predictedScore),
+        consistency: Math.round(consistency),
         revisionHealth: Math.round(Math.min(100, pyqs.length > 0 ? (pyqs.filter(p => !p.revisionNeeded).length / pyqs.length) * 100 : 0)),
         mockPerformance: Math.round(avgMock)
       },
       predictions: {
-        score: Math.round(Math.min(100, (overall * 0.4) + (avgMock * 0.4) + 20)),
-        rank: Math.round(Math.pow(10, (100 - Math.min(100, (overall * 0.4) + (avgMock * 0.4) + 20)) / 25) * 100),
-        admissions: overall > 70 ? 'High chance for Top IITs' : overall > 40 ? 'Good chance for NITs' : 'Focus on core subjects first'
+        score: Math.round(predictedScore),
+        rank: Math.round(Math.pow(10, (100 - predictedScore) / 25) * 100),
+        admissions: predictedScore > 70 ? 'High chance for Top IITs' : predictedScore > 50 ? 'Good chance for NITs' : 'Focus on core subjects first'
       },
-      riskLevel: overall < 30 ? 'High' : overall < 60 ? 'Medium' : 'Low'
+      riskLevel: consistency < 40 ? 'High' : consistency < 70 ? 'Medium' : 'Low'
     }
   };
 }

@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { useProgress } from '../../context/ProgressContext';
 import { aiService, noteService } from '../../services/api';
+import { buildAiContext } from '../../utils/aiContextBuilder';
 import Icon from '../ui/Icon';
 import GlassCard from '../ui/GlassCard';
 import GateNexaAIIcon from '../ui/GateNexaAIIcon';
@@ -117,28 +118,10 @@ export default function AICoachChat({ initialPrompt }) {
     setSuggestions(null);
 
     try {
-      const overallProgress = Math.round((topics || []).filter(t => t.done).length / ((topics || []).length || 1) * 100);
-      const mockAvg = (mocks || []).length > 0 ? Math.round((mocks || []).reduce((a, b) => a + (b.score || 0), 0) / (mocks || []).length) : 0;
-      const weakSubjects = (studyStats?.subjects || []).filter(s => s.progress < 40).map(s => s.name);
-      const strongSubjects = (studyStats?.subjects || []).filter(s => s.progress >= 70).map(s => s.name);
-      const weakTopics = (topics || []).filter(t => !t.done).slice(0, 8).map(t => t.name);
-      const overdueTopics = (pyqs || []).filter(p => p.revisionNeeded).length;
-      const recentAccuracy = (pyqs || []).length
-        ? Math.round(((pyqs || []).filter(p => p.status === 'correct' || p.solved).length / (pyqs || []).length) * 100)
-        : 0;
+      const ctx = buildAiContext({ topics, pyqs, mocks, gateFeatures, studyStats });
+      ctx.history = messages.slice(-6).map(m => ({ role: m.role, content: m.content }));
 
-      const res = await aiService.askCoach(messageText, {
-        overallProgress,
-        mockAvg,
-        weakSubjects,
-        strongSubjects,
-        weakTopics,
-        mockHistory: (mocks || []).slice(-5),
-        overdueTopics,
-        recentAccuracy,
-        streak: gateFeatures?.streak?.current || 0,
-        weeklyHours: weeklyHours.reduce((a, b) => a + b, 0)
-      });
+      const res = await aiService.askCoach(messageText, ctx);
 
       if (res.data.success) {
         const reply = res.data.data.text;

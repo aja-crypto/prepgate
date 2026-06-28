@@ -246,7 +246,7 @@ Return ONLY valid JSON array, 7 items for a week.`;
   ];
 
   try {
-    const text = await callAiApi(messages);
+    const text = await callAiApi(messages, { response_format: { type: 'json_object' } });
     if (!text) throw new Error('AI Response empty');
 
     const match = text.match(/\[[\s\S]*\]/);
@@ -446,7 +446,7 @@ Provide specific, professional, and highly motivating advice for a GATE aspirant
     { role: 'user', content: prompt },
   ];
 
-  const text = await callAiApi(messages);
+  const text = await callAiApi(messages, { response_format: { type: 'json_object' } });
   if (!text) return null;
 
   const match = text.match(/\[[\s\S]*\]/);
@@ -715,18 +715,7 @@ try {
       console.log('[AI Coach] API key found, calling callAiApi...');
       lastAiError = null;
       
-      const systemPrompt = `You are GateNexa AI Mentor.
-
-You help GATE CSE aspirants.
-
-Focus on:
-
-- Study plans
-- PYQs
-- Mock tests
-- Revision
-- Subject explanations
-- Rank improvement
+      const systemPrompt = `You are GateNexa AI Mentor — a senior GATE CSE preparation coach.
 
 Student context:
 - Overall progress: ${context.overallProgress || 0}%
@@ -738,14 +727,50 @@ Student context:
 - Overdue revisions: ${context.overdueTopics || 0}
 - Recent accuracy: ${context.recentAccuracy || 0}%
 
-Avoid generic answers. Be specific, actionable, and GATE-focused. Use markdown for formatting.`;
+Rules:
+- Stay within GATE CSE scope (DSA, OS, DBMS, CN, TOC, COA, Engineering Math, Aptitude)
+- Reference the student's actual data (weak subjects, mock scores, streak) in every response
+- Be specific: give subject names, topic names, concrete hour allocations
+- Keep responses under 200 words unless the user asks for detail
+- Use markdown formatting (bold, bullet points, numbered lists)
+- Always end with a follow-up question or actionable next step
 
-      const text = await callAiApi([
+Example interactions:
+
+User: "What should I study today?"
+Assistant: "Based on your weak areas, here's today's plan:
+**1. ${context.weakSubjects?.[0] || 'Your weakest subject'} (2 hours)** — Focus on ${context.weakTopics?.[0] || 'key weak topics'}. This is a high-weightage GATE area.
+**2. PYQ Practice (1 hour)** — Solve 10 previous year questions from any subject.
+**3. Revision (30 min)** — Review flashcards for formulas.
+You're on a **${context.streak || 0}-day streak** — keep it going! What subject do you want to start with?"
+
+User: "I scored 45% in my last mock"
+Assistant: "45% is a **starting point**, not a ceiling. Here's what I see:
+- Your **weak subjects** are dragging your score down
+- Focus on **PYQ accuracy** — it directly impacts your predicted rank
+- Take **2 more subject-wise mocks** this week before attempting another full-length
+Target: **55% in your next mock** by improving your weakest 2 subjects. Want me to create a study plan?"
+
+User: "Explain DBMS normalization"
+Assistant: "Here's a quick GATE-focused breakdown of **Normalization**:
+- **1NF**: No repeating groups, atomic values
+- **2NF**: 1NF + no partial dependency (all non-key depend on full primary key)
+- **3NF**: 2NF + no transitive dependency
+- **BCNF**: Every determinant is a candidate key
+
+**GATE Trick**: If a question gives a relation with composite primary key, check for partial dependency first — that's the most tested concept.
+
+Want me to walk through a specific GATE PYQ on normalization?"`;
+
+      const messages = [
         { role: 'system', content: systemPrompt },
+        ...(Array.isArray(context.history) ? context.history.slice(-6) : []),
         { role: 'user', content: message },
-      ], { max_tokens: 800, temperature: 0.7 });
+      ];
 
-      console.log('[AI Coach] callAiApi returned:', text);
+      const text = await callAiApi(messages, { max_tokens: 800, temperature: 0.7 });
+
+      console.log('[AI Coach] callAiApi returned:', text?.substring(0, 100));
 
       if (text) {
         const lower = text.toLowerCase();
@@ -829,7 +854,7 @@ Provide specific, motivating, GATE-focused advice.`;
   ];
 
   try {
-    const text = await callAiApi(messages, { max_tokens: 2000 });
+    const text = await callAiApi(messages, { max_tokens: 2000, response_format: { type: 'json_object' } });
     if (!text) return null;
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) return null;
@@ -918,7 +943,7 @@ Make it highly specific to the student's doubt and GATE CSE. Include concrete ex
   ];
 
   try {
-    const text = await callAiApi(messages, { max_tokens: 2500, temperature: 0.5 });
+    const text = await callAiApi(messages, { max_tokens: 2500, temperature: 0.5, response_format: { type: 'json_object' } });
     if (!text) return null;
 
     const match = text.match(/\{[\s\S]*\}/);

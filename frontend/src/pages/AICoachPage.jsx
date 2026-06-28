@@ -2,6 +2,7 @@
 import { useProgress } from '../context/ProgressContext';
 import { aiService } from '../services/api';
 import { computeSubjectCompletion, computeReadinessScore } from '../utils/gateUtils';
+import { buildAiContext } from '../utils/aiContextBuilder';
 import GlassCard from '../components/ui/GlassCard';
 import Icon from '../components/ui/Icon';
 
@@ -23,19 +24,6 @@ const DAILY_TIPS = [
   { icon: '⏰', title: 'Use the Pomodoro method', desc: '50 min focused study + 10 min break. Repeat 4 times.' },
   { icon: '🎯', title: 'Set a daily target', desc: "Decide 3 things you'll accomplish today before you start." },
 ];
-
-function buildContext(user) {
-  return {
-    weakSubjects: user?.weakSubjects || [],
-    strongSubjects: user?.strongSubjects || [],
-    weakTopics: (user?.progressBackup?.weakTopics || user?.weakTopics || []).slice(0, 5),
-    overallProgress: user?.progressBackup?.overallProgress || user?.overallProgress || 0,
-    mockAvg: user?.progressBackup?.mockAvg || user?.mockAvg || 0,
-    streak: user?.streak || 0,
-    overdueTopics: user?.overdueTopics || 0,
-    recentAccuracy: user?.recentAccuracy || 0,
-  };
-}
 
 export default function AICoachPage() {
   const { topics, pyqs, mocks, studyStats, gateFeatures, user } = useProgress();
@@ -60,7 +48,7 @@ export default function AICoachPage() {
     if (welcomeSent.current) return;
     welcomeSent.current = true;
     const timer = setTimeout(async () => {
-      const ctx = buildContext(user);
+      const ctx = buildAiContext({ topics, pyqs, mocks, gateFeatures, studyStats });
       const result = await aiService.askCoach("hello", ctx).catch(() => null);
       const text = result?.data?.data?.text || `Hey! I'm your GateNexa AI Mentor. Ask me anything about your GATE prep — study plans, weak topics, PYQs, revision, or motivation.`;
       setMessages([{ role: 'assistant', text }]);
@@ -77,7 +65,7 @@ export default function AICoachPage() {
     setInput('');
     setMessages((m) => [...m, { role: 'user', text: msg }]);
     setLoading(true);
-    const ctx = buildContext(user);
+    const ctx = buildAiContext({ topics, pyqs, mocks, gateFeatures, studyStats });
     const result = await aiService.askCoach(msg, ctx).catch(() => null);
     const reply = result?.data?.data?.text || "Based on your preparation data, I recommend focusing on your weakest subject and solving at least 10 PYQs daily. Consistency is key for GATE success!";
     setMessages((m) => [...m, { role: 'assistant', text: reply }]);
