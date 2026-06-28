@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useProgress } from '../context/ProgressContext';
 import { aiService } from '../services/api';
 import { GATE_SUBJECTS } from '../data/gateSubjectsData';
-import { computeSubjectCompletion } from '../utils/gateUtils';
+import { computeSubjectCompletion, getCountdown } from '../utils/gateUtils';
 import Modal from '../components/common/Modal';
 import toast from 'react-hot-toast';
 import { Sparkles, ChevronLeft, ChevronRight, Clock, BookOpen, Target, CheckCircle, Play, BarChart3, Brain, AlertCircle, GripVertical, X, Plus, Layers } from 'lucide-react';
@@ -17,31 +17,39 @@ function subjectMeta(name) {
 }
 
 // Generate smart schedule from weak topics
-function generateSmartSchedule(topics, pyqs, studyStats) {
+function generateSmartSchedule(topics, pyqs, studyStats, dailyHours = 8) {
+  const SUBJECT_WEIGHTAGE = {
+    'Operating Systems': 9, 'Computer Networks': 8.5, 'DBMS': 8,
+    'Computer Organization': 8.5, 'Theory of Computation': 8, 'Algorithms': 7.5,
+    'Programming & Data Structures': 11.5, 'Engineering Mathematics': 12.5,
+    'Digital Logic': 5, 'Compiler Design': 5, 'General Aptitude': 15,
+  };
   const subjects = computeSubjectCompletion(studyStats?.subjects || [], topics, pyqs);
-  const weak = subjects.filter(s => s.progress < 50).sort((a, b) => a.progress - b.progress);
-  const mid = subjects.filter(s => s.progress >= 50 && s.progress < 75).sort((a, b) => a.progress - b.progress);
-  const strong = subjects.filter(s => s.progress >= 75);
+  const sorted = [...subjects].sort((a, b) => {
+    const wa = SUBJECT_WEIGHTAGE[a.name] || 5;
+    const wb = SUBJECT_WEIGHTAGE[b.name] || 5;
+    return (wa * (1 - a.progress / 100)) - (wb * (1 - b.progress / 100));
+  });
+  const weak = sorted.filter(s => s.progress < 50);
+  const mid = sorted.filter(s => s.progress >= 50 && s.progress < 75);
   if (!weak.length && !mid.length) return [];
 
   const schedule = [];
-  let hour = 14; // start 2 PM
+  let hour = 14;
+  let remainingMins = dailyHours * 60;
   const push = (sub, label, mins) => {
+    if (remainingMins <= 0) return;
+    const actualMins = Math.min(mins, remainingMins);
     const meta = subjectMeta(sub.name);
-    schedule.push({ id: Date.now() + schedule.length, subject: sub.name, label: label || 'Revision', duration: mins, startHour: hour, color: meta.color, icon: meta.icon, progress: sub.progress });
-    hour += Math.ceil(mins / 60);
+    schedule.push({ id: Date.now() + schedule.length, subject: sub.name, label: label || 'Revision', duration: actualMins, startHour: hour, color: meta.color, icon: meta.icon, progress: sub.progress });
+    hour += Math.ceil(actualMins / 60);
+    remainingMins -= actualMins;
   };
 
-  // 2h on weakest subjects
-  weak.slice(0, 2).forEach(s => push(s, s.name === 'General Aptitude' ? 'Practice' : 'Core Topics', 120));
-  // 1h on mid subjects
-  mid.slice(0, 1).forEach(s => push(s, 'PYQ Practice', 60));
-  // 30min break
-  hour += 0.5;
-  // 1h PYQ
-  if (pyqs?.length) push(mid[0] || weak[0], 'PYQ Practice', 60);
-  // 30min revision
-  if (strong.length) push(strong[0], 'Quick Revision', 30);
+  weak.slice(0, 2).forEach(s => push(s, s.name === 'General Aptitude' ? 'Practice' : 'Core Topics', Math.round(dailyHours * 60 * 0.35)));
+  mid.slice(0, 1).forEach(s => push(s, 'PYQ Practice', Math.round(dailyHours * 60 * 0.2)));
+  if (remainingMins > 60 && pyqs?.length) push(mid[0] || weak[0], 'PYQ Practice', Math.round(dailyHours * 60 * 0.2));
+  if (remainingMins > 30 && sorted.length) push(sorted[sorted.length - 1], 'Quick Revision', Math.round(dailyHours * 60 * 0.15));
 
   return schedule;
 }
@@ -152,7 +160,8 @@ export default function StudyPlannerPage() {
         pyqs: pyqs || [],
         mocks: mocks || [],
         dailyHours: gateFeatures?.dailyTarget?.hours || 8,
-        period: 'today',
+        period: 'day',
+        daysRemaining: getCountdown(gateFeatures?.examDate).days,
       });
       const plan = res.data?.data?.plan;
       if (plan?.length) {

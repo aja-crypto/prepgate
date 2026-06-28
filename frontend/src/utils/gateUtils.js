@@ -289,6 +289,19 @@ export function getCountdown(examDateStr) {
   };
 }
 
+/**
+ * Map days remaining to a study phase with strategy recommendations.
+ * Returns { phase, label, focus, revisionFreq, mockFreq, conceptWeight, practiceWeight, revisionWeight }
+ */
+export function getExamPhase(examDateStr) {
+  const { days } = getCountdown(examDateStr);
+  if (days > 180) return { phase: 'foundation', label: 'Foundation', focus: 'Build strong concepts across all subjects', revisionFreq: 'weekly', mockFreq: 'monthly', conceptWeight: 0.6, practiceWeight: 0.3, revisionWeight: 0.1 };
+  if (days > 120) return { phase: 'deepening', label: 'Deepening', focus: 'Complete syllabus + begin PYQ practice', revisionFreq: 'weekly', mockFreq: 'bi-weekly', conceptWeight: 0.4, practiceWeight: 0.4, revisionWeight: 0.2 };
+  if (days > 60)  return { phase: 'practice',  label: 'Practice',  focus: 'PYQs + mock tests + weak area targeting', revisionFreq: 'twice-weekly', mockFreq: 'weekly', conceptWeight: 0.2, practiceWeight: 0.5, revisionWeight: 0.3 };
+  if (days > 14)  return { phase: 'revision',  label: 'Revision',  focus: 'Full revision + mock analysis + formula review', revisionFreq: 'daily', mockFreq: 'twice-weekly', conceptWeight: 0.1, practiceWeight: 0.3, revisionWeight: 0.6 };
+  return { phase: 'final', label: 'Final Sprint', focus: 'Light revision + confidence building + rest', revisionFreq: 'daily', mockFreq: 'daily (light)', conceptWeight: 0.0, practiceWeight: 0.2, revisionWeight: 0.8 };
+}
+
 /** PYQ statistics grouped by subject, topic, year, difficulty */
 export function computePyqStats(pyqs) {
   const bySubject = {};

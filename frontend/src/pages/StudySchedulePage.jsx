@@ -87,53 +87,73 @@ const PX_PER_15MIN = PX_PER_HOUR / 4;
 
 function generateDefaultSchedule(weekStart, dailyTarget, subjects) {
   const schedule = {};
-  const subNames = (subjects || []).map(s => s.name).filter(Boolean);
-  const fallback = ['Operating Systems', 'Computer Networks', 'DBMS', 'Algorithms', 'Theory of Computation', 'Computer Organization', 'Engineering Mathematics'];
+  const SUBJECT_WEIGHTAGE = {
+    'Operating Systems': 9, 'Computer Networks': 8.5, 'DBMS': 8,
+    'Computer Organization': 8.5, 'Theory of Computation': 8, 'Algorithms': 7.5,
+    'Programming & Data Structures': 11.5, 'Engineering Mathematics': 12.5,
+    'Digital Logic': 5, 'Compiler Design': 5, 'General Aptitude': 15,
+  };
+  const subNames = (subjects || [])
+    .map(s => s.name)
+    .filter(Boolean)
+    .sort((a, b) => (SUBJECT_WEIGHTAGE[b] || 5) - (SUBJECT_WEIGHTAGE[a] || 5));
+  const fallback = Object.entries(SUBJECT_WEIGHTAGE).sort((a, b) => b[1] - a[1]).map(([name]) => name);
   const subs = subNames.length >= 3 ? subNames : fallback;
+  const hours = Math.max(2, Math.min(14, dailyTarget || 8));
+  const startHour = 6;
+  const endHour = startHour + hours;
 
-  const weekday = (dayIdx) => {
-    const s1 = subs[dayIdx % subs.length];
-    const s2 = subs[(dayIdx + 1) % subs.length];
-    const s3 = subs[(dayIdx + 2) % subs.length];
-    const s4 = subs[(dayIdx + 3) % subs.length];
-    return [
-      { id: generateId(), type: 'new-concept', subject: s1, topic: '', startTime: '06:00', endTime: '08:00', status: 'not-started', notes: 'Morning deep study' },
-      { id: generateId(), type: 'break', subject: '', topic: 'Breakfast', startTime: '08:00', endTime: '08:30', status: 'not-started', notes: '' },
-      { id: generateId(), type: 'problem-solving', subject: s1, topic: '', startTime: '08:30', endTime: '10:30', status: 'not-started', notes: 'Practice problems' },
-      { id: generateId(), type: 'break', subject: '', topic: 'Break', startTime: '10:30', endTime: '11:00', status: 'not-started', notes: '' },
-      { id: generateId(), type: 'pyq', subject: s2, topic: '', startTime: '11:00', endTime: '12:00', status: 'not-started', notes: 'PYQ session' },
-      { id: generateId(), type: 'break', subject: '', topic: 'Lunch', startTime: '12:00', endTime: '13:30', status: 'not-started', notes: '' },
-      { id: generateId(), type: 'revision', subject: s3, topic: '', startTime: '13:30', endTime: '15:00', status: 'not-started', notes: 'Spaced revision' },
-      { id: generateId(), type: 'new-concept', subject: s4, topic: '', startTime: '15:00', endTime: '16:30', status: 'not-started', notes: 'New topic study' },
-      { id: generateId(), type: 'break', subject: '', topic: 'Break', startTime: '16:30', endTime: '17:00', status: 'not-started', notes: '' },
-      { id: generateId(), type: 'problem-solving', subject: s2, topic: '', startTime: '17:00', endTime: '18:30', status: 'not-started', notes: 'Evening practice' },
-      { id: generateId(), type: 'focus', subject: s3, topic: '', startTime: '19:00', endTime: '20:00', status: 'not-started', notes: 'Focus session' },
-      { id: generateId(), type: 'revision', subject: s1, topic: '', startTime: '20:00', endTime: '21:00', status: 'not-started', notes: 'Formula review' },
-      { id: generateId(), type: 'planning', subject: '', topic: 'Tomorrow Planning', startTime: '21:00', endTime: '21:30', status: 'not-started', notes: 'Plan next day' },
-    ];
+  const makeBlock = (type, subject, topic, startH, endH, notes) => ({
+    id: generateId(), type, subject, topic, startTime: `${String(startH).padStart(2, '0')}:00`, endTime: `${String(endH).padStart(2, '0')}:00`, status: 'not-started', notes,
+  });
+
+  const buildDay = (dayIdx, blockDefs) => {
+    const blocks = [];
+    let h = startHour;
+    for (const def of blockDefs) {
+      const duration = Math.min(def.dur, endHour - h);
+      if (duration <= 0) break;
+      const sub = subs[(dayIdx + def.subOffset) % subs.length];
+      blocks.push(makeBlock(def.type, def.type === 'break' || def.type === 'planning' ? '' : sub, def.topic || '', h, h + duration, def.notes));
+      h += duration;
+    }
+    return blocks;
   };
 
-  const saturday = () => [
-    { id: generateId(), type: 'new-concept', subject: subs[3 % subs.length], topic: '', startTime: '06:00', endTime: '08:00', status: 'not-started', notes: 'Weak topic deep dive' },
-    { id: generateId(), type: 'break', subject: '', topic: 'Break', startTime: '08:00', endTime: '08:30', status: 'not-started', notes: '' },
-    { id: generateId(), type: 'mock', subject: 'Full-Length Mock', topic: '', startTime: '08:30', endTime: '11:30', status: 'not-started', notes: 'Weekly mock test' },
-    { id: generateId(), type: 'break', subject: '', topic: 'Break', startTime: '11:30', endTime: '12:00', status: 'not-started', notes: '' },
-    { id: generateId(), type: 'revision', subject: subs[4 % subs.length], topic: '', startTime: '12:00', endTime: '13:30', status: 'not-started', notes: 'Mock analysis + revision' },
-    { id: generateId(), type: 'break', subject: '', topic: 'Lunch', startTime: '13:30', endTime: '15:00', status: 'not-started', notes: '' },
-    { id: generateId(), type: 'pyq', subject: 'Mixed', topic: '', startTime: '15:00', endTime: '17:00', status: 'not-started', notes: 'PYQ marathon' },
-    { id: generateId(), type: 'revision', subject: subs[5 % subs.length], topic: '', startTime: '17:00', endTime: '18:30', status: 'not-started', notes: 'Weak area revision' },
-  ];
+  const weekday = (dayIdx) => buildDay(dayIdx, [
+    { type: 'new-concept', subOffset: 0, dur: Math.min(2, hours * 0.25), notes: 'Morning deep study' },
+    { type: 'break', subOffset: 0, dur: 0.5, topic: 'Break', notes: '' },
+    { type: 'problem-solving', subOffset: 0, dur: Math.min(2, hours * 0.2), notes: 'Practice problems' },
+    { type: 'break', subOffset: 0, dur: 0.5, topic: 'Break', notes: '' },
+    { type: 'pyq', subOffset: 1, dur: Math.min(1.5, hours * 0.15), notes: 'PYQ session' },
+    { type: 'break', subOffset: 0, dur: 1, topic: 'Lunch', notes: '' },
+    { type: 'revision', subOffset: 2, dur: Math.min(1.5, hours * 0.15), notes: 'Spaced revision' },
+    { type: 'new-concept', subOffset: 3, dur: Math.min(1.5, hours * 0.15), notes: 'New topic study' },
+    { type: 'break', subOffset: 0, dur: 0.5, topic: 'Break', notes: '' },
+    { type: 'problem-solving', subOffset: 1, dur: Math.min(1.5, hours * 0.1), notes: 'Evening practice' },
+    { type: 'planning', subOffset: 0, dur: 0.5, topic: 'Tomorrow Planning', notes: 'Plan next day' },
+  ]);
 
-  const sunday = () => [
-    { id: generateId(), type: 'revision', subject: subs[0 % subs.length], topic: '', startTime: '07:00', endTime: '09:00', status: 'not-started', notes: 'Weekly full revision' },
-    { id: generateId(), type: 'break', subject: '', topic: 'Break', startTime: '09:00', endTime: '09:30', status: 'not-started', notes: '' },
-    { id: generateId(), type: 'pyq', subject: 'Mixed', topic: '', startTime: '09:30', endTime: '11:00', status: 'not-started', notes: 'PYQ practice — weak areas' },
-    { id: generateId(), type: 'break', subject: '', topic: 'Break', startTime: '11:00', endTime: '11:30', status: 'not-started', notes: '' },
-    { id: generateId(), type: 'mock', subject: 'Full-Length Mock', topic: '', startTime: '11:30', endTime: '14:00', status: 'not-started', notes: 'Sunday mock test' },
-    { id: generateId(), type: 'break', subject: '', topic: 'Lunch', startTime: '14:00', endTime: '15:00', status: 'not-started', notes: '' },
-    { id: generateId(), type: 'revision', subject: subs[2 % subs.length], topic: '', startTime: '15:00', endTime: '16:30', status: 'not-started', notes: 'Full revision' },
-    { id: generateId(), type: 'planning', subject: '', topic: 'Next Week Planning', startTime: '16:30', endTime: '17:30', status: 'not-started', notes: 'Plan next week' },
-  ];
+  const saturday = () => buildDay(3, [
+    { type: 'new-concept', subOffset: 3, dur: Math.min(2, hours * 0.25), notes: 'Weak topic deep dive' },
+    { type: 'break', subOffset: 0, dur: 0.5, topic: 'Break', notes: '' },
+    { type: 'mock', subOffset: 0, dur: Math.min(3, hours * 0.3), topic: 'Full-Length Mock', notes: 'Weekly mock test' },
+    { type: 'break', subOffset: 0, dur: 0.5, topic: 'Break', notes: '' },
+    { type: 'revision', subOffset: 4, dur: Math.min(1.5, hours * 0.15), notes: 'Mock analysis + revision' },
+    { type: 'break', subOffset: 0, dur: 1, topic: 'Lunch', notes: '' },
+    { type: 'pyq', subOffset: 0, dur: Math.min(2, hours * 0.15), topic: 'Mixed', notes: 'PYQ marathon' },
+  ]);
+
+  const sunday = () => buildDay(6, [
+    { type: 'revision', subOffset: 0, dur: Math.min(2, hours * 0.25), notes: 'Weekly full revision' },
+    { type: 'break', subOffset: 0, dur: 0.5, topic: 'Break', notes: '' },
+    { type: 'pyq', subOffset: 0, dur: Math.min(1.5, hours * 0.2), topic: 'Mixed', notes: 'PYQ practice — weak areas' },
+    { type: 'break', subOffset: 0, dur: 0.5, topic: 'Break', notes: '' },
+    { type: 'mock', subOffset: 0, dur: Math.min(2.5, hours * 0.25), topic: 'Full-Length Mock', notes: 'Sunday mock test' },
+    { type: 'break', subOffset: 0, dur: 1, topic: 'Lunch', notes: '' },
+    { type: 'revision', subOffset: 2, dur: Math.min(1.5, hours * 0.15), notes: 'Full revision' },
+    { type: 'planning', subOffset: 0, dur: 0.5, topic: 'Next Week Planning', notes: 'Plan next week' },
+  ]);
 
   for (let i = 0; i < 7; i++) {
     const date = addDays(weekStart, i);

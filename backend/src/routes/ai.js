@@ -140,48 +140,73 @@ async function callAiApi(messages, options = {}) {
   return null;
 }
 
+/** GATE CSE subject weightage (approx marks out of 100) */
+const SUBJECT_WEIGHTAGE = {
+  'Operating Systems': 9, 'Computer Networks': 8.5, 'DBMS': 8,
+  'Computer Organization': 8.5, 'Theory of Computation': 8, 'Algorithms': 7.5,
+  'Programming & Data Structures': 11.5, 'Engineering Mathematics': 12.5,
+  'Digital Logic': 5, 'Compiler Design': 5, 'General Aptitude': 15,
+};
+
+function getExamPhase(daysRemaining) {
+  if (daysRemaining > 180) return { phase: 'foundation', conceptWeight: 0.6, practiceWeight: 0.3, revisionWeight: 0.1 };
+  if (daysRemaining > 120) return { phase: 'deepening', conceptWeight: 0.4, practiceWeight: 0.4, revisionWeight: 0.2 };
+  if (daysRemaining > 60)  return { phase: 'practice',  conceptWeight: 0.2, practiceWeight: 0.5, revisionWeight: 0.3 };
+  if (daysRemaining > 14)  return { phase: 'revision',  conceptWeight: 0.1, practiceWeight: 0.3, revisionWeight: 0.6 };
+  return { phase: 'final', conceptWeight: 0.0, practiceWeight: 0.2, revisionWeight: 0.8 };
+}
+
+function getWeightageSortedSubjects(subjects) {
+  if (!subjects?.length) return Object.entries(SUBJECT_WEIGHTAGE).sort((a, b) => b[1] - a[1]).map(([name]) => ({ name, weightage: SUBJECT_WEIGHTAGE[name] }));
+  return [...subjects].sort((a, b) => {
+    const wa = SUBJECT_WEIGHTAGE[a.name] || 5;
+    const wb = SUBJECT_WEIGHTAGE[b.name] || 5;
+    const pa = a.progress || 0;
+    const pb = b.progress || 0;
+    return (wa * (1 - pa / 100)) - (wb * (1 - pb / 100));
+  }).map(s => ({ ...s, weightage: SUBJECT_WEIGHTAGE[s.name] || 5 }));
+}
+
 function buildHeuristicPlan(body) {
   const { subjects = [], topics = [], dailyHours = 8, period = 'week' } = body;
+  const daysRemaining = body.daysRemaining || body.context?.daysRemaining || 365;
   const incomplete = topics.filter((t) => !t.done);
-  const weakSubjects = [...subjects].sort((a, b) => (a.progress || 0) - (b.progress || 0));
+  const sorted = getWeightageSortedSubjects(subjects);
+  const phase = getExamPhase(daysRemaining);
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+  const weakHours = Math.max(0.5, Math.round(dailyHours * phase.conceptWeight * 10) / 10);
+  const practiceHours = Math.max(0.5, Math.round(dailyHours * phase.practiceWeight * 10) / 10);
+  const revisionHours = Math.max(0.5, Math.round(dailyHours * phase.revisionWeight * 10) / 10);
+
   if (period === 'day') {
-    const primarySubject = weakSubjects[0]?.name || 'DBMS';
-    const secondarySubject = weakSubjects[1]?.name || 'Computer Networks';
+    const primarySubject = sorted[0]?.name || 'Engineering Mathematics';
+    const secondarySubject = sorted[1]?.name || 'Operating Systems';
+    const thirdSubject = sorted[2]?.name || 'Algorithms';
     const primaryTopic = incomplete.find((t) => t.subject === primarySubject) || incomplete[0];
     const secondaryTopic = incomplete.find((t) => t.subject === secondarySubject) || incomplete[1];
 
-    return [
-      {
-        day: '1',
-        subject: primarySubject,
-        topic: `Revise ${primaryTopic?.name || 'Deadlocks'}`,
-        hours: Math.max(1, Math.min(2, dailyHours / 4)),
-        tasks: ['Read short notes', 'Make a one-page formula sheet'],
-      },
-      {
-        day: '2',
-        subject: primarySubject,
-        topic: `Solve 20 ${primarySubject.split(' ')[0]} PYQs`,
-        hours: Math.max(1, Math.min(2, dailyHours / 4)),
-        tasks: ['Time-box the set', 'Review every mistake'],
-      },
-      {
-        day: '3',
-        subject: secondarySubject,
-        topic: `Complete ${secondaryTopic?.name || 'Routing'}`,
-        hours: Math.max(1, Math.min(2, dailyHours / 4)),
-        tasks: ['Rewatch the tricky concepts', 'Attempt 5 practice questions'],
-      },
-      {
-        day: '4',
-        subject: 'Theory of Computation',
-        topic: 'Take TOC Quiz',
-        hours: Math.max(1, Math.min(2, dailyHours / 4)),
-        tasks: ['Attempt 15 mixed questions', 'Mark weak subtopics for revision'],
-      },
-    ];
+    const items = [];
+    if (phase.conceptWeight > 0.1) {
+      items.push(
+        { day: '1', subject: primarySubject, topic: `Revise ${primaryTopic?.name || 'core concepts'}`, hours: weakHours, tasks: ['Read short notes', 'Make a one-page formula sheet'] },
+        { day: '2', subject: primarySubject, topic: `Solve 20 ${primarySubject.split(' ')[0]} PYQs`, hours: practiceHours, tasks: ['Time-box the set', 'Review every mistake'] },
+      );
+    }
+    if (phase.practiceWeight > 0.1) {
+      items.push(
+        { day: String(items.length + 1), subject: secondarySubject, topic: `Complete ${secondaryTopic?.name || 'key topics'}`, hours: practiceHours, tasks: ['Rewatch tricky concepts', 'Attempt 5 practice questions'] },
+      );
+    }
+    if (phase.revisionWeight > 0.1) {
+      items.push(
+        { day: String(items.length + 1), subject: thirdSubject, topic: `Revise & quiz: ${thirdSubject}`, hours: revisionHours, tasks: ['Attempt 15 mixed questions', 'Mark weak subtopics for revision'] },
+      );
+    }
+    if (items.length === 0) {
+      items.push({ day: '1', subject: primarySubject, topic: 'Light revision + confidence review', hours: dailyHours, tasks: ['Review formula sheet', 'Solve 10 easy PYQs', 'Rest well'] });
+    }
+    return items;
   }
 
   if (weakSubjects.length === 0 && incomplete.length === 0) {
@@ -195,33 +220,38 @@ function buildHeuristicPlan(body) {
   }
 
   return days.map((day, i) => {
-    const sub = weakSubjects[i % Math.max(weakSubjects.length, 1)];
+    const sub = sorted[i % Math.max(sorted.length, 1)];
     const topic = (incomplete.filter(t => t.subject === sub?.name) || [])[0] || incomplete[i % Math.max(incomplete.length, 1)];
+    const dayHours = i < 5 ? dailyHours : Math.max(1, dailyHours - 1);
+    const tasks = [];
+    if (phase.conceptWeight > 0.1) tasks.push(topic ? `Study: ${topic.name}` : 'Review core concepts');
+    if (phase.practiceWeight > 0.1) tasks.push('Solve 2–3 PYQs');
+    if (phase.revisionWeight > 0.1) tasks.push(i % 2 === 0 ? 'Formula revision (30 min)' : 'Mock analysis / weak area drill');
+    if (tasks.length === 0) tasks.push('Light review + rest');
     return {
       day,
       subject: sub?.name || 'Mixed Review',
       topic: topic?.name || 'Revision',
-      hours: dailyHours,
-      tasks: [
-        topic ? `Study: ${topic.name}` : 'Review core concepts',
-        'Solve 2–3 PYQs',
-        i % 2 === 0 ? 'Formula revision (30 min)' : 'Mock analysis / weak area drill',
-      ],
+      hours: dayHours,
+      tasks,
     };
   });
 }
 
 async function buildGptPlan(body) {
   const { subjects = [], topics = [], pyqs = [], mocks = [], dailyHours = 8, period = 'week' } = body;
+  const daysRemaining = body.daysRemaining || body.context?.daysRemaining || 365;
   const incomplete = topics.filter((t) => !t.done).slice(0, 15);
   const unsolvedPyqs = pyqs.filter((p) => !p.solved).slice(0, 10);
   const recentMock = mocks[mocks.length - 1];
+  const phase = getExamPhase(daysRemaining);
 
   const prompt = period === 'day'
     ? `You are a GATE CSE 2027 study coach. Create a TODAY study plan as a JSON array with exactly 4 items.
 Each item must be an object with: { "day": "1", "subject": "...", "topic": "...", "hours": number, "tasks": ["...", "..."] }
 Make it concrete and exam-focused. Use short, actionable items like "Revise Deadlocks", "Solve 20 DBMS PYQs", "Complete CN Routing", and "Take TOC Quiz" when relevant.
 Daily target: ${dailyHours} hours. Focus weak subjects first.
+Exam phase: ${phase.label} (${daysRemaining} days remaining). ${phase.conceptWeight > 0.3 ? 'Focus on building concepts.' : phase.revisionWeight > 0.3 ? 'Focus on revision and mocks.' : 'Balance concepts, practice, and revision.'}
 
 Weak subjects: ${subjects.filter((s) => s.progress < 60).map((s) => `${s.name} (${s.progress}%)`).join(', ') || 'none'}
 Incomplete topics: ${incomplete.map((t) => `${t.name} (${t.subject})`).join(', ') || 'none'}
@@ -232,6 +262,7 @@ Return ONLY valid JSON array with 4 items.`
     : `You are a GATE CSE 2027 study coach. Create a ${period}ly study plan as JSON array.
 Each item: { "day": "Monday", "subject": "...", "topic": "...", "hours": number, "tasks": ["...", "..."] }
 Daily target: ${dailyHours} hours. Focus weak subjects first.
+Exam phase: ${phase.label} (${daysRemaining} days remaining). ${phase.conceptWeight > 0.3 ? 'Emphasize concept building.' : phase.revisionWeight > 0.3 ? 'Emphasize revision and mock tests.' : 'Balance all three: concepts, practice, revision.'}
 
 Weak subjects: ${subjects.filter((s) => s.progress < 60).map((s) => `${s.name} (${s.progress}%)`).join(', ') || 'none'}
 Incomplete topics: ${incomplete.map((t) => `${t.name} (${t.subject})`).join(', ') || 'none'}
