@@ -53,6 +53,9 @@ function loadUsersFromDisk() {
 }
 
 loadUsersFromDisk();
+
+const PREHASHED_DEMO_PW = '$2a$12$HD8WplzisrDSCM4iXuQ.KOTOrB94IfmovV1Vg6UzsZD0pT.wpdVOG';
+
 seedDemoUser();
 
 const formatUser = (user) => ({
@@ -117,8 +120,6 @@ const deleteUser = (id) => {
     usersById.delete(id);
   }
 };
-
-const PREHASHED_DEMO_PW = '$2a$12$HD8WplzisrDSCM4iXuQ.KOTOrB94IfmovV1Vg6UzsZD0pT.wpdVOG';
 
 function seedDemoUser() {
   const existing = usersByEmail.get('demo@gate2027.in');
