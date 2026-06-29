@@ -1,19 +1,20 @@
 services:
   - type: web
-    name: prepgate-api
-    env: node
-    region: singapore
+    name: gatenexa-api
+    runtime: node
     plan: free
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && node server.js
-    healthCheckPath: /api/health
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /health
+    healthCheckPolicy:
+      responseTimeout: 30
+      interval: 60
+      threshold: 3
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: "5000"
-      - key: USE_MOCK_AUTH
-        value: "false"
+        value: 10000
       - key: MONGO_URI
         sync: false
       - key: JWT_SECRET
@@ -24,39 +25,39 @@ services:
         value: 15m
       - key: JWT_REFRESH_EXPIRE
         value: 7d
-      - key: FRONTEND_URL
-        value: https://prepgate.vercel.app
-      - key: DASHSCOPE_API_KEY
-        sync: false
-      - key: OPENAI_API_KEY
-        sync: false
       - key: CORS_ORIGIN
-        value: https://prepgate.vercel.app
+        value: https://gatenexa.in,https://www.gatenexa.in,https://gatenexa.vercel.app
+      - key: FRONTEND_URL
+        value: https://gatenexa.in
+      - key: BACKEND_URL
+        value: https://gatenexa-api.onrender.com
       - key: OPENROUTER_API_KEY
         sync: false
       - key: OPENROUTER_MODEL
         value: openai/gpt-4o-mini
-      - key: SMTP_HOST
-        value: smtp.sendgrid.net
-      - key: SMTP_PORT
-        value: "587"
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: FROM_EMAIL
-        value: noreply@gate2027.in
-      - key: CRON_SECRET
-        generateValue: true
-      - key: GOOGLE_CLIENT_ID
-        sync: false
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-      - key: MISTRAL_API_KEY
+      - key: SMTP_HOST
+        value: smtp.sendgrid.net
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
         sync: false
-      - key: GEMINI_API_KEY
+      - key: SMTP_PASS
         sync: false
+      - key: FROM_EMAIL
+        value: noreply@gatenexa.in
+      - key: CRON_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: USE_MOCK_AUTH
+        value: "false"
+    disk:
+      name: uploads
+      mountPath: /opt/render/project/src/uploads
+      sizeGB: 1

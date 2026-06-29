@@ -92,8 +92,21 @@ const ALLOWED_ORIGINS = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim())
   : ['http://localhost:5200', 'http://127.0.0.1:5200', 'http://localhost:5173', 'http://localhost:3000'];
 
+// In production, also allow Vercel preview deployments (*.vercel.app)
+if (process.env.NODE_ENV === 'production') {
+  ALLOWED_ORIGINS.push(/^https:\/\/.*\.vercel\.app$/);
+}
+
 app.use(cors({
-  origin: ALLOWED_ORIGINS,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    // Check against string origins
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    // Check against regex patterns (for Vercel preview deployments)
+    if (ALLOWED_ORIGINS.some(pattern => pattern instanceof RegExp && pattern.test(origin))) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Demo-User']
 }));
@@ -140,11 +153,21 @@ const path = require('path');
 app.use(mongoSanitize());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Ensure uploads directory exists on startup (Render disk or local)
+const uploadsDir = path.join(__dirname, 'uploads');
+const uploadsNotesDir = path.join(uploadsDir, 'notes');
+if (!require('fs').existsSync(uploadsDir)) require('fs').mkdirSync(uploadsDir, { recursive: true });
+if (!require('fs').existsSync(uploadsNotesDir)) require('fs').mkdirSync(uploadsNotesDir, { recursive: true });
+
+app.use('/uploads', express.static(uploadsDir));
 app.use('/resources', express.static(path.join(__dirname, '..', 'resources')));
 
-// ─── Logging â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€───
-if (process.env.NODE_ENV === 'development') {
+// --- Logging (production: combined, development: dev) ---
+if (process.env.NODE_ENV === 'production') {
+  app.use(morgan('combined', {
+    skip: (req) => req.url === '/health' || req.url === '/api/health',
+  }));
+} else {
   app.use(morgan('dev'));
 }
 
