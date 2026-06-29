@@ -61,7 +61,7 @@ const cspDirectives = {
   scriptSrc: ["'self'", ...(isViteDev ? ["'unsafe-inline'", "'unsafe-eval'"] : [])],
   connectSrc: ["'self'", ...(isViteDev
     ? ["http://localhost:5000", "http://127.0.0.1:5000", "http://localhost:5200", "http://127.0.0.1:5200"]
-    : [process.env.CORS_ORIGIN].filter(Boolean)),
+    : (process.env.CORS_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean)),
     "https://api.openai.com", "https://openrouter.ai", "https://api.cloudinary.com"
   ],
   imgSrc: ["'self'", "data:", "https:", ...(isViteDev
