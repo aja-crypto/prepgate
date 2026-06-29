@@ -114,9 +114,11 @@ const connectDB = async () => {
         stopReconnectPing();
       });
 
-      // Seed demo user and local syllabus for fallback (even when MongoDB is connected)
+      // Seed demo user, local syllabus, and mock tests (even when MongoDB is connected)
       await seedDemoUser();
       seedLocalSyllabus();
+      const { seedMongoMockData } = require('../utils/seedMockTests');
+      await seedMongoMockData();
       console.log('📦 Local fallback data seeded (available if MongoDB disconnects)');
       return true;
     } catch (error) {
