@@ -1,0 +1,17 @@
+
+> gate2027-frontend@1.0.0 dev
+> vite
+
+
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m2407[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m5173[22m/[39m
+[2m3:20:17 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/styles/globals.css[22m
+[2m3:20:17 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.jsx, /src/styles/globals.css[22m
+[2m3:20:18 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/LandingPage.jsx, /src/styles/globals.css[22m
+[2m3:20:18 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/LandingPage.jsx, /src/styles/globals.css[22m
+[2m3:20:18 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/LoginPage.jsx, /src/styles/globals.css[22m
+[2m3:20:18 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/LoginPage.jsx, /src/styles/globals.css[22m
+[2m3:20:18 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/main.jsx, /src/styles/globals.css[22m
+[2m3:20:18 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/main.jsx, /src/styles/globals.css[22m
+[2m3:20:18 pm[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/styles/globals.css, /src/main.jsx, /src/context/ProgressContext.jsx, /src/context/AuthContext.jsx, /src/context/FocusContext.jsx, /src/pages/RegisterPage.jsx, /src/components/common/FloatingAIAssistant.jsx, /src/components/login/GlassLoginCard.jsx, /src/pages/DashboardPage.jsx, /src/components/gate/AIMentorWidget.jsx, /src/components/gate/PinnedNotesWidget.jsx, /src/components/gate/GateNexaAIWidget.jsx, /src/components/gate/GateVaultWidget.jsx, /src/components/gate/NotesHubWidget.jsx, /src/components/gate/DashboardMotivation.jsx, /src/components/gate/AnnouncementBar.jsx[22m

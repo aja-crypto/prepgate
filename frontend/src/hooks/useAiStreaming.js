@@ -1,0 +1,117 @@
+import { useState, useRef, useCallback } from 'react';
+import { aiService } from '../services/api';
+
+export default function useAiStreaming() {
+  const [streaming, setStreaming] = useState(false);
+  const [partialText, setPartialText] = useState('');
+  const [error, setError] = useState(null);
+  const abortRef = useRef(null);
+  const partialRef = useRef('');
+
+  const startStream = useCallback(async (message, context = {}, sessionId = 'default') => {
+    setStreaming(true);
+    setPartialText('');
+    setError(null);
+    partialRef.current = '';
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    try {
+      const res = await aiService.streamCoach(message, context, sessionId, controller.signal);
+      clearTimeout(timeoutId);
+      if (!res.ok) {
+        if (res.status === 429) throw new Error('rate_limit');
+        if (res.status === 401) throw new Error('auth');
+        if (res.status >= 500) throw new Error('server');
+        throw new Error(`http_${res.status}`);
+      }
+
+      // Handle non-streaming response (heuristic fallback when AI not configured)
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('text/event-stream')) {
+        const data = await res.json();
+        const text = data?.data?.text || data?.data?.message || '';
+        const suggestions = data?.data?.suggestions || null;
+        const source = data?.data?.source || 'heuristic';
+        setStreaming(false);
+        abortRef.current = null;
+        return { text, suggestions, source };
+      }
+
+      if (!res.body) {
+        setStreaming(false);
+        abortRef.current = null;
+        return null;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullText = '';
+      let suggestions = null;
+      let source = 'provider';
+      let remaining = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6).trim();
+          if (!data) continue;
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.type === 'delta') {
+              fullText += parsed.content;
+              partialRef.current = fullText;
+              setPartialText(fullText);
+            } else if (parsed.type === 'done') {
+              fullText = parsed.content || fullText;
+              setPartialText(fullText);
+              suggestions = parsed.suggestions || null;
+              source = parsed.source || 'provider';
+              remaining = parsed.remaining;
+            } else if (parsed.type === 'fallback') {
+              fullText = parsed.content || '';
+              setPartialText(fullText);
+              suggestions = parsed.suggestions || null;
+              source = parsed.source || 'heuristic';
+              remaining = parsed.remaining;
+            }
+          } catch {}
+        }
+      }
+
+      setStreaming(false);
+      abortRef.current = null;
+      return { text: fullText, suggestions, source, remaining };
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError' || controller.signal.aborted) {
+        setStreaming(false);
+        const pt = partialRef.current;
+        return pt ? { text: pt, suggestions: null, source: 'aborted' } : null;
+      }
+      setError(err.message);
+      setStreaming(false);
+      abortRef.current = null;
+      return null;
+    }
+  }, []);
+
+  const stopStream = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    setStreaming(false);
+  }, []);
+
+  return { startStream, stopStream, streaming, partialText, error, setPartialText };
+}
