@@ -1,12 +1,12 @@
-﻿import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFocus } from '../context/FocusContext';
 import { useProgress } from '../context/ProgressContext';
 import { useAuth } from '../context/AuthContext';
 
 const BG_OPTIONS = [
+  { id: 'deepfocus', label: 'Deep Focus', icon: '◈' },
   { id: 'particles', label: 'Particles', icon: '✦' },
-  { id: 'formulas', label: 'Formulas', icon: '∑' },
   { id: 'studyroom', label: 'Study Room', icon: '◈' },
 ];
 
@@ -25,11 +25,10 @@ const MOTIVATION_QUOTES = [
   { quote: 'Every hour of deep work is a vote for your future self.', author: 'GateNexa' },
 ];
 
-const GATE_FORMULAS = [
-  'O(log n)', '∑ i=1ⁿ i = n(n+1)/2', 'E=mc²', 'P(A∪B) = P(A)+P(B)−P(A∩B)',
-  '∫eË£dx = eË£+C', 'TCP/IP', 'F = ma', 'Î» = h/p', 'V−IR=0', 'n! ∼ √2Ï€n (n/e)ⁿ',
-  'limâ‚“â†’₀ sin x/x = 1', 'XOR = AÌ…B + ABÌ…', 'S = ½at²', 'AM ≥ GM ≥ HM',
-  'Cache: L1→L2→RAM', 'DB: ACID', 'OS: FCFS | SJF | RR',
+const INSPIRATIONAL_TEXTS = [
+  'DISCIPLINE', 'FOCUS', 'PATIENCE', 'INNER STRENGTH',
+  'STAY PRESENT', 'ONE STEP AT A TIME', 'SILENCE BUILDS GREATNESS',
+  'DISCIPLINE TODAY. SUCCESS TOMORROW.',
 ];
 
 const DURATIONS = [
@@ -265,42 +264,136 @@ function ParticleBackground() {
 }
 
 // â”€â”€─ FORMULA BACKGROUND â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
-function FormulaBackground() {
+function DeepFocusWallpaper() {
   const containerRef = useRef(null);
+  const bgRef = useRef(null);
+  const mouseRef = useRef({ x: 0.5, y: 0.5 });
 
   useEffect(() => {
-    const els = containerRef.current?.querySelectorAll('.f-formula') || [];
-    els.forEach((el, i) => {
-      el.style.setProperty('--tx', `${Math.random() * 80 - 40}px`);
-      el.style.setProperty('--ty', `${-window.innerHeight - 100}px`);
-      el.style.animationDuration = `${20 + Math.random() * 25}s`;
-      el.style.animationDelay = `${-Math.random() * 40}s`;
-    });
+    const handleMouse = (e) => {
+      mouseRef.current = {
+        x: (e.clientX / window.innerWidth - 0.5) * 2,
+        y: (e.clientY / window.innerHeight - 0.5) * 2,
+      };
+      if (bgRef.current) {
+        const dx = mouseRef.current.x * 4;
+        const dy = mouseRef.current.y * 3;
+        bgRef.current.style.transform = `translate(${dx}px, ${dy}px) scale(1.02)`;
+      }
+    };
+    window.addEventListener('mousemove', handleMouse);
+    return () => window.removeEventListener('mousemove', handleMouse);
   }, []);
 
+  const particles = Array.from({ length: 25 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    top: Math.random() * 100,
+    size: 1 + Math.random() * 2,
+    dur: 15 + Math.random() * 20,
+    delay: Math.random() * 10,
+    dx: (Math.random() > 0.5 ? 1 : -1) * (15 + Math.random() * 25),
+    dy: -(40 + Math.random() * 40),
+  }));
+
   return (
-    <div ref={containerRef} className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-      {GATE_FORMULAS.map((f, i) => (
-        <span
-          key={i}
-          className="f-formula absolute text-[11px] font-mono text-purple-400/10 hover:text-purple-300/20 transition-colors"
+    <div ref={containerRef} className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
+      {/* Base wallpaper */}
+      <div
+        ref={bgRef}
+        className="absolute inset-0"
+        style={{
+          backgroundImage: 'url("/images/deep focus wallpaper.png")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          transition: 'transform 0.15s ease-out',
+          transform: 'scale(1.02)',
+        }}
+      >
+        {/* Water ripple */}
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse at 50% 80%, rgba(255,200,150,0.04) 0%, transparent 60%)',
+          animation: 'waterRipple 8s ease-in-out infinite',
+        }} />
+        {/* Warm halo behind figure */}
+        <div className="absolute" style={{
+          width: '40%', height: '50%',
+          left: '20%', bottom: '20%',
+          background: 'radial-gradient(ellipse, rgba(255,180,80,0.12) 0%, transparent 60%)',
+          animation: 'haloPulse 7s ease-in-out infinite',
+        }} />
+        {/* Drifting fog */}
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse at 30% 70%, rgba(255,200,150,0.03) 0%, transparent 50%)',
+          animation: 'fogDrift 12s ease-in-out infinite',
+        }} />
+      </div>
+
+      {/* Floating dust particles */}
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="absolute rounded-full pointer-events-none"
           style={{
-            left: `${5 + (i * 7) % 90}%`,
-            top: `${(i * 11) % 90}%`,
-            fontSize: `${9 + (i % 5) * 2}px`,
-            animation: 'floatUp 30s linear infinite',
-            animationDelay: `${-i * 1.3}s`,
+            width: `${p.size}px`, height: `${p.size}px`,
+            left: `${p.left}%`, top: `${p.top}%`,
+            background: 'rgba(255,200,150,0.4)',
+            boxShadow: '0 0 4px rgba(255,200,150,0.3)',
+            animation: `dustFloat ${p.dur}s ease-in-out ${p.delay}s infinite`,
+            '--dx': `${p.dx}px`,
+            '--dy': `${p.dy}px`,
+            opacity: 0,
           }}
-        >
-          {f}
-        </span>
+        />
       ))}
+
+      {/* Inspirational text */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none" style={{ zIndex: 1 }}>
+        {INSPIRATIONAL_TEXTS.slice(0, 4).map((text, i) => (
+          <span
+            key={i}
+            className="absolute text-white/5 font-bold tracking-[0.3em]"
+            style={{
+              fontSize: `${11 + i * 2}px`,
+              left: `${15 + i * 18}%`,
+              top: `${12 + i * 22}%`,
+              animation: `textFade ${20 + i * 5}s ease-in-out ${i * 3}s infinite`,
+              opacity: 0,
+            }}
+          >
+            {text}
+          </span>
+        ))}
+      </div>
+
       <style>{`
-        @keyframes floatUp {
-          0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-          5% { opacity: 0.15; }
-          95% { opacity: 0.15; }
-          100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+        @keyframes waterRipple {
+          0%, 100% { transform: scale(1) translateY(0); opacity: 0.5; }
+          25% { transform: scale(1.01) translateY(-1px); opacity: 0.7; }
+          50% { transform: scale(1) translateY(0); opacity: 0.5; }
+          75% { transform: scale(1.005) translateY(1px); opacity: 0.6; }
+        }
+        @keyframes haloPulse {
+          0%, 100% { transform: scale(1); opacity: 0.6; }
+          50% { transform: scale(1.08); opacity: 1; }
+        }
+        @keyframes fogDrift {
+          0%, 100% { transform: translateX(0) translateY(0); opacity: 0.4; }
+          33% { transform: translateX(15px) translateY(-5px); opacity: 0.7; }
+          66% { transform: translateX(-10px) translateY(3px); opacity: 0.5; }
+        }
+        @keyframes dustFloat {
+          0% { transform: translate(0, 0) scale(0); opacity: 0; }
+          10% { opacity: 0.5; }
+          90% { opacity: 0.3; }
+          100% { transform: translate(var(--dx), var(--dy)) scale(1); opacity: 0; }
+        }
+        @keyframes textFade {
+          0%, 100% { opacity: 0; transform: translateY(5px); }
+          10% { opacity: 0.06; transform: translateY(0); }
+          90% { opacity: 0.06; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-5px); }
         }
       `}</style>
     </div>
@@ -598,7 +691,7 @@ export default function DeepFocusPage() {
   const { data, updateProductivity, updateStudyStats, syncToCloud } = useProgress();
   const focus = useFocus();
 
-  const [bgMode, setBgMode] = useState('studyroom');
+  const [bgMode, setBgMode] = useState('deepfocus');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('');
   const [selectedDuration, setSelectedDuration] = useState(25 * 60);
@@ -607,14 +700,14 @@ export default function DeepFocusPage() {
   const [sessionActive, setSessionActive] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
   const [completionData, setCompletionData] = useState(null);
-  const [focusSessions] = useState(() => loadDeepSessions());
+  const [focusSessions, setFocusSessions] = useState(() => loadDeepSessions());
   const [questionsSolved, setQuestionsSolved] = useState(0);
   const [notesRevised, setNotesRevised] = useState(0);
   const [quoteVisible, setQuoteVisible] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
 
   const subjects = useMemo(() => data.studyStats?.subjects || [], [data]);
-  const topics = useMemo(() => selectedSubject ? data.topics.filter((t) => t.subject === selectedSubject) : [], [data.topics, selectedSubject]);
+  const topics = useMemo(() => selectedSubject ? (data.topics || []).filter((t) => t.subject === selectedSubject) : [], [data.topics, selectedSubject]);
   const totalMinutes = focusSessions.reduce((s, sess) => s + (sess.duration || 0), 0);
   const sessionCount = focusSessions.length;
   const todaySessions = focusSessions.filter(
@@ -644,10 +737,11 @@ export default function DeepFocusPage() {
   useEffect(() => {
     const timer = setInterval(() => {
       setQuoteVisible(false);
-      setTimeout(() => {
+      const fadeId = setTimeout(() => {
         setQuoteIndex((i) => (i + 1) % MOTIVATION_QUOTES.length);
         setQuoteVisible(true);
       }, 500);
+      return () => clearTimeout(fadeId);
     }, 600000);
     return () => clearInterval(timer);
   }, []);
@@ -675,6 +769,7 @@ export default function DeepFocusPage() {
     };
     const updated = [...focusSessions, session];
     saveDeepSessions(updated);
+    setFocusSessions(updated);
     setCompletionData(session);
     setShowCompletion(true);
     setShowConfetti(true);
@@ -696,9 +791,7 @@ export default function DeepFocusPage() {
   // Watch for session completion
   useEffect(() => {
     if (!sessionActive || focus.isActive) return;
-    const elapsed = selectedDuration - focus.timeRemaining;
-    if (elapsed > 30 && focus.timeRemaining > 0) return;
-    if (elapsed > 10) onSessionComplete(elapsed);
+    if (focus.timeRemaining === 0) onSessionComplete(selectedDuration);
   }, [focus.isActive, focus.timeRemaining]);
 
   const handleCloseResult = () => {
@@ -714,7 +807,7 @@ export default function DeepFocusPage() {
     <div className="fixed inset-0 z-[100] bg-[#050816] flex flex-col overflow-hidden">
       {/* Background layers */}
       {bgMode === 'particles' && <ParticleBackground />}
-      {bgMode === 'formulas' && <FormulaBackground />}
+      {bgMode === 'deepfocus' && <DeepFocusWallpaper />}
       {bgMode === 'studyroom' && <StudyRoomBackground />}
 
       {/* Top bar */}

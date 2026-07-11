@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { throttle } from '../utils/perf';
 import { useAuth } from '../context/AuthContext';

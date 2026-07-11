@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { adminAuthService } from '../services/adminApi';
 
 const AdminAuthContext = createContext(null);
@@ -34,22 +34,24 @@ export function AdminAuthProvider({ children }) {
     return () => window.removeEventListener('admin:expired', handleExpired);
   }, [loadAdmin]);
 
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     const res = await adminAuthService.login(email, password);
     localStorage.setItem('adminToken', res.data.data.token);
     localStorage.setItem('adminUser', JSON.stringify(res.data.data.admin));
     setAdmin(res.data.data.admin);
     return res.data;
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
     setAdmin(null);
-  };
+  }, []);
+
+  const value = useMemo(() => ({ admin, loading, login, logout, loadAdmin }), [admin, loading, login, logout, loadAdmin]);
 
   return (
-    <AdminAuthContext.Provider value={{ admin, loading, login, logout, loadAdmin }}>
+    <AdminAuthContext.Provider value={value}>
       {children}
     </AdminAuthContext.Provider>
   );

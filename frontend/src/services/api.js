@@ -1,4 +1,4 @@
-// src/services/api.js – Axios API Service with token refresh
+// src/services/api.js ΓÇô Axios API Service with token refresh
 import axios from 'axios';
 
 export const api = axios.create({
@@ -17,7 +17,7 @@ export function getApiErrorMessage(error, fallback = 'Something went wrong') {
   return fallback;
 }
 
-// ─── Request interceptor ────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Request interceptor ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
@@ -36,7 +36,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ─── Response interceptor (auto token refresh + retry) ──────
+// ΓöÇΓöÇΓöÇ Response interceptor (auto token refresh + retry) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -64,7 +64,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     if (!originalRequest) return Promise.reject(error);
 
-    // Auto-retry on network errors (backend down, DB disconnect) — up to 2 tries
+    // Auto-retry on network errors (backend down, DB disconnect) ΓÇö up to 2 tries
     const isNetworkError = !error.response && error.message === 'Network Error';
     const isServerUnavailable = error.response?.status === 503 || error.response?.status === 502 || error.response?.status === 504 || error.response?.status === 500;
     if ((isNetworkError || isServerUnavailable) && !originalRequest._retryCount) {
@@ -147,7 +147,7 @@ api.interceptors.response.use(
   }
 );
 
-// ─── Named service functions ────────────────────────────────
+// ΓöÇΓöÇΓöÇ Named service functions ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 export const authService = {
   login: (d) => api.post('/auth/login', d),
   register: (d) => api.post('/auth/register', d),
@@ -383,7 +383,7 @@ export const adminLiveService = {
 
 export default api;
 
-// ─── GateVault API ──────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ GateVault API ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 export const gateVaultService = {
   getMonthlySet: () => api.get('/gate-vault/monthly-set'),
   getProgress: () => api.get('/gate-vault/progress'),
@@ -392,7 +392,7 @@ export const gateVaultService = {
   getStats: () => api.get('/gate-vault/stats'),
 };
 
-// ─── Calendar API ───────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Calendar API ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 export const calendarService = {
   getAll: (params) => api.get('/calendar', { params }),
   create: (data) => api.post('/calendar', data),
@@ -400,7 +400,7 @@ export const calendarService = {
   delete: (id) => api.delete(`/calendar/${id}`),
 };
 
-// ─── Opportunity Predictor API ──────────────────────────────
+// ΓöÇΓöÇΓöÇ Opportunity Predictor API ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 export const predictorService = {
   predict: (data) => api.post('/predictor/predict', data),
   getHistory: (params) => api.get('/predictor/history', { params }),
@@ -421,7 +421,7 @@ export const predictorService = {
   getUnlockStatus: () => api.get('/predictor/unlock-status'),
 };
 
-// ─── Referral API ─────────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Referral API ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 export const referralService = {
   getStatus: () => api.get('/referral/status'),
   getCode: () => api.get('/referral/code'),

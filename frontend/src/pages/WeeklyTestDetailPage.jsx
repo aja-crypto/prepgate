@@ -1,22 +1,23 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { weeklyTestService } from '../services/api';
 import { silentCatch } from '../utils/errorHandler';
 import { PageLoading } from '../components/common/GateLoadingScreen';
+import PremiumPdfViewer from '../components/common/PremiumPdfViewer';
 import toast from 'react-hot-toast';
 
 const SUBJECT_META = {
-  AL: { icon: '⚡', color: '#ff6b6b', name: 'Algorithms' },
-  DS: { icon: '🐍', color: '#ff9f43', name: 'Programming & Data Structures' },
-  CD: { icon: '🔧', color: '#4cc9f0', name: 'Compiler Design' },
-  CN: { icon: '🌐', color: '#ffd166', name: 'Computer Networks' },
-  CO: { icon: '🖥', color: '#06d6a0', name: 'Computer Organization (COA)' },
-  DB: { icon: '🗄', color: '#06b6d4', name: 'DBMS' },
-  DL: { icon: '💻', color: '#7c5cfc', name: 'Digital Logic' },
-  EM: { icon: '🔢', color: '#4f8dff', name: 'Engineering Mathematics' },
-  APT: { icon: '🧮', color: '#43aa8b', name: 'General Aptitude' },
-  OS: { icon: '⚙️', color: '#a855f7', name: 'Operating Systems' },
-  TOC: { icon: '🤖', color: '#f72585', name: 'Theory of Computation' },
+  AL: { icon: 'ΓÜí', color: '#ff6b6b', name: 'Algorithms' },
+  DS: { icon: '≡ƒÉì', color: '#ff9f43', name: 'Programming & Data Structures' },
+  CD: { icon: '≡ƒöº', color: '#4cc9f0', name: 'Compiler Design' },
+  CN: { icon: '≡ƒîÉ', color: '#ffd166', name: 'Computer Networks' },
+  CO: { icon: '≡ƒûÑ', color: '#06d6a0', name: 'Computer Organization (COA)' },
+  DB: { icon: '≡ƒùä', color: '#06b6d4', name: 'DBMS' },
+  DL: { icon: '≡ƒÆ╗', color: '#7c5cfc', name: 'Digital Logic' },
+  EM: { icon: '≡ƒöó', color: '#4f8dff', name: 'Engineering Mathematics' },
+  APT: { icon: '≡ƒº«', color: '#43aa8b', name: 'General Aptitude' },
+  OS: { icon: 'ΓÜÖ∩╕Å', color: '#a855f7', name: 'Operating Systems' },
+  TOC: { icon: '≡ƒñû', color: '#f72585', name: 'Theory of Computation' },
 };
 
 const DIFF_BADGE = {
@@ -26,18 +27,21 @@ const DIFF_BADGE = {
 };
 
 export default function WeeklyTestDetailPage() {
-  const { subjectCode } = useParams();
+  const { testId } = useParams();
   const navigate = useNavigate();
   const [tests, setTests] = useState([]);
   const [progress, setProgress] = useState([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const { subjectCode } = useParams();
   const [scoreInput, setScoreInput] = useState({});
   const [submitting, setSubmitting] = useState({});
   const [loading, setLoading] = useState(true);
   const [viewerPdfUrl, setViewerPdfUrl] = useState(null);
+  const [viewerPdfError, setViewerPdfError] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(true);
 
-  const meta = SUBJECT_META[subjectCode] || { icon: '📝', color: 'var(--color-primary)', name: subjectCode };
+  const meta = SUBJECT_META[subjectCode] || { icon: '≡ƒô¥', color: 'var(--color-primary)', name: subjectCode };
 
   useEffect(() => {
     setLoading(true);
@@ -135,6 +139,11 @@ export default function WeeklyTestDetailPage() {
         </div>
       </div>
 
+      <div className="flex items-center gap-2 mb-4">
+        <Link to="/notes" className="text-xs px-3 py-1.5 rounded-lg transition-all" style={{ background: 'rgba(139,92,246,0.08)', color: '#A78BFA', border: '1px solid rgba(139,92,246,0.12)' }}>
+          ≡ƒôÜ View {meta.name} Resources
+        </Link>
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
           { label: 'Total Tests', value: tests.length, color: 'text-primary' },
@@ -148,6 +157,24 @@ export default function WeeklyTestDetailPage() {
           </div>
         ))}
       </div>
+
+      {showDisclaimer && (
+        <div className="rounded-2xl p-4 mb-5 relative" style={{ background: 'linear-gradient(135deg, rgba(251,146,60,0.15), rgba(239,68,68,0.08))', border: '1px solid rgba(251,146,60,0.3)', boxShadow: '0 0 24px -4px rgba(251,146,60,0.12)' }}>
+          <button onClick={() => setShowDisclaimer(false)} className="absolute top-2.5 right-2.5 text-text3 hover:text-white transition-colors p-0.5">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+          </button>
+          <div className="flex items-start gap-2.5">
+            <span className="text-base shrink-0 mt-0.5">ΓÜû∩╕Å</span>
+            <div>
+              <h3 className="text-xs font-bold text-orange-300 mb-0.5">Disclaimer</h3>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                The PDF notes here are from public Telegram channels for <strong>personal educational use only</strong>.
+                We do not claim ownership. For copyright-safe content, use <strong>Short Notes</strong> below.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row gap-3 mb-5">
         <div className="relative flex-1">
@@ -193,7 +220,7 @@ export default function WeeklyTestDetailPage() {
                     <span className="text-xs font-mono text-text3">Test {test.testNumber}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded border capitalize ${DIFF_BADGE[test.difficulty] || DIFF_BADGE.medium}`}>{test.difficulty}</span>
                     {isDone && (
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/10 border border-green-500/20 text-green-400">✓ Completed</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/10 border border-green-500/20 text-green-400">Γ£ô Completed</span>
                     )}
                   </div>
                   <h3 className="text-sm font-semibold text-text">{test.title}</h3>
@@ -206,13 +233,15 @@ export default function WeeklyTestDetailPage() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  {test.pdfUrl && (
+                  {test.pdfUrl ? (
                     <button
-                      onClick={() => setViewerPdfUrl(test.pdfUrl)}
+                      onClick={() => { setViewerPdfUrl(test.pdfUrl); setViewerPdfError(false); }}
                       className="text-xs px-3 py-2 rounded-lg border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all"
                     >
                       View PDF
                     </button>
+                  ) : (
+                    <span className="text-[10px] text-text3/50 italic">PDF coming soon</span>
                   )}
                   {!isDone ? (
                     <div className="flex items-center gap-2">
@@ -251,17 +280,11 @@ export default function WeeklyTestDetailPage() {
       </div>
 
       {viewerPdfUrl && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => setViewerPdfUrl(null)}>
-          <div className="max-w-4xl max-h-[90vh] w-full bg-surface rounded-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-              <div className="text-sm font-semibold text-text">Test Paper</div>
-              <button onClick={() => setViewerPdfUrl(null)} className="text-text3 hover:text-text p-1">&times;</button>
-            </div>
-            <div className="p-2">
-              <iframe src={viewerPdfUrl} className="w-full h-[75vh] rounded" title="Test Paper" />
-            </div>
-          </div>
-        </div>
+        <PremiumPdfViewer
+          url={viewerPdfUrl}
+          fileName="Test Paper"
+          onClose={() => { setViewerPdfUrl(null); setViewerPdfError(false); }}
+        />
       )}
     </div>
   );

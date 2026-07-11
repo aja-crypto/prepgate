@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProgress } from '../context/ProgressContext';
@@ -125,43 +125,120 @@ function FloatingFormulas() {
   );
 }
 
-function NeonRing({ progress, size = 380, strokeWidth = 10, isActive = false, isPaused = false }) {
+function NeonRing({ progress, size = 380, strokeWidth = 12, isActive = false, isPaused = false, completed = false }) {
   const radius = (size - strokeWidth * 2) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (progress / 100) * circumference;
+
+  const isRunning = isActive && !isPaused && !completed;
+  const glowIntensity = isRunning ? 60 : isPaused ? 15 : 25;
+
   return (
     <svg width={size} height={size} className="absolute inset-0" style={{
-      filter: isActive && !isPaused ? 'drop-shadow(0 0 30px rgba(139,92,246,0.6))' : 'drop-shadow(0 0 15px rgba(139,92,246,0.25))',
       transition: 'filter 0.5s ease',
+      animation: isRunning ? 'breatheGlow 2s ease-in-out infinite' : 'none',
     }}>
       <defs>
-        <linearGradient id="focus-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#8B5CF6" />
-          <stop offset="50%" stopColor="#6366F1" />
-          <stop offset="100%" stopColor="#3B82F6" />
-        </linearGradient>
         <linearGradient id="focus-ring-bg" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="rgba(139,92,246,0.08)" />
-          <stop offset="100%" stopColor="rgba(59,130,246,0.04)" />
+          <stop offset="100%" stopColor="rgba(91,75,255,0.04)" />
+        </linearGradient>
+        <linearGradient id="focus-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8B5CF6" />
+          <stop offset="50%" stopColor="#6D5BFF" />
+          <stop offset="100%" stopColor="#A855F7" />
+        </linearGradient>
+        <linearGradient id="focus-ring-running" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#7C4DFF" />
+          <stop offset="30%" stopColor="#6D5BFF" />
+          <stop offset="60%" stopColor="#8B5CF6" />
+          <stop offset="100%" stopColor="#A855F7" />
         </linearGradient>
         <filter id="ring-glow">
-          <feGaussianBlur stdDeviation="6" result="blur" />
+          <feGaussianBlur stdDeviation="8" result="blur" />
           <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <filter id="dot-glow">
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
       </defs>
+
+      {/* Frosted background ring (idle) */}
       <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="url(#focus-ring-bg)" strokeWidth={strokeWidth + 8} />
-      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="url(#focus-ring-bg)" strokeWidth={strokeWidth + 4} opacity="0.4"
-        strokeDasharray={`${circumference * 0.04} ${circumference * 0.06}`} strokeLinecap="round" />
-      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="url(#focus-ring-grad)" strokeWidth={strokeWidth}
-        strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
-        style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)', filter: 'url(#ring-glow)' }} />
-      {progress > 0 && (
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#8B5CF6" strokeWidth="2" opacity="0.35"
-          strokeDasharray={`${circumference * 0.015} ${circumference * 0.985}`} strokeLinecap="round"
-          style={{ strokeDashoffset: offset, transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)', transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(139,92,246,0.15)" strokeWidth={strokeWidth + 6}
+        opacity={isRunning ? 0.25 : 0.1}
+        style={{ transition: 'opacity 0.5s ease' }}
+      />
+
+      {/* Glass reflection arc */}
+      <circle cx={size / 2} cy={size / 2} r={radius + 2} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1"
+        strokeDasharray={`${circumference * 0.3} ${circumference * 0.7}`}
+        strokeDashoffset={circumference * 0.85}
+        strokeLinecap="round"
+        style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
+      />
+
+      {/* Progress ring */}
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none"
+        stroke={completed ? 'url(#focus-ring-grad)' : isRunning ? 'url(#focus-ring-running)' : 'url(#focus-ring-grad)'}
+        strokeWidth={strokeWidth}
+        strokeDasharray={circumference} strokeDashoffset={completed ? 0 : offset} strokeLinecap="round"
+        style={{
+          transition: 'stroke-dashoffset 0.4s linear',
+          filter: completed || isRunning ? 'url(#ring-glow)' : 'none',
+          transform: 'rotate(-90deg)',
+          transformOrigin: '50% 50%',
+          opacity: isPaused ? 0.5 : 1,
+        }}
+      />
+
+      {/* Moving light particle */}
+      {isRunning && (
+        <>
+          <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#C084FC" strokeWidth="4" opacity="0.95"
+            strokeDasharray={`${circumference * 0.025} ${circumference * 0.975}`} strokeLinecap="round"
+            style={{
+              strokeDashoffset: offset,
+              transition: 'stroke-dashoffset 0.4s linear',
+              transform: 'rotate(-90deg)',
+              transformOrigin: '50% 50%',
+              filter: 'url(#dot-glow)',
+            }}
+          />
+          <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#A78BFA" strokeWidth="2" opacity="0.4"
+            strokeDasharray={`${circumference * 0.01} ${circumference * 0.99}`} strokeLinecap="round"
+            style={{
+              strokeDashoffset: offset - circumference * 0.005,
+              transition: 'stroke-dashoffset 0.4s linear',
+              transform: 'rotate(-90deg)',
+              transformOrigin: '50% 50%',
+              filter: 'blur(6px)',
+            }}
+          />
+        </>
+      )}
+
+      {/* Completed state */}
+      {completed && (
+        <g transform={`translate(${size * 0.28},${size * 0.42})`}>
+          <path d="M10 30 L25 45 L50 15" fill="none" stroke="#A855F7" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"
+            style={{
+              strokeDasharray: '60',
+              strokeDashoffset: '0',
+              animation: 'drawCheck 0.6s ease-out forwards',
+              filter: 'drop-shadow(0 0 12px rgba(168,85,247,0.8))',
+            }}
+          />
+        </g>
       )}
     </svg>
   );
@@ -298,6 +375,18 @@ export default function ProductivityPage() {
   const [selectedTopic, setSelectedTopic] = useState('');
   const [selectedGoal, setSelectedGoal] = useState('');
   const [quoteIndex, setQuoteIndex] = useState(0);
+  const [showCustom, setShowCustom] = useState(false);
+  const [customMinutes, setCustomMinutes] = useState('');
+  const [showFirstReward, setShowFirstReward] = useState(false);
+  const prevSessionsRef = useRef(sessionsCompleted);
+
+  useEffect(() => {
+    if (sessionsCompleted > 0 && prevSessionsRef.current === 0) {
+      setShowFirstReward(true);
+      setTimeout(() => setShowFirstReward(false), 5000);
+    }
+    prevSessionsRef.current = sessionsCompleted;
+  }, [sessionsCompleted]);
   const [weeklyHours] = useState(() => {
     const h = [];
     for (let i = 0; i < 7; i++) h.push(Math.random() * 4 + 0.5);
@@ -354,8 +443,10 @@ export default function ProductivityPage() {
   const weeklyAvg = Math.round(focusHours * 10) / 10;
   const focusScore = sessionsCompleted > 0 ? Math.min(100, Math.round((focusHours / Math.max(1, sessionsCompleted)) * 60 * 100 / 100)) : 0;
   const goalProgress = Math.min(100, (totalStudyMins / 180) * 100);
-
   const xp = sessionsCompleted * 25 + Math.round(totalStudyMins * 0.5);
+
+  const completed = !isActive && progress >= 100 && timeRemaining <= 0 && sessionsCompleted > 0;
+  const isRunning = isActive && !isPaused && !completed;
   const level = Math.floor(xp / 300) + 1;
   const xpInLevel = xp % 300;
 
@@ -372,6 +463,66 @@ export default function ProductivityPage() {
   const maxWeekly = Math.max(...weeklyHours, 1);
 
   return (
+    <>
+    <style>{`
+      .wallpaper-bg {
+        background-image: url('/images/focus wallpaper.png');
+        background-size: cover;
+        background-position: 55% 30%;
+        background-repeat: no-repeat;
+        animation: wallpaperFadeIn 600ms ease-out forwards;
+        opacity: 0;
+      }
+      @keyframes wallpaperFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes drawCheck {
+        from { stroke-dashoffset: 60; }
+        to { stroke-dashoffset: 0; }
+      }
+      .timer-digits {
+        animation: digitPulse 0.3s ease-out;
+        text-shadow: 0 0 40px rgba(139,92,246,0.4), 0 0 80px rgba(139,92,246,0.2);
+        color: #FFFFFF;
+      }
+      @keyframes digitPulse {
+        0% { transform: scale(1.03); opacity: 0.85; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      @keyframes breatheGlow {
+        0%, 100% { filter: drop-shadow(0 0 30px rgba(139,92,246,0.5)) drop-shadow(0 0 60px rgba(139,92,246,0.3)); }
+        50% { filter: drop-shadow(0 0 50px rgba(139,92,246,0.8)) drop-shadow(0 0 100px rgba(139,92,246,0.5)); }
+      }
+      @keyframes floatParticle {
+        0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+        25% { transform: translate(10px, -15px) scale(1.2); opacity: 0.6; }
+        50% { transform: translate(-5px, -25px) scale(0.8); opacity: 0.4; }
+        75% { transform: translate(15px, -10px) scale(1.1); opacity: 0.5; }
+      }
+      @keyframes rayPulse {
+        0%, 100% { opacity: 0.15; transform: scaleX(1); }
+        50% { opacity: 0.3; transform: scaleX(1.05); }
+      }
+      @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+      @keyframes pulse-slow {
+        0%, 100% { opacity: 0.5; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.02); }
+      }
+      @keyframes bounce-slow {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-4px); }
+      }
+      .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+      .animate-bounce-slow { animation: bounce-slow 2s ease-in-out infinite; }
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+      }
+    `}</style>
     <div className="relative min-h-[calc(100vh-80px)] overflow-hidden">
       <GalaxyBackground />
       <FloatingFormulas />
@@ -384,35 +535,35 @@ export default function ProductivityPage() {
             <span className="text-lg">🔥</span>
             <div>
               <div className="text-lg font-bold text-orange-400 leading-none">{dailyStreak}</div>
-              <div className="text-[9px] text-text3 uppercase tracking-wider">Day Streak</div>
+              <div className="text-[10px] sm:text-[11px] text-text3 uppercase tracking-wider">Day Streak</div>
             </div>
           </div>
           <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-gradient-to-r from-primary/10 to-blue-500/5 border border-primary/15 backdrop-blur-md">
             <span className="text-lg">🎯</span>
             <div>
               <div className="text-lg font-bold text-primary leading-none">{focusScore}%</div>
-              <div className="text-[9px] text-text3 uppercase tracking-wider">Focus Score</div>
+              <div className="text-[10px] sm:text-[11px] text-text3 uppercase tracking-wider">Focus Score</div>
             </div>
           </div>
           <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-gradient-to-r from-cyan-500/10 to-blue-500/5 border border-cyan-500/15 backdrop-blur-md">
             <span className="text-lg">⏱</span>
             <div>
               <div className="text-lg font-bold text-cyan-400 leading-none">{todayHours}h</div>
-              <div className="text-[9px] text-text3 uppercase tracking-wider">Today's Hours</div>
+              <div className="text-[10px] sm:text-[11px] text-text3 uppercase tracking-wider">Today's Hours</div>
             </div>
           </div>
           <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-green-500/5 border border-emerald-500/15 backdrop-blur-md">
             <span className="text-lg">📈</span>
             <div>
               <div className="text-lg font-bold text-emerald-400 leading-none">{weeklyAvg}h</div>
-              <div className="text-[9px] text-text3 uppercase tracking-wider">Weekly Avg</div>
+              <div className="text-[10px] sm:text-[11px] text-text3 uppercase tracking-wider">Weekly Avg</div>
             </div>
           </div>
           <div className="ml-auto flex items-center gap-3 px-4 py-2 rounded-2xl bg-gradient-to-r from-violet-500/10 to-purple-500/5 border border-violet-500/15 backdrop-blur-md">
             <span className="text-lg">⚡</span>
             <div>
               <div className="text-lg font-bold text-violet-400 leading-none">Lv.{level}</div>
-              <div className="text-[9px] text-text3 uppercase tracking-wider">{xpInLevel}/300 XP</div>
+              <div className="text-[10px] sm:text-[11px] text-text3 uppercase tracking-wider">{xpInLevel}/300 XP</div>
             </div>
             <div className="w-16 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
               <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-purple-400 transition-all" style={{ width: `${(xpInLevel / 300) * 100}%` }} />
@@ -426,6 +577,18 @@ export default function ProductivityPage() {
           <div className="space-y-5">
             {/* Main Timer Area */}
             <GlassCard className="p-6 sm:p-8 relative overflow-hidden" glow>
+              {/* Wallpaper background layer */}
+              <div className="absolute inset-0 wallpaper-bg" />
+              {/* Cinematic purple overlay */}
+              <div className="absolute inset-0" style={{
+                background: 'linear-gradient(135deg, rgba(12,8,30,0.65) 0%, rgba(20,12,40,0.50) 50%, rgba(12,8,30,0.60) 100%)',
+              }} />
+              {/* Subtle purple vignette */}
+              <div className="absolute inset-0" style={{
+                background: 'radial-gradient(ellipse at center, transparent 40%, rgba(91,75,255,0.08) 100%)',
+                pointerEvents: 'none',
+              }} />
+              <div className="relative z-10">
               <div className="absolute top-4 right-4 z-10">
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold ${isActive ? (mode === 'work' ? 'bg-primary/15 text-primary border border-primary/25' : 'bg-amber-500/15 text-amber-400 border border-amber-500/25') : 'bg-success/15 text-success border border-success/25'}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${isActive ? (mode === 'work' ? 'bg-primary animate-pulse' : 'bg-amber-400 animate-pulse') : 'bg-success'}`} />
@@ -436,9 +599,9 @@ export default function ProductivityPage() {
               <div className="flex flex-col items-center py-2">
                 {/* Giant Timer Ring */}
                 <div className="relative flex items-center justify-center mb-4 w-[min(380px,80vw)] h-[min(380px,80vw)]">
-                  <NeonRing progress={progress} size={380} strokeWidth={10} isActive={isActive} isPaused={isPaused} />
+                  <NeonRing progress={progress} size={380} strokeWidth={10} isActive={isActive} isPaused={isPaused} completed={completed} />
                   <div className="flex flex-col items-center z-10">
-                    <span className="text-8xl sm:text-9xl font-bold font-mono text-text tracking-tight leading-none"
+                    <span key={timeRemaining} className="text-8xl sm:text-9xl font-bold font-mono text-text tracking-tight leading-none timer-digits"
                       style={{ textShadow: isActive && !isPaused ? '0 0 40px rgba(139,92,246,0.6)' : 'none', fontSize: 'clamp(4rem, 10vw, 7.5rem)' }}>
                       {formatTime(timeRemaining)}
                     </span>
@@ -467,15 +630,27 @@ export default function ProductivityPage() {
                       </div>
                     )}
 
-                    {/* Session Progress Bar */}
+                    {/* Glowing Segment Progress */}
                     <div className="px-4">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[10px] text-text3">Session Progress</span>
-                        <span className="text-[10px] text-primary font-semibold">{Math.round(progress)}%</span>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] text-text3 font-medium">Session Progress</span>
+                        <span className="text-[10px] font-bold" style={{ color: isRunning ? '#22C55E' : '#8B5CF6' }}>{Math.round(progress)}%</span>
                       </div>
-                      <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
-                        <div className="h-full rounded-full bg-gradient-to-r from-primary via-blue-500 to-primary transition-all duration-1000"
-                          style={{ width: `${progress}%`, backgroundSize: '200% 100%', animation: isActive && !isPaused ? 'shimmer 3s linear infinite' : 'none' }} />
+                      <div className="relative h-2.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                        <div className="h-full rounded-full transition-all duration-500 ease-out"
+                          style={{
+                            width: `${progress}%`,
+                            background: isRunning
+                              ? 'linear-gradient(90deg, #22C55E, #4ADE80, #22C55E)'
+                              : 'linear-gradient(90deg, #8B5CF6, #A78BFA, #8B5CF6)',
+                            backgroundSize: '200% 100%',
+                            animation: isActive && !isPaused ? 'shimmer 2s linear infinite' : 'none',
+                            boxShadow: isActive && !isPaused
+                              ? '0 0 12px rgba(34,197,94,0.5), 0 0 24px rgba(34,197,94,0.2)'
+                              : 'none',
+                            transition: 'width 0.5s ease-out, box-shadow 0.5s ease',
+                          }}
+                        />
                       </div>
                     </div>
 
@@ -502,8 +677,75 @@ export default function ProductivityPage() {
                         {d.label}
                       </button>
                     ))}
+                    <button onClick={() => setShowCustom(true)}
+                      className={`text-xs px-4 py-2 rounded-xl border transition-all ${
+                        !DURATIONS.some(d => d.value === sessionDuration)
+                          ? 'bg-primary/20 border-primary/40 text-primary shadow-lg shadow-primary/10'
+                          : 'border-white/[0.08] text-text3 hover:border-primary/30 hover:text-text2'
+                      }`}>
+                      Custom
+                    </button>
                   </motion.div>
                 )}
+                {/* Custom timer dialog */}
+                <AnimatePresence>
+                  {showCustom && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                      style={{ background: 'rgba(0,0,0,0.6)' }}
+                      onClick={() => setShowCustom(false)}
+                    >
+                      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="relative rounded-2xl p-6 w-full max-w-xs border border-white/[0.08]"
+                        style={{ background: '#0C0F23', backdropFilter: 'blur(24px)' }}
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <h3 className="text-sm font-semibold text-text mb-4">Custom Duration</h3>
+                        <input
+                          type="number"
+                          min="1"
+                          max="480"
+                          placeholder="Minutes (1-480)"
+                          value={customMinutes}
+                          onChange={e => setCustomMinutes(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              const mins = parseInt(customMinutes, 10);
+                              if (mins >= 1 && mins <= 480) {
+                                selectDuration(mins * 60);
+                                setCustomMinutes('');
+                                setShowCustom(false);
+                              }
+                            }
+                          }}
+                          className="w-full px-4 py-3 rounded-xl text-sm text-text outline-none mb-4"
+                          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+                          autoFocus
+                        />
+                        <div className="flex gap-2">
+                          <button onClick={() => setShowCustom(false)}
+                            className="flex-1 px-4 py-2.5 rounded-xl text-xs font-medium text-text3 border border-white/[0.08] hover:text-text transition-all">
+                            Cancel
+                          </button>
+                          <button onClick={() => {
+                            const mins = parseInt(customMinutes, 10);
+                            if (mins >= 1 && mins <= 480) {
+                              selectDuration(mins * 60);
+                              setCustomMinutes('');
+                              setShowCustom(false);
+                            }
+                          }}
+                            className="flex-1 px-4 py-2.5 rounded-xl text-xs font-semibold text-white"
+                            style={{ background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)' }}>
+                            Apply
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-text3 mt-3 text-center">Min: 1 min · Max: 480 min (8 hours)</p>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Pre-Session Config */}
                 {!isActive && (
@@ -516,9 +758,10 @@ export default function ProductivityPage() {
                   </motion.div>
                 )}
 
-                {/* Controls */}
+                {/* Controls in glass panel */}
                 {isActive ? (
-                  <div className="flex gap-3 items-center">
+                  <div className="flex items-center justify-center gap-4 px-6 py-4 rounded-2xl border border-white/[0.08] backdrop-blur-xl"
+                    style={{ background: 'rgba(255,255,255,0.04)' }}>
                     {mode === 'work' && (
                       <button onClick={isPaused ? resumeSession : pauseSession}
                         className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-primary to-blue-600 text-white font-semibold text-sm shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all hover:scale-105 active:scale-95">
@@ -526,7 +769,7 @@ export default function ProductivityPage() {
                       </button>
                     )}
                     <button onClick={stopSession}
-                      className="px-6 py-3.5 rounded-xl border border-white/[0.12] bg-white/[0.04] text-text2 font-medium text-sm hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-all">
+                      className="px-6 py-3.5 rounded-xl border border-white/[0.12] bg-white/[0.04] text-text2 font-medium text-sm hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-all hover:scale-105 active:scale-95">
                       ⏹ End
                     </button>
                   </div>
@@ -552,8 +795,9 @@ export default function ProductivityPage() {
                     {selectedGoal && (
                       <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px]">{selectedGoal}</span>
                     )}
-                  </motion.div>
+                   </motion.div>
                 )}
+              </div>
               </div>
             </GlassCard>
 
@@ -584,37 +828,71 @@ export default function ProductivityPage() {
               {/* Focus Goal */}
               <GlassCard className="p-5" hover>
                 <h3 className="text-sm font-semibold text-text mb-3 flex items-center gap-2">
-                  <span>🎯</span> Focus Goal
+                  <span>🎯</span> Daily Goal
                 </h3>
-                <div className="text-center mb-3">
-                  <div className="text-3xl font-bold text-text">{todayHours}<span className="text-sm text-text3">h</span></div>
-                  <div className="text-[10px] text-text3">of 3h daily target</div>
-                </div>
-                <div className="h-2.5 rounded-full bg-white/[0.06] overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-primary to-blue-500 transition-all duration-700" style={{ width: `${goalProgress}%` }} />
-                </div>
-                <div className="text-center mt-2 text-[10px] text-text3">{Math.round(goalProgress)}% complete</div>
+                {sessionsCompleted > 0 ? (
+                  <>
+                    <div className="text-center mb-3">
+                      <div className="text-3xl font-bold text-text">{todayHours}<span className="text-sm text-text3">h</span></div>
+                      <div className="text-[10px] text-text3">of 3h daily target</div>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-primary to-blue-500 transition-all duration-700" style={{ width: `${goalProgress}%` }} />
+                    </div>
+                    <div className="text-center mt-2 text-[10px] text-text3">{Math.round(goalProgress)}% complete</div>
+                  </>
+                ) : (
+                  <div className="text-center py-4">
+                    <div className="text-3xl mb-3 animate-bounce-slow">🎯</div>
+                    <p className="text-sm font-medium text-text mb-1">Target: 3 Hours</p>
+                    <div className="flex items-center justify-center gap-1 text-xs text-text3 mb-4">
+                      <span className="font-mono text-primary font-semibold">0</span>
+                      <span>/ 3 Hours</span>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-white/[0.06] overflow-hidden mb-3 relative">
+                      <div className="h-full rounded-full bg-gradient-to-r from-primary/20 to-blue-500/20 animate-pulse-slow" style={{ width: '100%' }} />
+                    </div>
+                    <p className="text-[10px] text-text3">Complete your first 25-minute session to start tracking.</p>
+                  </div>
+                )}
               </GlassCard>
 
-              {/* Weekly Analytics */}
+              {/* Weekly Focus */}
               <GlassCard className="p-5" hover>
                 <h3 className="text-sm font-semibold text-text mb-3 flex items-center gap-2">
-                  <span>📊</span> Weekly Focus
+                  <span>📅</span> Weekly Activity
                 </h3>
-                <div className="flex items-end gap-1.5 h-20 mb-2">
-                  {weeklyHours.map((h, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                      <div className={`w-full rounded-t-md transition-all ${i === new Date().getDay() - 1 ? 'bg-gradient-to-t from-primary to-blue-500' : 'bg-white/[0.08]'}`}
-                        style={{ height: `${(h / maxWeekly) * 100}%`, minHeight: '4px' }} />
+                {sessionsCompleted > 0 ? (
+                  <>
+                    <div className="flex items-end gap-1.5 h-20 mb-2">
+                      {weeklyHours.map((h, i) => (
+                          <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                          <div className={`w-full rounded-t-md transition-all ${i === (new Date().getDay() || 7) - 1 ? 'bg-gradient-to-t from-primary to-blue-500' : 'bg-white/[0.08]'}`}
+                            style={{ height: `${(h / maxWeekly) * 100}%`, minHeight: '4px' }} />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div className="flex gap-1.5">
-                  {WEEKLY_BAR_DATA.map((d, i) => (
-                    <div key={i} className={`flex-1 text-center text-[9px] ${i === new Date().getDay() - 1 ? 'text-primary font-bold' : 'text-text3'}`}>{d}</div>
-                  ))}
-                </div>
-                <div className="text-center mt-2 text-[10px] text-text3">Total: {weeklyAvg}h this week</div>
+                    <div className="flex gap-1.5">
+                      {WEEKLY_BAR_DATA.map((d, i) => (
+                        <div key={i} className={`flex-1 text-center text-[9px] ${i === (new Date().getDay() || 7) - 1 ? 'text-primary font-bold' : 'text-text3'}`}>{d}</div>
+                      ))}
+                    </div>
+                    <div className="text-center mt-2 text-[10px] text-text3">Total: {weeklyAvg}h this week</div>
+                  </>
+                ) : (
+                  <div className="text-center py-4">
+                    <div className="text-3xl mb-3">📅</div>
+                    <p className="text-sm font-medium text-text mb-1">No focus sessions this week</p>
+                    <div className="grid grid-cols-7 gap-1.5 mb-3 max-w-[210px] mx-auto">
+                      {Array.from({ length: 28 }, (_, i) => (
+                        <div key={i}
+                          className={`aspect-square rounded-sm ${i === 27 ? 'border border-primary/40 bg-primary/5 animate-pulse-slow' : 'bg-white/[0.04]'}`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-text3">Start today to build consistency.</p>
+                  </div>
+                )}
               </GlassCard>
 
               {/* Streak */}
@@ -622,16 +900,35 @@ export default function ProductivityPage() {
                 <h3 className="text-sm font-semibold text-text mb-3 flex items-center gap-2">
                   <span>🔥</span> Streak
                 </h3>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-orange-400 mb-1">{dailyStreak}</div>
-                  <div className="text-[10px] text-text3 mb-3">consecutive days</div>
-                  <div className="grid grid-cols-7 gap-1">
-                    {Array.from({ length: 28 }, (_, i) => (
-                      <div key={i} className={`w-full aspect-square rounded-sm ${i < dailyStreak ? 'bg-gradient-to-br from-orange-500/40 to-amber-500/30' : 'bg-white/[0.05]'}`} />
-                    ))}
+                {dailyStreak > 0 ? (
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-orange-400 mb-1">{dailyStreak}</div>
+                    <div className="text-[10px] text-text3 mb-3">consecutive days</div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {Array.from({ length: 28 }, (_, i) => (
+                        <div key={i} className={`w-full aspect-square rounded-sm ${i < dailyStreak ? 'bg-gradient-to-br from-orange-500/40 to-amber-500/30' : 'bg-white/[0.05]'}`} />
+                      ))}
+                    </div>
+                    <div className="text-[9px] text-text3 mt-2">Last 28 days</div>
                   </div>
-                  <div className="text-[9px] text-text3 mt-2">Last 28 days</div>
-                </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <div className="text-4xl mb-2" style={{ filter: 'grayscale(0.5)', opacity: 0.6 }}>🔥</div>
+                    <p className="text-sm font-medium text-text mb-1">No streak yet</p>
+                    <p className="text-[10px] text-text3 mb-3">Start today to begin your journey.</p>
+                    <div className="grid grid-cols-7 gap-1 max-w-[210px] mx-auto mb-3">
+                      {Array.from({ length: 28 }, (_, i) => (
+                        <div key={i}
+                          className={`aspect-square rounded-sm ${i === 27 ? 'border border-orange-400/40 bg-orange-500/5 animate-pulse-slow shadow-[0_0_8px_rgba(251,146,60,0.3)]' : 'bg-white/[0.04]'}`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-[9px] text-text3">
+                      <span className="inline-block w-2 h-2 rounded-sm bg-orange-500/30 mr-1 align-middle" />
+                      Day 1 waiting to begin
+                    </p>
+                  </div>
+                )}
               </GlassCard>
             </div>
 
@@ -653,20 +950,32 @@ export default function ProductivityPage() {
               <h3 className="text-sm font-semibold text-text mb-4 flex items-center gap-2">
                 <span>📊</span> Study Summary
               </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: 'Total Time', value: formatTime(focusHours * 3600), icon: '⏱' },
-                  { label: 'Sessions', value: sessionsCompleted, icon: '🎯' },
-                  { label: 'Topics Studied', value: studiedToday.length, icon: '📖' },
-                  { label: 'Focus Score', value: `${focusScore}%`, icon: '⚡', color: 'text-primary' },
-                ].map((s, i) => (
-                  <div key={i} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-center">
-                    <div className="text-base mb-1">{s.icon}</div>
-                    <div className={`text-lg font-bold ${s.color || 'text-text'}`}>{s.value}</div>
-                    <div className="text-[9px] text-text3 uppercase tracking-wider">{s.label}</div>
-                  </div>
-                ))}
-              </div>
+              {sessionsCompleted > 0 ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: 'Total Time', value: formatTime(focusHours * 3600), icon: '⏱' },
+                    { label: 'Sessions', value: sessionsCompleted, icon: '🎯' },
+                    { label: 'Topics Studied', value: studiedToday.length, icon: '📖' },
+                    { label: 'Focus Score', value: `${focusScore}%`, icon: '⚡', color: 'text-primary' },
+                  ].map((s, i) => (
+                    <div key={i} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-center">
+                      <div className="text-base mb-1">{s.icon}</div>
+                      <div className={`text-lg font-bold ${s.color || 'text-text'}`}>{s.value}</div>
+                      <div className="text-[9px] text-text3 uppercase tracking-wider">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <div className="text-3xl mb-3 animate-pulse-slow">📊</div>
+                  <p className="text-sm font-medium text-text mb-1">No study session today</p>
+                  <p className="text-xs text-text3 mb-4">Start your first focus session to unlock today's statistics.</p>
+                  <button onClick={handleStart}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-blue-600 text-white text-xs font-semibold shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all hover:scale-105 active:scale-95">
+                    ▶ Start Focus Session
+                  </button>
+                </div>
+              )}
             </GlassCard>
 
             {/* Stopwatch */}
@@ -701,9 +1010,10 @@ export default function ProductivityPage() {
                   })}
                 </div>
               ) : (
-                <div className="text-center py-6 text-text3 text-xs">
-                  <div className="text-2xl mb-2">📚</div>
-                  No study sessions yet today. Start focusing!
+                <div className="text-center py-6">
+                  <div className="text-2xl mb-3 opacity-60">📚</div>
+                  <p className="text-xs text-text3 mb-1">No topics studied yet</p>
+                  <p className="text-[10px] text-text3/60">Complete a focus session with a subject selected.</p>
                 </div>
               )}
             </GlassCard>
@@ -744,9 +1054,14 @@ export default function ProductivityPage() {
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-blue-500/5" />
               <div className="relative z-10">
                 <h3 className="text-sm font-semibold text-text mb-2 flex items-center gap-2">
-                  <span>💡</span> Need Motivation?
+                  <span>💡</span> {sessionsCompleted === 0 ? 'Get Started' : 'Keep Going'}
                 </h3>
-                <p className="text-xs text-text2 mb-3">You're doing great! Keep going.</p>
+                <p className="text-xs text-text2 mb-3">
+                  {sessionsCompleted === 0 ? "Every expert was once a beginner." :
+                   sessionsCompleted === 1 ? "First session done! The hardest part is over." :
+                   sessionsCompleted < 5 ? "You are building a habit. Stay consistent." :
+                   "You are doing great! Keep the momentum going."}
+                </p>
                 <div className="text-sm text-text italic leading-relaxed mb-3">"{quote.text}"</div>
                 <button onClick={() => setQuoteIndex((i) => (i + 1) % QUOTES.length)}
                   className="w-full py-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-medium hover:bg-primary/15 transition-all">
@@ -757,7 +1072,27 @@ export default function ProductivityPage() {
           </div>
         </div>
       </div>
+      {/* First session reward */}
+      <AnimatePresence>
+        {showFirstReward && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: 'spring', damping: 15 }}
+              className="text-center p-8 rounded-2xl border border-primary/20 backdrop-blur-2xl"
+              style={{ background: 'rgba(12,10,30,0.9)' }}>
+              <div className="text-5xl mb-4">🎉</div>
+              <h3 className="text-lg font-bold text-text mb-2">Great Start!</h3>
+              <div className="flex items-center justify-center gap-2 text-sm text-primary font-semibold mb-2">
+                <span>⚡</span> +25 XP
+              </div>
+              <p className="text-xs text-text3">First Focus Session Completed</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
+    </>
   );
 }
 

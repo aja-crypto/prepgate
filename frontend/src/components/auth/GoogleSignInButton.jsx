@@ -1,4 +1,4 @@
-// Google Sign-In — uses renderButton() for reliable flow
+// Google Sign-In ΓÇö uses renderButton() with timeout + retry
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -9,10 +9,13 @@ const IS_PLACEHOLDER = !CLIENT_ID ||
   CLIENT_ID === '' ||
   CLIENT_ID.includes('your_google_client_id') ||
   CLIENT_ID === 'undefined' ||
-  CLIENT_ID.includes('purruajaykumar') ||
   CLIENT_ID.includes('PLACEHOLDER');
 
-export default function GoogleSignInButton({ onSuccess, onError }) {
+// Google OAuth only works on whitelisted origins.
+const LOADING_TIMEOUT = 15000;
+const RETRY_COOLDOWN = 5000;
+
+export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_with' }) {
   const { loginAsGuest } = useAuth();
   const navigate = useNavigate();
   const btnRef = useRef(null);
@@ -20,6 +23,10 @@ export default function GoogleSignInButton({ onSuccess, onError }) {
   const [loading, setLoading] = useState(false);
   const [scriptReady, setScriptReady] = useState(false);
   const [promptFailed, setPromptFailed] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const [error, setError] = useState('');
+  const timeoutRef = useRef(null);
 
   const handleDemoMode = () => {
     loginAsGuest();
@@ -35,59 +42,120 @@ export default function GoogleSignInButton({ onSuccess, onError }) {
     }
   }, [onSuccess, onError]);
 
-  useEffect(() => {
-    if (IS_PLACEHOLDER) return;
+  const handleCredentialRef = useRef(handleCredential);
+  handleCredentialRef.current = handleCredential;
 
-    let mounted = true;
+  const initializedRef = useRef(false);
 
-    const initGoogleSignIn = () => {
-      if (!mounted || !window.google?.accounts?.id) return;
-      try {
-        window.google.accounts.id.initialize({
-          client_id: CLIENT_ID,
-          callback: handleCredential,
-          auto_select: false,
-        });
-        if (mounted) setScriptReady(true);
-      } catch (err) {
-        console.error('Google Sign-In initialization failed:', err);
-      }
+  const clearTimeout_ = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  };
+
+  const startLoadingTimer = () => {
+    clearTimeout_();
+    timeoutRef.current = setTimeout(() => {
+      setTimedOut(true);
+    }, LOADING_TIMEOUT);
+  };
+
+  const initGoogleSignIn = () => {
+    if (!window.google?.accounts?.id || initializedRef.current) return;
+    try {
+      window.google.accounts.id.initialize({
+        client_id: CLIENT_ID,
+        callback: (response) => handleCredentialRef.current(response),
+        auto_select: false,
+        error_callback: (err) => {
+          console.error('Google Sign-In error:', err);
+          if (err?.type === 'popup_closed') return;
+          const msg = err?.message || err?.type || '';
+          if (msg.includes('origin') || msg.includes('redirect_uri')) {
+            setError('Google Sign-In is not configured for localhost. Use email/password or Demo Mode.');
+          } else {
+            setError('Google Sign-In failed: ' + (msg || 'Unknown error'));
+          }
+          setPromptFailed(true);
+        },
+      });
+      initializedRef.current = true;
+      setScriptReady(true);
+      clearTimeout_();
+    } catch (err) {
+      console.error('Google Sign-In initialization failed:', err);
+    }
+  };
+
+  const loadScript = () => {
+    if (scriptLoaded.current && !retrying) return;
+    scriptLoaded.current = true;
+    setTimedOut(false);
+    setPromptFailed(false);
+    setScriptReady(false);
+    setRetrying(false);
+    startLoadingTimer();
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      // wait a tick for google to be fully ready
+      setTimeout(initGoogleSignIn, 100);
     };
+    script.onerror = () => {
+      console.error('Failed to load Google Sign-In script');
+      setPromptFailed(true);
+      clearTimeout_();
+    };
+    document.body.appendChild(script);
+  };
+
+  useEffect(() => {
+    if (IS_PLACEHOLDER) {
+      // Client ID not configured ΓÇö show demo fallback
+      setPromptFailed(true);
+      setError('Google Sign-In is not configured. Set VITE_GOOGLE_CLIENT_ID in .env or use Demo Mode.');
+      return;
+    }
 
     if (window.google?.accounts?.id) {
       initGoogleSignIn();
-    } else if (!scriptLoaded.current) {
-      scriptLoaded.current = true;
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = initGoogleSignIn;
-      script.onerror = () => {
-        console.error('Failed to load Google Sign-In script');
-        if (mounted) setPromptFailed(true);
-      };
-      document.body.appendChild(script);
+    } else {
+      loadScript();
     }
 
-    return () => { mounted = false; };
-  }, [handleCredential]);
+    return () => { clearTimeout_(); };
+  }, []);
+
+  const handleRetry = () => {
+    setRetrying(true);
+    scriptLoaded.current = false;
+    initializedRef.current = false;
+    // remove existing Google script tag if any
+    const old = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+    if (old) old.remove();
+    delete window.google?.accounts;
+    setTimeout(loadScript, RETRY_COOLDOWN);
+  };
 
   // Render the native Google button inside our container
   useEffect(() => {
     if (!scriptReady || !btnRef.current || !window.google?.accounts?.id) return;
-
     try {
       window.google.accounts.id.renderButton(btnRef.current, {
         theme: 'outline',
         size: 'large',
         width: btnRef.current.offsetWidth || 380,
-        text: 'signin_with',
+        text: text,
         shape: 'rectangular',
       });
     } catch (err) {
       console.error('Google renderButton failed:', err);
       setPromptFailed(true);
+      clearTimeout_();
     }
   }, [scriptReady]);
 
@@ -95,12 +163,13 @@ export default function GoogleSignInButton({ onSuccess, onError }) {
     return (
       <button
         onClick={handleDemoMode}
+        aria-label="Google Sign-In disabled ΓÇö enter demo mode"
         className="w-full group text-[11px] text-text3 text-center py-4 px-4 border border-dashed border-border rounded-xl bg-bg-3/30 hover:border-primary/50 hover:bg-primary/5 transition-all"
       >
         <p className="font-bold text-text mb-1 group-hover:text-primary transition-colors italic">Google Sign-In Disabled</p>
         <p className="mb-2 opacity-70">Set VITE_GOOGLE_CLIENT_ID in .env</p>
         <div className="text-primary font-bold uppercase tracking-widest text-[10px] bg-primary/10 py-1.5 rounded-xl border border-primary/20">
-          Enter Demo Mode instead →
+          Enter Demo Mode instead ΓåÆ
         </div>
       </button>
     );
@@ -108,31 +177,44 @@ export default function GoogleSignInButton({ onSuccess, onError }) {
 
   if (promptFailed) {
     return (
-      <button
-        onClick={handleDemoMode}
-        className="w-full group text-[11px] text-text3 text-center py-4 px-4 border border-dashed border-border rounded-xl bg-bg-3/30 hover:border-primary/50 hover:bg-primary/5 transition-all"
-      >
-        <p className="font-bold text-text mb-1 group-hover:text-primary transition-colors italic">Google Sign-In Unavailable</p>
-        <p className="mb-2 opacity-70">Could not load Google services. Check your connection.</p>
-        <div className="text-primary font-bold uppercase tracking-widest text-[10px] bg-primary/10 py-1.5 rounded-xl border border-primary/20">
-          Enter Demo Mode instead →
-        </div>
-      </button>
+      <div className="w-full flex flex-col items-center gap-3 py-4 px-4 rounded-xl border border-dashed border-border bg-bg-3/30">
+        <p className="text-xs text-text3 text-center font-medium">{error || 'Google Sign-In temporarily unavailable'}</p>
+        <button
+          onClick={handleRetry}
+          aria-label="Retry loading Google Sign-In"
+          className="text-xs text-primary font-semibold hover:text-primary-light transition-colors px-4 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20"
+        >
+          Retry
+        </button>
+      </div>
     );
   }
 
   return (
-    <div className="w-full relative">
+    <div className="w-full relative" style={{ minHeight: '48px' }}>
       {/* Native Google button rendered here */}
       <div
         ref={btnRef}
-        className="w-full [&>div]:w-full [&>div>div]:w-full"
+        className={`w-full [&>div]:w-full [&>div>div]:w-full ${!scriptReady ? 'invisible' : ''}`}
+        aria-label="Google Sign-In button"
       />
-      {/* Loading overlay while script loads */}
-      {!scriptReady && (
-        <div className="absolute inset-0 flex items-center justify-center py-3.5 px-4 rounded-xl border border-border bg-surface/60 backdrop-blur-md">
+      {/* Loading / timed out overlay */}
+      {!scriptReady && !timedOut && (
+        <div className="absolute inset-0 flex items-center justify-center py-3.5 px-4 rounded-xl border border-border bg-surface/60 backdrop-blur-md" role="status" aria-label="Loading Google Sign-In">
           <div className="w-5 h-5 border-2 border-white/20 border-t-primary rounded-full animate-spin mr-3" />
-          <span className="text-sm text-text3">Loading Google Sign-In...</span>
+          <span className="text-sm text-text3">Initializing Google Sign-In...</span>
+        </div>
+      )}
+      {!scriptReady && timedOut && !promptFailed && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 py-3.5 px-4 rounded-xl border border-border bg-surface/60 backdrop-blur-md">
+          <p className="text-xs text-text3 text-center">Google Sign-In unavailable</p>
+          <button
+            onClick={handleRetry}
+            aria-label="Retry loading Google Sign-In"
+            className="text-xs text-primary font-semibold hover:text-primary-light transition-colors px-4 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20"
+          >
+            Retry
+          </button>
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-// PYQ Practice — PDF subject browser + topic/subject/year-wise browse, practice, revision
+// PYQ Practice ΓÇö PDF subject browser + topic/subject/year-wise browse, practice, revision
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useProgress } from '../context/ProgressContext';
@@ -29,7 +29,7 @@ const HowItWorks = () => {
         className="w-full text-left mb-4 px-4 py-3 rounded-xl border border-purple-500/30 bg-purple-500/10"
       >
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-purple-400">🎯 How PYQ Practice Works</span>
+          <span className="text-sm font-semibold text-purple-400">≡ƒÄ» How PYQ Practice Works</span>
           <span className="text-text3 text-xs">{expanded ? 'Hide' : 'Show'}</span>
         </div>
       </button>
@@ -74,6 +74,7 @@ export default function PYQPage() {
   const [globalStats, setGlobalStats] = useState(null);
   const [browse, setBrowse] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [pyqError, setPyqError] = useState(false);
   const [viewSolutionId, setViewSolutionId] = useState(null);
   const [solutionData, setSolutionData] = useState(null);
   const [loadingSolution, setLoadingSolution] = useState(false);
@@ -92,8 +93,9 @@ export default function PYQPage() {
 
   useEffect(() => {
     setLoading(true);
+    setPyqError(false);
     Promise.all([
-      refreshPyqs?.(),
+      refreshPyqs?.().catch(() => setPyqError(true)),
       pyqService.getStats().then((r) => setGlobalStats(r.data.data)).catch(silentCatch('Load PYQ stats')),
       pyqService.getBrowse().then((r) => setBrowse(r.data.data)).catch(silentCatch('Load PYQ browse')),
     ]).finally(() => setLoading(false));
@@ -122,7 +124,10 @@ export default function PYQPage() {
       const order = { easy: 0, medium: 1, hard: 2 };
       return (order[a.difficulty] || 0) - (order[b.difficulty] || 0);
     }
-    if (sortBy === 'subject') return a.subject.localeCompare(b.subject);
+    if (sortBy === 'subject') {
+      if (!a.subject || !b.subject) return 0;
+      return a.subject.localeCompare(b.subject);
+    }
     return 0;
   });
 
@@ -150,7 +155,7 @@ export default function PYQPage() {
         await pyqService.toggleSolved(q.mongoId, next);
       }
     } catch {
-      toast.error('Sync failed — saved locally');
+      toast.error('Sync failed ΓÇö saved locally');
     }
   }, [updatePyqs, mongoAvailable]);
 
@@ -176,14 +181,14 @@ export default function PYQPage() {
 
   const setMistakeType = async (q, mistakeType) => {
     updatePyqs((d) => d.map((item) => (
-      item.id === q.id ? { ...item, mistakeType, revisionNeeded: true, markedDifficult: true } : item
+      item.id === q.id ? { ...item, mistakeType } : item
     )));
     toast.success(`Tagged as ${mistakeType}`);
     if (q.mongoId && mongoAvailable) {
       try {
-        await pyqService.updateFlags(q.mongoId, { mistakeType, revisionNeeded: true, markedDifficult: true });
+        await pyqService.updateFlags(q.mongoId, { mistakeType });
       } catch {
-        toast.error('Sync failed — saved locally');
+        toast.error('Sync failed ΓÇö saved locally');
       }
     }
   };
@@ -257,8 +262,8 @@ export default function PYQPage() {
         <div>
           <h1 className="text-xl font-bold text-text">PYQ Practice</h1>
           <p className="text-sm text-text3 mt-0.5">
-            {stats.solved}/{stats.total} solved · {stats.revisionNeeded} need revision
-            {mongoAvailable ? ' · API synced' : ' · Local mode'}
+            {stats.solved}/{stats.total} solved ┬╖ {stats.revisionNeeded} need revision
+            {mongoAvailable ? ' ┬╖ API synced' : ' ┬╖ Local mode'}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -276,7 +281,7 @@ export default function PYQPage() {
       </div>
 
       {showStats && globalStats && (
-        <div className="grid grid-cols-3 gap-3 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
           {[
             { label: 'Community Correct %', value: globalStats.correctPct, color: 'text-green-400' },
             { label: 'Community Incorrect %', value: globalStats.incorrectPct, color: 'text-red-400' },
@@ -356,7 +361,7 @@ export default function PYQPage() {
           <div>
             <div className="text-sm font-semibold text-text">Mistake Notebook</div>
             <div className="text-[11px] text-text3 mt-0.5">
-              {mistakeSummary.total} tagged/weak PYQs · Dominant pattern: <span className="text-primary">{mistakeSummary.dominant}</span>
+              {mistakeSummary.total} tagged/weak PYQs ┬╖ Dominant pattern: <span className="text-primary">{mistakeSummary.dominant}</span>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -372,11 +377,16 @@ export default function PYQPage() {
       {browse && !pyqs.length && !loading && (
         <div className="bg-surface border border-border rounded-xl p-6 mb-5 text-center">
           <p className="text-sm text-text2 mb-2">No PYQs loaded yet.</p>
-          <p className="text-xs text-text3">
+          <p className="text-xs text-text3 mb-4">
             {browse.total > 0
-              ? `${browse.total} questions in database — refresh or check connection.`
-              : 'Admin: import PYQs via Admin Panel → PYQs (CSV/JSON). Run npm run seed for samples.'}
+              ? `${browse.total} questions in database ΓÇö ${pyqError ? 'connection issue.' : 'refresh or check connection.'}`
+              : 'Admin: import PYQs via Admin Panel ΓåÆ PYQs (CSV/JSON). Run npm run seed for samples.'}
           </p>
+          {pyqError && (
+            <button onClick={async () => { setLoading(true); setPyqError(false); try { await refreshPyqs?.(); } catch { setPyqError(true); } finally { setLoading(false); } }} className="text-xs px-4 py-2 rounded-xl font-semibold transition-all hover:-translate-y-0.5 active:scale-[0.98]" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', color: 'white' }}>
+              Retry Loading
+            </button>
+          )}
         </div>
       )}
 
@@ -419,7 +429,7 @@ export default function PYQPage() {
               </div>
               <span className={`text-[10px] px-2 py-1 rounded border whitespace-nowrap flex-shrink-0 capitalize ${DIFF_STYLE[q.difficulty]}`}>{q.difficulty}</span>
             </div>
-            <div className="text-[11px] text-text3 mb-1">{q.subject} · GATE {q.year}{q.topic ? ` · ${q.topic}` : ''}</div>
+            <div className="text-[11px] text-text3 mb-1">{q.subject} ┬╖ GATE {q.year}{q.topic ? ` ┬╖ ${q.topic}` : ''}</div>
             {q.questionText && <p className="text-[10px] text-text3 mb-2 line-clamp-2">{q.questionText}</p>}
             <div className="flex flex-wrap gap-1.5 mb-3">
               {q.revisionNeeded && <span className="text-[9px] px-2 py-0.5 rounded bg-orange-500/10 border border-orange-500/20 text-orange-400">Revision</span>}
@@ -451,15 +461,15 @@ export default function PYQPage() {
                     Practice
                   </button>
                   <button type="button" onClick={() => viewSolution(q)} className="text-[10px] px-2 py-1.5 rounded-lg border bg-bg-2 border-border text-text3 hover:border-white/15" title="View Solution">
-                    💡
+                    ≡ƒÆí
                   </button>
                 </>
               ) : (
                 <button type="button" onClick={() => toggle(q, 'solved')} className={`flex-1 text-[10px] px-2 py-1.5 rounded-lg border transition-all ${q.solved ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-bg-2 border-border text-text3'}`}>
-                  {q.solved ? '✓ Solved' : 'Mark Solved'}
+                  {q.solved ? 'Γ£ô Solved' : 'Mark Solved'}
                 </button>
               )}
-              <button type="button" onClick={() => toggle(q, 'revisionNeeded')} className={`text-[10px] px-2 py-1.5 rounded-lg border transition-all ${q.revisionNeeded ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' : 'bg-bg-2 border-border text-text3'}`}>↻</button>
+              <button type="button" onClick={() => toggle(q, 'revisionNeeded')} className={`text-[10px] px-2 py-1.5 rounded-lg border transition-all ${q.revisionNeeded ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' : 'bg-bg-2 border-border text-text3'}`}>Γå╗</button>
               <button type="button" onClick={() => toggle(q, 'markedDifficult')} className={`text-[10px] px-2 py-1.5 rounded-lg border transition-all ${q.markedDifficult ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-bg-2 border-border text-text3'}`}>!</button>
             </div>
           </div>
@@ -467,7 +477,7 @@ export default function PYQPage() {
         {filtered.length === 0 && !loading && (
           <div className="col-span-3 text-center py-16">
             <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12), rgba(99,102,241,0.06))', border: '1px solid rgba(168,85,247,0.15)' }}>
-              <span className="text-3xl">📝</span>
+              <span className="text-3xl">≡ƒô¥</span>
             </div>
             <h3 className="text-base font-bold text-text mb-1">No PYQs Match This Filter</h3>
             <p className="text-sm text-text3 mb-4">Try adjusting your filters or check back later.</p>
@@ -488,7 +498,7 @@ export default function PYQPage() {
           <div className="space-y-4">
             <div>
               <h3 className="text-base font-bold text-text mb-1">{solutionData.title}</h3>
-              <p className="text-xs text-text3">{solutionData.subject?.name || solutionData.subject} · GATE {solutionData.year}</p>
+              <p className="text-xs text-text3">{solutionData.subject?.name || solutionData.subject} ┬╖ GATE {solutionData.year}</p>
             </div>
             {solutionData.questionText && <p className="text-sm text-text2 leading-relaxed">{solutionData.questionText}</p>}
             {solutionData.options?.length > 0 && (
@@ -496,7 +506,7 @@ export default function PYQPage() {
                 {solutionData.options.map((opt) => (
                   <div key={opt.key} className={`text-sm px-3 py-2 rounded-lg border ${opt.key === solutionData.correctAnswer ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-bg-2 border-border text-text2'}`}>
                     <span className="font-mono font-semibold mr-2">{opt.key}.</span>{opt.text}
-                    {opt.key === solutionData.correctAnswer && <span className="ml-2 text-[10px]">✓ Correct</span>}
+                    {opt.key === solutionData.correctAnswer && <span className="ml-2 text-[10px]">Γ£ô Correct</span>}
                   </div>
                 ))}
               </div>

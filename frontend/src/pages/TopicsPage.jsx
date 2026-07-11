@@ -4,7 +4,7 @@ import { useProgress } from '../context/ProgressContext';
 import { topicService, subjectService, getApiErrorMessage } from '../services/api';
 import { PageLoading } from '../components/common/GateLoadingScreen';
 import SmartTopicCard from '../components/gate/SmartTopicCard';
-import toast from 'react-hot-toast';
+import { useSEO } from '../hooks/useSEO';
 
 function computeSubjectReadiness(topics) {
   const subjects = {};
@@ -52,11 +52,13 @@ function getHighWeightageNotDone(topics) {
 }
 
 export default function TopicsPage() {
+  useSEO({ title: 'Topics', description: 'Study GATE topics with progress tracking and completion checklists.' });
   const { topics: localTopics, studyStats } = useProgress();
   const [topics, setTopics] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [filter, setFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
@@ -75,10 +77,10 @@ export default function TopicsPage() {
       const fallbackSubjects = studyStats?.subjects || [];
       setSubjects(fallbackSubjects);
       const subMap = new Map(fallbackSubjects.map(s => [s.name, s]));
-      setTopics((localTopics || []).map(t => ({
+      setTopics((localTopics || []).map((t, idx) => ({
         ...t,
-        subject: subMap.get(t.subject) || { name: t.subject, icon: '📘', color: '#4f8dff' },
-        _id: String(t.id),
+        subject: subMap.get(t.subject) || { name: t.subject, icon: '≡ƒôÿ', color: '#4f8dff' },
+        _id: String(t.id != null ? t.id : `fallback-${idx}`),
         progress: {
           lecture: t.progress?.lecture || false,
           notes: t.progress?.notes || false,
@@ -97,9 +99,15 @@ export default function TopicsPage() {
 
   useEffect(() => { load(); }, []);
 
-  const subjectNames = ['All', ...subjects.map((s) => s.name)];
+  const subjectNames = ['All', ...subjects.map((s) => s.name).filter(Boolean)];
 
   const filtered = topics.filter((t) => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const name = (t.name || '').toLowerCase();
+      const sub = (t.subject?.name || '').toLowerCase();
+      if (!name.includes(q) && !sub.includes(q)) return false;
+    }
     const subName = t.subject?.name || '';
     if (filter !== 'All' && subName !== filter) return false;
     const p = t.progress || {};
@@ -166,8 +174,8 @@ export default function TopicsPage() {
       {loadError && topics.length > 0 && (
         <div className="mb-4 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-yellow-400 text-sm">⚠</span>
-            <span className="text-xs text-yellow-300">Using offline data — server unreachable.</span>
+            <span className="text-yellow-400 text-sm">ΓÜá</span>
+            <span className="text-xs text-yellow-300">Using offline data ΓÇö server unreachable.</span>
           </div>
           <button type="button" onClick={load} className="text-[10px] px-2.5 py-1 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 hover:bg-yellow-500/20">Retry</button>
         </div>
@@ -175,15 +183,15 @@ export default function TopicsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-text">Smart Topic Tracker</h1>
-          <p className="text-sm text-text3 mt-0.5">{topics.length} GATE syllabus topics · smart progress system</p>
+          <p className="text-sm text-text3 mt-0.5">{topics.length} GATE syllabus topics ┬╖ smart progress system</p>
         </div>
-        <Link to="/subjects" className="text-xs text-primary hover:opacity-80">View by Subject →</Link>
+        <Link to="/subjects" className="text-xs text-primary hover:opacity-80">View by Subject ΓåÆ</Link>
       </div>
 
       {revisionDueTopics.length > 0 && (
         <div className="mb-5 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-yellow-400 text-sm">↻</span>
+            <span className="text-yellow-400 text-sm">Γå╗</span>
             <span className="text-xs font-semibold text-yellow-400">{revisionDueTopics.length} topic(s) due for revision</span>
           </div>
           <div className="flex flex-wrap gap-1">
@@ -203,14 +211,14 @@ export default function TopicsPage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
         {[
-          { label: 'Total Topics', value: topics.length, color: 'text-text' },
+          { label: 'Total Topics', value: filtered.length, color: 'text-text' },
           { label: 'Completed', value: done, color: 'text-green-400' },
           { label: 'Revision Due', value: revisionDueTopics.length, color: 'text-yellow-400' },
-          { label: 'Not Started', value: topics.filter((t) => {
+          { label: 'Not Started', value: filtered.filter((t) => {
             const p = t.progress || {};
             return ['lecture', 'notes', 'revision1', 'revision2', 'revision3', 'revision4', 'pyqs', 'topicTest'].every((k) => !p[k]);
           }).length, color: 'text-red-400' },
-          { label: 'In Progress', value: topics.filter((t) => {
+          { label: 'In Progress', value: filtered.filter((t) => {
             const p = t.progress || {};
             const tasks = ['lecture', 'notes', 'revision1', 'revision2', 'revision3', 'revision4', 'pyqs', 'topicTest'];
             const done = tasks.filter((k) => p[k]).length;
@@ -220,14 +228,14 @@ export default function TopicsPage() {
         ].map((s) => (
           <div key={s.label} className="bg-surface border border-border rounded-xl p-3 text-center">
             <div className={`text-lg font-bold font-mono ${s.color}`}>{s.value}</div>
-            <div className="text-[9px] text-text3 uppercase tracking-wider mt-0.5">{s.label}</div>
+            <div className="text-[10px] sm:text-[11px] text-text3 uppercase tracking-wider mt-0.5">{s.label}</div>
           </div>
         ))}
       </div>
 
       {weakTopics.length > 0 && (
         <div className="mb-5 p-3 rounded-xl bg-red-500/5 border border-red-500/15">
-          <div className="text-xs font-semibold text-red-400 mb-2">Weak Topics — Start Here</div>
+          <div className="text-xs font-semibold text-red-400 mb-2">Weak Topics ΓÇö Start Here</div>
           <div className="flex flex-wrap gap-1">
             {weakTopics.map((t) => (
               <Link key={t._id} to={`/learn/topic/${t._id}`}
@@ -242,7 +250,7 @@ export default function TopicsPage() {
 
       {highValueTopics.length > 0 && (
         <div className="mb-5 p-3 rounded-xl bg-primary/5 border border-primary/15">
-          <div className="text-xs font-semibold text-primary mb-2">High Weightage — Priority Topics</div>
+          <div className="text-xs font-semibold text-primary mb-2">High Weightage ΓÇö Priority Topics</div>
           <div className="flex flex-wrap gap-1">
             {highValueTopics.map((t) => (
               <Link key={t._id} to={`/learn/topic/${t._id}`}
@@ -260,7 +268,7 @@ export default function TopicsPage() {
           <Link key={s.name} to={`/subjects/${nameToCode[s.name.toLowerCase()] || s.name}`}
             className="bg-surface border border-border rounded-xl p-3 text-center hover:border-primary/30 transition-all"
           >
-            <div className="text-lg">{s.icon || '📘'}</div>
+            <div className="text-lg">{s.icon || '≡ƒôÿ'}</div>
             <div className="text-[10px] font-semibold text-text mt-1 truncate">{s.name}</div>
             <div className="flex items-center gap-1 justify-center mt-1">
               <div className="w-full h-1.5 bg-bg-3 rounded-full overflow-hidden max-w-[60px]">
@@ -268,10 +276,15 @@ export default function TopicsPage() {
                   style={{ width: `${s.total > 0 ? Math.round((s.done / s.total) * 100) : 0}%` }}
                 />
               </div>
-              <span className="text-[9px] font-mono text-text2">{Math.round((s.done / s.total) * 100)}%</span>
+              <span className="text-[10px] sm:text-[11px] font-mono text-text2">{Math.round((s.done / s.total) * 100)}%</span>
             </div>
           </Link>
         ))}
+      </div>
+
+      <div className="relative mb-3">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text3"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>
+        <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search topics..." className="w-full bg-surface border border-border rounded-xl pl-9 pr-4 py-2 text-sm text-text focus:outline-none focus:border-primary/50" />
       </div>
 
       <div className="flex gap-2 flex-wrap mb-2">
@@ -289,7 +302,7 @@ export default function TopicsPage() {
           <button key={s} type="button" onClick={() => setStatusFilter(s)}
             className={`text-xs px-3 py-1.5 rounded-lg border ${statusFilter === s ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3'}`}
           >
-            {s === 'Revision Due' && '↻ '}{s}
+            {s === 'Revision Due' && 'Γå╗ '}{s}
           </button>
         ))}
       </div>
@@ -297,10 +310,10 @@ export default function TopicsPage() {
       <div className="bg-surface border border-border rounded-xl mb-4 p-4">
         <div className="flex justify-between text-xs mb-2">
           <span className="text-text2">
-            {done}/{filtered.length} completed
+            {filtered.length > 0 ? `${done}/${filtered.length} completed` : 'No topics loaded yet'}
             {statusFilter !== 'All' && ` (filtered)`}
           </span>
-          <span className="text-primary font-mono">{pct}%</span>
+          <span className="text-primary font-mono">{filtered.length > 0 ? `${pct}%` : 'ΓÇö'}</span>
         </div>
         <div className="h-2 bg-bg-3 rounded-full overflow-hidden">
           <div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all" style={{ width: `${pct}%` }} />
@@ -312,15 +325,25 @@ export default function TopicsPage() {
           <SmartTopicCard key={t._id} topic={t} />
         ))}
         {filtered.length === 0 && (
-          <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.15)' }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 text-text3"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" strokeLinecap="round" /></svg>
+          <div className="col-span-full flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.15)' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6 text-text3"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" strokeLinecap="round" /></svg>
             </div>
-            <h4 className="text-base font-semibold text-text mb-1">No Topics Found</h4>
-            <p className="text-sm text-text3 max-w-xs leading-relaxed mb-5">Try adjusting your filters or search to find what you're looking for.</p>
+          <h4 className="text-sm font-semibold text-text mb-1">{topics.length === 0 ? 'No Topics Yet' : 'No Topics Found'}</h4>
+          <p className="text-sm text-text3 max-w-xs leading-relaxed mb-4">
+            {topics.length === 0
+              ? 'Topics will appear here once you start studying. Complete PYQs and track progress to build your topic list.'
+              : 'Try adjusting your filters or search to find what you\'re looking for.'}
+          </p>
+          {topics.length === 0 ? (
+            <Link to="/subjects" className="text-xs px-5 py-2.5 rounded-lg font-semibold transition-all hover:scale-[1.02]" style={{ background: 'rgba(168,85,247,0.12)', color: '#A78BFA', border: '1px solid rgba(168,85,247,0.25)' }}>
+              Browse Subjects ΓåÆ
+            </Link>
+          ) : (
             <Link to="/topics" className="text-xs px-5 py-2.5 rounded-lg font-semibold transition-all hover:scale-[1.02]" style={{ background: 'rgba(168,85,247,0.12)', color: '#A78BFA', border: '1px solid rgba(168,85,247,0.25)' }}>
               View All Topics
             </Link>
+          )}
           </div>
         )}
       </div>

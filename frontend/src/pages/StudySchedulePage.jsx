@@ -1,9 +1,9 @@
-﻿import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, addDays, startOfWeek, isToday, isSameDay } from 'date-fns';
 import { useProgress } from '../context/ProgressContext';
 import { useFocus } from '../context/FocusContext';
-import { aiService } from '../services/api';
+import { aiService, calendarService } from '../services/api';
 import { detectWeakTopics, computeRevisionPriority, getCountdown } from '../utils/gateUtils';
 import GlassCard from '../components/ui/GlassCard';
 import ProgressRing from '../components/ui/ProgressRing';
@@ -240,7 +240,10 @@ export default function StudySchedulePage() {
 
   const selectedDayKey = format(selectedDay, 'yyyy-MM-dd');
   const selectedBlocks = useMemo(() => {
-    return [...(gateFeatures?.studyPlans?.[selectedDayKey] || [])].sort((a, b) => a.startTime.localeCompare(b.startTime));
+    return [...(gateFeatures?.studyPlans?.[selectedDayKey] || [])].sort((a, b) => {
+      if (!a.startTime || !b.startTime) return 0;
+      return a.startTime.localeCompare(b.startTime);
+    });
   }, [gateFeatures?.studyPlans, selectedDayKey]);
 
   const weekPlanned = useMemo(() => weekDays.reduce((s, d) => s + d.totalHours, 0), [weekDays]);
@@ -347,6 +350,23 @@ export default function StudySchedulePage() {
 
   const saveBlocks = useCallback(async (dateKey, blocks) => {
     updateGateFeatures(gf => ({ ...gf, studyPlans: { ...(gf.studyPlans || {}), [dateKey]: blocks } }));
+    calendarService.getAll({ start: dateKey, end: dateKey }).then(r => {
+      const existing = r.data.data || [];
+      const existingMap = {};
+      existing.forEach(e => { existingMap[e.title + '|' + e.start] = e._id; });
+      blocks.forEach(b => {
+        const startStr = `${dateKey}T${b.startTime}:00`;
+        const endStr = `${dateKey}T${b.endTime}:00`;
+        const key = b.subject + '|' + startStr;
+        if (existingMap[key]) {
+          calendarService.update(existingMap[key], { title: b.subject || b.type, description: b.notes, start: startStr, end: endStr, type: 'study', subject: b.subject, completed: b.status === 'completed' }).catch(err => console.error('Calendar update failed:', err?.message));
+        } else {
+          calendarService.create({ title: b.subject || b.type, description: b.notes, start: startStr, end: endStr, type: 'study', subject: b.subject, completed: b.status === 'completed' }).catch(err => console.error('Calendar create failed:', err?.message));
+        }
+        delete existingMap[key];
+      });
+      Object.values(existingMap).forEach(id => calendarService.delete(id).catch(err => console.error('Calendar delete failed:', err?.message)));
+    }).catch(err => console.error('Calendar sync failed:', err?.message));
   }, [updateGateFeatures]);
 
   const toggleBlockStatus = useCallback(async (blockId) => {

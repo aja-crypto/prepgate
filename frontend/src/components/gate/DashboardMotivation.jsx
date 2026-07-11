@@ -1,12 +1,12 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../../services/api';
 
 const QUOTES = [
-  { quote: 'Success in GATE Starts With Knowing What to Do Today.', author: 'GateNexa Team' },
-  { quote: 'Consistency beats intensity. Small daily progress becomes a big rank.', author: 'GateNexa Team' },
-  { quote: 'Every question you solve today is one step closer to your IIT dream.', author: 'GateNexa Team' },
-  { quote: 'The best time to start was yesterday. The next best time is now.', author: 'GateNexa Team' },
-  { quote: 'Don\'t count the days, make the days count.', author: 'GateNexa Team' },
+  { text: 'Success in GATE Starts With Knowing What to Do Today.', author: 'GateNexa Team' },
+  { text: 'Consistency beats intensity. Small daily progress becomes a big rank.', author: 'GateNexa Team' },
+  { text: 'Every question you solve today is one step closer to your IIT dream.', author: 'GateNexa Team' },
+  { text: 'The best time to start was yesterday. The next best time is now.', author: 'GateNexa Team' },
+  { text: 'Don\'t count the days, make the days count.', author: 'GateNexa Team' },
 ];
 
 export default function DashboardMotivation() {
@@ -70,7 +70,7 @@ export default function DashboardMotivation() {
         </div>
         <div className="flex-1 min-w-0" style={{ transition: 'opacity 0.5s ease-in-out', opacity: visible ? 1 : 0 }}>
           <p className="text-base sm:text-lg font-bold text-white leading-snug tracking-tight">
-            &ldquo;{item.quote}&rdquo;
+            &ldquo;{item.text}&rdquo;
           </p>
           <p className="text-xs text-gray-400 mt-2">— {item.author || 'GateNexa Team'}</p>
         </div>

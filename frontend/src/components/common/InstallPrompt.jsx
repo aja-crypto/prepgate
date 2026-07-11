@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from '../ui/Icon';
 import BrandText from '../ui/BrandText';
 
@@ -10,11 +10,23 @@ export default function InstallPrompt() {
   const [dismissed, setDismissed] = useState(() => localStorage.getItem(LS_KEY));
 
   useEffect(() => {
+    let showEligible = true;
+    const d = localStorage.getItem(LS_KEY);
+    if (d) {
+      if (d === 'installed' || d === 'permanent') {
+        showEligible = false;
+        setDismissed(d);
+      } else {
+        try {
+          const parsed = JSON.parse(d);
+          if (parsed?.until && parsed.until > Date.now()) showEligible = false;
+        } catch {}
+      }
+    }
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      const d = localStorage.getItem(LS_KEY);
-      if (!d) {
+      if (showEligible) {
         setTimeout(() => setShow(true), 2000);
       }
     };
@@ -35,7 +47,9 @@ export default function InstallPrompt() {
 
   const handleLater = () => {
     setShow(false);
-    sessionStorage.setItem('gatenexa_install_later', Date.now().toString());
+    const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+    localStorage.setItem('gatenexa_install_dismissed', JSON.stringify({ until: expiresAt }));
+    setDismissed('later');
   };
 
   const handleDontShow = () => {

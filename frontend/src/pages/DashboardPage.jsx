@@ -1,16 +1,67 @@
-﻿// Premium customizable dashboard with drag-and-drop widgets
-import { useMemo, useState, useEffect } from 'react';
+import { memo, useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import GlassCard from '../components/ui/GlassCard';
+import ProgressRing from '../components/ui/ProgressRing';
+
+const StatCard = memo(function StatCard({ label, value, sub, color, display }) {
+  return (
+    <GlassCard className="flex items-center gap-4" glow>
+      <ProgressRing value={value} size={72} stroke={5} color={color} />
+      <div>
+        <div className="text-2xl font-bold font-mono text-text">{display ?? Math.round(value)}</div>
+        <div className="text-[10px] text-text3 uppercase tracking-wider font-medium">{label}</div>
+        <div className="text-[11px] text-text2 mt-0.5">{sub}</div>
+      </div>
+    </GlassCard>
+  );
+});
+
+const StatsGrid = memo(function StatsGrid({ stats }) {
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {stats.map((s) => <StatCard key={s.label} {...s} />)}
+    </div>
+  );
+});
+
+const GoalsRow = memo(function GoalsRow() {
+  return (
+    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <DailyTargetCard />
+      <StreakTracker />
+      <GoalTrackerCard period="weekly" />
+      <GoalTrackerCard period="monthly" />
+    </div>
+  );
+});
+
+const RecommendationsRow = memo(function RecommendationsRow({ limit = 5 }) {
+  return (
+    <div className="grid md:grid-cols-2 gap-4">
+      <SmartRecommendations />
+      <WeakTopicsPanel limit={limit} />
+    </div>
+  );
+});
+
+const PredictionsRow = memo(function PredictionsRow({ gamification }) {
+  return (
+    <div className="grid md:grid-cols-3 gap-4">
+      <ScorePredictor />
+      <AirPredictor />
+      <GamificationPanel gamification={gamification} />
+    </div>
+  );
+});
 import { useAuth } from '../context/AuthContext';
 import { useProgress } from '../context/ProgressContext';
 import { useDashboard } from '../context/DashboardContext';
 import { useLiveData } from '../hooks/useLiveData';
+import StartGuide from '../components/dashboard/StartGuide';
 import { computeSubjectCompletion, getDailyTargetProgress, computeReadinessScore } from '../utils/gateUtils';
 import DashboardWidget from '../components/dashboard/DashboardWidget';
 import DashboardCustomizer from '../components/dashboard/DashboardCustomizer';
-import GlassCard from '../components/ui/GlassCard';
-import ProgressRing from '../components/ui/ProgressRing';
 import OfficialCountdown from '../components/gate/OfficialCountdown';
 import LiveNewsFeed from '../components/gate/LiveNewsFeed';
 import ExamScheduleCard from '../components/gate/ExamScheduleCard';
@@ -39,8 +90,72 @@ import NotesHubWidget from '../components/gate/NotesHubWidget';
 import RecommendationEngine from '../components/gate/RecommendationEngine';
 import ExamTimeline from '../components/gate/ExamTimeline';
 import FocusStatsCard from '../components/gate/FocusStatsCard';
+import DailyMissions from '../components/gamification/DailyMissions';
+import DailyInspiration from '../components/common/DailyInspiration';
+import ReferralCard from '../components/referral/ReferralCard';
 
 const FOCUS_STORAGE_KEY = 'gatenexa_focus_session';
+
+const DASHBOARD_SECTIONS = [
+  {
+    id: 'hero',
+    label: null,
+    desc: null,
+    gridCols: 'grid-cols-1 lg:grid-cols-3',
+    widgets: ['motivation', 'countdown', 'today-plan', 'stats', 'referral'],
+  },
+  {
+    id: 'quick-actions',
+    label: 'Quick Actions',
+    desc: 'Your daily preparation command center',
+    gridCols: 'grid-cols-2 md:grid-cols-4',
+    widgets: ['gatenexa-ai', 'recommendation-engine', 'focus-stats', 'daily-missions', 'revision-schedule'],
+  },
+  {
+    id: 'command-center',
+    label: 'Study Command Center',
+    desc: 'Subject mastery, goals, and study patterns',
+    gridCols: 'grid-cols-1 lg:grid-cols-2',
+    widgets: ['subjects', 'goals', 'weekly-hours', 'progress-heatmap', 'recommendations'],
+  },
+  {
+    id: 'ai-insights',
+    label: 'AI Insights',
+    desc: 'Score predictions, topic analysis, and readiness',
+    gridCols: 'grid-cols-1 lg:grid-cols-3',
+    widgets: ['predictions', 'analysis', 'success-hub', 'action-center'],
+  },
+  {
+    id: 'resources',
+    label: 'Resources',
+    desc: 'Your notes, vault, and daily study materials',
+    gridCols: 'grid-cols-1 lg:grid-cols-2',
+    widgets: ['notes-hub', 'gate-vault', 'pinned-notes', 'daily-content'],
+  },
+  {
+    id: 'live',
+    label: 'Live Information',
+    desc: 'GATE news, PSU recruitment & exam updates',
+    gridCols: 'grid-cols-1 lg:grid-cols-2',
+    widgets: ['live-news', 'recruitment', 'trending', 'exam-schedule', 'exam-timeline'],
+  },
+  {
+    id: 'system',
+    label: 'System',
+    desc: 'Platform updates and resources',
+    gridCols: 'grid-cols-1',
+    widgets: ['announcements', 'resources'],
+  },
+];
+
+const SECTION_ICONS = {
+  'quick-actions': <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/></svg>,
+  'command-center': <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M3.196 12.87l-.825.483a.75.75 0 000 1.294l7.25 4.25a.75.75 0 00.758 0l7.25-4.25a.75.75 0 000-1.294l-.825-.484-5.666 3.322a2.25 2.25 0 01-2.276 0L3.196 12.87z"/><path d="M3.196 8.87l-.825.483a.75.75 0 000 1.294l7.25 4.25a.75.75 0 00.758 0l7.25-4.25a.75.75 0 000-1.294l-.825-.484-5.666 3.322a2.25 2.25 0 01-2.276 0L3.196 8.87z"/><path d="M10.38 1.103a.75.75 0 00-.76 0l-7.25 4.25a.75.75 0 000 1.294l7.25 4.25a.75.75 0 00.76 0l7.25-4.25a.75.75 0 000-1.294l-7.25-4.25z"/></svg>,
+  'ai-insights': <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M10 1a4.5 4.5 0 00-4.5 4.5v2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 6V5.5a3 3 0 10-6 0V7h6z"/></svg>,
+  'resources': <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>,
+  'live': <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M3.43 2.524A10.004 10.004 0 0110 0c2.955 0 5.62 1.278 7.432 3.31a.75.75 0 11-1.119.998A8.504 8.504 0 0010 1.5a8.5 8.5 0 00-6.313 2.808.75.75 0 01-1.119-.998.754.754 0 01-.138-.786zM5.55 5.359a.75.75 0 01.94-.218A5.48 5.48 0 0110 4.5c1.46 0 2.788.57 3.77 1.5a.75.75 0 01-1.04 1.082A3.98 3.98 0 0010 6a3.99 3.99 0 00-2.73 1.082.75.75 0 01-1.041-1.082.748.748 0 01-.679-.641zM6.5 9.5a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5a.75.75 0 01.75-.75zm3.5 0a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5A.75.75 0 0110 9.5zm3.5 0a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5a.75.75 0 01.75-.75z"/></svg>,
+  'system': <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/></svg>,
+};
 
 function getInterruptedSession() {
   try {
@@ -81,9 +196,12 @@ export default function DashboardPage() {
   const dailyProgress = getDailyTargetProgress(safeGF.dailyTarget, safeGF.todayProgress);
   const { current: streakCurrent = 0 } = safeGF.streak || {};
   const readiness = computeReadinessScore(safeTopics, safePyqs, safeMocks, safeGF.streak);
+  const avgMock = useMemo(() => { if (!safeMocks?.length) return 0; return Math.round(safeMocks.reduce((a, m) => a + (m.score || 0), 0) / safeMocks.length); }, [safeMocks]);
+  const weakestSubject = useMemo(() => [...subjects].sort((a, b) => a.progress - b.progress)[0], [subjects]);
 
-  const widgetContent = {
+  const widgetContent = useMemo(() => ({
     welcome: isEmptyProgress ? <EmptyDashboard userName={user?.name?.split(' ')[0]} /> : null,
+    referral: <ReferralCard />,
     motivation: <DashboardMotivation />,
     announcements: <AnnouncementBar />,
     "gatenexa-ai": <GateNexaAIWidget />,
@@ -115,23 +233,12 @@ export default function DashboardPage() {
       />
     ),
     stats: (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Readiness', value: readiness, sub: `${overall}% overall`, color: 'var(--color-primary)' },
-          { label: 'Study Today', value: Math.min(100, (dailyProgress.hours / (safeGF.dailyTarget?.hours || 8)) * 100), sub: `${dailyProgress.hours}h / ${safeGF.dailyTarget?.hours || 8}h`, color: 'var(--color-success)', display: `${dailyProgress.hours}h` },
-          { label: 'Daily Target', value: dailyProgress.overall, sub: `${dailyProgress.topicsCompleted} topics`, color: 'var(--color-accent)' },
-          { label: 'Streak', value: Math.min(100, streakCurrent * 5), sub: `Best ${(safeGF.streak?.longest || 0)}d`, color: 'var(--color-secondary)', display: streakCurrent },
-        ].map((s) => (
-          <GlassCard key={s.label} className="flex items-center gap-4" glow>
-            <ProgressRing value={s.value} size={72} stroke={5} color={s.color} />
-            <div>
-              <div className="text-2xl font-bold font-mono text-text">{s.display ?? Math.round(s.value)}</div>
-              <div className="text-[10px] text-text3 uppercase tracking-wider font-medium">{s.label}</div>
-              <div className="text-[11px] text-text2 mt-0.5">{s.sub}</div>
-            </div>
-          </GlassCard>
-        ))}
-      </div>
+      <StatsGrid stats={[
+        { label: 'Readiness', value: readiness, sub: `${overall}% overall`, color: 'var(--color-primary)' },
+        { label: 'Study Today', value: Math.min(100, (dailyProgress.hours / (safeGF.dailyTarget?.hours || 8)) * 100), sub: `${dailyProgress.hours}h / ${safeGF.dailyTarget?.hours || 8}h`, color: 'var(--color-success)', display: `${dailyProgress.hours}h` },
+        { label: 'Daily Target', value: dailyProgress.overall, sub: `${dailyProgress.topicsCompleted} topics`, color: 'var(--color-accent)' },
+        { label: 'Streak', value: Math.min(100, streakCurrent * 5), sub: `Best ${(safeGF.streak?.longest || 0)}d`, color: 'var(--color-secondary)', display: streakCurrent },
+      ]} />
     ),
     'live-news': (
       <LiveNewsFeed 
@@ -159,14 +266,7 @@ export default function DashboardPage() {
         placementResources={liveData?.placementResources || []}
       />
     ),
-    goals: (
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <DailyTargetCard />
-        <StreakTracker />
-        <GoalTrackerCard period="weekly" />
-        <GoalTrackerCard period="monthly" />
-      </div>
-    ),
+    goals: (<GoalsRow />),
     'weekly-hours': (
       <GlassCard>
         <div className="text-sm font-semibold text-text mb-1">Weekly Study Hours</div>
@@ -187,7 +287,7 @@ export default function DashboardPage() {
                     opacity: h > 0 ? 1 : 0.2,
                   }}
                 />
-                <span className="text-[9px] text-text3 uppercase font-medium">{d}</span>
+                <span className="text-[10px] sm:text-[11px] text-text3 uppercase font-medium">{d}</span>
               </div>
             );
           })}
@@ -197,20 +297,16 @@ export default function DashboardPage() {
     'pinned-notes': <PinnedNotesWidget />,
     subjects: <SubjectCompletionRings />,
     'ai-mentor': <AIMentorWidget />,
-    recommendations: (
-      <div className="grid md:grid-cols-2 gap-4">
-        <SmartRecommendations />
-        <WeakTopicsPanel limit={5} />
-      </div>
-    ),
-    predictions: (
-      <div className="grid md:grid-cols-3 gap-4">
-        <ScorePredictor />
-        <AirPredictor />
-        <GamificationPanel gamification={gamification} />
-      </div>
-    ),
+    recommendations: (<RecommendationsRow limit={5} />),
+    predictions: (<PredictionsRow gamification={gamification} />),
     'focus-stats': <FocusStatsCard />,
+    'daily-missions': <DailyMissions
+      todayHours={dailyProgress.hours}
+      pyqsSolved={safePyqs.filter(p => p.solved).length}
+      mocksTaken={safeMocks.length}
+      topicsRevised={dailyProgress.topicsCompleted}
+      focusSessions={[]}
+    />,
     'action-center': (
       <GlassCard>
         <div className="flex items-center gap-3 mb-3">
@@ -229,7 +325,7 @@ export default function DashboardPage() {
           ].map((c, i) => (
             <div key={i} className="flex items-center gap-2 text-xs">
               <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] ${c.met ? 'bg-success/20 text-success' : 'bg-bg-3 text-text3'}`}>
-                {c.met ? '✓' : '×'}
+                {c.met ? '\u2713' : '\u00d7'}
               </span>
               <span className="text-text2">{c.label}</span>
             </div>
@@ -285,255 +381,366 @@ export default function DashboardPage() {
         <Link to="/analytics" className="text-xs text-primary hover:underline">View full analytics →</Link>
       </GlassCard>
     ),
-  };
+  }), [isEmptyProgress, user, liveData, safeGF, readiness, overall, dailyProgress, streakCurrent, safeSS, safeTopics, safeGF.dailyTarget, safeGF.streak, safeGF.examDate, safePyqs, safeMocks, gamification]);
 
   const spanMap = {
-    welcome: 'col-span-full',
-    motivation: 'col-span-full',
-    announcements: 'col-span-full',
-    'GateNexa-ai': 'col-span-full',
-    'gate-vault': 'col-span-full',
-    'notes-hub': 'col-span-full',
-    'recommendation-engine': 'col-span-full',
-    countdown: 'col-span-full',
-    stats: 'col-span-full',
-    'daily-content': 'col-span-full',
-    goals: 'col-span-full',
-    'weekly-hours': 'col-span-full',
-    'pinned-notes': 'col-span-full',
-    'ai-mentor': 'col-span-full',
-    subjects: 'col-span-full',
-    recommendations: 'col-span-full',
-    predictions: 'col-span-full',
-    'focus-stats': 'col-span-1',
-    'action-center': 'col-span-1',
-    'today-plan': 'col-span-1',
-    'success-hub': 'col-span-1',
-    'revision-schedule': 'col-span-1',
+    'motivation': 'col-span-full',
+    'countdown': 'col-span-full lg:col-span-2',
+    'today-plan': 'col-span-full lg:col-span-1',
+    'stats': 'col-span-full',
+
+    'gatenexa-ai': '',
+    'recommendation-engine': '',
+    'focus-stats': '',
+    'daily-missions': '',
+    'revision-schedule': '',
+
+    'subjects': 'col-span-full',
+    'goals': 'col-span-full',
+    'weekly-hours': 'col-span-1',
     'progress-heatmap': 'col-span-1',
-    'live-news': 'col-span-1',
+    'recommendations': 'col-span-full',
+
+    'predictions': 'col-span-full',
+    'analysis': 'col-span-1',
+    'success-hub': 'col-span-1',
+    'action-center': 'col-span-1',
+
+    'notes-hub': 'col-span-full',
+    'gate-vault': 'col-span-full',
+    'pinned-notes': 'col-span-1',
+    'daily-content': 'col-span-1',
+
+    'live-news': 'col-span-full',
+    'recruitment': 'col-span-1',
+    'trending': 'col-span-1',
     'exam-schedule': 'col-span-1',
     'exam-timeline': 'col-span-1',
-    recruitment: 'col-span-1',
-    trending: 'col-span-1',
-    analysis: 'col-span-1',
-    resources: 'col-span-1',
+
+    'announcements': '',
+    'resources': '',
   };
 
-  const pairedRow = ['live-news', 'exam-schedule', 'exam-timeline', 'recruitment', 'trending', 'analysis', 'resources'];
+  const renderedSections = useMemo(() => {
+    const visibleIds = new Set(
+      visibleWidgets
+        .filter((w) => {
+          if (w.id === 'welcome' && !isEmptyProgress) return false;
+          return widgetContent[w.id] != null;
+        })
+        .map((w) => w.id)
+    );
 
-  const rendered = [];
-  let i = 0;
-  const widgets = visibleWidgets.filter((w) => {
-    if (w.id === 'welcome' && !isEmptyProgress) return false;
-    return widgetContent[w.id] != null;
-  });
+    const hasWelcome = visibleIds.has('welcome') && widgetContent.welcome != null;
 
-  while (i < widgets.length) {
-    const w = widgets[i];
-    const next = widgets[i + 1];
-    if (pairedRow.includes(w.id) && next && pairedRow.includes(next.id)) {
-      rendered.push(
-        <div key={`row-${w.id}`} className="grid md:grid-cols-2 gap-4 col-span-full">
-          <DashboardWidget id={w.id}>{widgetContent[w.id]}</DashboardWidget>
-          <DashboardWidget id={next.id}>{widgetContent[next.id]}</DashboardWidget>
-        </div>
+    const sections = DASHBOARD_SECTIONS.map((section, sIdx) => {
+      const sectionWidgetIds = section.widgets.filter((id) => visibleIds.has(id));
+      if (sectionWidgetIds.length === 0) return null;
+
+      return (
+        <section
+          key={section.id}
+          className="opacity-0 animate-fade-in"
+          style={{
+            animationDelay: `${sIdx * 100}ms`,
+            animationFillMode: 'forwards',
+          }}
+        >
+          {section.label && (
+            <div className="flex items-center gap-3 mb-3 group">
+              <div
+                className="w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
+                style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(59,130,246,0.1))' }}
+              >
+                <span className="text-primary">{SECTION_ICONS[section.id]}</span>
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-text tracking-tight">{section.label}</h2>
+                <p className="text-[11px] text-text3/70 mt-0.5">{section.desc}</p>
+              </div>
+            </div>
+          )}
+          <div className={`grid ${section.gridCols} gap-3`}>
+            {sectionWidgetIds.map((id) => (
+              <DashboardWidget key={id} id={id} span={spanMap[id] || ''}>
+                {widgetContent[id]}
+              </DashboardWidget>
+            ))}
+          </div>
+        </section>
       );
-      i += 2;
-    } else {
-      rendered.push(
-        <DashboardWidget key={w.id} id={w.id} span={spanMap[w.id] || 'col-span-full'}>
-          {widgetContent[w.id]}
-        </DashboardWidget>
+    }).filter(Boolean);
+
+    if (hasWelcome) {
+      sections.unshift(
+        <section key="welcome-section" className="opacity-0 animate-fade-in" style={{ animationDelay: '0ms', animationFillMode: 'forwards' }}>
+          <div className="grid grid-cols-1 gap-4">
+            <DashboardWidget id="welcome" span="col-span-full">
+              {widgetContent.welcome}
+            </DashboardWidget>
+          </div>
+        </section>
       );
-      i += 1;
     }
-  }
+
+    return sections;
+  }, [visibleWidgets, widgetContent, isEmptyProgress]);
 
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">Overview</p>
-            {!mongoAvailable && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20 font-bold uppercase tracking-widest">
-                Local Mode
-              </span>
-            )}
-            {mongoAvailable && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 font-bold uppercase tracking-widest">
-                Cloud Synced
-              </span>
-            )}
+    <div className="relative min-h-screen">
+      {/* Background glow — premium AI command center atmosphere */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: `
+            radial-gradient(ellipse at 15% 15%, rgba(139,92,246,0.04) 0%, transparent 55%),
+            radial-gradient(ellipse at 85% 20%, rgba(34,211,238,0.03) 0%, transparent 50%),
+            radial-gradient(ellipse at 50% 80%, rgba(139,92,246,0.02) 0%, transparent 60%)
+          `,
+        }}
+      />
+
+      <div className="relative">
+        {/* ── Header ── */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">AI Command Center</p>
+              {!mongoAvailable && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20 font-bold uppercase tracking-widest">
+                  Local Mode
+                </span>
+              )}
+              {mongoAvailable && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 font-bold uppercase tracking-widest">
+                  Cloud Synced
+                </span>
+              )}
+            </div>
+            <h1 className="text-2xl font-bold text-text tracking-tight">
+              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name?.split(' ')[0]}
+            </h1>
+            <p className="text-sm text-text3/70 mt-1">Your preparation command center</p>
           </div>
-          <h1 className="text-2xl font-bold text-text tracking-tight">
-            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name?.split(' ')[0]}
-          </h1>
-          <p className="text-sm text-text3 mt-1">Your preparation command center</p>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={refreshLive} className="btn-ghost text-xs">↻ Refresh</button>
+            <button
+              onClick={() => setEditMode(!editMode)}
+              className={`text-xs px-4 py-2 rounded-xl border transition-all ${editMode ? 'bg-primary/15 border-primary/30 text-primary' : 'btn-ghost'}`}
+            >
+              {editMode ? 'Done editing' : 'Customize'}
+            </button>
+            <button onClick={() => setCustomizerOpen(true)} className="btn-ghost text-xs">Widgets</button>
+            <Link to="/planner" className="btn-primary text-xs">Planner</Link>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button onClick={refreshLive} className="btn-ghost text-xs">↻ Refresh</button>
-          <button
-            onClick={() => setEditMode(!editMode)}
-            className={`text-xs px-4 py-2 rounded-xl border transition-all ${editMode ? 'bg-primary/15 border-primary/30 text-primary' : 'btn-ghost'}`}
-          >
-            {editMode ? 'Done editing' : 'Customize'}
-          </button>
-          <button onClick={() => setCustomizerOpen(true)} className="btn-ghost text-xs">Widgets</button>
-          <Link to="/planner" className="btn-primary text-xs">Planner</Link>
-        </div>
-      </div>
 
-      {editMode && (
-        <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-primary animate-fade-in">
-          Edit mode — drag widgets to reorder. Use &quot;Widgets&quot; to show or hide sections.
-        </div>
-      )}
+        {/* ── Start Guide — for first-time / confused aspirants ── */}
+        <StartGuide isEmptyProgress={isEmptyProgress} />
 
-      {/* Interrupted Session Reminder */}
-      {interruptedSession && (
-        <div className="mb-4 rounded-2xl border border-cyan-500/20 bg-gradient-to-r from-cyan-500/10 to-purple-500/8 p-4 sm:p-5 animate-fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        {editMode && (
+          <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-primary animate-fade-in">
+            Edit mode — drag widgets to reorder. Use &quot;Widgets&quot; to show or hide sections.
+          </div>
+        )}
+
+        {/* ── Interrupted Session Reminder ── */}
+        {interruptedSession && (
+          <div className="mb-4 rounded-2xl border border-cyan-500/20 bg-gradient-to-r from-cyan-500/10 to-purple-500/8 p-3 sm:p-4 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="text-2xl">⏳</div>
+                <div>
+                  <div className="text-sm font-bold text-text">Unfinished Focus Session</div>
+                  <div className="text-[11px] text-text3">
+                    {interruptedSession.currentSubject
+                      ? `You were studying ${interruptedSession.currentSubject}`
+                      : 'You have an interrupted session'}
+                  </div>
+                </div>
+              </div>
+              <div className="sm:ml-auto flex gap-2">
+                <button
+                  onClick={() => { navigate('/focus'); }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.02]"
+                  style={{ background: 'linear-gradient(135deg, #7C3AED, #06B6D4)' }}
+                >
+                  Continue Session
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem(FOCUS_STORAGE_KEY);
+                    setInterruptedSession(null);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-text3 border border-border hover:bg-bg-2 transition-all"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Today's Focus — Priority Section ── */}
+        <div className="glass-card mb-4 p-4 sm:p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            {/* Streak */}
             <div className="flex items-center gap-3 shrink-0">
-              <div className="text-2xl">⏳</div>
+              <div className="text-2xl">{streakCurrent > 0 ? '🔥' : '✨'}</div>
               <div>
-                <div className="text-sm font-bold text-text">Unfinished Focus Session</div>
-                <div className="text-[11px] text-text3">
-                  {interruptedSession.currentSubject
-                    ? `You were studying ${interruptedSession.currentSubject}`
-                    : 'You have an interrupted session'}
+                <div className="text-lg font-bold text-text">{streakCurrent > 0 ? `Day ${streakCurrent}` : 'Start Today'}</div>
+                <div className="text-[10px] text-text3 uppercase tracking-wider">
+                  {streakCurrent > 0 ? 'Study Streak' : 'Begin your streak'}
                 </div>
               </div>
             </div>
-            <div className="sm:ml-auto flex gap-2">
-              <button
-                onClick={() => { navigate('/focus'); }}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.02]"
+
+            <div className="hidden sm:block w-px h-10 bg-white/5" />
+
+            {/* Today's Goal */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-medium text-text2">Today's Goal</span>
+                <span className="text-xs font-bold text-text">
+                  {dailyProgress?.hours || 0}h / {gateFeatures?.dailyTarget?.hours || 2}h
+                </span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.min(100, ((dailyProgress?.hours || 0) / (gateFeatures?.dailyTarget?.hours || 2)) * 100)}%`,
+                    background: 'linear-gradient(90deg, #7C3AED, #06B6D4)',
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="hidden sm:block w-px h-10 bg-white/5" />
+
+            {/* Next Action */}
+            <div className="shrink-0">
+              <Link
+                to={subjects.length > 0 && subjects.some(s => s.progress < 50) ? '/subjects' : '/pyq'}
+                className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-medium text-white transition-all duration-200 hover:scale-[1.02]"
                 style={{ background: 'linear-gradient(135deg, #7C3AED, #06B6D4)' }}
               >
-                Continue Session
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.removeItem(FOCUS_STORAGE_KEY);
-                  setInterruptedSession(null);
-                }}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-text3 border border-border hover:bg-bg-2 transition-all"
-              >
-                Dismiss
-              </button>
+                {subjects.length > 0 && subjects.some(s => s.progress < 50)
+                  ? 'Review Weak Subjects'
+                  : 'Practice PYQs'}
+                <span className="text-white/70">→</span>
+              </Link>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Today's Focus — Priority Section */}
-      <div className="mb-6 rounded-2xl border border-purple-500/15 bg-gradient-to-r from-purple-500/8 to-cyan-500/5 p-4 sm:p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          {/* Streak */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="text-2xl">{streakCurrent > 0 ? '🔥' : '✨'}</div>
-            <div>
-              <div className="text-lg font-bold text-text">{streakCurrent > 0 ? `Day ${streakCurrent}` : 'Start Today'}</div>
-              <div className="text-[10px] text-text3 uppercase tracking-wider">
-                {streakCurrent > 0 ? 'Study Streak' : 'Begin your streak'}
+        {/* ── Command Center — What should I do next? ── */}
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(6,182,212,0.1))' }}>
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-primary"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/></svg>
+            </div>
+            <h2 className="text-sm font-bold text-text">Command Center</h2>
+            <span className="text-[10px] text-text3">What should I do next?</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-in-stagger">
+            {/* Weak Topics */}
+            <Link to="/subjects" className="glass-card p-3.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className="text-lg">🎯</div>
+                <div className="text-xs font-bold text-text">Weak Topics</div>
               </div>
-            </div>
-          </div>
-
-          <div className="hidden sm:block w-px h-10 bg-white/5" />
-
-          {/* Today's Goal */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-text2">Today's Goal</span>
-              <span className="text-xs font-bold text-text">
-                {dailyProgress?.hours || 0}h / {gateFeatures?.dailyTarget?.hours || 2}h
-              </span>
-            </div>
-            <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${Math.min(100, ((dailyProgress?.hours || 0) / (gateFeatures?.dailyTarget?.hours || 2)) * 100)}%`,
-                  background: 'linear-gradient(90deg, #7C3AED, #06B6D4)',
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="hidden sm:block w-px h-10 bg-white/5" />
-
-          {/* Next Action */}
-          <div className="shrink-0">
-            <Link
-              to={subjects.length > 0 && subjects.some(s => s.progress < 50) ? '/subjects' : '/pyq'}
-              className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-medium text-white transition-all duration-200 hover:scale-[1.02]"
-              style={{ background: 'linear-gradient(135deg, #7C3AED, #06B6D4)' }}
-            >
-              {subjects.length > 0 && subjects.some(s => s.progress < 50)
-                ? 'Review Weak Subjects'
-                : 'Practice PYQs'}
-              <span className="text-white/70">→</span>
+              <div className="text-[10px] text-text3 line-clamp-2">
+                {subjects.filter(s => s.progress < 50).length > 0
+                  ? `${subjects.filter(s => s.progress < 50).length} subjects need attention`
+                  : 'All subjects on track'}
+              </div>
+            </Link>
+            {/* Revision Queue */}
+            <Link to="/revision" className="glass-card p-3.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className="text-lg">🔄</div>
+                <div className="text-xs font-bold text-text">Revision</div>
+              </div>
+              <div className="text-[10px] text-text3 line-clamp-2">
+                {safePyqs.filter(p => p.revisionNeeded).length || 0} topics due · {subjects.length > 0 ? `${[...subjects].sort((a,b) => a.progress - b.progress)[0]?.name?.split(' ').slice(-1)[0] || ''} weakest` : ''}
+              </div>
+            </Link>
+            {/* Upcoming Mock */}
+            <Link to="/mocks" className="glass-card p-3.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className="text-lg">📝</div>
+                <div className="text-xs font-bold text-text">Mock Tests</div>
+              </div>
+              <div className="text-[10px] text-text3 line-clamp-2">
+                {safeMocks.length > 0 ? `${safeMocks.length} taken · Avg ${avgMock}%` : 'Take your first mock'}
+              </div>
+            </Link>
+            {/* AI Recommendation */}
+            <Link to="/mentor" className="glass-card p-3.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className="text-lg">🤖</div>
+                <div className="text-xs font-bold text-text">AI Mentor</div>
+              </div>
+              <div className="text-[10px] text-text3 line-clamp-2">
+                {weakestSubject ? `Focus on ${weakestSubject.name?.split(' ').slice(-1)[0]} (${Math.round(weakestSubject.progress)}%)` : 'Get AI recommendations'}
+              </div>
             </Link>
           </div>
         </div>
+
+        {/* ── Widget Sections ── */}
+        <div className="space-y-4 mt-6">
+          {renderedSections}
+        </div>
+
+        {/* ── Meet the Creator ── */}
+        <div className="glass-card p-4 sm:p-5 mt-6 flex flex-col sm:flex-row sm:items-center gap-4 opacity-0 animate-fade-in" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0"
+              style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(6,182,212,0.15))' }}>
+              {'\uD83D\uDC68\u200D\uD83D\uDCBB'}
+            </div>
+            <div className="sm:hidden">
+              <div className="text-sm font-bold text-text">{'\uD83D\uDC68\u200D\uD83D\uDCBB'} Meet the Creator</div>
+              <div className="text-[11px] text-text2/80 mt-0.5">Curious about who built GateNexa?</div>
+            </div>
+          </div>
+          <div className="flex-1 min-w-0 hidden sm:block">
+            <div className="text-sm font-bold text-text">{'\uD83D\uDC68\u200D\uD83D\uDCBB'} Meet the Creator</div>
+            <div className="text-[11px] text-text2/80 mt-0.5">Curious about who built GateNexa? Learn the story, vision, and mission behind the platform.</div>
+          </div>
+          <Link
+            to="/about"
+            className="relative group/shimmer w-full sm:w-auto text-center px-5 py-2.5 rounded-full text-xs font-bold text-[#1A1A2E] transition-all duration-250 hover:-translate-y-0.5 active:scale-[0.97] overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, #FFD54F, #F9A825)',
+              boxShadow: '0 0 20px rgba(255,213,79,0.25), 0 0 40px rgba(249,168,37,0.1)',
+            }}
+          >
+            <span className="relative z-10 flex items-center justify-center gap-1.5">
+              {'\uD83D\uDFE1'} Meet the Creator
+              <span className="inline-block transition-transform duration-250 group-hover/shimmer:translate-x-1">{'\u2192'}</span>
+            </span>
+            <span
+              className="absolute inset-0 pointer-events-none animate-shimmer"
+              style={{
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                backgroundSize: '200% 100%',
+              }}
+            />
+          </Link>
+        </div>
+
+        {liveData?.lastUpdated && (
+          <p className="text-center text-[10px] text-text3 mt-6">
+            Live data · {new Date(liveData.lastUpdated).toLocaleString('en-IN')}
+            {liveLoading && ' · Updating...'}
+          </p>
+        )}
+
+        <DashboardCustomizer open={customizerOpen} onClose={() => setCustomizerOpen(false)} />
       </div>
-
-      {/* Quick Actions Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <Link to="/focus" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-200" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(124,58,237,0.15))' }}>
-            🎯
-          </div>
-          <div className="text-left">
-            <div className="text-xs font-bold text-text">Resume Study</div>
-            <div className="text-[10px] text-text3">Start focus session</div>
-          </div>
-        </Link>
-        <Link to="/mocks" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-200" style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.15))' }}>
-            📝
-          </div>
-          <div className="text-left">
-            <div className="text-xs font-bold text-text">Take Mock</div>
-            <div className="text-[10px] text-text3">Practice test</div>
-          </div>
-        </Link>
-        <Link to="/pyq" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-200" style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.2), rgba(22,163,74,0.15))' }}>
-            📄
-          </div>
-          <div className="text-left">
-            <div className="text-xs font-bold text-text">Practice PYQs</div>
-            <div className="text-[10px] text-text3">Previous year questions</div>
-          </div>
-        </Link>
-        <Link to="/planner" className="glass-card p-4 flex items-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg group-hover:scale-110 transition-transform duration-200" style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.2), rgba(6,182,212,0.15))' }}>
-            📅
-          </div>
-          <div className="text-left">
-            <div className="text-xs font-bold text-text">Study Plan</div>
-            <div className="text-[10px] text-text3">View schedule</div>
-          </div>
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-        {rendered}
-      </div>
-
-      {liveData?.lastUpdated && (
-        <p className="text-center text-[10px] text-text3 mt-8">
-          Live data · {new Date(liveData.lastUpdated).toLocaleString('en-IN')}
-          {liveLoading && ' · Updating...'}
-        </p>
-      )}
-
-      <DashboardCustomizer open={customizerOpen} onClose={() => setCustomizerOpen(false)} />
     </div>
   );
 }
-

@@ -24,7 +24,7 @@ const HowItWorks = () => {
         className="w-full text-left mb-4 px-4 py-3 rounded-xl border border-purple-500/30 bg-purple-500/10"
       >
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-purple-400">📊 How Mock Tests Work</span>
+          <span className="text-sm font-semibold text-purple-400">≡ƒôè How Mock Tests Work</span>
           <span className="text-gray-400 text-xs">{expanded ? 'Hide' : 'Show'}</span>
         </div>
       </button>
@@ -70,7 +70,15 @@ export default function MocksPage() {
   useEffect(() => {
     api.get('/mocks').then(r => {
       const backend = r.data.data || [];
-      if (backend.length > mocks.length) updateMocks(backend);
+      // Always sync from backend ΓÇö it's the source of truth for persisted data
+      if (backend.length > 0) {
+        updateMocks(prev => {
+          // Merge: keep local-only entries (with Date.now() IDs) that aren't on backend
+          const backendIds = new Set(backend.map(e => e._id || e.id));
+          const localOnly = (prev || []).filter(e => !backendIds.has(e.id));
+          return [...backend, ...localOnly];
+        });
+      }
     }).catch(e => console.warn('MocksPage fetch failed', e?.message));
   }, []);
 
@@ -165,7 +173,7 @@ export default function MocksPage() {
                   <div key={s._id} className="flex items-center justify-between bg-bg-2 border border-border rounded-lg p-3 mb-2 text-sm">
                     <div>
                       <div className="text-text">{s.name}</div>
-                      <div className="text-[10px] text-text3 capitalize">{s.type} · {s.status}</div>
+                      <div className="text-[10px] text-text3 capitalize">{s.type} ┬╖ {s.status}</div>
                     </div>
                     {s.status === 'completed' ? (
                       <span className="text-xs font-mono text-primary">{s.score}/{s.maxScore}</span>
@@ -203,7 +211,7 @@ export default function MocksPage() {
               { label: 'Best Score', v: best, c: '#06d6a0' },
               { label: 'Avg Score', v: avg, c: '#4f8dff' },
               { label: 'Tests Taken', v: mocks.length, c: '#ff9f43' },
-              { label: 'Est. AIR', v: latestPred ? `~${latestPred.air.toLocaleString()}` : '—', c: '#a855f7' },
+              { label: 'Est. AIR', v: latestPred ? `~${latestPred.air.toLocaleString()}` : 'ΓÇö', c: '#a855f7' },
             ].map((s) => (
               <div key={s.label} className="bg-bg-2 border border-border rounded-lg p-3 text-center">
                 <div className="text-xl font-bold font-mono" style={{ color: s.c }}>{s.v}</div>
@@ -237,7 +245,7 @@ export default function MocksPage() {
                   <td className="px-4 py-3 text-text font-medium">{t.name}</td>
                   <td className="px-4 py-3 text-text3">{t.date}</td>
                   <td className="px-4 py-3"><span className={`text-xs font-bold font-mono px-2 py-1 rounded border ${cls}`}>{t.score}</span></td>
-                  <td className="px-4 py-3 text-text3">{t.rank || '—'}</td>
+                  <td className="px-4 py-3 text-text3">{t.rank || 'ΓÇö'}</td>
                   <td className="px-4 py-3 text-text3 font-mono text-xs">~{pred.air.toLocaleString()}</td>
                   <td className="px-4 py-3 text-text3 text-xs">{t.notes}</td>
                 </tr>
@@ -250,7 +258,7 @@ export default function MocksPage() {
       {showModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-surface border border-white/10 rounded-2xl p-6 w-full max-w-md">
-            <div className="flex justify-between mb-5"><h3 className="font-semibold text-text">🎯 Add Mock Test</h3><button onClick={() => setShowModal(false)} className="text-text3 hover:text-text">✕</button></div>
+            <div className="flex justify-between mb-5"><h3 className="font-semibold text-text">≡ƒÄ» Add Mock Test</h3><button onClick={() => setShowModal(false)} className="text-text3 hover:text-text">Γ£ò</button></div>
             <div className="space-y-3">
               {[{ label: 'Test Name', key: 'name', ph: 'e.g. MADE Easy Full Length Test 9' }, { label: 'Score (out of 100)', key: 'score', ph: 'e.g. 58.5' }, { label: 'Rank (optional)', key: 'rank', ph: 'e.g. 342' }, { label: 'Notes', key: 'notes', ph: 'What to improve?' }].map((f) => (
                 <div key={f.key}>

@@ -1,5 +1,4 @@
-// src/utils/exportUtils.js – CSV & Excel export
-import * as XLSX from 'xlsx';
+// src/utils/exportUtils.js ΓÇô CSV & Excel export
 
 function escapeCsv(val) {
   const s = String(val ?? '');
@@ -22,10 +21,10 @@ export function exportToCsv(payload) {
   });
   payload.pyqs.forEach((p) => {
     const status = p.solved ? 'Solved' : p.revisionNeeded ? 'Revision Needed' : 'Unsolved';
-    rows.push(['PYQ', p.title, p.subject, status, `GATE ${p.year} · ${p.difficulty}${p.bookmarked ? ' · ★' : ''}`]);
+    rows.push(['PYQ', p.title, p.subject, status, `GATE ${p.year} ┬╖ ${p.difficulty}${p.bookmarked ? ' ┬╖ Γÿà' : ''}`]);
   });
   payload.mocks.forEach((m) => {
-    rows.push(['Mock Test', m.name, '', `Score: ${m.score}`, `Rank: ${m.rank ?? 'N/A'} · ${m.date}`]);
+    rows.push(['Mock Test', m.name, '', `Score: ${m.score}`, `Rank: ${m.rank ?? 'N/A'} ┬╖ ${m.date}`]);
   });
 
   const csv = bom + rows.map((r) => r.map(escapeCsv).join(',')).join('\n');
@@ -38,13 +37,14 @@ export function exportToCsv(payload) {
   URL.revokeObjectURL(url);
 }
 
-export function exportToExcel(payload) {
+export async function exportToExcel(payload) {
+  const XLSX = await import('xlsx');
   const wb = XLSX.utils.book_new();
 
   const summary = [
     ['GATE 2027 Progress Report'],
     ['Student', payload.user?.name || 'Student'],
-    ['Email', payload.user?.email || '—'],
+    ['Email', payload.user?.email || 'ΓÇö'],
     ['Exported', new Date().toLocaleString('en-IN')],
     [],
     ['Metric', 'Value'],

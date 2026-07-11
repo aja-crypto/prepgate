@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Icon from '../ui/Icon';
 import { BrandName } from '../ui/BrandText';
 
@@ -90,15 +90,15 @@ export default function GateLoadingScreen({
   }, [pct]);
 
   const content = (
-    <div className="flex flex-col items-center justify-center w-full h-full relative overflow-hidden" style={{ background: '#000' }}>
+    <div className="flex flex-col items-center justify-center w-full h-full relative overflow-hidden" style={{ background: 'var(--color-bg)' }}>
 
       <Particles />
 
       {/* Logo */}
-      <div className="relative z-10 flex flex-col items-center" style={{ animation: 'pg-fade-in 0.8s ease-out both' }}>
+<div className="relative z-10 flex flex-col items-center" style={{ animation: 'pg-fade-in 0.8s ease-out both' }}>
         <Icon name="logo" className="w-14 h-14 mb-3" />
         <BrandName size="22px" letterSpacing="6px" />
-        <div style={{ color: '#A855F7', fontSize: '11px', fontWeight: 600, letterSpacing: '3px', marginTop: '4px' }}>GATE 2027</div>
+        <div style={{ color: 'var(--color-primary)', fontSize: '11px', fontWeight: 600, letterSpacing: '3px', marginTop: '4px' }}>GATE 2027</div>
       </div>
 
       {/* Rotating ring */}
@@ -106,7 +106,7 @@ export default function GateLoadingScreen({
         <div style={{
           width: '200px', height: '200px', borderRadius: '50%',
           border: '1.5px solid rgba(168,85,247,0.1)',
-          borderTop: '1.5px solid #A855F7',
+          borderTop: '1.5px solid var(--color-primary)',
           animation: 'pg-spin 12s linear infinite',
           position: 'relative',
         }}>
@@ -123,7 +123,7 @@ export default function GateLoadingScreen({
 
       {/* Percentage */}
       <div className="relative z-10" style={{
-        color: '#C084FC',
+        color: 'var(--color-primary-light)',
         fontSize: '1.6rem',
         fontWeight: 700,
         marginTop: '24px',
@@ -136,21 +136,21 @@ export default function GateLoadingScreen({
       <div className="relative z-10" style={{
         width: '320px', maxWidth: '80vw', height: '4px',
         marginTop: '16px', borderRadius: '50px',
-        background: '#111',
+        background: 'var(--color-bg-3)',
         overflow: 'hidden',
         animation: 'pg-fade-in 0.8s ease-out 0.4s both',
       }}>
         <div style={{
           width: `${pct}%`, height: '100%',
           borderRadius: '50px',
-          background: 'linear-gradient(90deg, #7C3AED, #A855F7, #C084FC)',
+          background: 'linear-gradient(90deg, var(--color-primary-dark), var(--color-primary), var(--color-primary-light))',
           transition: 'width 0.15s linear',
         }} />
       </div>
 
       {/* Status */}
       <div className="relative z-10" style={{
-        color: '#bbb',
+        color: 'var(--color-text3)',
         fontSize: '0.85rem',
         marginTop: '16px',
         height: '1.3em',
@@ -170,10 +170,10 @@ export default function GateLoadingScreen({
         backdropFilter: 'blur(10px)',
         animation: 'pg-fade-in 0.8s ease-out 0.6s both',
       }}>
-        <div style={{ color: '#A855F7', fontSize: '0.7rem', marginBottom: '6px', letterSpacing: '2px' }}>
+        <div style={{ color: 'var(--color-primary)', fontSize: '0.7rem', marginBottom: '6px', letterSpacing: '2px' }}>
           TIP OF THE DAY
         </div>
-        <div style={{ color: '#ddd', fontSize: '0.85rem' }}>
+        <div style={{ color: 'var(--color-text2)', fontSize: '0.85rem' }}>
           Consistency today, excellence tomorrow.
         </div>
       </div>
@@ -189,19 +189,19 @@ export default function GateLoadingScreen({
     </div>
   );
 
-  if (mode === 'inline') {
-    return <div className="w-full py-12 flex items-center justify-center" style={{ background: '#000' }}><div className="max-w-sm w-full">{content}</div></div>;
+if (mode === 'inline') {
+    return <div className="w-full py-12 flex items-center justify-center" style={{ background: 'var(--color-bg)' }}><div className="max-w-sm w-full">{content}</div></div>;
   }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{
-      background: '#000',
+      background: 'var(--color-bg)',
       transition: 'opacity 0.6s ease',
       opacity: done ? 0 : 1,
     }}>
       <div style={{
         position: 'fixed', inset: 0,
-        background: 'radial-gradient(circle at center, #111 0%, #050505 50%, #000 100%)',
+        background: 'radial-gradient(circle at center, var(--color-bg-2) 0%, var(--color-bg) 50%, var(--color-bg) 100%)',
         pointerEvents: 'none',
       }} />
       {content}
@@ -211,9 +211,9 @@ export default function GateLoadingScreen({
 
 export function PageLoading({ title }) {
   return (
-    <div className="w-full py-20 flex flex-col items-center justify-center" style={{ background: '#000', minHeight: '40vh' }}>
-      <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '1.5px solid rgba(168,85,247,0.1)', borderTop: '1.5px solid #A855F7', animation: 'pg-spin 1.2s linear infinite', marginBottom: '16px' }} />
-      <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>{title || 'Loading...'}</span>
+    <div className="w-full py-20 flex flex-col items-center justify-center" style={{ background: 'var(--color-bg)', minHeight: '40vh' }}>
+      <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '1.5px solid rgba(168,85,247,0.1)', borderTop: '1.5px solid var(--color-primary)', animation: 'pg-spin 1.2s linear infinite', marginBottom: '16px' }} />
+      <span style={{ color: 'var(--color-text3)', fontSize: '0.8rem' }}>{title || 'Loading...'}</span>
     </div>
   );
 }
@@ -221,8 +221,8 @@ export function PageLoading({ title }) {
 export function InlineLoading({ text = 'Loading...' }) {
   return (
     <div className="flex items-center gap-3 py-4 justify-center">
-      <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: '1.5px solid rgba(168,85,247,0.1)', borderTop: '1.5px solid #A855F7', animation: 'pg-spin 0.8s linear infinite' }} />
-      <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>{text}</span>
+      <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: '1.5px solid rgba(168,85,247,0.1)', borderTop: '1.5px solid var(--color-primary)', animation: 'pg-spin 0.8s linear infinite' }} />
+      <span className="text-xs" style={{ color: 'var(--color-text3)' }}>{text}</span>
     </div>
   );
 }

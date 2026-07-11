@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { shortNoteService } from '../services/api';
 import { silentCatch } from '../utils/errorHandler';
+import { resolveMediaUrl } from '../utils/mediaUrl';
 import { PageLoading } from '../components/common/GateLoadingScreen';
 
 export default function FinalRevisionHubPage() {
@@ -19,8 +20,8 @@ export default function FinalRevisionHubPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-text">🚀 Final Revision Hub</h1>
-        <p className="text-sm text-text3 mt-0.5">Quick-access short notes — perfect for last-week revision before GATE 2027</p>
+        <h1 className="text-xl font-bold text-text">≡ƒÜÇ Final Revision Hub</h1>
+        <p className="text-sm text-text3 mt-0.5">Quick-access short notes ΓÇö perfect for last-week revision before GATE 2027</p>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -38,12 +39,12 @@ export default function FinalRevisionHubPage() {
               {sub.files.map(file => (
                 <a
                   key={file.name}
-                  href={file.fileUrl}
+                  href={resolveMediaUrl(file.fileUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 bg-bg-2 border border-border rounded-lg px-3 py-2 text-xs text-text3 hover:text-text hover:border-white/15 transition-all"
                 >
-                  <span>{file.type === 'pdf' ? '📄' : '🖼'}</span>
+                  <span>{file.type === 'pdf' ? '≡ƒôä' : '≡ƒû╝'}</span>
                   <span className="flex-1 truncate">{file.name}</span>
                   <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 shrink-0 opacity-40 group-hover:opacity-100"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" /><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 100-2H5z" /></svg>
                 </a>

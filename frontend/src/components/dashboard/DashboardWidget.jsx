@@ -1,27 +1,30 @@
 // Draggable dashboard widget wrapper
+import { memo, useCallback } from 'react';
 import { useDashboard } from '../../context/DashboardContext';
 import Icon from '../ui/Icon';
 
-export default function DashboardWidget({ id, children, className = '', span = '' }) {
+function DashboardWidget({ id, children, className = '', span = '' }) {
   const { editMode, dragId, setDragId, reorderWidgets } = useDashboard();
 
-  const handleDragStart = (e) => {
+  const handleDragStart = useCallback((e) => {
     setDragId(id);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', id);
-  };
+  }, [id, setDragId]);
 
-  const handleDragOver = (e) => {
+  const handleDragOver = useCallback((e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-  };
+  }, []);
 
-  const handleDrop = (e) => {
+  const handleDrop = useCallback((e) => {
     e.preventDefault();
     const fromId = e.dataTransfer.getData('text/plain');
     if (fromId) reorderWidgets(fromId, id);
     setDragId(null);
-  };
+  }, [id, reorderWidgets, setDragId]);
+
+  const handleDragEnd = useCallback(() => setDragId(null), [setDragId]);
 
   return (
     <div
@@ -29,7 +32,7 @@ export default function DashboardWidget({ id, children, className = '', span = '
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      onDragEnd={() => setDragId(null)}
+      onDragEnd={handleDragEnd}
       className={`relative transition-all duration-200 ${span} ${className} ${
         editMode ? 'cursor-grab active:cursor-grabbing' : ''
       } ${dragId === id ? 'opacity-50 scale-[0.98]' : ''} ${
@@ -46,3 +49,5 @@ export default function DashboardWidget({ id, children, className = '', span = '
     </div>
   );
 }
+
+export default memo(DashboardWidget);

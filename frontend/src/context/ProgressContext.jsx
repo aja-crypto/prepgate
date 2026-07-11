@@ -1,6 +1,11 @@
-﻿// src/context/ProgressContext.jsx – Central progress store with MongoDB hybrid sync
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+// src/context/ProgressContext.jsx – Central progress store with MongoDB hybrid sync
+import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from './AuthContext';
+import { TopicProvider } from './domains/TopicContext';
+import { NoteProvider } from './domains/NoteContext';
+import { PYQProvider } from './domains/PYQContext';
+import { MockProvider } from './domains/MockContext';
+import { StatsProvider } from './domains/StatsContext';
 import {
   getEmptyProgressData, mergeProgressData, isEmptyProgress, BADGE_DEFINITIONS,
 } from '../data/emptyState';
@@ -32,6 +37,7 @@ function loadFromStorage(userId) {
 }
 
 export const ProgressProvider = ({ children }) => {
+  useEffect(() => { const t = Date.now(); console.log('[Trace] ProgressProvider MOUNTED at', t); return () => console.log('[Trace] ProgressProvider UNMOUNTED after', Date.now() - t, 'ms'); }, []);
   const { user } = useAuth();
   const userId = user?.id || user?._id || 'guest';
   const [data, setData] = useState(() => loadFromStorage(userId));
@@ -374,49 +380,61 @@ export const ProgressProvider = ({ children }) => {
     if (newBadges.length) awardBadges(newBadges);
   }, [data.gateFeatures?.streak?.current, data.pyqs, data.mocks.length, awardBadges]);
 
+  const value = useMemo(() => ({
+    data,
+    topics: data.topics,
+    notes: data.notes,
+    pyqs: data.pyqs,
+    mocks: data.mocks,
+    studyStats: data.studyStats,
+    gateFeatures: data.gateFeatures,
+    gamification: data.gamification,
+    revisionSchedule: data.revisionSchedule,
+    resources: data.resources,
+    productivity: data.productivity,
+    notifications: data.notifications,
+    isNewUser,
+    isEmptyProgress: isEmptyProgress(data),
+    backupStatus,
+    lastBackupAt,
+    cloudBackupStatus,
+    lastCloudBackupAt,
+    mongoAvailable,
+    syncToCloud,
+    refreshPyqs,
+    updateTopics,
+    updateNotes,
+    updatePyqs,
+    updateMocks,
+    updateStudyStats,
+    updateGateFeatures,
+    updateGamification,
+    updateRevision,
+    updateProductivity,
+    updateNotifications,
+    resetAllProgress,
+    resetSubjectProgress,
+    resetTopicProgress,
+    restoreFromSnapshot,
+    importUserData,
+    getSearchIndex,
+    getExportPayload,
+    backupIntervalMs: BACKUP_INTERVAL_MS,
+  }), [data, isNewUser, backupStatus, lastBackupAt, cloudBackupStatus, lastCloudBackupAt, mongoAvailable]);
+
   return (
-    <ProgressContext.Provider value={{
-      data,
-      topics: data.topics,
-      notes: data.notes,
-      pyqs: data.pyqs,
-      mocks: data.mocks,
-      studyStats: data.studyStats,
-      gateFeatures: data.gateFeatures,
-      gamification: data.gamification,
-      revisionSchedule: data.revisionSchedule,
-      resources: data.resources,
-      productivity: data.productivity,
-      notifications: data.notifications,
-      isNewUser,
-      isEmptyProgress: isEmptyProgress(data),
-      backupStatus,
-      lastBackupAt,
-      cloudBackupStatus,
-      lastCloudBackupAt,
-      mongoAvailable,
-      syncToCloud,
-      refreshPyqs,
-      updateTopics,
-      updateNotes,
-      updatePyqs,
-      updateMocks,
-      updateStudyStats,
-      updateGateFeatures,
-      updateGamification,
-      updateRevision,
-      updateProductivity,
-      updateNotifications,
-      resetAllProgress,
-      resetSubjectProgress,
-      resetTopicProgress,
-      restoreFromSnapshot,
-      importUserData,
-      getSearchIndex,
-      getExportPayload,
-      backupIntervalMs: BACKUP_INTERVAL_MS,
-    }}>
-      {children}
+    <ProgressContext.Provider value={value}>
+      <TopicProvider data={data} setData={setData}>
+        <NoteProvider data={data} setData={setData}>
+          <PYQProvider data={data} setData={setData}>
+            <MockProvider data={data} setData={setData}>
+              <StatsProvider data={data} setData={setData}>
+                {children}
+              </StatsProvider>
+            </MockProvider>
+          </PYQProvider>
+        </NoteProvider>
+      </TopicProvider>
     </ProgressContext.Provider>
   );
 };

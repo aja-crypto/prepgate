@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import NeuralBackground from '../components/common/NeuralBackground';
 import AIMentorPage from './AIMentorPage';
@@ -99,11 +99,11 @@ export default function GateNexaAIPage() {
         </div>
 
         <div className="animate-fade-in">
-          {activeTab === 'mentor' && <AIMentorPage />}
-          {activeTab === 'coach' && <DailyCoachPage />}
-          {activeTab === 'weak-topics' && <WeakTopicsPage />}
-          {activeTab === 'insights' && <InsightsPage />}
-          {activeTab === 'doubt' && <DoubtSolverPage />}
+          <div style={{ display: activeTab === 'mentor' ? 'block' : 'none' }}><AIMentorPage /></div>
+          <div style={{ display: activeTab === 'coach' ? 'block' : 'none' }}><DailyCoachPage /></div>
+          <div style={{ display: activeTab === 'weak-topics' ? 'block' : 'none' }}><WeakTopicsPage /></div>
+          <div style={{ display: activeTab === 'insights' ? 'block' : 'none' }}><InsightsPage /></div>
+          <div style={{ display: activeTab === 'doubt' ? 'block' : 'none' }}><DoubtSolverPage /></div>
         </div>
       </div>
     </div>

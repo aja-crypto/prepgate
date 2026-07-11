@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { noteService } from '../../services/api';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import Icon from '../ui/Icon';
 import GlassCard from '../ui/GlassCard';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,6 +16,7 @@ export default function PinnedNotesWidget() {
         setPinned(res.data.data);
       } catch (err) {
         console.error(err);
+        setPinned([]);
       } finally {
         setLoading(false);
       }
@@ -29,7 +31,7 @@ export default function PinnedNotesWidget() {
     </div>
   );
 
-  if (pinned.length === 0) return (
+  if (!pinned || pinned.length === 0) return (
     <GlassCard className="flex flex-col items-center justify-center py-8 text-text3">
       <Icon name="star" className="w-8 h-8 mb-2 opacity-20" />
       <p className="text-xs font-medium">No pinned resources yet</p>
@@ -59,10 +61,10 @@ export default function PinnedNotesWidget() {
                   <span className="text-[9px] font-black">PDF DOC</span>
                 </div>
               ) : (
-                <img src={note.fileUrl} alt={note.title} className="w-full h-full object-cover" />
+                <img src={resolveMediaUrl(note.fileUrl)} alt={note.title} className="w-full h-full object-cover" />
               )}
               <a 
-                href={note.fileUrl} 
+                href={resolveMediaUrl(note.fileUrl)} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"

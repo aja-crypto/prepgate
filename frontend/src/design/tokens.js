@@ -1,4 +1,4 @@
-﻿// GateNexa design system — original palette (not generic GATE blue-green)
+// GateNexa design system — original palette (not generic GATE blue-green)
 
 export const BRAND = {
   name: 'GateNexa',
@@ -64,35 +64,49 @@ export const ROLE_COLORS = {
 };
 
 export const DEFAULT_WIDGETS = [
+  // ── Section 1: Hero ──
   { id: 'welcome', label: 'Getting Started', defaultVisible: true, category: 'overview' },
   { id: 'motivation', label: 'Daily Motivation', defaultVisible: true, category: 'overview' },
-  { id: 'announcements', label: 'Announcements', defaultVisible: true, category: 'overview' },
-  { id: 'focus-stats', label: 'Focus Session Stats', defaultVisible: true, category: 'progress' },
-  { id: 'action-center', label: 'Am I Ready for GATE?', defaultVisible: true, category: 'overview' },
-  { id: 'gatenexa-ai', label: 'GateNexa AI', defaultVisible: true, category: 'overview' },
-  { id: 'gate-vault', label: 'Gate Vault', defaultVisible: true, category: 'overview' },
-  { id: 'notes-hub', label: 'Notes Hub', defaultVisible: true, category: 'overview' },
-  { id: 'recommendation-engine', label: 'Recommendation Engine', defaultVisible: true, category: 'overview' },
   { id: 'countdown', label: 'Exam Countdown', defaultVisible: true, category: 'overview' },
   { id: 'today-plan', label: "Today's Plan", defaultVisible: true, category: 'overview' },
   { id: 'stats', label: 'Key Metrics', defaultVisible: true, category: 'overview' },
-  { id: 'live-news', label: 'Live News', defaultVisible: true, category: 'live' },
-  { id: 'exam-schedule', label: 'Exam Schedule', defaultVisible: true, category: 'live' },
-  { id: 'exam-timeline', label: 'GATE 2027 Timeline', defaultVisible: true, category: 'live' },
-  { id: 'daily-content', label: 'Daily Content', defaultVisible: true, category: 'live' },
-  { id: 'recruitment', label: 'Recruitment Feed', defaultVisible: true, category: 'live' },
-  { id: 'trending', label: 'Trending Topics', defaultVisible: true, category: 'live' },
-  { id: 'analysis', label: 'Topic Analysis', defaultVisible: true, category: 'insights' },
-  { id: 'resources', label: 'Resources', defaultVisible: true, category: 'insights' },
+
+  // ── Section 2: Quick Actions ──
+  { id: 'gatenexa-ai', label: 'GateNexa AI', defaultVisible: true, category: 'overview' },
+  { id: 'recommendation-engine', label: 'Recommendation Engine', defaultVisible: true, category: 'overview' },
+  { id: 'focus-stats', label: 'Focus Session Stats', defaultVisible: true, category: 'progress' },
+  { id: 'daily-missions', label: 'Daily Missions', defaultVisible: true, category: 'overview' },
+  { id: 'revision-schedule', label: 'Revision Schedule', defaultVisible: true, category: 'progress' },
+
+  // ── Section 3: Study Command Center ──
+  { id: 'subjects', label: 'Subject Progress', defaultVisible: true, category: 'progress' },
   { id: 'goals', label: 'Goals & Streak', defaultVisible: true, category: 'progress' },
   { id: 'weekly-hours', label: 'Weekly Hours', defaultVisible: true, category: 'progress' },
-  { id: 'subjects', label: 'Subject Progress', defaultVisible: true, category: 'progress' },
-  { id: 'pinned-notes', label: 'Pinned Resources', defaultVisible: true, category: 'overview' },
-  { id: 'success-hub', label: 'Success Hub', defaultVisible: true, category: 'insights' },
-  { id: 'recommendations', label: 'Recommendations', defaultVisible: true, category: 'insights' },
-  { id: 'predictions', label: 'Score Predictions', defaultVisible: true, category: 'insights' },
-  { id: 'revision-schedule', label: 'Revision Schedule', defaultVisible: true, category: 'progress' },
   { id: 'progress-heatmap', label: 'Progress Heatmap', defaultVisible: true, category: 'progress' },
+  { id: 'recommendations', label: 'Recommendations', defaultVisible: true, category: 'insights' },
+
+  // ── Section 4: AI Insights ──
+  { id: 'predictions', label: 'Score Predictions', defaultVisible: true, category: 'insights' },
+  { id: 'analysis', label: 'Topic Analysis', defaultVisible: true, category: 'insights' },
+  { id: 'success-hub', label: 'Success Hub', defaultVisible: true, category: 'insights' },
+  { id: 'action-center', label: 'Am I Ready for GATE?', defaultVisible: true, category: 'overview' },
+
+  // ── Section 5: Resources ──
+  { id: 'notes-hub', label: 'Notes Hub', defaultVisible: true, category: 'overview' },
+  { id: 'gate-vault', label: 'Gate Vault', defaultVisible: true, category: 'overview' },
+  { id: 'pinned-notes', label: 'Pinned Notes', defaultVisible: true, category: 'overview' },
+  { id: 'daily-content', label: 'Daily Content', defaultVisible: true, category: 'live' },
+
+  // ── Section 6: Live Information ──
+  { id: 'live-news', label: 'Live News', defaultVisible: true, category: 'live' },
+  { id: 'recruitment', label: 'Recruitment Feed', defaultVisible: true, category: 'live' },
+  { id: 'trending', label: 'Trending Topics', defaultVisible: true, category: 'live' },
+  { id: 'exam-schedule', label: 'Exam Schedule', defaultVisible: true, category: 'live' },
+  { id: 'exam-timeline', label: 'GATE 2027 Timeline', defaultVisible: true, category: 'live' },
+
+  // ── Section 7: System ──
+  { id: 'announcements', label: 'Announcements', defaultVisible: true, category: 'overview' },
+  { id: 'resources', label: 'Resources', defaultVisible: true, category: 'insights' },
 ];
 
 export function getDefaultWidgetLayout() {

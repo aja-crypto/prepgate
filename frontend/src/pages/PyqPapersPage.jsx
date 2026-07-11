@@ -102,11 +102,11 @@ export default function PyqPapersPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(99,102,241,0.1))' }}>
-                        <span className="text-xl">📄</span>
+                        <span className="text-xl">≡ƒôä</span>
                       </div>
                       <div>
                         <p className="font-semibold text-text">{paper.title || `GATE CSE ${paper.year} ${getSetLabel(paper.set)}`}</p>
-                        <p className="text-sm text-text3">{paper.subject} • {getSetLabel(paper.set)}</p>
+                        <p className="text-sm text-text3">{paper.subject} ΓÇó {getSetLabel(paper.set)}</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -116,14 +116,14 @@ export default function PyqPapersPage() {
                         rel="noopener noreferrer"
                         className="px-4 py-2 rounded-lg font-medium text-white bg-primary/90 hover:bg-primary transition-all flex items-center gap-2"
                       >
-                        <span>👁</span> View
+                        <span>≡ƒæü</span> View
                       </a>
                       <a
                         href={getPdfUrl(paper)}
                         download={paper.fileName || `GATE_CSE_${paper.year}_Set${paper.set}.pdf`}
                         className="px-4 py-2 rounded-lg font-medium bg-surface border border-border hover:bg-primary/10 transition-all flex items-center gap-2"
                       >
-                        <span>⬇</span> Download
+                        <span>Γ¼ç</span> Download
                       </a>
                     </div>
                   </div>
@@ -137,9 +137,14 @@ export default function PyqPapersPage() {
       {/* Empty state for no years */}
       {years.length === 0 && !loading && (
         <div className="glass-card p-12 text-center">
-          <div className="text-5xl mb-4">📚</div>
-          <h3 className="text-xl font-semibold text-text mb-2">No PYQ Papers Available</h3>
-          <p className="text-text3">PYQ papers will appear here once admin uploads them.</p>
+          <div className="text-5xl mb-4">≡ƒôï</div>
+          <h3 className="text-lg font-semibold text-text mb-2">PYQ Papers Coming Soon</h3>
+          <p className="text-sm text-text3/70 max-w-md mx-auto">GATE CSE previous year papers will be available here once uploaded by the admin team. Check back later.</p>
+          <div className="mt-6 flex items-center justify-center gap-6 text-xs text-text3/50">
+            <span>≡ƒôä 2000ΓÇô2026</span>
+            <span>≡ƒöì Search & filter</span>
+            <span>Γ¼ç Download PDF</span>
+          </div>
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import Icon from '../ui/Icon';
@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { section: 'MANAGEMENT' },
   { path: '/admin/users', label: 'Users', icon: 'users' },
   { path: '/admin/analytics', label: 'Analytics', icon: 'bar-chart' },
+  { path: '/admin/predictor', label: 'NEXA Predictor', icon: 'database' },
   { section: 'SYSTEM' },
   { path: '/admin/settings', label: 'Settings', icon: 'settings' },
   { path: '/admin/system-health', label: 'System Health', icon: 'activity' },
@@ -79,9 +80,7 @@ export default function AdminLayout() {
 
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border">
           <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold uppercase">
-              {admin?.name?.charAt(0) || 'A'}
-            </div>
+            <img src="/images/pro iocn.png" alt={admin?.name || 'Admin'} className="w-8 h-8 rounded-full object-cover shrink-0" style={{ border: '2px solid rgba(139,92,246,0.5)', boxShadow: '0 0 8px rgba(139,92,246,0.3)' }} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <div className="text-xs font-semibold text-text truncate">{admin?.name}</div>

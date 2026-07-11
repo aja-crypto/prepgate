@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { BRAND } from '../../design/tokens';
-import AIBrainScene from './AIBrainScene';
+import PremiumGiftCard from '../referral/PremiumGiftCard';
+
+const AIBrainScene = lazy(() => import('./AIBrainScene'));
 
 // AIR tips
 const AIR_TIPS = [
@@ -128,17 +130,19 @@ export default function FuturisticHero() {
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
       style={{ opacity: heroOpacity, background: 'transparent' }}
     >
-      {/* ═══ FULL-SCREEN NEURAL BRAIN BACKGROUND (dimmed) ═══ */}
+      {/* ΓòÉΓòÉΓòÉ FULL-SCREEN NEURAL BRAIN BACKGROUND (dimmed) ΓòÉΓòÉΓòÉ */}
       <div className={`absolute inset-0 z-0 transition-opacity duration-300 ${visible ? 'opacity-25' : 'opacity-0'}`}>
-        <AIBrainScene />
+        <Suspense fallback={null}>
+          <AIBrainScene />
+        </Suspense>
       </div>
 
-      {/* ═══ PURPLE GLOW BEHIND TEXT ═══ */}
+      {/* ΓòÉΓòÉΓòÉ PURPLE GLOW BEHIND TEXT ΓòÉΓòÉΓòÉ */}
       <div className="absolute inset-0 z-[1] pointer-events-none" style={{
         background: 'radial-gradient(circle at center, rgba(168,85,247,0.06) 0%, rgba(124,58,237,0.03) 30%, transparent 70%)',
       }} />
 
-      {/* ═══ CONTENT OVERLAY (above brain) ═══ */}
+      {/* ΓòÉΓòÉΓòÉ CONTENT OVERLAY (above brain) ΓòÉΓòÉΓòÉ */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen py-16 px-4">
 
         {/* Top badge */}
@@ -147,7 +151,7 @@ export default function FuturisticHero() {
           AI-Powered GATE 2027 Preparation Platform
         </div>
 
-        {/* Headline — centered, big */}
+        {/* Headline ΓÇö centered, big */}
         <div className={`text-center mb-8 transition-all duration-250 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-6'}`}>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-tight" style={{ textShadow: '0 0 40px rgba(139,92,246,0.15), 0 0 80px rgba(139,92,246,0.06), 0 0 120px rgba(34,211,238,0.03)' }}>
             <span className="text-[#F8FAFC]">Build Your </span>
@@ -217,6 +221,16 @@ export default function FuturisticHero() {
           <span className="text-[9px]" style={{ color: 'rgba(139,92,246,0.35)' }}>
             Hover over the brain to explore subject regions
           </span>
+        </div>
+      </div>
+
+      {/* Premium Gift Card ΓÇö positioned right side on desktop, below on mobile */}
+      <div className="hidden lg:block absolute right-8 top-1/2 -translate-y-1/2 z-20">
+        <PremiumGiftCard />
+      </div>
+      <div className="lg:hidden relative z-20 px-4 pb-8">
+        <div className="max-w-[280px] mx-auto">
+          <PremiumGiftCard compact />
         </div>
       </div>
     </section>

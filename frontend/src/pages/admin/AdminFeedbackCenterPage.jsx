@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adminFeedbackService } from '../../services/adminApi';
+import toast from 'react-hot-toast';
 
 const CATEGORIES = [
-  { value: 'bug_report', label: 'Bug Report', icon: '🐛', color: 'bg-red-500/20 text-red-400' },
-  { value: 'feature_request', label: 'Feature Request', icon: '💡', color: 'bg-yellow-500/20 text-yellow-400' },
-  { value: 'question', label: 'Question', icon: '❓', color: 'bg-blue-500/20 text-blue-400' },
-  { value: 'complaint', label: 'Complaint', icon: '⚠️', color: 'bg-orange-500/20 text-orange-400' },
-  { value: 'suggestion', label: 'Suggestion', icon: '📝', color: 'bg-purple-500/20 text-purple-400' },
-  { value: 'appreciation', label: 'Appreciation', icon: '🎉', color: 'bg-green-500/20 text-green-400' },
+  { value: 'bug_report', label: 'Bug Report', icon: '≡ƒÉ¢', color: 'bg-red-500/20 text-red-400' },
+  { value: 'feature_request', label: 'Feature Request', icon: '≡ƒÆí', color: 'bg-yellow-500/20 text-yellow-400' },
+  { value: 'question', label: 'Question', icon: 'Γ¥ô', color: 'bg-blue-500/20 text-blue-400' },
+  { value: 'complaint', label: 'Complaint', icon: 'ΓÜá∩╕Å', color: 'bg-orange-500/20 text-orange-400' },
+  { value: 'suggestion', label: 'Suggestion', icon: '≡ƒô¥', color: 'bg-purple-500/20 text-purple-400' },
+  { value: 'appreciation', label: 'Appreciation', icon: '≡ƒÄë', color: 'bg-green-500/20 text-green-400' },
 ];
 
 const STATUSES = [
@@ -60,18 +61,18 @@ function TicketDetail({ ticket, onClose, onUpdated }) {
       setLocalReplies(prev => [...prev, res.data.data]);
       setReplyText('');
       onUpdated();
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error(e); toast.error('Failed to send reply'); }
     finally { setReplying(false); }
   };
 
   const handleStatus = async (status) => {
     try { await adminFeedbackService.update(ticket._id, { status }); onUpdated(); }
-    catch (e) { console.error(e); }
+    catch (e) { console.error(e); toast.error('Failed to update status'); }
   };
 
   const handlePriority = async (priority) => {
     try { await adminFeedbackService.update(ticket._id, { priority }); onUpdated(); }
-    catch (e) { console.error(e); }
+    catch (e) { console.error(e); toast.error('Action failed'); }
   };
 
   const cat = CATEGORIES.find(c => c.value === ticket.category);
@@ -195,7 +196,7 @@ function RequestsTab() {
   const fetchRequests = async () => {
     setLoading(true);
     try { const res = await adminFeedbackService.listRequests(); setRequests(res.data.data || []); }
-    catch (e) { console.error(e); }
+    catch (e) { console.error(e); toast.error('Action failed'); }
     finally { setLoading(false); }
   };
 
@@ -205,19 +206,19 @@ function RequestsTab() {
     e.preventDefault();
     setSaving(true);
     try { await adminFeedbackService.createRequest(newReq); setShowCreate(false); setNewReq({ title: '', description: '', requestedByName: 'Admin', priority: 'medium' }); fetchRequests(); }
-    catch (e) { console.error(e); }
+    catch (e) { console.error(e); toast.error('Action failed'); }
     finally { setSaving(false); }
   };
 
   const handleStatusUpdate = async (id, status) => {
     try { await adminFeedbackService.updateRequest(id, { status }); fetchRequests(); }
-    catch (e) { console.error(e); }
+    catch (e) { console.error(e); toast.error('Action failed'); }
   };
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this request?')) return;
     try { await adminFeedbackService.deleteRequest(id); fetchRequests(); }
-    catch (e) { console.error(e); }
+    catch (e) { console.error(e); toast.error('Action failed'); }
   };
 
   return (
@@ -362,11 +363,11 @@ export default function AdminFeedbackCenterPage() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <StatCard label="Total" value={stats.total} icon="📋" />
-          <StatCard label="Unread" value={stats.unread} icon="📬" color="text-blue-400" />
-          <StatCard label="In Progress" value={stats.pending} icon="⏳" color="text-yellow-400" />
-          <StatCard label="Resolved" value={stats.resolved} icon="✅" color="text-green-400" />
-          <StatCard label="Critical" value={stats.critical} icon="🚨" color="text-red-400" />
+          <StatCard label="Total" value={stats.total} icon="≡ƒôï" />
+          <StatCard label="Unread" value={stats.unread} icon="≡ƒô¼" color="text-blue-400" />
+          <StatCard label="In Progress" value={stats.pending} icon="ΓÅ│" color="text-yellow-400" />
+          <StatCard label="Resolved" value={stats.resolved} icon="Γ£à" color="text-green-400" />
+          <StatCard label="Critical" value={stats.critical} icon="≡ƒÜ¿" color="text-red-400" />
         </div>
       )}
 

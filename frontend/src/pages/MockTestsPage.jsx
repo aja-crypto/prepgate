@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { mockTestService } from '../services/api';
+import { useSEO } from '../hooks/useSEO';
 
 const SUBJECT_CODES = {
   APT: { name: 'General Aptitude', color: '#43aa8b' },
@@ -23,12 +24,15 @@ const DIFF_BADGE = {
 };
 
 const TYPE_BADGE = {
-  'subject-wise': 'bg-blue-500/10 border-blue-500/20 text-blue-400',
-  'topic-wise': 'bg-purple-500/10 border-purple-500/20 text-purple-400',
-  'full-length': 'bg-rose-500/10 border-rose-500/20 text-rose-400',
+  'subject': 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+  'topic': 'bg-purple-500/10 border-purple-500/20 text-purple-400',
+  'full': 'bg-rose-500/10 border-rose-500/20 text-rose-400',
 };
 
-const FILTER_TABS = ['All', 'Subject-wise', 'Topic-wise', 'Full-length'];
+const FILTER_TABS = [
+  'All', 'Subject-wise', 'Topic-wise',
+  { label: 'Full-length', badge: 'Coming Soon' },
+];
 
 function SkeletonCard() {
   return (
@@ -53,6 +57,7 @@ function SkeletonCard() {
 }
 
 export default function MockTestsPage() {
+  useSEO({ title: 'Mock Tests', description: 'Practice GATE CSE mock tests with full-length and subject-wise options.' });
   const navigate = useNavigate();
   const [tests, setTests] = useState([]);
   const [subjectCounts, setSubjectCounts] = useState([]);
@@ -60,16 +65,18 @@ export default function MockTestsPage() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [apiSucceeded, setApiSucceeded] = useState(false);
 
   const loadData = () => {
     setLoading(true);
     setLoadError(false);
+    setApiSucceeded(false);
     Promise.all([
-      mockTestService.getAll().then(r => { setTests(r.data.data || []); return r.data.data?.length; }).catch(e => { console.warn('MockTests getAll failed', e?.message); return 0; }),
+      mockTestService.getAll().then(r => { setTests(r.data.data || []); setApiSucceeded(true); return r.data.data?.length; }).catch(e => { console.warn('MockTests getAll failed', e?.message); return 0; }),
       mockTestService.getSubjectCounts().then(r => setSubjectCounts(r.data.data || [])).catch(e => { console.warn('MockTests getSubjectCounts failed', e?.message); }),
       mockTestService.getAnalytics().then(r => setAnalytics(r.data.data || null)).catch(e => { console.warn('MockTests getAnalytics failed', e?.message); }),
     ]).then(([testCount]) => {
-      if (!testCount) setLoadError(true);
+      if (!testCount && !apiSucceeded) setLoadError(true);
     }).catch(() => setLoadError(true)).finally(() => setLoading(false));
   };
 
@@ -141,7 +148,7 @@ export default function MockTestsPage() {
     return (
       <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
         <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6" style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.12), rgba(239,68,68,0.08))', border: '1px solid rgba(239,68,68,0.15)' }}>
-          <span className="text-4xl">⚠️</span>
+          <span className="text-4xl">ΓÜá∩╕Å</span>
         </div>
         <h3 className="text-lg font-bold text-text mb-2">Failed to Load Mock Tests</h3>
         <p className="text-sm text-text3 max-w-sm mb-6 leading-relaxed">Could not connect to the server. Make sure the backend is running.</p>
@@ -175,29 +182,37 @@ export default function MockTestsPage() {
       </div>
 
       <div className="flex gap-2 mb-5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
-        {FILTER_TABS.map(t => (
+        {FILTER_TABS.map(t => {
+          const isObj = typeof t === 'object';
+          const label = isObj ? t.label : t;
+          const active = activeFilter === label;
+          return (
           <button
-            key={t}
+            key={label}
             type="button"
-            onClick={() => setActiveFilter(t)}
-            className={`text-xs px-4 py-2 rounded-lg border transition-all whitespace-nowrap flex-shrink-0 ${
-              activeFilter === t
+            onClick={() => setActiveFilter(label)}
+            className={`text-xs px-4 py-2 rounded-lg border transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 ${
+              active
                 ? 'bg-primary/15 border-primary/30 text-primary'
                 : 'bg-bg-2 border-border text-text3 hover:border-white/10'
             }`}
           >
-            {t}
+            {label}
+            {isObj && t.badge && (
+              <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-medium">{t.badge}</span>
+            )}
           </button>
-        ))}
+          );
+        })}
       </div>
 
       {groupedBySubject.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
           <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.12), rgba(99,102,241,0.08))', border: '1px solid rgba(168,85,247,0.15)', boxShadow: '0 0 25px rgba(168,85,247,0.08)' }}>
-            <span className="text-4xl">📋</span>
+            <span className="text-4xl">≡ƒôï</span>
           </div>
           <h3 className="text-lg font-bold text-text mb-2">No Tests for This Filter</h3>
-          <p className="text-sm text-text3 max-w-sm mb-6 leading-relaxed">Try a different subject or type, or check back later — new tests are added regularly.</p>
+          <p className="text-sm text-text3 max-w-sm mb-6 leading-relaxed">Try a different subject or type, or check back later ΓÇö new tests are added regularly.</p>
           <button onClick={() => setActiveFilter('All')} className="inline-flex items-center gap-2 text-sm px-6 py-2.5 rounded-xl font-semibold transition-all hover:scale-[1.02]" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', color: 'white', boxShadow: '0 0 20px rgba(168,85,247,0.25)' }}>
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
             Clear Filters
@@ -232,16 +247,20 @@ export default function MockTestsPage() {
                             {test.difficulty}
                           </span>
                         )}
-                        {test.type && (
-                          <span className={`text-[10px] px-2 py-0.5 rounded border capitalize ${TYPE_BADGE[test.type] || TYPE_BADGE['subject-wise']}`}>
-                            {test.type === 'full-length' ? 'Full' : test.type === 'subject-wise' ? 'Subject' : 'Topic'}
+                        {test.type === 'full' ? (
+                          <span className="text-[10px] px-2 py-0.5 rounded border bg-amber-500/10 border-amber-500/20 text-amber-400">
+                            Full ┬╖ Coming Soon
+                          </span>
+                        ) : test.type && (
+                          <span className={`text-[10px] px-2 py-0.5 rounded border capitalize ${TYPE_BADGE[test.type] || ''}`}>
+                            {test.type === 'subject' ? 'Subject' : 'Topic'}
                           </span>
                         )}
                       </div>
 
                       <div className="flex items-center gap-3 text-[10px] text-text3 mb-2.5">
-                        <span>{test.questionCount} Qs</span>
-                        <span>{test.duration} min</span>
+                        <span>{test.questionCount ?? '?'} Qs</span>
+                        <span>{test.duration ?? '?'} min</span>
                       </div>
 
                       {topics.length > 0 && (
@@ -275,6 +294,10 @@ export default function MockTestsPage() {
                               Retake
                             </button>
                           </div>
+                        </div>
+                      ) : test.type === 'full' ? (
+                        <div className="w-full text-xs py-2 rounded-lg border border-amber-500/20 bg-amber-500/5 text-amber-400/60 text-center font-medium cursor-not-allowed">
+                          ≡ƒÜº Coming Soon
                         </div>
                       ) : (
                         <button

@@ -19,21 +19,27 @@ export default function CommunityPage() {
   const [askForm, setAskForm] = useState({ title: '', body: '', subject: '', topic: '', type: 'concept', tags: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => { loadQuestions(); }, [filter, page]);
+  useEffect(() => {
+    const ac = new AbortController();
+    loadQuestions(ac.signal);
+    return () => ac.abort();
+  }, [filter, page]);
 
-  const loadQuestions = async () => {
+  const loadQuestions = async (signal) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
       const params = new URLSearchParams({ page, limit: 15, ...filter });
-      const res = await axios.get(`${API}/questions?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get(`${API}/questions?${params}`, { headers: { Authorization: `Bearer ${token}` }, signal });
+      if (signal?.aborted) return;
       setQuestions(res.data?.data || []);
       setTotalPages(res.data?.pagination?.pages || 1);
     } catch (err) {
+      if (err.name === 'AbortError' || err.name === 'CanceledError') return;
       console.error('Failed to load questions:', err);
       toast.error('Failed to load community questions');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   };
 
@@ -108,7 +114,7 @@ export default function CommunityPage() {
         <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>
       ) : questions.length === 0 ? (
         <GlassCard hover={false} padding="p-12" className="text-center">
-          <div className="text-5xl mb-4">💬</div>
+          <div className="text-5xl mb-4">≡ƒÆ¼</div>
           <h2 className="text-xl font-bold text-text mb-2">No Questions Yet</h2>
           <p className="text-text3 mb-6">Be the first to ask a question!</p>
           <button onClick={() => setShowAskModal(true)} className="px-6 py-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary font-medium hover:bg-primary/20 transition-all">
@@ -122,9 +128,9 @@ export default function CommunityPage() {
               <div className="flex gap-4">
                 {/* Vote column */}
                 <div className="flex flex-col items-center gap-1 min-w-[50px]">
-                  <button onClick={() => handleVote(q._id, 1)} className="w-8 h-8 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-text2 hover:text-primary transition-all flex items-center justify-center text-lg">▲</button>
+                  <button onClick={() => handleVote(q._id, 1)} className="w-8 h-8 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-text2 hover:text-primary transition-all flex items-center justify-center text-lg">Γû▓</button>
                   <span className="text-sm font-bold text-text">{q.upvotes - q.downvotes}</span>
-                  <button onClick={() => handleVote(q._id, -1)} className="w-8 h-8 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-text2 hover:text-red-400 transition-all flex items-center justify-center text-lg">▼</button>
+                  <button onClick={() => handleVote(q._id, -1)} className="w-8 h-8 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-text2 hover:text-red-400 transition-all flex items-center justify-center text-lg">Γû╝</button>
                 </div>
 
                 {/* Content */}
@@ -145,7 +151,7 @@ export default function CommunityPage() {
                     <div className="flex items-center gap-3 text-xs text-text3">
                       <span>{q.answerCount || 0} answers</span>
                       <span>{q.viewCount || 0} views</span>
-                      {q.acceptedAnswer && <span className="text-green-400">✓ Answered</span>}
+                      {q.acceptedAnswer && <span className="text-green-400">Γ£ô Answered</span>}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-text3">{q.user?.name || 'Anonymous'}</span>

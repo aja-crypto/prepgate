@@ -1,4 +1,4 @@
-﻿/* GateNexa Design System — premium SaaS aesthetic */
+/* GateNexa Design System — premium SaaS aesthetic */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,6 +11,13 @@
     --color-success: #22C55E;
     --color-warning: #F59E0B;
     --color-danger: #EF4444;
+    /* Brand color shades */
+    --color-primary-light: #a78bfa;
+    --color-primary-lighter: #c4b5fd;
+    --color-primary-dark: #7c3aed;
+    --color-primary-glow: rgba(139, 92, 246, 0.3);
+    --color-secondary-light: #67e8f9;
+    --color-secondary-glow: rgba(34, 211, 238, 0.2);
 
     --color-bg: #F8FAFC;
     --color-bg-2: #FFFFFF;
@@ -37,7 +44,7 @@
     --color-bg-3: #111633;
     --color-surface: rgba(12, 15, 35, 0.7);
     --color-surface-2: rgba(12, 15, 35, 0.88);
-    --color-glass: rgba(12, 15, 35, 0.5);
+    --color-glass: rgba(12, 15, 35, 0.6);
     --color-text: #F8FAFC;
     --color-text2: #CBD5E1;
     --color-text3: #64748B;
@@ -49,6 +56,13 @@
     --color-mesh-1: rgba(139, 92, 246, 0.18);
     --color-mesh-2: rgba(34, 211, 238, 0.12);
     --color-mesh-3: rgba(245, 158, 11, 0.08);
+    /* Brand color shades */
+    --color-primary-light: #a78bfa;
+    --color-primary-lighter: #c4b5fd;
+    --color-primary-dark: #7c3aed;
+    --color-primary-glow: rgba(139, 92, 246, 0.4);
+    --color-secondary-light: #67e8f9;
+    --color-secondary-glow: rgba(34, 211, 238, 0.25);
   }
 
   * {
@@ -85,8 +99,8 @@
       padding-bottom: env(safe-area-inset-bottom);
     }
     input, textarea, select { font-size: 16px !important; }
-    * { max-width: 100vw; }
-    img, svg, canvas, video { max-width: 100%; height: auto; }
+    img, video, canvas, object, embed { max-width: 100%; height: auto; }
+    pre, table, blockquote { overflow-x: auto; }
     table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
     /* Prevent double-tap zoom on interactive elements */
@@ -94,11 +108,23 @@
       touch-action: manipulation;
     }
 
+    /* Minimum touch target size (WCAG 2.2 — 44x44px) for interactive elements on mobile */
+    button, a, [role="button"], [role="tab"], [role="link"], label, select {
+      min-height: 44px;
+    }
+    button, a, [role="button"] {
+      min-width: 44px;
+    }
+
     /* Momentum scrolling for iOS */
     .custom-scrollbar, .scrollbar-thin, [class*="overflow-y"] {
       -webkit-overflow-scrolling: touch;
     }
   }
+
+  /* Text selection color */
+  ::selection { background: rgba(139, 92, 246, 0.3); color: #fff; }
+  ::-moz-selection { background: rgba(139, 92, 246, 0.3); color: #fff; }
 
   /* Reduced motion support */
   @media (prefers-reduced-motion: reduce) {
@@ -168,18 +194,36 @@
 }
 
 @layer components {
+  .glass-enter {
+    animation: glassEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes glassEnter {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .page-enter {
+    animation: pageEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes pageEnter {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   .glass-card {
-    @apply rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden;
-    border-color: var(--color-border);
-    background: var(--color-glass);
-    backdrop-filter: blur(28px) saturate(1.5);
-    -webkit-backdrop-filter: blur(28px) saturate(1.5);
+    @apply rounded-2xl border transition-all duration-300 ease-out relative;
+    isolation: isolate;
+    border-color: color-mix(in srgb, var(--color-primary) 12%, var(--color-border));
+    background: linear-gradient(135deg, var(--color-glass), color-mix(in srgb, var(--color-glass) 85%, rgba(255,255,255,0.02)));
+    backdrop-filter: blur(36px) saturate(1.8);
+    -webkit-backdrop-filter: blur(36px) saturate(1.8);
     box-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.06) inset,
-      0 8px 32px -8px rgba(0, 0, 0, 0.25),
-      0 0 0 0.5px rgba(255, 255, 255, 0.04) inset,
-      0 2px 4px -2px rgba(0, 0, 0, 0.08);
+      0 1px 2px -1px rgba(0, 0, 0, 0.05),
+      0 4px 12px -4px rgba(0, 0, 0, 0.12),
+      0 12px 40px -8px rgba(0, 0, 0, 0.15),
+      0 0 0 0.5px rgba(255, 255, 255, 0.03) inset;
     will-change: transform, box-shadow;
+    --tint-glow: var(--color-glow);
   }
 
   .glass-card::before {
@@ -189,7 +233,7 @@
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent);
     pointer-events: none;
   }
 
@@ -198,21 +242,55 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.03), transparent 60%);
+    background: linear-gradient(135deg, var(--tint-overlay, rgba(139, 92, 246, 0.04)), transparent 60%);
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.4s ease;
   }
 
   .glass-card:hover {
-    transform: translateY(-2px) scale(1.01);
+    transform: translateY(-3px) scale(1.015);
     box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.08) inset,
-      0 20px 48px -12px rgba(0, 0, 0, 0.3),
+      0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+      0 1px 2px -1px rgba(0, 0, 0, 0.05),
+      0 12px 32px -8px rgba(0, 0, 0, 0.2),
+      0 32px 64px -16px rgba(0, 0, 0, 0.3),
       0 0 0 0.5px rgba(255, 255, 255, 0.06) inset,
-      0 0 40px -8px var(--color-glow),
-      0 0 80px -16px rgba(139, 92, 246, 0.1);
-    border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+      0 0 50px -8px var(--tint-glow, rgba(139,92,246,0.2)),
+      0 0 100px -20px rgba(139, 92, 246, 0.1);
+    border-color: color-mix(in srgb, var(--color-primary) 55%, var(--color-border));
+  }
+
+  .glass-tinted-cyan {
+    --tint-overlay: rgba(34, 211, 238, 0.04);
+    --tint-glow: rgba(34, 211, 238, 0.2);
+  }
+  .glass-tinted-cyan:hover {
+    border-color: rgba(34, 211, 238, 0.25);
+  }
+
+  .glass-tinted-orange {
+    --tint-overlay: rgba(245, 158, 11, 0.05);
+    --tint-glow: rgba(245, 158, 11, 0.2);
+  }
+  .glass-tinted-orange:hover {
+    border-color: rgba(245, 158, 11, 0.25);
+  }
+
+  .glass-tinted-emerald {
+    --tint-overlay: rgba(34, 197, 94, 0.04);
+    --tint-glow: rgba(34, 197, 94, 0.2);
+  }
+  .glass-tinted-emerald:hover {
+    border-color: rgba(34, 197, 94, 0.25);
+  }
+
+  .glass-tinted-rose {
+    --tint-overlay: rgba(225, 29, 72, 0.04);
+    --tint-glow: rgba(225, 29, 72, 0.2);
+  }
+  .glass-tinted-rose:hover {
+    border-color: rgba(225, 29, 72, 0.25);
   }
 
   .glass-card:hover::before {
@@ -225,13 +303,15 @@
 
   .widget-card {
     @apply rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden;
-    border-color: var(--color-border);
-    background: var(--color-glass);
-    backdrop-filter: blur(24px) saturate(1.4);
-    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    border-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-border));
+    background: linear-gradient(135deg, var(--color-glass), color-mix(in srgb, var(--color-glass) 85%, rgba(255,255,255,0.02)));
+    backdrop-filter: blur(32px) saturate(1.6);
+    -webkit-backdrop-filter: blur(32px) saturate(1.6);
     box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-      0 4px 24px -6px rgba(0, 0, 0, 0.2);
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+      0 1px 2px -1px rgba(0, 0, 0, 0.05),
+      0 4px 16px -4px rgba(0, 0, 0, 0.1),
+      0 8px 32px -6px rgba(0, 0, 0, 0.12);
   }
 
   .widget-card::before {
@@ -241,18 +321,20 @@
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
     pointer-events: none;
   }
 
   .widget-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px) scale(1.01);
     box-shadow:
-      0 0 0 1px rgba(139, 92, 246, 0.12) inset,
-      0 16px 48px -10px rgba(0, 0, 0, 0.3),
-      0 0 48px -12px rgba(139, 92, 246, 0.12),
-      0 0 80px -20px rgba(59, 130, 246, 0.08);
-    border-color: color-mix(in srgb, var(--color-primary) 25%, var(--color-border));
+      0 0 0 1px rgba(139, 92, 246, 0.15) inset,
+      0 1px 2px -1px rgba(0, 0, 0, 0.05),
+      0 8px 24px -6px rgba(0, 0, 0, 0.18),
+      0 20px 48px -10px rgba(0, 0, 0, 0.22),
+      0 0 40px -10px rgba(139, 92, 246, 0.1),
+      0 0 80px -20px rgba(59, 130, 246, 0.06);
+    border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
   }
 
   .glass-sidebar {
@@ -343,6 +425,17 @@
     box-shadow: 0 4px 20px -4px rgba(139, 92, 246, 0.12);
   }
 
+  /* Button shadow utilities (used by Button component) */
+  .shadow-primary {
+    box-shadow: 0 4px 16px -4px rgba(139, 92, 246, 0.3), 0 8px 32px -8px rgba(139, 92, 246, 0.1);
+  }
+  .shadow-primary-lg {
+    box-shadow: 0 8px 28px -6px rgba(139, 92, 246, 0.4), 0 16px 48px -12px rgba(139, 92, 246, 0.2), 0 0 24px -4px rgba(139, 92, 246, 0.25);
+  }
+  .shadow-primary-sm {
+    box-shadow: 0 4px 12px -4px rgba(139, 92, 246, 0.3);
+  }
+
   .glass-header {
     background: var(--color-surface-2);
     backdrop-filter: blur(24px) saturate(1.4);
@@ -406,8 +499,12 @@
         color-mix(in srgb, var(--color-bg) 8%, transparent),
         color-mix(in srgb, var(--color-bg) 20%, transparent)
       ),
-      url('/images/login-wallpaper.png');
+      image-set(
+        url('/images/login-wallpaper.webp') type('image/webp'),
+        url('/images/login-wallpaper.png') type('image/png')
+      );
     background-size: cover;
+    background-image: url('/images/login-wallpaper.webp'), linear-gradient(to bottom, color-mix(in srgb, var(--color-bg) 8%, transparent), color-mix(in srgb, var(--color-bg) 20%, transparent));
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: scroll;
@@ -574,9 +671,196 @@
 .animate-subtle-float { animation: subtle-float 4s ease-in-out infinite; }
 .animate-rotate-slow { animation: rotate-slow 20s linear infinite; }
 
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
 .stagger-1 { animation-delay: 0.05s; }
 .stagger-2 { animation-delay: 0.1s; }
 .stagger-3 { animation-delay: 0.15s; }
 .stagger-4 { animation-delay: 0.2s; }
 .stagger-5 { animation-delay: 0.25s; }
 .stagger-6 { animation-delay: 0.3s; }
+
+/* Skeleton loading */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+.animate-skeleton { animation: skeleton-pulse 1.5s ease-in-out infinite; }
+
+/* Button press effect */
+.btn-press:active { transform: scale(0.97); }
+
+/* Hover lift — subtle upward movement + shadow */
+.hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.hover-lift:hover { transform: translateY(-2px); box-shadow: 0 8px 24px -8px rgba(0,0,0,0.15); }
+
+/* Hover glow — border + shadow glow on hover */
+.hover-glow { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.hover-glow:hover { border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border)); box-shadow: 0 0 24px -6px var(--color-primary-glow); }
+
+/* Hover arrow slide — child arrow moves right on parent hover */
+.hover-arrow-slide { transition: transform 0.2s ease; }
+.group:hover .hover-arrow-slide { transform: translateX(4px); }
+
+/* Staggered entrance — parent gets animate-fade-in-stagger, children get stagger classes */
+.animate-fade-in-stagger > * {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-fade-in-stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.animate-fade-in-stagger > *:nth-child(2) { animation-delay: 0.05s; }
+.animate-fade-in-stagger > *:nth-child(3) { animation-delay: 0.08s; }
+.animate-fade-in-stagger > *:nth-child(4) { animation-delay: 0.11s; }
+.animate-fade-in-stagger > *:nth-child(5) { animation-delay: 0.14s; }
+.animate-fade-in-stagger > *:nth-child(6) { animation-delay: 0.17s; }
+.animate-fade-in-stagger > *:nth-child(7) { animation-delay: 0.2s; }
+.animate-fade-in-stagger > *:nth-child(8) { animation-delay: 0.23s; }
+.animate-fade-in-stagger > *:nth-child(9) { animation-delay: 0.26s; }
+.animate-fade-in-stagger > *:nth-child(10) { animation-delay: 0.29s; }
+
+/* Scale on click — for any interactive element */
+.btn-scale:active { transform: scale(0.96); transition: transform 0.08s ease; }
+
+/* Focus ring */
+*:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 8px; }
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* Ripple effect for magnetic buttons */
+@keyframes ripple { to { transform: scale(20); opacity: 0; } }
+
+/* Card floating animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* =========================================================
+   GATENEXA DESIGN SYSTEM — Standardized Utilities
+   ========================================================= */
+
+/* --- Focus Ring (global accessibility) --- */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* --- Buttons --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  text-decoration: none;
+  user-select: none;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 2px 12px var(--color-primary-glow);
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px var(--color-primary-glow);
+}
+.btn-secondary {
+  background: rgba(139,92,246,0.1);
+  color: var(--color-primary-light);
+  border-color: rgba(139,92,246,0.2);
+}
+.btn-secondary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: rgba(139,92,246,0.15);
+  box-shadow: 0 4px 16px rgba(139,92,246,0.15);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text2);
+  border-color: transparent;
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+.btn-danger {
+  background: rgba(239,68,68,0.1);
+  color: #f87171;
+  border-color: rgba(239,68,68,0.2);
+}
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: rgba(239,68,68,0.15);
+  box-shadow: 0 4px 16px rgba(239,68,68,0.15);
+}
+
+/* --- Inputs --- */
+.input-field {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  color: var(--color-text);
+  background: var(--color-bg-2);
+  border: 1px solid var(--color-border);
+  transition: all 0.2s ease;
+  outline: none;
+}
+.input-field::placeholder { color: var(--color-text3); }
+.input-field:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-glow);
+}
+.input-field.error {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.15);
+}
+.input-field.success {
+  border-color: var(--color-success);
+  box-shadow: 0 0 0 3px rgba(34,197,94,0.15);
+}
+
+/* --- Cards --- */
+.card {
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  transition: all 0.25s ease;
+}
+.card:hover {
+  border-color: rgba(139,92,246,0.2);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+/* --- Responsive Touch Targets --- */
+@media (max-width: 767px) {
+  .btn, button, a, input, select, textarea {
+    min-height: 44px;
+  }
+  .btn { padding: 12px 20px; }
+  .input-field { padding: 12px 14px; }
+}

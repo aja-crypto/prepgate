@@ -44,6 +44,7 @@ function ScrollReveal({ children, section, observe, entries, className = '' }) {
 }
 
 export default function AboutPage() {
+  useEffect(() => { const t = Date.now(); console.log('[Trace] AboutPage MOUNTED at', t); return () => console.log('[Trace] AboutPage UNMOUNTED after', Date.now() - t, 'ms'); }, []);
   const [readingProgress, setReadingProgress] = useState(0);
   const { entries, observe } = useIntersection();
 
@@ -80,7 +81,7 @@ export default function AboutPage() {
         <Link to="/dashboard" className="nav-back">Dashboard</Link>
       </nav>
 
-      {/* Hero — Founder card left + Content right */}
+      {/* Hero ΓÇö Founder card left + Content right */}
       <section className="hero-section">
         <div className="hero-layout">
           <div className="founder-card">
@@ -100,10 +101,10 @@ export default function AboutPage() {
 
               <div className="fc-details">
                 <div className="fc-detail-row">
-                  <span className="fc-detail-tag-em">🎓 B.Tech Final Year Student</span>
-                  <span className="fc-detail-tag-em">💻 Full Stack Developer</span>
-                  <span className="fc-detail-tag-em">📚 GATE 2027 Aspirant</span>
-                  <span className="fc-detail-tag-em">🤖 Exploring AI &amp; Education</span>
+                  <span className="fc-detail-tag-em">≡ƒÄô B.Tech Final Year Student</span>
+                  <span className="fc-detail-tag-em">≡ƒÆ╗ Full Stack Developer</span>
+                  <span className="fc-detail-tag-em">≡ƒôÜ GATE 2027 Aspirant</span>
+                  <span className="fc-detail-tag-em">≡ƒñû Exploring AI &amp; Education</span>
                 </div>
                 <div className="fc-quote">
                   Helping GATE aspirants spend less time searching<br />and more time learning, revising, and improving.
@@ -115,7 +116,7 @@ export default function AboutPage() {
           </div>
 
           <div className="hero-content">
-            <div className="hc-badge">About GateApex</div>
+            <div className="hc-badge">About GateNexa</div>
             <h1 className="hc-heading">
               One Platform.<br />Every Resource.<br />Complete Preparation.
             </h1>
@@ -134,7 +135,7 @@ export default function AboutPage() {
 
       <main className="about-content">
 
-        {/* ── MISSION ── */}
+        {/* ΓöÇΓöÇ MISSION ΓöÇΓöÇ */}
         <ScrollReveal section="mission" observe={observe} entries={entries}>
           <div className="mission-block">
             <h2 className="mission-heading">Our Mission</h2>
@@ -142,13 +143,13 @@ export default function AboutPage() {
               Preparation should be challenging because of concepts, not because resources are difficult to find.
             </p>
             <p className="mission-text">
-              GateApex exists to make preparation more organized, accessible, and efficient for every aspirant.
+              GateNexa exists to make preparation more organized, accessible, and efficient for every aspirant.
             </p>
             <div className="mission-accent" />
           </div>
         </ScrollReveal>
 
-        {/* ── WHY I BUILT GateApex ── */}
+        {/* ΓöÇΓöÇ WHY I BUILT GateNexa ΓöÇΓöÇ */}
         <ScrollReveal section="why" observe={observe} entries={entries}>
           <div className="why-card">
             <div className="why-quote-icon">"</div>
@@ -157,13 +158,13 @@ export default function AboutPage() {
                 <span key={i} className="why-particle" style={{ animationDelay: `${i * 0.4}s` }} />
               ))}
             </div>
-            <h2 className="why-heading">Why I Built GateApex</h2>
+            <h2 className="why-heading">Why I Built GateNexa</h2>
             <p className="why-text">
               Most students waste countless hours searching for notes, PDFs, PYQs, and resources 
               across Telegram, YouTube, blogs, and websites. I experienced this firsthand.
             </p>
             <p className="why-text">
-              GateApex was built to organize everything in one place so aspirants can focus on 
+              GateNexa was built to organize everything in one place so aspirants can focus on 
               preparation instead of searching. Every feature exists because I wished it existed 
               when I was preparing.
             </p>
@@ -173,21 +174,21 @@ export default function AboutPage() {
           </div>
         </ScrollReveal>
 
-        {/* ── WHAT YOU WILL FIND HERE ── */}
+        {/* ΓöÇΓöÇ WHAT YOU WILL FIND HERE ΓöÇΓöÇ */}
         <ScrollReveal section="resources" observe={observe} entries={entries}>
           <div className="resources-block">
             <h2 className="section-heading">What You Will Find Here</h2>
             <p className="section-sub">
-              Everything on GateApex is designed around one goal — helping you prepare with clarity, consistency, and confidence.
+              Everything on GateNexa is designed around one goal ΓÇö helping you prepare with clarity, consistency, and confidence.
             </p>
             <div className="resource-grid">
               {[
-                { icon: '📓', title: 'Subject-wise Notes', desc: 'Structured notes for every GATE CSE subject' },
-                { icon: '📊', title: 'Formula Sheets', desc: 'Quick reference for formulas and key concepts' },
-                { icon: '📋', title: 'PYQs', desc: 'Previous year questions with community stats' },
-                { icon: '✍️', title: 'Mock Tests', desc: '55+ pre-seeded tests with detailed analytics' },
-                { icon: '📖', title: 'Revision Materials', desc: 'Short notes and summaries for last-minute revision' },
-                { icon: '🤖', title: 'AI Assistance', desc: 'Smart mentor, coach, and doubt solver' },
+                { icon: '≡ƒôô', title: 'Subject-wise Notes', desc: 'Structured notes for every GATE CSE subject' },
+                { icon: '≡ƒôè', title: 'Formula Sheets', desc: 'Quick reference for formulas and key concepts' },
+                { icon: '≡ƒôï', title: 'PYQs', desc: 'Previous year questions with community stats' },
+                { icon: 'Γ£ì∩╕Å', title: 'Mock Tests', desc: '55+ pre-seeded tests with detailed analytics' },
+                { icon: '≡ƒôû', title: 'Revision Materials', desc: 'Short notes and summaries for last-minute revision' },
+                { icon: '≡ƒñû', title: 'AI Assistance', desc: 'Smart mentor, coach, and doubt solver' },
               ].map((item, i) => (
                 <div key={i} className="resource-card" style={{ animationDelay: `${i * 0.1}s` }}>
                   <span className="rc-icon">{item.icon}</span>
@@ -199,7 +200,7 @@ export default function AboutPage() {
           </div>
         </ScrollReveal>
 
-        {/* ── RESOURCE ATTRIBUTION ── */}
+        {/* ΓöÇΓöÇ RESOURCE ATTRIBUTION ΓöÇΓöÇ */}
         <ScrollReveal section="attribution" observe={observe} entries={entries}>
           <div className="attr-block">
             <h2 className="section-heading">Resource Attribution</h2>
@@ -209,11 +210,11 @@ export default function AboutPage() {
             <div className="attr-timeline">
               <div className="attr-line" />
               {[
-                { icon: '▶️', label: 'YouTube Channels', desc: 'Free lectures and tutorials from educators' },
-                { icon: '🌐', label: 'Websites', desc: 'Curated links to trusted educational sites' },
-                { icon: '📚', label: 'Open Learning', desc: 'OER content and public domain resources' },
-                { icon: '💬', label: 'Community', desc: 'Discussions and shared knowledge from aspirants' },
-                { icon: '👥', label: 'Student Contributions', desc: 'Notes and materials shared by fellow students' },
+                { icon: 'Γû╢∩╕Å', label: 'YouTube Channels', desc: 'Free lectures and tutorials from educators' },
+                { icon: '≡ƒîÉ', label: 'Websites', desc: 'Curated links to trusted educational sites' },
+                { icon: '≡ƒôÜ', label: 'Open Learning', desc: 'OER content and public domain resources' },
+                { icon: '≡ƒÆ¼', label: 'Community', desc: 'Discussions and shared knowledge from aspirants' },
+                { icon: '≡ƒæÑ', label: 'Student Contributions', desc: 'Notes and materials shared by fellow students' },
               ].map((item, i) => (
                 <div key={i} className="attr-node" style={{ animationDelay: `${i * 0.15}s` }}>
                   <span className="attr-dot" />
@@ -228,7 +229,7 @@ export default function AboutPage() {
           </div>
         </ScrollReveal>
 
-        {/* ── COPYRIGHT ── */}
+        {/* ΓöÇΓöÇ COPYRIGHT ΓöÇΓöÇ */}
         <ScrollReveal section="copyright" observe={observe} entries={entries}>
           <div className="copyright-card">
             <div className="cp-icon">&#169;</div>
@@ -241,17 +242,17 @@ export default function AboutPage() {
           </div>
         </ScrollReveal>
 
-        {/* ── FEEDBACK ── */}
+        {/* ΓöÇΓöÇ FEEDBACK ΓöÇΓöÇ */}
         <ScrollReveal section="feedback" observe={observe} entries={entries}>
           <div className="feedback-block">
             <h2 className="section-heading">Feedback &amp; Suggestions</h2>
-            <p className="section-sub">GateApex is continuously improving. Help us make it better.</p>
+            <p className="section-sub">GateNexa is continuously improving. Help us make it better.</p>
             <div className="feedback-grid">
               {[
-                { icon: '🔍', title: 'Missing Resources', desc: 'Found something we should add?' },
-                { icon: '🔗', title: 'Broken Links', desc: 'Spot a dead link? Let us know.' },
-                { icon: '💡', title: 'Feature Requests', desc: 'Have an idea for a new feature?' },
-                { icon: '✅', title: 'Corrections', desc: 'Found incorrect information?' },
+                { icon: '≡ƒöì', title: 'Missing Resources', desc: 'Found something we should add?' },
+                { icon: '≡ƒöù', title: 'Broken Links', desc: 'Spot a dead link? Let us know.' },
+                { icon: '≡ƒÆí', title: 'Feature Requests', desc: 'Have an idea for a new feature?' },
+                { icon: 'Γ£à', title: 'Corrections', desc: 'Found incorrect information?' },
               ].map((item, i) => (
                 <div key={i} className="feedback-card">
                   <span className="fb-icon">{item.icon}</span>
@@ -263,7 +264,7 @@ export default function AboutPage() {
           </div>
         </ScrollReveal>
 
-        {/* ── PERSONAL NOTE ── */}
+        {/* ΓöÇΓöÇ PERSONAL NOTE ΓöÇΓöÇ */}
         <ScrollReveal section="founder" observe={observe} entries={entries}>
           <div className="founder-card-premium">
             <div className="fc-spotlight" aria-hidden="true" />
@@ -278,15 +279,24 @@ export default function AboutPage() {
                   <span>Full Stack Developer</span>
                   <span>GATE 2027 Aspirant</span>
                 </div>
+                {/* Tech stack badges */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(97,218,251,0.1)', color: '#61DAFB', border: '1px solid rgba(97,218,251,0.2)' }}>ΓÜ¢ React</span>
+                  <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(131,205,63,0.1)', color: '#83CD3F', border: '1px solid rgba(131,205,63,0.2)' }}>≡ƒƒó Node.js</span>
+                  <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(0,0,0,0.1)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.15)' }}>≡ƒÜÇ Express.js</span>
+                  <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(0,168,63,0.1)', color: '#00A83F', border: '1px solid rgba(0,168,63,0.2)' }}>≡ƒìâ MongoDB</span>
+                  <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(139,92,246,0.1)', color: '#A78BFA', border: '1px solid rgba(139,92,246,0.2)' }}>≡ƒñû AI</span>
+                  <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(79,143,255,0.1)', color: '#4F8DFF', border: '1px solid rgba(79,143,255,0.2)' }}>Γÿü Cloud</span>
+                </div>
                 <p className="fc-premium-text">
-                  I built GateApex because I lived the struggle of GATE preparation myself. The scattered resources, 
-                  the endless Telegram channels, the fear of missing a good PDF or a mock test — I experienced it all. 
+                  I built GateNexa because I lived the struggle of GATE preparation myself. The scattered resources, 
+                  the endless Telegram channels, the fear of missing a good PDF or a mock test ΓÇö I experienced it all. 
                   This platform is my attempt to solve that problem for every aspirant who follows. Every feature, 
                   every resource, every line of code was written with one question in mind: 
                   "Would this have helped me when I was preparing?"
                 </p>
                 <p className="fc-premium-text">
-                  GateApex is free, open, and always will be. Because quality preparation should not depend 
+                  GateNexa is free, open, and always will be. Because quality preparation should not depend 
                   on how much you can spend.
                 </p>
               </div>
@@ -294,7 +304,7 @@ export default function AboutPage() {
           </div>
         </ScrollReveal>
 
-        {/* ── ENDING ── */}
+        {/* ΓöÇΓöÇ ENDING ΓöÇΓöÇ */}
         <section className="ending-section">
           <div className="ending-content">
             <p className="ending-line" style={{ animationDelay: '0s' }}>Spend less time searching.</p>
@@ -305,7 +315,7 @@ export default function AboutPage() {
               Built by a student. For students.
             </p>
             <p className="ending-signature" style={{ animationDelay: '2s' }}>
-              — Purru Ajay Kumar
+              ΓÇö Purru Ajay Kumar
             </p>
           </div>
         </section>
@@ -328,7 +338,7 @@ export default function AboutPage() {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
-        /* ── Reading Progress Line ── */
+        /* ΓöÇΓöÇ Reading Progress Line ΓöÇΓöÇ */
         .reading-progress {
           position: fixed;
           left: 0;
@@ -345,7 +355,7 @@ export default function AboutPage() {
           border-radius: 0 0 4px 4px;
         }
 
-        /* ── Background ── */
+        /* ΓöÇΓöÇ Background ΓöÇΓöÇ */
         .bg-neural {
           position: fixed; inset: 0;
           background:
@@ -372,7 +382,7 @@ export default function AboutPage() {
           pointer-events: none; z-index: 0;
         }
 
-        /* ── Navigation ── */
+        /* ΓöÇΓöÇ Navigation ΓöÇΓöÇ */
         .about-nav {
           position: relative; z-index: 10;
           display: flex; align-items: center; justify-content: space-between;
@@ -393,7 +403,7 @@ export default function AboutPage() {
         }
         .nav-back:hover { color: #fff; }
 
-        /* ── Hero ── */
+        /* ΓöÇΓöÇ Hero ΓöÇΓöÇ */
         .hero-section {
           position: relative; z-index: 10;
           max-width: 1100px; margin: 0 auto;
@@ -410,7 +420,7 @@ export default function AboutPage() {
           padding-top: 12px;
         }
 
-        /* ── Floating Tech Stack ── */
+        /* ΓöÇΓöÇ Floating Tech Stack ΓöÇΓöÇ */
         .tech-stack {
           display: flex;
           justify-content: center;
@@ -435,7 +445,7 @@ export default function AboutPage() {
         .tech-chip:nth-child(3) { animation-delay: 1s; }
         .tech-chip:nth-child(4) { animation-delay: 1.5s; }
 
-        /* ── Founder Card ── */
+        /* ΓöÇΓöÇ Founder Card ΓöÇΓöÇ */
         .founder-card {
           flex-shrink: 0;
           width: 420px;
@@ -456,12 +466,14 @@ export default function AboutPage() {
           box-shadow: 0 12px 50px rgba(139,92,246,0.2), 0 0 100px rgba(139,92,246,0.06);
         }
 
-        /* ── Banner ── */
+        /* ΓöÇΓöÇ Banner ΓöÇΓöÇ */
         .fc-banner {
           position: relative;
           width: 100%;
           height: 320px;
-          background-image: url('/images/batman.png');
+          background-image: url('/images/batman.webp');
+          background-image: -webkit-image-set(url('/images/batman.webp') type('image/webp'), url('/images/batman.png') type('image/png'));
+          background-image: image-set(url('/images/batman.webp') type('image/webp'), url('/images/batman.png') type('image/png'));
           background-size: cover;
           background-position: 50% 30%;
           background-repeat: no-repeat;
@@ -490,7 +502,7 @@ export default function AboutPage() {
           z-index: 0;
         }
 
-        /* Profile overlay — no glass, directly on wallpaper */
+        /* Profile overlay ΓÇö no glass, directly on wallpaper */
         .fc-banner-profile {
           position: absolute;
           top: 50%;
@@ -565,7 +577,7 @@ export default function AboutPage() {
           margin-top: 8px;
         }
 
-        /* ── Founder Details ── */
+        /* ΓöÇΓöÇ Founder Details ΓöÇΓöÇ */
         .fc-details {
           padding: 20px 20px 24px;
           text-align: center;
@@ -605,7 +617,7 @@ export default function AboutPage() {
           margin-right: auto;
         }
 
-        /* ── Glass Button ── */
+        /* ΓöÇΓöÇ Glass Button ΓöÇΓöÇ */
         .fc-btn-glass {
           display: block;
           width: fit-content;
@@ -629,7 +641,7 @@ export default function AboutPage() {
           box-shadow: 0 0 28px rgba(139,92,246,0.18);
         }
 
-        /* ── Hero Content (Premium AI Startup) ── */
+        /* ΓöÇΓöÇ Hero Content (Premium AI Startup) ΓöÇΓöÇ */
         .hc-badge {
           display: inline-block;
           font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
@@ -670,14 +682,14 @@ export default function AboutPage() {
         .st-num { font-size: 22px; font-weight: 800; color: #fff; font-family: 'Sora', system-ui, sans-serif; }
         .st-label { font-size: 10px; color: #64748B; text-transform: uppercase; letter-spacing: 0.8px; font-family: 'Space Grotesk', system-ui, sans-serif; }
 
-        /* ── Content Area ── */
+        /* ΓöÇΓöÇ Content Area ΓöÇΓöÇ */
         .about-content {
           position: relative; z-index: 10;
           max-width: 720px; margin: 0 auto;
           padding: 0 24px 80px;
         }
 
-        /* ── Scroll Reveal ── */
+        /* ΓöÇΓöÇ Scroll Reveal ΓöÇΓöÇ */
         .scroll-reveal {
           opacity: 0; transform: translateY(40px);
           transition: opacity 0.8s ease, transform 0.8s ease;
@@ -686,7 +698,7 @@ export default function AboutPage() {
           opacity: 1; transform: translateY(0);
         }
 
-        /* ── Section Shared ── */
+        /* ΓöÇΓöÇ Section Shared ΓöÇΓöÇ */
         .section-heading {
           font-size: clamp(20px, 2.8vw, 28px);
           font-weight: 800;
@@ -703,7 +715,7 @@ export default function AboutPage() {
           font-family: 'Inter', system-ui, sans-serif;
         }
 
-        /* ── MISSION ── */
+        /* ΓöÇΓöÇ MISSION ΓöÇΓöÇ */
         .mission-block {
           padding: 60px 40px 48px;
           text-align: center;
@@ -744,7 +756,7 @@ export default function AboutPage() {
           animation: glowPulse 3s ease infinite;
         }
 
-        /* ── WHY I BUILT GateApex ── */
+        /* ΓöÇΓöÇ WHY I BUILT GateNexa ΓöÇΓöÇ */
         .why-card {
           position: relative;
           padding: 48px 40px;
@@ -812,7 +824,7 @@ export default function AboutPage() {
           margin-top: 24px;
         }
 
-        /* ── RESOURCE GRID ── */
+        /* ΓöÇΓöÇ RESOURCE GRID ΓöÇΓöÇ */
         .resources-block {
           padding: 0;
         }
@@ -848,7 +860,7 @@ export default function AboutPage() {
           font-family: 'Inter', system-ui, sans-serif;
         }
 
-        /* ── ATTRIBUTION TIMELINE ── */
+        /* ΓöÇΓöÇ ATTRIBUTION TIMELINE ΓöÇΓöÇ */
         .attr-block {
           padding: 0;
         }
@@ -901,7 +913,7 @@ export default function AboutPage() {
           font-family: 'Inter', system-ui, sans-serif;
         }
 
-        /* ── COPYRIGHT CARD ── */
+        /* ΓöÇΓöÇ COPYRIGHT CARD ΓöÇΓöÇ */
         .copyright-card {
           display: flex;
           gap: 20px;
@@ -926,7 +938,7 @@ export default function AboutPage() {
           font-family: 'Inter', system-ui, sans-serif;
         }
 
-        /* ── FEEDBACK ── */
+        /* ΓöÇΓöÇ FEEDBACK ΓöÇΓöÇ */
         .feedback-block {
           padding: 0;
         }
@@ -960,7 +972,7 @@ export default function AboutPage() {
           font-family: 'Inter', system-ui, sans-serif;
         }
 
-        /* ── PERSONAL NOTE (Premium Founder Card) ── */
+        /* ΓöÇΓöÇ PERSONAL NOTE (Premium Founder Card) ΓöÇΓöÇ */
         .founder-card-premium {
           position: relative;
           border-radius: 20px;
@@ -1026,7 +1038,7 @@ export default function AboutPage() {
         }
         .fc-premium-text:last-child { margin-bottom: 0; }
 
-        /* ── ENDING SECTION ── */
+        /* ΓöÇΓöÇ ENDING SECTION ΓöÇΓöÇ */
         .ending-section {
           min-height: 60vh;
           display: flex; align-items: center; justify-content: center;
@@ -1067,7 +1079,7 @@ export default function AboutPage() {
           font-style: italic;
         }
 
-        /* ── Footer ── */
+        /* ΓöÇΓöÇ Footer ΓöÇΓöÇ */
         .about-footer {
           position: relative; z-index: 10;
           border-top: 1px solid rgba(139,92,246,0.06);
@@ -1076,7 +1088,7 @@ export default function AboutPage() {
           font-family: 'Inter', system-ui, sans-serif;
         }
 
-        /* ── Keyframes ── */
+        /* ΓöÇΓöÇ Keyframes ΓöÇΓöÇ */
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
@@ -1115,11 +1127,11 @@ export default function AboutPage() {
           to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ── Section Spacing ── */
+        /* ΓöÇΓöÇ Section Spacing ΓöÇΓöÇ */
         .scroll-reveal { margin-bottom: 120px; }
         .scroll-reveal:last-of-type { margin-bottom: 0; }
 
-        /* ── Responsive ── */
+        /* ΓöÇΓöÇ Responsive ΓöÇΓöÇ */
         @media (max-width: 900px) {
           .hero-layout { flex-direction: column; gap: 40px; }
           .founder-card { width: 100%; max-width: 380px; }

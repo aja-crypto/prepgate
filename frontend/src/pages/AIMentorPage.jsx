@@ -6,11 +6,10 @@ import { MentorLoading } from '../components/common/GateLoadingScreen';
 import toast from 'react-hot-toast';
 import GlassCard from '../components/ui/GlassCard';
 import Icon from '../components/ui/Icon';
-import ProgressRing from '../components/ui/ProgressRing';
 import { computeSubjectCompletion, computeReadinessScore, computeCompletionForecast } from '../utils/gateUtils';
 
 import AICoachChat from '../components/gate/AICoachChat';
-import NextTopicRecommendation from '../components/gate/NextTopicRecommendation';
+import StrategyHub from '../components/gate/StrategyHub';
 
 function localHeuristicRecommendations(data) {
   const { subjects = [], topics = [], pyqs = [], mocks = [], studyStats = {} } = data;
@@ -223,6 +222,7 @@ const AIMentorPage = () => {
         }
       } catch (error) {
         if (error.name === 'CanceledError' || controller.signal.aborted) return;
+        toast.error('AI service unavailable. Showing local recommendations.');
         const fallback = localHeuristicRecommendations({
           subjects: subjects || [],
           topics: topics || [],
@@ -235,7 +235,7 @@ const AIMentorPage = () => {
         setAnalysis(fallback.analysis);
         setAiError(null);
       } finally {
-        if (!abortRef.current?.signal.aborted) setLoading(false);
+        if (!abortRef.current || !abortRef.current.signal.aborted) setLoading(false);
       }
     }, 500);
 
@@ -411,17 +411,10 @@ const AIMentorPage = () => {
         </div>
       </GlassCard>
 
-      <div className="grid lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-1">
-          <NextTopicRecommendation
-            topicName={subjects.find(s => s.progress < 70)?.name || "Data Structures & Algorithms"}
-            confidence={Math.min(95, 95 - (subjects.find(s => s.progress < 70)?.progress || 0))}
-            expectedGain={`+${Math.max(5, Math.ceil(100 - (subjects.find(s => s.progress < 70)?.progress || 0)))} marks`}
-            onStartLearning={() => navigate("/topics")}
-          />
-        </div>
-        <div className="lg:col-span-2"></div>
-      </div>
+      <StrategyHub
+        weakSubject={subjects.find(s => s.progress < 70)?.name || "Data Structures & Algorithms"}
+        onStartLearning={() => navigate("/topics")}
+      />
 
       {aiError && (
         <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-sm text-text2">
@@ -443,7 +436,7 @@ const AIMentorPage = () => {
         </GlassCard>
 
         <GlassCard className="flex flex-col items-center text-center py-6" glow>
-          <div className="text-3xl font-bold text-orange-500 mb-1">#{analysis?.predictions?.rank || '—'}</div>
+          <div className="text-3xl font-bold text-orange-500 mb-1">#{analysis?.predictions?.rank || 'ΓÇö'}</div>
           <div className="text-[10px] text-text3 uppercase tracking-wider font-bold">Predicted Rank</div>
         </GlassCard>
 
@@ -510,7 +503,7 @@ const AIMentorPage = () => {
                           {(rec.type || 'insight').replace('_', ' ')}
                         </span>
                       </div>
-                      <p className="text-sm text-text2 mt-2 leading-relaxed break-words break-words">{rec.content}</p>
+                      <p className="text-sm text-text2 mt-2 leading-relaxed break-words">{rec.content}</p>
                       <button 
                         onClick={() => navigate(rec.action || '/dashboard')}
                         className="mt-4 text-xs font-bold text-primary flex items-center gap-1 hover:underline"
@@ -554,7 +547,7 @@ const AIMentorPage = () => {
                     </div>
                     <p className="text-[11px] text-text3 italic mt-2">
                       {pyqAccuracy < 50 ? 'Focus on building core concepts before attempting more PYQs.' :
-                       pyqAccuracy < 70 ? 'Review your mistake patterns — are they conceptual or silly errors?' :
+                       pyqAccuracy < 70 ? 'Review your mistake patterns ΓÇö are they conceptual or silly errors?' :
                        'Good accuracy! Now work on speed and time management.'}
                     </p>
                   </div>

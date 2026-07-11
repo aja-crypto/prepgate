@@ -62,7 +62,7 @@ export function AnimatedProgressBar({ value, max = 100, color = '#a855f7', label
   );
 }
 
-export function PulseGlow({ color = '#a855f7', size = 200, blur = 80, duration = 4 }) {
+export function PulseGlow({ color = '#a855f7', size = 200, blur = 40, duration = 4 }) {
   return (
     <motion.div
       className="absolute rounded-full pointer-events-none"

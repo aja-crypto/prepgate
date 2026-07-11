@@ -1,5 +1,6 @@
 // Analytics: weekly/monthly graphs, accuracy, mock trends, completion forecast
 import { useEffect, useRef, useMemo, useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { Chart, registerables } from 'chart.js';
 import { useProgress } from '../context/ProgressContext';
 import {
@@ -69,50 +70,11 @@ export default function AnalyticsPage() {
     [studyStats.subjects, topics, pyqs]
   );
 
-  if (!hasData) {
-    return (
-      <div>
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-text">Analytics</h1>
-          <p className="text-sm text-text3 mt-0.5">Deep insights into your preparation</p>
-        </div>
-        <div className="bg-surface border border-border rounded-xl p-12 text-center">
-          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-primary/10 border border-primary/20">
-            <span className="text-3xl">📊</span>
-          </div>
-          <h2 className="text-lg font-bold text-text mb-2">No Analytics Yet</h2>
-          <p className="text-sm text-text3 max-w-md mx-auto mb-6 leading-relaxed">
-            Complete focus sessions, solve PYQs, and take mock tests to see your progress analytics here. Your data will appear as you study.
-          </p>
-          <div className="flex justify-center gap-3">
-            <a href="/focus" className="text-xs font-medium text-primary bg-primary/10 hover:bg-primary/15 px-5 py-2.5 rounded-xl border border-primary/20 transition-colors">
-              Start Focus Session
-            </a>
-            <a href="/pyq" className="text-xs font-medium text-text2 bg-bg-2 hover:bg-bg-3 px-5 py-2.5 rounded-xl border border-border transition-colors">
-              Practice PYQs
-            </a>
-            <a href="/mocks" className="text-xs font-medium text-text2 bg-bg-2 hover:bg-bg-3 px-5 py-2.5 rounded-xl border border-border transition-colors">
-              Take a Mock
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  const labels = subjects.map((s) => s?.name?.split(' ')[0] || '');
-  const scores = subjects.map((s) => s?.progress ?? 0);
-  const readiness = computeReadinessScore(topics, pyqs, mocks, gateFeatures?.streak);
-  const forecast = computeCompletionForecast(topics, gateFeatures);
-  const priorities = getSubjectPriorities(studyStats.subjects, topics, pyqs);
-  const recentScore = mocks.length ? mocks.slice(-3).reduce((sum, m) => sum + (m.score || 0), 0) / Math.min(3, mocks.length) : 0;
-  const rankRange = predictRankRange(recentScore || readiness);
-  const revisionHealth = computeRevisionHealth(revisionSchedule);
-  const consistencyScore = computeConsistencyScore(studyStats, gateFeatures);
-  const pace = computeStudyPace(studyStats, topics, gateFeatures);
-  const recoveryPlans = buildWeakRecoveryPlans(subjects, topics, pyqs);
-  const finalPlans = buildFinalModePlans();
+  const labels = useMemo(() => subjects.map((s) => s?.name?.split(' ')[0] || ''), [subjects]);
+  const scores = useMemo(() => subjects.map((s) => s?.progress ?? 0), [subjects]);
 
   useEffect(() => {
+    if (!hasData) return;
     const chartOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
     const destroy = (key) => { charts.current[key]?.destroy(); };
 
@@ -129,7 +91,7 @@ export default function AnalyticsPage() {
       destroy('pie');
       charts.current.pie = new Chart(pieRef.current, {
         type: 'doughnut',
-        data: { labels, datasets: [{ data: (studyStats.weeklyHours || []), backgroundColor: subjects.map((s) => s.color), borderWidth: 0 }] },
+        data: { labels, datasets: [{ data: scores, backgroundColor: subjects.map((s) => s.color), borderWidth: 0 }] },
         options: { ...chartOpts, cutout: '65%' },
       });
     }
@@ -201,7 +163,48 @@ export default function AnalyticsPage() {
     }
 
     return () => Object.values(charts.current).forEach((c) => c?.destroy());
-  }, [subjects, labels, scores, studyStats.weeklyHours, gateFeatures, mocks]);
+  }, [hasData, subjects, labels, scores, studyStats.weeklyHours, gateFeatures, mocks]);
+
+  if (!hasData) {
+    return (
+      <div>
+        <div className="mb-6">
+          <h1 className="text-xl font-bold text-text">Analytics</h1>
+          <p className="text-sm text-text3 mt-0.5">Deep insights into your preparation</p>
+        </div>
+        <div className="bg-surface border border-border rounded-xl p-12 text-center">
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-primary/10 border border-primary/20">
+            <span className="text-3xl">≡ƒôè</span>
+          </div>
+          <h2 className="text-lg font-bold text-text mb-2">No Analytics Yet</h2>
+          <p className="text-sm text-text3 max-w-md mx-auto mb-6 leading-relaxed">
+            Complete focus sessions, solve PYQs, and take mock tests to see your progress analytics here. Your data will appear as you study.
+          </p>
+          <div className="flex justify-center gap-3">
+            <Link to="/productivity" className="text-xs font-medium text-primary bg-primary/10 hover:bg-primary/15 px-5 py-2.5 rounded-xl border border-primary/20 transition-colors">
+              Start Focus Session
+            </Link>
+            <Link to="/pyq" className="text-xs font-medium text-text2 bg-bg-2 hover:bg-bg-3 px-5 py-2.5 rounded-xl border border-border transition-colors">
+              Practice PYQs
+            </Link>
+            <Link to="/mocks" className="text-xs font-medium text-text2 bg-bg-2 hover:bg-bg-3 px-5 py-2.5 rounded-xl border border-border transition-colors">
+              Take a Mock
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  const readiness = computeReadinessScore(topics, pyqs, mocks, gateFeatures?.streak);
+  const forecast = computeCompletionForecast(topics, gateFeatures);
+  const priorities = getSubjectPriorities(studyStats.subjects, topics, pyqs);
+  const recentScore = mocks.length ? mocks.slice(-3).reduce((sum, m) => sum + (m.score || 0), 0) / Math.min(3, mocks.length) : 0;
+  const rankRange = predictRankRange(mocks.length ? recentScore : readiness);
+  const revisionHealth = computeRevisionHealth(revisionSchedule);
+  const consistencyScore = computeConsistencyScore(studyStats, gateFeatures);
+  const pace = computeStudyPace(studyStats, topics, gateFeatures);
+  const recoveryPlans = buildWeakRecoveryPlans(subjects, topics, pyqs);
+  const finalPlans = buildFinalModePlans();
 
   return (
     <div>
@@ -213,7 +216,7 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
         {[
           { label: 'Readiness Score', value: `${readiness}/100`, color: '#4f8dff', tip: readiness >= 70 ? 'Strong preparation' : readiness >= 40 ? 'Needs improvement' : 'Start studying' },
-          { label: 'Expected Score', value: Math.round(recentScore || readiness), color: '#06d6a0', tip: 'Based on recent mock tests' },
+          { label: 'Expected Score', value: mocks.length ? Math.round(recentScore) : readiness, color: '#06d6a0', tip: 'Based on recent mock tests' },
           { label: 'Expected Rank', value: rankRange.label, color: '#ff9f43', tip: 'Approximate GATE rank range' },
           { label: 'Consistency', value: `${consistencyScore}/100`, color: '#a855f7', tip: consistencyScore >= 70 ? 'Very consistent' : 'Study more regularly' },
         ].map((s) => (
@@ -247,9 +250,9 @@ export default function AnalyticsPage() {
           <div className="text-3xl font-bold text-primary mb-1">{revisionHealth.label}</div>
           <div className="text-xs text-text3 mb-4">Score: {revisionHealth.score}/100</div>
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="bg-bg-2 rounded-lg p-2"><div className="text-red-400 font-mono">{revisionHealth.missed}</div><div className="text-[9px] text-text3">Missed</div></div>
-            <div className="bg-bg-2 rounded-lg p-2"><div className="text-orange-400 font-mono">{revisionHealth.today}</div><div className="text-[9px] text-text3">Today</div></div>
-            <div className="bg-bg-2 rounded-lg p-2"><div className="text-blue-400 font-mono">{revisionHealth.upcoming}</div><div className="text-[9px] text-text3">Upcoming</div></div>
+            <div className="bg-bg-2 rounded-lg p-2"><div className="text-red-400 font-mono">{revisionHealth.missed}</div><div className="text-[10px] sm:text-[11px] text-text3">Missed</div></div>
+            <div className="bg-bg-2 rounded-lg p-2"><div className="text-orange-400 font-mono">{revisionHealth.today}</div><div className="text-[10px] sm:text-[11px] text-text3">Today</div></div>
+            <div className="bg-bg-2 rounded-lg p-2"><div className="text-blue-400 font-mono">{revisionHealth.upcoming}</div><div className="text-[10px] sm:text-[11px] text-text3">Upcoming</div></div>
           </div>
         </div>
         <div className="bg-surface border border-border rounded-xl p-5">
@@ -280,7 +283,7 @@ export default function AnalyticsPage() {
                 <div className="flex flex-wrap gap-2 mt-2">
                   {item.plan.map((step) => <span key={step} className="text-[10px] px-2 py-1 rounded bg-primary/10 text-primary border border-primary/20">{step}</span>)}
                 </div>
-                <a href={`/topics`} className="mt-2 inline-block text-[10px] text-primary hover:underline">Study this topic →</a>
+                <a href={`/topics`} className="mt-2 inline-block text-[10px] text-primary hover:underline">Study this topic ΓåÆ</a>
               </div>
             ))}
           </div>

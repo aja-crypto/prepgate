@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { api } from '../../services/api';
 
 const TYPE_STYLES = {
   motivation: { bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.2)', color: '#A78BFA' },
@@ -52,35 +53,24 @@ export default function NotificationBell() {
     setLoading(true);
     try {
       const [notesRes, countRes] = await Promise.all([
-        fetch('/api/notifications', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch('/api/notifications/unread-count', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+        api.get('/notifications'),
+        api.get('/notifications/unread-count'),
       ]);
-      const notes = await notesRes.json();
-      const count = await countRes.json();
-      if (notes.success) setNotifications(notes.data || []);
-      if (count.success) setUnread(count.count || 0);
+      if (notesRes.data?.success) setNotifications(notesRes.data.data || []);
+      if (countRes.data?.success) setUnread(countRes.data.count || 0);
     } catch (e) {
-      console.error('Failed to fetch notifications:', e);
+      if (e.code !== 'ERR_CANCELED') console.error('Failed to fetch notifications:', e);
     }
     setLoading(false);
   }
 
   async function markRead(id) {
-    const token = localStorage.getItem('accessToken');
     const prev = notifications;
     const prevUnread = unread;
     setNotifications(prevN => prevN.map(n => n.id === id ? { ...n, read: true } : n));
     setUnread(u => Math.max(0, u - 1));
     try {
-      const res = await fetch(`/api/notifications/${id}/read`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed');
+      await api.put(`/notifications/${id}/read`);
     } catch (e) {
       setNotifications(prev);
       setUnread(prevUnread);
@@ -88,17 +78,12 @@ export default function NotificationBell() {
   }
 
   async function markAllRead() {
-    const token = localStorage.getItem('accessToken');
     const prev = notifications;
     const prevUnread = unread;
     setNotifications(prevN => prevN.map(n => ({ ...n, read: true })));
     setUnread(0);
     try {
-      const res = await fetch('/api/notifications/read-all', {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed');
+      await api.put('/notifications/read-all');
     } catch (e) {
       setNotifications(prev);
       setUnread(prevUnread);
@@ -106,18 +91,13 @@ export default function NotificationBell() {
   }
 
   async function deleteNote(id) {
-    const token = localStorage.getItem('accessToken');
     const prev = notifications;
     const prevUnread = unread;
     const wasUnread = notifications.find(n => n.id === id)?.read === false;
     setNotifications(prevN => prevN.filter(n => n.id !== id));
     if (wasUnread) setUnread(u => Math.max(0, u - 1));
     try {
-      const res = await fetch(`/api/notifications/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed');
+      await api.delete(`/notifications/${id}`);
     } catch (e) {
       setNotifications(prev);
       setUnread(prevUnread);
@@ -128,6 +108,8 @@ export default function NotificationBell() {
     <div ref={ref} className="relative">
       <button
         onClick={() => { setOpen(!open); if (!open) fetchNotifications(); }}
+        aria-label={`Notifications${unread > 0 ? ` (${unread} unread)` : ''}`}
+        aria-expanded={open}
         className="relative p-2.5 rounded-xl transition-all hover:bg-white/5"
         title="Notifications"
       >
@@ -163,7 +145,7 @@ export default function NotificationBell() {
           <div className="overflow-y-auto max-h-[380px]">
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center px-6">
-                <div className="text-3xl mb-3">🔔</div>
+                <div className="text-3xl mb-3">≡ƒöö</div>
                 <p className="text-xs text-text3">No notifications yet. Start studying to get personalized tips and motivation!</p>
               </div>
             ) : (
@@ -190,14 +172,14 @@ export default function NotificationBell() {
                           </span>
                           {n.actionUrl && (
                             <Link to={n.actionUrl} className="text-[10px] font-medium" style={{ color: style.color }} onClick={(e) => e.stopPropagation()}>
-                              View →
+                              View ΓåÆ
                             </Link>
                           )}
                           <button
                             onClick={(e) => { e.stopPropagation(); deleteNote(n.id); }}
                             className="text-[10px] text-text3 hover:text-text ml-auto transition-colors p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center"
                           >
-                            ✕
+                            Γ£ò
                           </button>
                         </div>
                       </div>

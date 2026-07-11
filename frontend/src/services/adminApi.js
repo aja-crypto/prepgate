@@ -115,7 +115,7 @@ export const adminFlashcardService = {
   deleteMonthlySet: (id) => adminApi.delete(`/admin/gate-vault/monthly-sets/${id}`),
 };
 
-// ─── CMS Management ─────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ CMS Management ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 function createCmsService(basePath) {
   return {
     list: (params) => adminApi.get(`/admin/cms/${basePath}`, { params }),
@@ -139,7 +139,7 @@ export const cmsService = {
   getStats: () => adminApi.get('/admin/cms/stats'),
 };
 
-// ─── Question Bank Management ───────────────────────────────
+// ΓöÇΓöÇΓöÇ Question Bank Management ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 export const questionBankService = {
   list: (params) => adminApi.get('/admin/question-bank', { params }),
   stats: () => adminApi.get('/admin/question-bank/stats'),
@@ -155,7 +155,7 @@ export const questionBankService = {
   bulkDifficulty: (ids, difficulty) => adminApi.post('/admin/question-bank/bulk/difficulty', { ids, difficulty }),
 };
 
-// ─── Notification Center ────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Notification Center ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 export const adminNotificationService = {
   getStats: () => adminApi.get('/admin/notifications/stats'),
   list: (params) => adminApi.get('/admin/notifications', { params }),
@@ -168,7 +168,7 @@ export const adminNotificationService = {
   getAnalytics: (period) => adminApi.get('/admin/notifications/analytics/overview', { params: { period } }),
 };
 
-// ─── Feedback Center ────────────────────────────────────────
+// ΓöÇΓöÇΓöÇ Feedback Center ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 export const adminFeedbackService = {
   getStats: () => adminApi.get('/admin/feedback/stats'),
   list: (params) => adminApi.get('/admin/feedback', { params }),
@@ -181,6 +181,75 @@ export const adminFeedbackService = {
   createRequest: (data) => adminApi.post('/admin/feedback/requests', data),
   updateRequest: (id, data) => adminApi.put(`/admin/feedback/requests/${id}`, data),
   deleteRequest: (id) => adminApi.delete(`/admin/feedback/requests/${id}`),
+};
+
+const datasetCrud = (base, modelName) => ({
+  list: (params) => adminApi.get(`/admin/predictor/${base}`, { params }),
+  get: (id) => adminApi.get(`/admin/predictor/${base}/${id}`),
+  create: (data) => adminApi.post(`/admin/predictor/${base}`, data),
+  update: (id, data) => adminApi.put(`/admin/predictor/${base}/${id}`, data),
+  delete: (id) => adminApi.delete(`/admin/predictor/${base}/${id}`),
+  importBulk: (data) => adminApi.post(`/admin/predictor/${base}/import`, { data }),
+});
+
+export const adminPredictorService = {
+  // Stats + bulk import
+  getStats: () => adminApi.get('/admin/predictor/stats'),
+  getDatasetCounts: () => adminApi.get('/admin/predictor/dataset-counts'),
+  getAccuracy: () => adminApi.get('/admin/predictor/accuracy'),
+  getFeedback: (params) => adminApi.get('/admin/predictor/feedback', { params }),
+
+  // Smart Import
+  importSmart: (data, type, year, paper) => adminApi.post('/admin/predictor/import', { data, type, year, paper }),
+  previewImport: (data, type) => adminApi.post('/admin/predictor/import/preview', { data, type }),
+
+  // Danger zone
+  clearDataset: (type) => adminApi.delete(`/admin/predictor/clear/${type}`),
+
+  // Legacy endpoints (keep for backward compat)
+  getYears: () => adminApi.get('/admin/predictor/years'),
+  createYear: (data) => adminApi.post('/admin/predictor/years', data),
+  updateYear: (id, data) => adminApi.put(`/admin/predictor/years/${id}`, data),
+  deleteYear: (id) => adminApi.delete(`/admin/predictor/years/${id}`),
+  getCutoffs: (params) => adminApi.get('/admin/predictor/cutoffs', { params }),
+  createCutoff: (data) => adminApi.post('/admin/predictor/cutoffs', data),
+  updateCutoff: (id, data) => adminApi.put(`/admin/predictor/cutoffs/${id}`, data),
+  deleteCutoff: (id) => adminApi.delete(`/admin/predictor/cutoffs/${id}`),
+  importCutoffs: (cutoffs) => adminApi.post('/admin/predictor/cutoffs/import', { cutoffs }),
+  getRankData: (params) => adminApi.get('/admin/predictor/rank-data', { params }),
+  createRankData: (data) => adminApi.post('/admin/predictor/rank-data', data),
+  importRankData: (data) => adminApi.post('/admin/predictor/rank-data/import', { data }),
+  deleteRankData: (id) => adminApi.delete(`/admin/predictor/rank-data/${id}`),
+  getScoreData: (params) => adminApi.get('/admin/predictor/score-data', { params }),
+  createScoreData: (data) => adminApi.post('/admin/predictor/score-data', data),
+  importScoreData: (data) => adminApi.post('/admin/predictor/score-data/import', { data }),
+  deleteScoreData: (id) => adminApi.delete(`/admin/predictor/score-data/${id}`),
+  getColleges: (params) => adminApi.get('/admin/predictor/colleges', { params }),
+  createCollege: (data) => adminApi.post('/admin/predictor/colleges', data),
+  updateCollege: (id, data) => adminApi.put(`/admin/predictor/colleges/${id}`, data),
+  deleteCollege: (id) => adminApi.delete(`/admin/predictor/colleges/${id}`),
+  importColleges: (colleges) => adminApi.post('/admin/predictor/colleges/import', { colleges }),
+  getCollegeCutoffs: (params) => adminApi.get('/admin/predictor/college-cutoffs', { params }),
+  createCollegeCutoff: (data) => adminApi.post('/admin/predictor/college-cutoffs', data),
+  updateCollegeCutoff: (id, data) => adminApi.put(`/admin/predictor/college-cutoffs/${id}`, data),
+  deleteCollegeCutoff: (id) => adminApi.delete(`/admin/predictor/college-cutoffs/${id}`),
+  importCollegeCutoffs: (cutoffs) => adminApi.post('/admin/predictor/college-cutoffs/import', { cutoffs }),
+  getPsus: (params) => adminApi.get('/admin/predictor/psus', { params }),
+  createPsu: (data) => adminApi.post('/admin/predictor/psus', data),
+  updatePsu: (id, data) => adminApi.put(`/admin/predictor/psus/${id}`, data),
+  deletePsu: (id) => adminApi.delete(`/admin/predictor/psus/${id}`),
+  importPsus: (psus) => adminApi.post('/admin/predictor/psus/import', { psus }),
+
+  // NEW dataset endpoints
+  marksScore: datasetCrud('marks-score', 'GateMarksScore'),
+  scoreRank: datasetCrud('score-rank', 'GateScoreRank'),
+  rankPercentile: datasetCrud('rank-percentile', 'GateRankPercentile'),
+  gateStatistics: datasetCrud('gate-statistics', 'GateStatistics'),
+  ccmt: datasetCrud('ccmt', 'CcmtCutoff'),
+  coap: datasetCrud('coap', 'CoapCutoff'),
+  seatMatrix: datasetCrud('seat-matrix', 'SeatMatrix'),
+  branchStats: datasetCrud('branch-stats', 'BranchStatistics'),
+  psuRecruitment: datasetCrud('psu-recruitment', 'PsuRecruitment'),
 };
 
 export default adminApi;

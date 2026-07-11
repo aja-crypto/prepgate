@@ -1,10 +1,17 @@
-﻿import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
+import rehypeHighlight from 'rehype-highlight';
 import { useProgress } from '../context/ProgressContext';
 import { aiService } from '../services/api';
 import { computeSubjectCompletion, computeReadinessScore } from '../utils/gateUtils';
 import { buildAiContext } from '../utils/aiContextBuilder';
+import useAiStreaming from '../hooks/useAiStreaming';
+import useAiCache from '../hooks/useAiCache';
+import useConversation from '../hooks/useConversation';
 import GlassCard from '../components/ui/GlassCard';
 import Icon from '../components/ui/Icon';
+import GateNexaAIIcon from '../components/ui/GateNexaAIIcon';
 
 const SUGGESTIONS = [
   "What should I study today?",
@@ -29,11 +36,19 @@ export default function AICoachPage() {
   const { topics, pyqs, mocks, studyStats, gateFeatures, user } = useProgress();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState('chat');
   const chatEnd = useRef(null);
   const inputRef = useRef(null);
   const welcomeSent = useRef(false);
+
+  const { startStream, stopStream, streaming, partialText, error: streamErr } = useAiStreaming();
+  const cache = useAiCache();
+  const conversation = useConversation('mentor');
+  const [statusText, setStatusText] = useState('Thinking');
+  const [responseTime, setResponseTime] = useState(null);
+  const [thumbs, setThumbs] = useState({});
+  const streamStartRef = useRef(null);
+  const statusIntervalRef = useRef(null);
 
   const subjects = useMemo(() => computeSubjectCompletion(studyStats?.subjects || [], topics || [], pyqs || []), [studyStats, topics, pyqs]);
   const overall = useMemo(() => { if (!subjects.length) return 0; return Math.round(subjects.reduce((s, x) => s + x.progress, 0) / subjects.length); }, [subjects]);
@@ -47,30 +62,89 @@ export default function AICoachPage() {
   useEffect(() => {
     if (welcomeSent.current) return;
     welcomeSent.current = true;
-    const timer = setTimeout(async () => {
-      const ctx = buildAiContext({ topics, pyqs, mocks, gateFeatures, studyStats });
-      const result = await aiService.askCoach("hello", ctx).catch(() => null);
-      const text = result?.data?.data?.text || `Hey! I'm your GateNexa AI Mentor. Ask me anything about your GATE prep — study plans, weak topics, PYQs, revision, or motivation.`;
-      setMessages([{ role: 'assistant', text }]);
+    const timer = setTimeout(() => {
+      const name = user?.name?.split(' ')[0] || 'Aspirant';
+      const wh = studyStats?.weeklyHours || [];
+      const yesterday = wh[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1] || 0;
+      const greet = new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 17 ? 'Good Afternoon' : 'Good Evening';
+      const weak = weakestSubject;
+      const targets = [];
+      if (weak) targets.push(`📚 **${weak.name}** — ${Math.round(weak.progress)}% complete`);
+      if (avgMock > 0) targets.push(`🎯 Mock target: ${Math.min(100, avgMock + 5)}%`);
+      targets.push(`📄 Solve 5+ PYQs today`);
+      const estHrs = targets.length * 1.5;
+      const now = new Date();
+      now.setHours(now.getHours() + Math.ceil(estHrs));
+      const estTime = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      const text = `${greet}, ${name}! 👋
+You studied **${yesterday}h** yesterday${yesterday >= 4 ? ' — 🔥 Great consistency!' : yesterday > 0 ? ' — good effort!' : ' — let\'s start strong!'}
+
+**Today's Goals:**
+${targets.map(t => `☐ ${t}`).join('\n')}
+
+⏰ Estimated completion: **${estTime}**
+
+I'm your study companion. Ask me about study plans, PYQs, subjects, or motivation!`;
+      setMessages([{ role: 'assistant', text, companion: true }]);
     }, 400);
     return () => clearTimeout(timer);
   }, [user]);
 
-  useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, partialText]);
 
-  const handleSend = async (e) => {
+  const handleSend = useCallback(async (e) => {
     if (e?.preventDefault) e.preventDefault();
-    if (!input.trim() || loading) return;
+    if (!input.trim() || streaming) return;
     const msg = input.trim();
     setInput('');
+    setResponseTime(null);
+    streamStartRef.current = performance.now();
+    conversation.addUserMessage(msg);
     setMessages((m) => [...m, { role: 'user', text: msg }]);
-    setLoading(true);
+
+    let phaseIdx = 0;
+    statusIntervalRef.current = setInterval(() => {
+      const phases = ['Thinking', 'Searching', 'Generating', 'Streaming'];
+      phaseIdx = (phaseIdx + 1) % phases.length;
+      setStatusText(phases[phaseIdx]);
+    }, 2000);
+
+    const cached = cache.getCached(msg);
+    if (cached) {
+      clearInterval(statusIntervalRef.current);
+      conversation.addAssistantMessage(cached.text);
+      setMessages((m) => [...m, { role: 'assistant', text: cached.text, source: 'cache' }]);
+      if (streamStartRef.current) setResponseTime(((performance.now() - streamStartRef.current) / 1000).toFixed(1));
+      return;
+    }
+
     const ctx = buildAiContext({ topics, pyqs, mocks, gateFeatures, studyStats });
-    const result = await aiService.askCoach(msg, ctx).catch(() => null);
-    const reply = result?.data?.data?.text || "Based on your preparation data, I recommend focusing on your weakest subject and solving at least 10 PYQs daily. Consistency is key for GATE success!";
-    setMessages((m) => [...m, { role: 'assistant', text: reply }]);
-    setLoading(false);
-  };
+    ctx.history = conversation.getHistoryForContext();
+
+    const result = await startStream(msg, ctx, conversation.sessionId);
+    clearInterval(statusIntervalRef.current);
+    if (streamStartRef.current) setResponseTime(((performance.now() - streamStartRef.current) / 1000).toFixed(1));
+
+    if (result?.text) {
+      conversation.addAssistantMessage(result.text);
+      cache.setCached(msg, { text: result.text, suggestions: result.suggestions });
+      setMessages((m) => [...m, { role: 'assistant', text: result.text, source: result.source || 'provider' }]);
+    } else if (!streaming) {
+      const fallback = "Unable to connect to GateNexa AI. Please try again in a moment.";
+      setMessages((m) => [...m, { role: 'assistant', text: fallback, source: 'error' }]);
+    }
+  }, [input, streaming, topics, pyqs, mocks, gateFeatures, studyStats, startStream, cache, conversation]);
+
+  const handleStop = useCallback(() => {
+    stopStream();
+    if (partialText) {
+      conversation.addAssistantMessage(partialText);
+      cache.setCached(messages[messages.length - 1]?.text, { text: partialText, suggestions: null });
+      setMessages((m) => [...m, { role: 'assistant', text: partialText }]);
+    }
+  }, [partialText, stopStream, cache, conversation, messages]);
+
+  const loading = streaming;
 
   const statsRow = [
     { label: 'Readiness', value: `${readiness}%`, color: '#8B5CF6' },
@@ -131,51 +205,145 @@ export default function AICoachPage() {
           <div className="lg:col-span-2">
             <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <div className="h-[500px] sm:h-[580px] overflow-y-auto p-4 sm:p-6 space-y-4">
-                {messages.length === 0 && (
-                  <div className="text-center py-10">
-                    <div className="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.15), rgba(99,102,241,0.1))', border: '1px solid rgba(168,85,247,0.2)', boxShadow: '0 0 30px rgba(168,85,247,0.1)' }}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-primary"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" /></svg>
-                    </div>
-                    <h4 className="text-base font-semibold text-text mb-2">Start Your GATE Conversation</h4>
-                    <p className="text-sm text-text3 mb-5 max-w-sm mx-auto leading-relaxed">Ask me anything — study plans, PYQ tips, subject advice, or daily motivation.</p>
-                    <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto">
-                      {SUGGESTIONS.slice(0, 5).map(s => (
-                        <button key={s} onClick={() => { setInput(s); setTimeout(() => inputRef.current?.focus(), 100); }}
-                          className="text-xs px-3 py-1.5 rounded-lg transition-all hover:scale-[1.02]"
-                          style={{ background: 'rgba(139,92,246,0.08)', color: '#A78BFA', border: '1px solid rgba(139,92,246,0.15)' }}>
-                          {s}
-                        </button>
-                      ))}
+                {messages.length === 0 && !loading && (
+                  <div className="flex items-center justify-center h-full py-16">
+                    <div className="text-center">
+                      <div className="w-10 h-10 border-2 border-white/20 border-t-primary rounded-full animate-spin mx-auto mb-3" />
+                      <p className="text-xs text-text3">Preparing your companion...</p>
                     </div>
                   </div>
                 )}
-                {messages.map((msg, i) => (
-                  <div key={i} className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 ${msg.role === 'user' ? 'bg-primary/20' : ''}`} style={msg.role === 'assistant' ? { background: 'rgba(139,92,246,0.12)' } : {}}>
-                      {msg.role === 'user' ? (
-                        <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-primary"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/></svg>
+                {messages.map((msg, i) => {
+                  const isLastAssistant = msg.role === 'assistant' && i === messages.length - 1;
+                  const displayText = isLastAssistant && streaming ? partialText || msg.text : msg.text;
+                  return (
+                    <div key={i} className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                      {msg.companion ? (
+                        <div className="w-full p-5 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(6,182,212,0.04))', border: '1px solid rgba(139,92,246,0.15)' }}>
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(99,102,241,0.1))' }}>👋</div>
+                            <div>
+                              <div className="text-sm font-bold text-text">Study Companion</div>
+                              <div className="text-[10px] text-text3">Always here to help</div>
+                            </div>
+                          </div>
+                          <div className="text-sm leading-relaxed whitespace-pre-line text-text [&_strong]:text-primary">
+                            {msg.text.split(/(\*\*.+?\*\*)/g).map((part, j) =>
+                              part.startsWith('**') ? (
+                                <strong key={j}>{part.slice(2, -2)}</strong>
+                              ) : (
+                                <span key={j}>{part}</span>
+                              )
+                            )}
+                          </div>
+                        </div>
                       ) : (
-                        <Icon name="logo" className="w-5 h-5" />
+                        <>
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 ${msg.role === 'user' ? 'bg-primary/20' : ''}`} style={msg.role === 'assistant' ? { background: 'rgba(139,92,246,0.12)' } : {}}>
+                            {msg.role === 'user' ? (
+                              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-primary"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"/></svg>
+                            ) : (
+                              <GateNexaAIIcon size={20} thinking={streaming && isLastAssistant} />
+                            )}
+                          </div>
+                          <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-[13px] ${msg.role === 'user' ? 'bg-primary text-white rounded-tr-none' : 'bg-white/[0.03] border border-white/[0.06] rounded-tl-none'}`}>
+                            {msg.role === 'assistant' && !streaming && msg.source && msg.source !== 'thinking' && (
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{
+                                  background: (msg.source === 'cache' ? '#4f8dff' : msg.source === 'error' ? '#f87171' : '#06d6a0') + '20',
+                                  color: msg.source === 'cache' ? '#4f8dff' : msg.source === 'error' ? '#f87171' : '#06d6a0',
+                                  border: '1px solid ' + (msg.source === 'cache' ? '#4f8dff' : msg.source === 'error' ? '#f87171' : '#06d6a0') + '30',
+                                }}>
+                                  {msg.source === 'cache' ? 'Cached' : msg.source === 'error' ? 'Error' : 'AI'}
+                                </span>
+                                {responseTime != null && isLastAssistant && (
+                                  <span className="text-[8px] text-text3">{responseTime}s</span>
+                                )}
+                              </div>
+                            )}
+                            {msg.role === 'user' ? (
+                              <span style={{ whiteSpace: 'pre-wrap' }}>{displayText}</span>
+                            ) : (
+                              <ReactMarkdown rehypePlugins={[rehypeHighlight]} components={{
+                                pre({ children }) { return <pre className="overflow-x-auto rounded-xl text-[12px] leading-relaxed my-2 p-3" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.06)' }}>{children}</pre>; },
+                                code({ inline, className, children, ...props }) {
+                                  if (inline) return <code className="px-1.5 py-0.5 rounded text-xs font-mono" style={{ background: 'rgba(139,92,246,0.12)', color: '#c4b5fd' }} {...props}>{children}</code>;
+                                  return <code className={className} {...props}>{children}</code>;
+                                },
+                                a({ href, children }) { return <a href={href} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#22d3ee' }}>{children}</a>; },
+                                ul({ children }) { return <ul className="list-disc ml-4 space-y-1 my-1">{children}</ul>; },
+                                ol({ children }) { return <ol className="list-decimal ml-4 space-y-1 my-1">{children}</ol>; },
+                                blockquote({ children }) { return <blockquote className="border-l-2 my-2 pl-3 italic" style={{ borderColor: 'rgba(139,92,246,0.3)', color: 'rgba(255,255,255,0.5)' }}>{children}</blockquote>; },
+                                h1({ children }) { return <h1 className="text-base font-bold mt-3 mb-1 text-text">{children}</h1>; },
+                                h2({ children }) { return <h2 className="text-sm font-bold mt-3 mb-1 text-text">{children}</h2>; },
+                                h3({ children }) { return <h3 className="text-xs font-bold mt-2 mb-1 text-text">{children}</h3>; },
+                                p({ children }) { return <p className="my-1 leading-relaxed">{children}</p>; },
+                              }}>{displayText}</ReactMarkdown>
+                            )}
+                            {streaming && isLastAssistant && (
+                              <span className="inline-block w-1.5 h-3.5 ml-0.5 animate-pulse align-middle" style={{ background: '#A78BFA' }} />
+                            )}
+                            {msg.role === 'assistant' && !streaming && msg.source && msg.source !== 'thinking' && displayText && (
+                              <div className="flex flex-wrap items-center gap-1 mt-2 pt-1.5 border-t" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
+                                <button onClick={() => navigator.clipboard.writeText(displayText)}
+                                  className="flex items-center gap-1 px-2 py-1 rounded text-[9px] transition-colors hover:bg-white/5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                                  <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path d="M4 2a2 2 0 012-2h4a2 2 0 012 2v1H4V2z"/><path fillRule="evenodd" d="M2 4a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V4zm2 0h8v10H4V4z"/></svg>
+                                  Copy
+                                </button>
+                                {msg.source === 'error' && (
+                                  <button onClick={() => handleSend(messages[i-1]?.text || '')}
+                                    className="flex items-center gap-1 px-2 py-1 rounded text-[9px] transition-colors hover:bg-red-500/10" style={{ color: '#f87171' }}>
+                                    <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M8 3a5 5 0 100 10A5 5 0 008 3zM4 8a4 4 0 118 0 4 4 0 01-8 0z"/><path d="M8 4.5a.5.5 0 01.5.5v2a.5.5 0 01-1 0V5a.5.5 0 01.5-.5zM8 9a.5.5 0 100 1 .5.5 0 000-1z"/></svg>
+                                    Retry
+                                  </button>
+                                )}
+                                {msg.source !== 'error' && msg.source !== 'thinking' && isLast && (
+                                  <button onClick={() => handleSend(messages[i-1]?.text || input)}
+                                    className="flex items-center gap-1 px-2 py-1 rounded text-[9px] transition-colors hover:bg-white/5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                                    <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>
+                                    Regenerate
+                                  </button>
+                                )}
+                                <button onClick={() => setThumbs(prev => ({ ...prev, [i]: prev[i] === 'up' ? null : 'up' }))}
+                                  className="flex items-center gap-1 px-2 py-1 rounded text-[9px] transition-colors hover:bg-white/5"
+                                  style={{ color: thumbs[i] === 'up' ? '#22d3ee' : 'rgba(255,255,255,0.25)' }}>
+                                  <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path d="M4.3 6.1c.4-.4.7-.8.8-1.5l.7-2.6c.18-.69.67-1.2 1.3-1.5.63-.28 1.3-.23 1.9.1.6.35.9.88 1.3 1.4.5.7.66 1.6.7 2.4v2.2l5.2.1c0 0 .9 0 .9.8 0 .6-.6 1.1-.6 1.1l.6 1.3s.5.8 0 1.3c-.4.4-1 .3-1 .3l.4 1.3s.3.8-.2 1.2c-.5.4-1 .2-1 .2l.1.9s0 .7-.6.8c-.6.2-1 0-1 0H6.8c-1.2 0-2.1-.7-2.5-1.8-.2-.5-.3-1-.5-1.5-.2-.5-.4-1-.7-1.4l-.7-.7c-.5-.4-.8-1-.8-1.7V8c0-1 .6-1.7 1.3-1.9h.4z"/></svg>
+                                </button>
+                                <button onClick={() => setThumbs(prev => ({ ...prev, [i]: prev[i] === 'down' ? null : 'down' }))}
+                                  className="flex items-center gap-1 px-2 py-1 rounded text-[9px] transition-colors hover:bg-white/5"
+                                  style={{ color: thumbs[i] === 'down' ? '#f87171' : 'rgba(255,255,255,0.25)' }}>
+                                  <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3" style={{ transform: 'scaleY(-1)' }}><path d="M4.3 6.1c.4-.4.7-.8.8-1.5l.7-2.6c.18-.69.67-1.2 1.3-1.5.63-.28 1.3-.23 1.9.1.6.35.9.88 1.3 1.4.5.7.66 1.6.7 2.4v2.2l5.2.1c0 0 .9 0 .9.8 0 .6-.6 1.1-.6 1.1l.6 1.3s.5.8 0 1.3c-.4.4-1 .3-1 .3l.4 1.3s.3.8-.2 1.2c-.5.4-1 .2-1 .2l.1.9s0 .7-.6.8c-.6.2-1 0-1 0H6.8c-1.2 0-2.1-.7-2.5-1.8-.2-.5-.3-1-.5-1.5-.2-.5-.4-1-.7-1.4l-.7-.7c-.5-.4-.8-1-.8-1.7V8c0-1 .6-1.7 1.3-1.9h.4z"/></svg>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </>
                       )}
                     </div>
-                    <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user' ? 'bg-primary/10 border border-primary/20 rounded-tr-none' : 'bg-white/[0.03] border border-white/[0.06] rounded-tl-none'}`}>
-                      <p className="text-sm leading-relaxed whitespace-pre-line text-text">{msg.text}</p>
+                  );
+                })}
+                {streaming && !partialText && messages[messages.length - 1]?.role === 'user' && (
+                  <div className="flex items-center gap-2.5 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    <div className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: '#A78BFA', animationDelay: '0s' }} />
+                      <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: '#A78BFA', animationDelay: '0.15s' }} />
+                      <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: '#A78BFA', animationDelay: '0.3s' }} />
                     </div>
-                  </div>
-                ))}
-                {loading && (
-                  <div className="flex items-center gap-2 text-xs text-text3">
-                    <span className="w-2 h-2 rounded-full bg-primary animate-bounce" />
-                    <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.15s' }} />
-                    <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.3s' }} />
+                    <span className="text-[10px] font-medium uppercase tracking-[0.12em]">{statusText}</span>
                   </div>
                 )}
                 <div ref={chatEnd} />
               </div>
               <form onSubmit={handleSend} className="flex items-center gap-2 p-4 border-t border-white/5">
                 <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask your AI Mentor..." className="flex-1 bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary/30 transition-colors" />
-                <button type="submit" disabled={!input.trim() || loading} className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 text-white" style={{ background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' }}>
-                  Send
+                <button
+                  type="submit"
+                  disabled={!input.trim() && !streaming}
+                  onClick={streaming ? (e) => { e.preventDefault(); handleStop(); } : undefined}
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 text-white"
+                  style={streaming ? { background: 'rgba(248,113,113,0.2)' } : { background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' }}
+                >
+                  {streaming ? 'Stop' : 'Send'}
                 </button>
               </form>
             </div>
@@ -334,4 +502,3 @@ export default function AICoachPage() {
     </div>
   );
 }
-

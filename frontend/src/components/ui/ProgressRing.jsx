@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-// SVG progress ring — replaces basic progress bars
+// SVG progress ring ΓÇö replaces basic progress bars
 const ProgressRing = memo(function ProgressRing({
   value = 0,
   size = 80,
@@ -11,9 +11,10 @@ const ProgressRing = memo(function ProgressRing({
   sublabel,
   className = '',
 }) {
-  const radius = (size - stroke) / 2;
+  const safeSize = Math.max(size, stroke * 2 + 2);
+  const radius = (safeSize - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (Math.min(100, Math.max(0, value)) / 100) * circumference;
+  const offset = circumference - (Math.min(100, Math.max(0, value || 0)) / 100) * circumference;
 
   return (
     <div className={`relative inline-flex flex-col items-center ${className}`}>

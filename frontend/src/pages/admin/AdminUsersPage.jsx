@@ -97,30 +97,17 @@ export default function AdminUsersPage() {
       setTotal(res.data.count || 0);
       setTotalPages(res.data.pages || 1);
 
-      // Compute summary from real users
-      const activeUsers = realUsers.filter(u => !u.deletedAt && u.isActive !== false);
+      // Summary stats ΓÇö note: activeToday/studyingNow are approximate (from current page)
       const activeToday = realUsers.filter(u => {
         const last = u.lastLogin ? new Date(u.lastLogin) : null;
         if (!last) return false;
         const today = new Date();
         return last.getDate() === today.getDate() && last.getMonth() === today.getMonth() && last.getFullYear() === today.getFullYear();
       }).length;
-      const studyingNow = realUsers.filter(u => {
-        const last = u.lastLogin ? new Date(u.lastLogin) : null;
-        if (!last) return false;
-        return (Date.now() - new Date(u.lastLogin).getTime()) < 5 * 60 * 1000;
-      }).length;
-      const avgHours = realUsers.length > 0
-        ? Math.round(realUsers.reduce((s, u) => s + (u.studyHours || 0), 0) / realUsers.length)
-        : 0;
-      const powerUsers = realUsers.filter(u => u.engagement === 'Power User').length;
       setSummary(prev => ({
         ...prev,
-        active: realUsers.filter(u => !u.deletedAt && u.isActive !== false).length,
-        avgStudyHours: Math.round(realUsers.reduce((s, u) => s + (u.studyHours || 0), 0) / Math.max(1, realUsers.length)),
-        powerUsers: realUsers.filter(u => u.engagement === 'Power User').length,
+        totalUsers: res.data.count || 0,
         activeToday,
-        studyingNow,
       }));
     } catch (err) {
       toast.error('Failed to load users');
@@ -190,12 +177,12 @@ export default function AdminUsersPage() {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-        <StatCard icon="👥" label="Total Users" value={summary.total} sub="Real users only" color="var(--color-primary)" />
-        <StatCard icon="🟢" label="Active Users" value={summary.active} sub="Enrolled & active" color="#34D399" />
-        <StatCard icon="📅" label="New This Week" value={summary.newThisWeek} sub="Last 7 days" color="#FBBF24" />
-        <StatCard icon="🎯" label="Active Today" value={summary.activeToday} sub="Logged in today" color="#60A5FA" />
-        <StatCard icon="📚" label="Studying Now" value={summary.studyingNow} sub="Active <5 min ago" color="#FBBF24" />
-        <StatCard icon="🏆" label="Power Users" value={summary.powerUsers} sub="High engagement" color="#F87171" />
+        <StatCard icon="≡ƒæÑ" label="Total Users" value={summary.total} sub="Real users only" color="var(--color-primary)" />
+        <StatCard icon="≡ƒƒó" label="Active Users" value={summary.active} sub="Enrolled & active" color="#34D399" />
+        <StatCard icon="≡ƒôà" label="New This Week" value={summary.newThisWeek} sub="Last 7 days" color="#FBBF24" />
+        <StatCard icon="≡ƒÄ»" label="Active Today" value={summary.activeToday} sub="Logged in today" color="#60A5FA" />
+        <StatCard icon="≡ƒôÜ" label="Studying Now" value={summary.studyingNow} sub="Active <5 min ago" color="#FBBF24" />
+        <StatCard icon="≡ƒÅå" label="Power Users" value={summary.powerUsers} sub="High engagement" color="#F87171" />
       </div>
 
       {/* Filters */}
@@ -250,9 +237,7 @@ export default function AdminUsersPage() {
                   <tr key={user._id || user.id} className="border-b border-border/50 hover:bg-bg-2/50 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold uppercase">
-                          {(user.name || '?').charAt(0)}
-                        </div>
+                        <img src="/images/pro iocn.png" alt={user.name || 'User'} className="w-9 h-9 rounded-full object-cover shrink-0" style={{ border: '2px solid rgba(139,92,246,0.5)', boxShadow: '0 0 8px rgba(139,92,246,0.3)' }} />
                         <div>
                           <div className="font-medium text-text truncate max-w-[160px]">{user.name || 'Unknown'}</div>
                           <div className="text-[10px] text-text3 truncate max-w-[160px]">{user.email}</div>
@@ -260,7 +245,7 @@ export default function AdminUsersPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-xs text-text2 hidden md:table-cell">
-                      {user.lastLogin || '—'}
+                      {user.lastLogin || 'ΓÇö'}
                     </td>
                     <td className="px-4 py-3 text-center hidden lg:table-cell">
                       <span className="font-mono text-sm text-text2">{user.totalLogins || 0}</span>
@@ -274,7 +259,7 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3 text-center hidden sm:table-cell">
                       <span className="font-mono text-sm text-text2">
                         {user.streakCurrent || 0}
-                        <span className="text-[10px] text-text3 ml-0.5">🔥</span>
+                        <span className="text-[10px] text-text3 ml-0.5">≡ƒöÑ</span>
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -341,7 +326,7 @@ export default function AdminUsersPage() {
             Previous
           </button>
           <span className="text-xs text-text3 px-3">
-            Page {page} of {totalPages} · {total} users
+            Page {page} of {totalPages} ┬╖ {total} users
           </span>
           <button
             disabled={page >= totalPages}

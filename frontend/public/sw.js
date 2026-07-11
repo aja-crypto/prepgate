@@ -1,6 +1,6 @@
-﻿const CACHE_NAME = 'gatenexa-v2';
-const STATIC_CACHE = 'gatenexa-static-v2';
-const DYNAMIC_CACHE = 'gatenexa-dynamic-v2';
+const CACHE_NAME = 'gatenexa-v3';
+const STATIC_CACHE = 'gatenexa-static-v3';
+const DYNAMIC_CACHE = 'gatenexa-dynamic-v3';
 
 const APP_SHELL = [
   '/',
@@ -43,6 +43,9 @@ self.addEventListener('fetch', (event) => {
   // Skip non-http(s) schemes (chrome-extension, data, blob)
   if (!url.protocol.startsWith('http')) return;
 
+  // Skip Vite dev server paths (node_modules, .vite, @fs) to avoid opaque-response errors
+  if (url.pathname.includes('/node_modules/') || url.pathname.includes('/.vite/') || url.pathname.includes('/@fs/')) return;
+
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request).catch(() =>
@@ -74,7 +77,7 @@ self.addEventListener('fetch', (event) => {
         const clone = response.clone();
         caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone));
         return response;
-      }).catch(() => caches.match(request))
+      }).catch(() => caches.match(request).then((cached) => cached || new Response('', { status: 503 })))
     );
     return;
   }

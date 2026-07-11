@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addMonths, subMonths, startOfWeek, endOfWeek, isToday, addDays } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useProgress } from '../context/ProgressContext';
 import { aiService } from '../services/api';
 import { GATE_SUBJECTS } from '../data/gateSubjectsData';
@@ -9,11 +10,135 @@ import Modal from '../components/common/Modal';
 import toast from 'react-hot-toast';
 import { Sparkles, ChevronLeft, ChevronRight, Clock, BookOpen, Target, CheckCircle, Play, BarChart3, Brain, AlertCircle, GripVertical, X, Plus, Layers } from 'lucide-react';
 
-const HOURS = Array.from({ length: 16 }, (_, i) => i + 6); // 6 AM – 9 PM
+const HOURS = Array.from({ length: 16 }, (_, i) => i + 6); // 6 AM ΓÇô 9 PM
 const COLORS_BY_NAME = Object.fromEntries(GATE_SUBJECTS.map(s => [s.name, { color: s.color, icon: s.icon }]));
 function subjectMeta(name) {
   const m = Object.values(GATE_SUBJECTS).find(s => s.name === name);
-  return { color: m?.color || '#7C3AED', icon: m?.icon || '📘' };
+  return { color: m?.color || '#7C3AED', icon: m?.icon || '≡ƒôÿ' };
+}
+const SUBJECT_DIFFICULTY = {
+  'Operating Systems': 4, 'Computer Networks': 4, 'DBMS': 3,
+  'Computer Organization': 4, 'Theory of Computation': 3, 'Algorithms': 3,
+  'Programming & Data Structures': 4, 'Engineering Mathematics': 5,
+  'Digital Logic': 2, 'Compiler Design': 3, 'General Aptitude': 2,
+};
+function getSubjectDifficulty(name) { return SUBJECT_DIFFICULTY[name] || 3; }
+
+// Activity styles ΓÇö permanent gradient colors and icons for each activity type
+const ACTIVITY_STYLES = {
+  'Wake Up': { icon: 'ΓÿÇ∩╕Å', bg: 'linear-gradient(135deg, #FBBF24, #F59E0B)' },
+  'Freshen Up': { icon: '≡ƒÜ┐', bg: 'linear-gradient(135deg, #60A5FA, #2563EB)' },
+  'Meditation': { icon: '≡ƒºÿ', bg: 'linear-gradient(135deg, #A78BFA, #7C3AED)' },
+  'Study Block 1': { icon: '≡ƒôÿ', bg: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' },
+  'Study Block 2': { icon: '≡ƒôÿ', bg: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' },
+  'Study Block 3': { icon: '≡ƒôÿ', bg: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' },
+  'New Concepts': { icon: '≡ƒôÿ', bg: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' },
+  'PYQ Practice': { icon: 'Γ¥ô', bg: 'linear-gradient(135deg, #2563EB, #1D4ED8)' },
+  'Revision': { icon: '≡ƒºá', bg: 'linear-gradient(135deg, #22C55E, #15803D)' },
+  'Formula Sheet': { icon: '≡ƒôä', bg: 'linear-gradient(135deg, #14B8A6, #0F766E)' },
+  'Formula Revision': { icon: '≡ƒôä', bg: 'linear-gradient(135deg, #14B8A6, #0F766E)' },
+  'Mock Test': { icon: '≡ƒÄ»', bg: 'linear-gradient(135deg, #EF4444, #B91C1C)' },
+  'Mock Analysis': { icon: '≡ƒôè', bg: 'linear-gradient(135deg, #F97316, #C2410C)' },
+  'Notes': { icon: '≡ƒô¥', bg: 'linear-gradient(135deg, #EC4899, #BE185D)' },
+  'Exercise': { icon: '≡ƒÆ¬', bg: 'linear-gradient(135deg, #10B981, #047857)' },
+  'Breakfast': { icon: '≡ƒì│', bg: 'linear-gradient(135deg, #F59E0B, #D97706)' },
+  'Lunch': { icon: '≡ƒì¢', bg: 'linear-gradient(135deg, #F97316, #EA580C)' },
+  'Dinner': { icon: '≡ƒì╜', bg: 'linear-gradient(135deg, #FB7185, #E11D48)' },
+  'Tea Break': { icon: 'Γÿò', bg: 'linear-gradient(135deg, #9CA3AF, #6B7280)' },
+  'Break': { icon: 'Γÿò', bg: 'linear-gradient(135deg, #9CA3AF, #6B7280)' },
+  'Sleep': { icon: '≡ƒîÖ', bg: 'linear-gradient(135deg, #1E3A8A, #312E81)' },
+  'Power Nap': { icon: '≡ƒÿ┤', bg: 'linear-gradient(135deg, #1E3A8A, #312E81)' },
+  'Free Time': { icon: '≡ƒô▒', bg: 'linear-gradient(135deg, #06B6D4, #0E7490)' },
+  'Walking': { icon: '≡ƒÜ╢', bg: 'linear-gradient(135deg, #34D399, #059669)' },
+  'AI Tomorrow Planning': { icon: '≡ƒñû', bg: 'linear-gradient(135deg, #A78BFA, #7C3AED)' },
+  'Goal Planning': { icon: '≡ƒÄ»', bg: 'linear-gradient(135deg, #F97316, #C2410C)' },
+  'Full Mock Test': { icon: '≡ƒÄ»', bg: 'linear-gradient(135deg, #EF4444, #B91C1C)' },
+  'Weekly Review': { icon: '≡ƒôè', bg: 'linear-gradient(135deg, #F97316, #C2410C)' },
+  'Tomorrow Planning': { icon: '≡ƒñû', bg: 'linear-gradient(135deg, #A78BFA, #7C3AED)' },
+};
+
+// Default daily schedule ΓÇö complete 05:45 ΓåÆ 22:30 timetable
+const DEFAULT_SCHEDULE = [
+  { label: 'Wake Up', startHour: 5.75, duration: 15, icon: 'ΓÿÇ∩╕Å' },
+  { label: 'Freshen Up', startHour: 6, duration: 20, icon: '≡ƒÜ┐' },
+  { label: 'Meditation', startHour: 6.33, duration: 20, icon: '≡ƒºÿ' },
+  { label: 'New Concepts', startHour: 6.67, duration: 120, icon: '≡ƒôÿ' },
+  { label: 'Breakfast', startHour: 8.67, duration: 30, icon: '≡ƒì│' },
+  { label: 'PYQ Practice', startHour: 9.17, duration: 120, icon: 'Γ¥ô' },
+  { label: 'Break', startHour: 11.17, duration: 20, icon: 'Γÿò' },
+  { label: 'Formula Sheet', startHour: 11.5, duration: 60, icon: '≡ƒôä' },
+  { label: 'Lunch', startHour: 12.5, duration: 60, icon: '≡ƒì¢' },
+  { label: 'Power Nap', startHour: 13.5, duration: 30, icon: '≡ƒÿ┤' },
+  { label: 'New Concepts', startHour: 14, duration: 120, icon: '≡ƒôÿ' },
+  { label: 'Break', startHour: 16, duration: 20, icon: 'Γÿò' },
+  { label: 'Notes', startHour: 16.33, duration: 60, icon: '≡ƒô¥' },
+  { label: 'Exercise', startHour: 17.33, duration: 40, icon: '≡ƒÆ¬' },
+  { label: 'Revision', startHour: 18, duration: 60, icon: '≡ƒºá' },
+  { label: 'Dinner', startHour: 19, duration: 40, icon: '≡ƒì╜' },
+  { label: 'Mock Test', startHour: 19.67, duration: 60, icon: '≡ƒÄ»' },
+  { label: 'Formula Revision', startHour: 20.67, duration: 40, icon: '≡ƒôä' },
+  { label: 'Tomorrow Planning', startHour: 21.33, duration: 30, icon: '≡ƒñû' },
+  { label: 'Free Time', startHour: 21.83, duration: 40, icon: '≡ƒô▒' },
+  { label: 'Sleep', startHour: 22.5, duration: 0, icon: '≡ƒîÖ' },
+];
+
+// Weekly subject rotation
+const WEEKLY_SUBJECTS = [
+  { day: 1, subjects: ['Operating Systems', 'DBMS'], label: 'OS + DBMS' },
+  { day: 2, subjects: ['Computer Networks', 'Algorithms'], label: 'CN + Algorithms' },
+  { day: 3, subjects: ['Theory of Computation', 'Compiler Design'], label: 'TOC + CD' },
+  { day: 4, subjects: ['Programming & Data Structures', 'Computer Organization'], label: 'DS + CO' },
+  { day: 5, subjects: ['Engineering Mathematics', 'Digital Logic'], label: 'Math + DL' },
+  { day: 6, subjects: ['General Aptitude', 'All Subjects Revision'], label: 'Aptitude + Revision' },
+  { day: 0, label: 'Full Mock + Revision', isMock: true },
+];
+
+const SUBJECT_COLORS = {
+  'Operating Systems': '#8B5CF6',
+  'DBMS': '#3B82F6',
+  'Computer Networks': '#06B6D4',
+  'Algorithms': '#F59E0B',
+  'Programming & Data Structures': '#6366F1',
+  'Theory of Computation': '#EC4899',
+  'Compiler Design': '#EF4444',
+  'Computer Organization': '#14B8A6',
+  'Digital Logic': '#EAB308',
+  'Engineering Mathematics': '#22C55E',
+  'General Aptitude': '#FBBF24',
+};
+
+// Generate default timetable on first load
+function generateDefaultSchedule(today) {
+  const dayOfWeek = today.getDay();
+  const rotation = WEEKLY_SUBJECTS[dayOfWeek] || WEEKLY_SUBJECTS[1];
+  const now = new Date();
+  const isSunday = dayOfWeek === 0;
+
+  return DEFAULT_SCHEDULE.map((slot, i) => {
+    const id = Date.now() + i;
+    const isStudyBlock = slot.label === 'New Concepts' || slot.label === 'PYQ Practice' || slot.label === 'Mock Test' || slot.label === 'Mock Analysis';
+    const style = ACTIVITY_STYLES[slot.label] || ACTIVITY_STYLES['Break'];
+    const subject = isStudyBlock && !isSunday
+      ? rotation.subjects[i % rotation.subjects.length]
+      : isSunday && slot.label === 'Mock Test' ? 'General'
+      : slot.label === 'New Concepts' && isSunday ? 'Revision'
+      : '';
+    const topic = subject ? `${slot.label} ΓÇö ${rotation.label}` : '';
+
+    return {
+      id,
+      subject: subject || slot.label,
+      topic: topic || slot.label,
+      hours: slot.duration / 60,
+      startHour: slot.startHour,
+      notes: '',
+      done: false,
+      color: style.bg,
+      icon: style.icon,
+      progress: 0,
+      isDefault: true,
+    };
+  }).filter(s => s.hours > 0);
 }
 
 // Generate smart schedule from weak topics
@@ -56,6 +181,7 @@ function generateSmartSchedule(topics, pyqs, studyStats, dailyHours = 8) {
 
 export default function StudyPlannerPage() {
   const { gateFeatures, updateGateFeatures, syncToCloud, topics, pyqs, mocks, studyStats } = useProgress();
+  const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -67,6 +193,24 @@ export default function StudyPlannerPage() {
   const [editId, setEditId] = useState(null);
   const [aiGenerating, setAiGenerating] = useState(false);
   const timelineRef = useRef(null);
+  const seededRef = useRef(false);
+
+  // Auto-generate default timetable on first load (never empty)
+  useEffect(() => {
+    if (seededRef.current) return;
+    const plans = gateFeatures?.studyPlans;
+    const todayKey = format(new Date(), 'yyyy-MM-dd');
+    const hasTodayPlans = plans?.[todayKey]?.length > 0;
+    const totalPlans = plans ? Object.values(plans).flat().length : 0;
+    if (totalPlans === 0 && !seededRef.current) {
+      seededRef.current = true;
+      const defaultPlan = generateDefaultSchedule(new Date());
+      updateGateFeatures((gf) => ({
+        ...gf,
+        studyPlans: { ...(gf.studyPlans || {}), [todayKey]: defaultPlan },
+      }));
+    }
+  }, [gateFeatures]);
 
   const today = new Date();
   const monthStart = startOfMonth(currentMonth);
@@ -85,8 +229,13 @@ export default function StudyPlannerPage() {
     return gateFeatures?.studyPlans?.[key] || [];
   }, [gateFeatures]);
 
+  const defaultSchedule = useMemo(() => generateDefaultSchedule(today), []);
+
   const todayKey = format(today, 'yyyy-MM-dd');
-  const todayPlans = getPlans(today);
+  const todayPlans = (() => {
+    const plans = getPlans(today);
+    return plans.length > 0 ? plans : defaultSchedule;
+  })();
   const subjects = computeSubjectCompletion(studyStats?.subjects || [], topics, pyqs);
   const smartSched = useMemo(() => generateSmartSchedule(topics, pyqs, studyStats), [topics, pyqs, studyStats]);
 
@@ -96,13 +245,19 @@ export default function StudyPlannerPage() {
   // Show today's schedule by default
   const [activeDay, setActiveDay] = useState(todayKey);
   const activeDate = new Date(activeDay + 'T00:00:00');
-  const activePlans = getPlans(activeDate);
+  const activePlans = format(activeDate, 'yyyy-MM-dd') === todayKey
+    ? [...defaultSchedule, ...getPlans(activeDate)]
+    : getPlans(activeDate);
 
   // Time-based current hour highlight
   const [now, setNow] = useState(new Date());
   useEffect(() => { const id = setInterval(() => setNow(new Date()), 60000); return () => clearInterval(id); }, []);
   const currentHour = now.getHours() + now.getMinutes() / 60;
 
+  const startFocusSession = (plan) => {
+    const subj = typeof plan.subject === 'string' ? plan.subject : GATE_SUBJECTS[0]?.name || '';
+    navigate(`/productivity?subject=${encodeURIComponent(subj || '')}`);
+  };
   const openAdd = (date) => {
     setSelectedDate(date);
     setForm({ subject: GATE_SUBJECTS[0].name, topic: GATE_SUBJECTS[0].highRoiTopics[0] || '', hours: 1, notes: '' });
@@ -191,7 +346,7 @@ export default function StudyPlannerPage() {
           return { ...gf, studyPlans: { ...gf.studyPlans, [key]: smart } };
         });
         await syncToCloud();
-        toast('Smart schedule created', { icon: '📋' });
+        toast('Smart schedule created', { icon: '≡ƒôï' });
       }
     } catch {
       // Fallback: smart heuristic
@@ -204,7 +359,7 @@ export default function StudyPlannerPage() {
         return { ...gf, studyPlans: { ...gf.studyPlans, [key]: smart } };
       });
       await syncToCloud();
-      toast('Created smart schedule', { icon: '📋' });
+      toast('Created smart schedule', { icon: '≡ƒôï' });
     } finally {
       setAiGenerating(false);
     }
@@ -232,7 +387,7 @@ export default function StudyPlannerPage() {
   }, [activeDay]);
 
   return (
-    <div className="flex gap-4 h-[calc(100vh-140px)] min-h-[600px]">
+    <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-80px)] lg:h-[calc(100vh-140px)] min-h-0 lg:min-h-[600px]">
       {/* ===== LEFT SIDEBAR ===== */}
       <div className="hidden lg:flex flex-col w-56 shrink-0 gap-3">
         <div className="bg-surface border border-border rounded-xl p-4">
@@ -245,12 +400,41 @@ export default function StudyPlannerPage() {
           </div>
           {todayPlans.length > 0 && (
             <div className="mt-3 pt-3 border-t border-border">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] text-text3">Progress</span>
+                <span className="text-[10px] font-mono text-text3">{todayPlans.length > 0 ? Math.round((completedCount / todayPlans.length) * 100) : 0}%</span>
+              </div>
+              <div className="h-2 rounded-full bg-white/5 overflow-hidden mb-3">
+                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${todayPlans.length > 0 ? (completedCount / todayPlans.length) * 100 : 0}%`, background: 'linear-gradient(90deg, var(--color-primary), #22D3EE)' }} />
+              </div>
               <div className="text-[10px] text-text3 mb-1.5">Current</div>
               <div className="text-xs font-medium text-text truncate">{todayPlans[0]?.topic || ''}</div>
               <div className="text-xs text-text3 mt-2 mb-1.5">Next</div>
-              <div className="text-xs text-text truncate">{todayPlans[1]?.topic || '—'}</div>
+              <div className="text-xs text-text truncate">{todayPlans[1]?.topic || 'ΓÇö'}</div>
             </div>
           )}
+        </div>
+
+        {/* Goal + Streak */}
+        <div className="bg-surface border border-border rounded-xl p-4">
+          <div className="text-xs font-semibold text-text mb-2">Today's Goal</div>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] text-text3">{totalHours}h of {gateFeatures?.dailyTarget?.hours || 8}h</span>
+            <span className="text-[10px] font-mono text-primary">{Math.round(Math.min(100, (totalHours / (gateFeatures?.dailyTarget?.hours || 8)) * 100))}%</span>
+          </div>
+          <div className="h-2 rounded-full bg-white/5 overflow-hidden mb-3">
+            <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min(100, (totalHours / (gateFeatures?.dailyTarget?.hours || 8)) * 100)}%`, background: 'linear-gradient(90deg, #22C55E, #4ADE80)' }} />
+          </div>
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="text-text3 flex items-center gap-1">≡ƒöÑ {gateFeatures?.streak?.current || 0} Day Streak</span>
+            <span className="text-text3">Next:{' '}
+              {todayPlans.find(p => !p.done) ? (() => {
+                const p = todayPlans.find(pl => !pl.done);
+                const h = p.startHour || 14;
+                return `${h > 12 ? h - 12 : h}${h >= 12 ? 'PM' : 'AM'}`;
+              })() : 'ΓÇö'}
+            </span>
+          </div>
         </div>
 
         <div className="bg-surface border border-border rounded-xl p-4 flex-1 overflow-y-auto">
@@ -286,7 +470,7 @@ export default function StudyPlannerPage() {
         </div>
       </div>
 
-      {/* ===== CENTER — TIMELINE ===== */}
+      {/* ===== CENTER ΓÇö TIMELINE ===== */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Week selector */}
         <div className="flex items-center gap-1 mb-4 overflow-x-auto pb-1 scrollbar-thin">
@@ -301,6 +485,41 @@ export default function StudyPlannerPage() {
                 <span className={`text-sm font-bold font-mono mt-0.5 ${active ? 'text-primary' : ''}`}>{format(d, 'd')}</span>
                 {count > 0 && <span className="text-[8px] mt-0.5 text-primary">{count} sessions</span>}
                 {isToday(d) && !active && <span className="text-[8px] mt-0.5 text-primary">Today</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Weekly Heatmap */}
+        <div className="flex items-center gap-1 mb-4 overflow-x-auto pb-1 scrollbar-thin">
+          {weekDays.map((d) => {
+            const k = format(d, 'yyyy-MM-dd');
+            const count = getPlans(d).length;
+            const doneCount = getPlans(d).filter(p => p.done).length;
+            const ratio = count > 0 ? doneCount / count : 0;
+            return (
+              <button key={k} onClick={() => setActiveDay(k)}
+                className="flex flex-col items-center gap-0.5 shrink-0"
+                title={`${format(d, 'EEEE')}: ${doneCount}/${count} done`}>
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-medium transition-all"
+                  style={{
+                    background: count === 0 ? 'rgba(255,255,255,0.03)' :
+                      ratio >= 1 ? 'rgba(34,197,94,0.25)' :
+                      ratio >= 0.5 ? 'rgba(139,92,246,0.2)' :
+                      'rgba(234,179,8,0.15)',
+                    border: k === activeDay ? '1px solid rgba(139,92,246,0.5)' : '1px solid rgba(255,255,255,0.04)',
+                    color: count === 0 ? 'rgba(255,255,255,0.2)' : ratio >= 1 ? '#4ADE80' : ratio >= 0.5 ? '#A78BFA' : '#EAB308',
+                  }}>
+                  {format(d, 'd')}
+                </div>
+                <span className="text-[8px] text-text3/60 uppercase">{format(d, 'EEE')}</span>
+                {count > 0 && (
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: Math.min(count, 3) }).map((_, i) => (
+                      <div key={i} className={`w-1 h-1 rounded-full ${i < doneCount ? 'bg-success' : 'bg-white/10'}`} />
+                    ))}
+                  </div>
+                )}
               </button>
             );
           })}
@@ -328,19 +547,29 @@ export default function StudyPlannerPage() {
 
                   {/* Slot */}
                   <div
-                    className={`flex-1 min-h-[56px] border-l-2 pl-3 py-1.5 relative transition-all ${isCurrentHour ? 'border-primary border-l-[3px] bg-primary/[0.03]' : 'border-border'} ${idx === HOURS.length - 1 ? '' : 'mb-0.5'}`}
+                    className={`flex-1 min-h-[56px] border-l-2 pl-3 py-1.5 relative transition-all ${isCurrentHour ? 'border-primary border-l-[3px] bg-primary/[0.03]' : 'border-border/40'} ${idx === HOURS.length - 1 ? '' : 'mb-0.5'}`}
                     onDragOver={e => e.preventDefault()}
                     onDrop={() => { if (draggingId) dropPlan(activeDay, draggingId, h); }}
                   >
                     {isCurrentHour && (
                       <div className="absolute left-[-2.5px] top-0 w-[5px] h-full bg-primary rounded-full animate-pulse" />
                     )}
+                    {/* Timeline dot indicator */}
+                    <div className={`absolute left-[-4px] top-2 w-[6px] h-[6px] rounded-full border-2 ${isCurrentHour ? 'bg-primary border-primary' : 'bg-surface border-border'}`} />
 
                     {plansAtHour.length === 0 && !isCurrentHour && (
-                      <button onClick={() => { setSelectedDate(activeDate); setForm({ subject: GATE_SUBJECTS[0].name, topic: '', hours: 1, notes: '', startHour: h }); setEditId(null); setShowModal(true); }}
-                        className="w-full h-full min-h-[40px] rounded-lg border border-dashed border-border/40 hover:border-primary/30 hover:bg-primary/[0.02] transition-all text-[10px] text-text3/40 hover:text-text3/60 flex items-center justify-center">
-                        + Add at {h > 12 ? `${h - 12} PM` : h === 12 ? '12 PM' : `${h} AM`}
-                      </button>
+                      <div className="w-full h-full min-h-[40px] rounded-lg flex items-center justify-center gap-2">
+                        <button onClick={() => openAdd(activeDate)}
+                          className="text-[10px] px-3 py-1.5 rounded-lg border border-dashed border-border/40 hover:border-primary/30 hover:bg-primary/[0.03] text-text3/40 hover:text-text3/60 transition-all">
+                          + Add Custom Session
+                        </button>
+                        {hourFloat >= 8 && hourFloat <= 16 && (
+                          <button onClick={generateAiSchedule} disabled={aiGenerating}
+                            className="text-[10px] px-3 py-1.5 rounded-lg border border-dashed border-purple-500/20 hover:border-purple-500/40 hover:bg-purple-500/[0.03] text-purple-400/40 hover:text-purple-400/60 transition-all">
+                            {aiGenerating ? '┬╖┬╖┬╖' : 'Γ£¿ AI Suggest'}
+                          </button>
+                        )}
+                      </div>
                     )}
 
                     <AnimatePresence>
@@ -357,28 +586,92 @@ export default function StudyPlannerPage() {
                             draggable
                             onDragStart={() => setDraggingId(plan.id)}
                             onClick={() => openDrawer(plan, activeDate)}
-                            style={{ borderLeftColor: meta.color }}
-                            className="bg-surface border border-border border-l-[3px] rounded-xl p-3 cursor-pointer hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all group relative overflow-hidden"
+                            style={{
+                              borderLeftColor: meta.color,
+                            }}
+                            className="border border-white/[0.06] border-l-[3px] rounded-xl p-3 cursor-pointer hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 transition-all group relative overflow-hidden"
                           >
                             <div className="absolute inset-0 opacity-[0.03]" style={{ background: `linear-gradient(135deg, ${meta.color}, transparent)` }} />
-                            <div className="relative">
-                              <div className="flex items-center justify-between mb-1">
-                                <div className="flex items-center gap-1.5">
+                            <div className="relative z-10">
+                              {/* Header: subject + priority */}
+                              <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center gap-1.5 min-w-0">
                                   <GripVertical size={12} className="text-text3/30 group-hover:text-text3/60 cursor-grab shrink-0" />
-                                  <span className="text-[10px] font-semibold" style={{ color: meta.color }}>{plan.subject.split(' ').slice(-1)[0]}</span>
+                                  {/* Activity type color dot */}
+                                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: plan.color?.match(/#[0-9a-fA-F]{6}/)?.[0] || meta.color }} />
+                                  <span className="text-[11px] font-semibold truncate" style={{ color: meta.color }}>{meta.icon} {plan.subject}</span>
+                                  {(plan.priority || getSubjectDifficulty(plan.subject) >= 4) && (
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0" title="High priority">
+                                      ≡ƒöÑ High
+                                    </span>
+                                  )}
                                 </div>
-                                <button onClick={e => { e.stopPropagation(); toggleDone(activeDate, plan.id); }}
-                                  className={`text-[9px] px-1.5 py-0.5 rounded-full border ${plan.done ? 'bg-success/10 border-success/20 text-success' : 'bg-bg-2 border-border text-text3'}`}>
-                                  {plan.done ? 'Done' : 'Mark'}
-                                </button>
+                                {/* Status badge */}
+                                {plan.done ? (
+                                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-success/10 text-success border border-success/20 shrink-0">Γ£ô Done</span>
+                                ) : plan.started ? (
+                                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0 animate-pulse">ΓùÅ Active</span>
+                                ) : (
+                                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-white/[0.04] text-text3 border border-white/[0.06] shrink-0">ΓÿÉ Pending</span>
+                                )}
                               </div>
-                              <div className="text-xs font-semibold text-text truncate pl-[22px]">{plan.topic}</div>
-                              <div className="flex items-center gap-2 mt-1 ml-[22px]">
-                                <span className="text-[9px] text-text3">
-                                  {format(new Date().setHours(h, 0, 0, 0), 'h:mm a')} – {format(new Date().setHours(Math.min(endHour, 23), 0, 0, 0), 'h:mm a')}
-                                </span>
-                                <span className="text-[9px] text-text3">· {dur}min</span>
-                                {plan.notes && <span className="text-[9px] text-text3 truncate">· {plan.notes}</span>}
+
+                              {/* Topic + Goal */}
+                              <div className="pl-[22px]">
+                                <div className="text-xs font-semibold text-text truncate flex items-center gap-1.5">
+                                  <span>{(ACTIVITY_STYLES[plan.topic]?.icon || plan.icon || '≡ƒôÿ')}</span>
+                                  <span className="truncate">{plan.topic}</span>
+                                </div>
+                                {plan.goal && (
+                                  <div className="flex items-center gap-1 mt-0.5 text-[10px] text-text3">
+                                    <span>≡ƒÄ»</span>
+                                    <span className="truncate">{plan.goal}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Progress + Difficulty */}
+                              <div className="flex items-center gap-3 mt-1.5 pl-[22px]">
+                                {!plan.done && (
+                                  <div className="flex-1 min-w-0">
+                                    <div className="h-2 rounded-full bg-white/5 overflow-hidden shadow-inner">
+                                      <div className="h-full rounded-full transition-all duration-700 ease-out" style={{ width: `${Math.min(100, plan.progress || 0)}%`, background: `linear-gradient(90deg, ${meta.color}, ${meta.color}88)`, boxShadow: plan.progress > 50 ? `0 0 8px ${meta.color}44` : 'none' }} />
+                                    </div>
+                                  </div>
+                                )}
+                                <span className="text-[9px] text-amber-400/60 shrink-0 font-mono">{'\u2605'.repeat(getSubjectDifficulty(plan.subject))}{'\u2606'.repeat(5 - getSubjectDifficulty(plan.subject))}</span>
+                              </div>
+
+                              {/* Duration + meta */}
+                              <div className="flex items-center gap-3 mt-1 pl-[22px]">
+                                <span className="text-[9px] text-text3">{dur}min</span>
+                                <span className="text-[9px] text-text3">{format(new Date().setHours(h, 0, 0, 0), 'h:mm a')} ΓÇô {format(new Date().setHours(Math.min(endHour, 23), 0, 0, 0), 'h:mm a')}</span>
+                              </div>
+
+                              {/* Quick actions row */}
+                              <div className="flex items-center gap-2 mt-1.5 pl-[22px]">
+                                <button onClick={e => { e.stopPropagation(); navigate('/notes'); }}
+                                  className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/[0.04] text-text3 hover:text-text hover:bg-white/[0.08] transition-all" title="Notes">≡ƒôä Notes</button>
+                                <button onClick={e => { e.stopPropagation(); navigate('/pyq'); }}
+                                  className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/[0.04] text-text3 hover:text-text hover:bg-white/[0.08] transition-all" title="PYQs">Γ¥ô PYQs</button>
+                                <button onClick={e => { e.stopPropagation(); navigate('/formulas'); }}
+                                  className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/[0.04] text-text3 hover:text-text hover:bg-white/[0.08] transition-all" title="Formula Sheet">≡ƒô¥ Formula</button>
+                              </div>
+
+                              {/* Action row: Start/Done */}
+                              <div className="flex items-center justify-end gap-2 mt-2 pl-[22px]">
+                                <div className="flex items-center gap-2">
+                                  {!plan.done && (
+                                    <button onClick={e => { e.stopPropagation(); startFocusSession(plan); }}
+                                      className="text-xs px-4 min-h-[36px] rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all font-semibold flex items-center gap-1.5">
+                                      Γû╢ Start
+                                    </button>
+                                  )}
+                                  <button onClick={e => { e.stopPropagation(); toggleDone(activeDate, plan.id); }}
+                                    className={"text-xs px-3 min-h-[36px] rounded-lg border transition-all flex items-center gap-1.5 " + (plan.done ? 'bg-success/10 border-success/20 text-success' : 'bg-white/5 border-white/10 text-text3 hover:text-text')}>
+                                    {plan.done ? 'Γ£ô Done' : plan.started ? 'ΓÅ╕ Mark' : 'ΓÿÉ Done'}
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </motion.div>
@@ -404,7 +697,7 @@ export default function StudyPlannerPage() {
                   {aiGenerating ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Sparkles size={16} />}
                   {aiGenerating ? 'Generating...' : 'Generate AI Schedule'}
                 </button>
-                <button onClick={() => { setSelectedDate(activeDate); setForm({ subject: GATE_SUBJECTS[0].name, topic: '', hours: 1, notes: '' }); setEditId(null); setShowModal(true); }}
+                <button onClick={() => { setSelectedDate(activeDate); setForm({ subject: GATE_SUBJECTS[0].name, topic: GATE_SUBJECTS[0].highRoiTopics[0] || '', hours: 1, notes: '' }); setEditId(null); setShowModal(true); }}
                   className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-bg-2 border border-border text-text2 hover:border-white/15">
                   Create Manually
                 </button>
@@ -412,6 +705,15 @@ export default function StudyPlannerPage() {
             </div>
           )}
         </div>
+
+        {/* Motivation footer */}
+        {todayPlans.length > 0 && completedCount < todayPlans.length && (
+          <div className="mt-3 text-center">
+            <p className="text-[10px] text-text3/60">
+              ≡ƒöÑ {completedCount > 0 ? `Only ${todayPlans.length - completedCount} more sessions to reach today's goal. Keep going!` : 'Start your first session to begin the momentum.'}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* ===== RIGHT PANEL ===== */}
@@ -442,21 +744,48 @@ export default function StudyPlannerPage() {
         </div>
 
         <div className="bg-surface border border-border rounded-xl p-4">
-          <div className="text-xs font-semibold text-text mb-3">Weak Topic</div>
+          <div className="text-xs font-semibold text-text mb-3 flex items-center gap-1.5">
+            <span>≡ƒôï</span> Revision Due Today
+          </div>
           {subjects.length > 0 ? (
-            <div className="text-center">
-              <div className="text-xl mb-1">{subjectMeta(subjects.sort((a, b) => a.progress - b.progress)[0].name).icon}</div>
-              <div className="text-xs font-medium text-text">{subjects.sort((a, b) => a.progress - b.progress)[0].name.split(' ').slice(-1)[0]}</div>
-              <div className="text-[9px] text-orange-400 mt-0.5">{subjects.sort((a, b) => a.progress - b.progress)[0].progress}% complete</div>
-              <a href="/topics" className="mt-2 inline-block text-[10px] text-primary hover:underline">Study now →</a>
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm">{subjectMeta(subjects.sort((a, b) => a.progress - b.progress)[0].name).icon}</span>
+                <span className="text-xs font-medium text-text">{subjects.sort((a, b) => a.progress - b.progress)[0].name}</span>
+                <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">High</span>
+              </div>
+              <div className="text-[10px] text-text3 mb-2">{subjects.sort((a, b) => a.progress - b.progress)[0].progress}% complete ┬╖ 2 topics pending</div>
+              <a href={`/topics`} className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline">Start Revision ΓåÆ</a>
             </div>
           ) : (
-            <p className="text-[10px] text-text3 text-center py-2">No data yet</p>
+            <p className="text-[10px] text-text3 py-2">Complete topics to build revision queue</p>
           )}
         </div>
 
         <div className="bg-surface border border-border rounded-xl p-4">
-          <div className="text-xs font-semibold text-text mb-2">AI Suggestion</div>
+          <div className="text-xs font-semibold text-text mb-3 flex items-center gap-1.5">
+            <span>Γ¥ô</span> Today's PYQs
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-primary font-mono mb-1">{pyqs?.filter(p => p.solved)?.length || 0}</div>
+            <div className="text-[10px] text-text3">questions solved</div>
+            <a href="/pyq" className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline">Solve PYQs ΓåÆ</a>
+          </div>
+        </div>
+
+        <div className="bg-surface border border-border rounded-xl p-4">
+          <div className="text-xs font-semibold text-text mb-3 flex items-center gap-1.5">
+            <span>≡ƒÄ»</span> Mock Reminder
+          </div>
+          <div className="text-center">
+            <div className="text-lg mb-1">≡ƒôà Sunday 9 AM</div>
+            <div className="text-[10px] text-text3 mb-2">Full-length mock every Sunday</div>
+            <a href="/mocks" className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline">Schedule Mock ΓåÆ</a>
+          </div>
+        </div>
+
+        <div className="bg-surface border border-border rounded-xl p-4">
+          <div className="text-xs font-semibold text-text mb-2">AI Insight</div>
           {subjects.length > 0 ? (
             <p className="text-[10px] text-text3 leading-relaxed">
               Focus on <span className="text-primary font-medium">{subjects.sort((a, b) => a.progress - b.progress)[0]?.name?.split(' ').slice(-1)[0] || 'your weakest subject'}</span> today.
@@ -465,14 +794,6 @@ export default function StudyPlannerPage() {
           ) : (
             <p className="text-[10px] text-text3 leading-relaxed">Start studying to get AI suggestions.</p>
           )}
-        </div>
-
-        <div className="bg-surface border border-border rounded-xl p-4">
-          <div className="text-xs font-semibold text-text mb-2">Productivity Score</div>
-          <div className="text-center py-2">
-            <div className="text-xl font-bold font-mono text-primary">{Math.min(100, totalHours * 12 + completedCount * 5)}</div>
-            <div className="text-[9px] text-text3">/ 100</div>
-          </div>
         </div>
       </div>
 
@@ -516,7 +837,7 @@ export default function StudyPlannerPage() {
 
             <div className="flex gap-2 mt-6">
               <button onClick={() => toggleDone(drawerDate, drawerPlan.id)} className={`flex-1 py-2.5 rounded-xl text-sm font-semibold ${drawerPlan.done ? 'bg-bg-2 border border-border text-text2' : 'bg-success text-white'}`}>
-                {drawerPlan.done ? '✓ Completed' : 'Mark Complete'}
+                {drawerPlan.done ? 'Γ£ô Completed' : 'Mark Complete'}
               </button>
               <button onClick={() => deletePlan(drawerDate, drawerPlan.id)} className="py-2.5 px-4 rounded-xl border border-red-500/20 text-red-400 text-sm hover:bg-red-500/10">Delete</button>
             </div>
@@ -530,15 +851,22 @@ export default function StudyPlannerPage() {
         <div className="space-y-3">
           <div>
             <label className="text-xs text-text2 uppercase tracking-wider font-semibold block mb-1.5">Subject</label>
-            <select value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
+            <select value={form.subject} onChange={e => {
+              const sub = GATE_SUBJECTS.find(s => s.name === e.target.value);
+              setForm(f => ({ ...f, subject: e.target.value, topic: sub?.highRoiTopics?.[0] || '' }));
+            }}
               className="w-full bg-bg-2 border border-border rounded-lg px-4 py-2.5 text-sm text-text focus:outline-none focus:border-primary/60">
               {GATE_SUBJECTS.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
             </select>
           </div>
           <div>
             <label className="text-xs text-text2 uppercase tracking-wider font-semibold block mb-1.5">Topic</label>
-            <input value={form.topic} onChange={e => setForm(f => ({ ...f, topic: e.target.value }))} placeholder="e.g. Process Scheduling"
-              className="w-full bg-bg-2 border border-border rounded-lg px-4 py-2.5 text-sm text-text focus:outline-none focus:border-primary/60" />
+            <select value={form.topic} onChange={e => setForm(f => ({ ...f, topic: e.target.value }))}
+              className="w-full bg-bg-2 border border-border rounded-lg px-4 py-2.5 text-sm text-text focus:outline-none focus:border-primary/60">
+              {(GATE_SUBJECTS.find(s => s.name === form.subject)?.highRoiTopics || []).map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="text-xs text-text2 uppercase tracking-wider font-semibold block mb-1.5">Duration (hours)</label>

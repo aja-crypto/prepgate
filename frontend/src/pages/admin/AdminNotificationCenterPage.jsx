@@ -297,12 +297,12 @@ export default function AdminNotificationCenterPage() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <StatCard label="Total Sent" value={stats.totalSent} icon="📤" />
-          <StatCard label="Today" value={stats.todayNotifications} icon="📅" />
-          <StatCard label="Scheduled" value={stats.scheduledNotifications} icon="⏰" />
-          <StatCard label="Delivery Rate" value={stats.deliveryRate} icon="✅" color="text-green-400" />
-          <StatCard label="Open Rate" value={stats.openRate} icon="👁" color="text-blue-400" />
-          <StatCard label="Click Rate" value={stats.clickRate} icon="🖱" color="text-yellow-400" />
+          <StatCard label="Total Sent" value={stats.totalSent} icon="≡ƒôñ" />
+          <StatCard label="Today" value={stats.todayNotifications} icon="≡ƒôà" />
+          <StatCard label="Scheduled" value={stats.scheduledNotifications} icon="ΓÅ░" />
+          <StatCard label="Delivery Rate" value={stats.deliveryRate} icon="Γ£à" color="text-green-400" />
+          <StatCard label="Open Rate" value={stats.openRate} icon="≡ƒæü" color="text-blue-400" />
+          <StatCard label="Click Rate" value={stats.clickRate} icon="≡ƒû▒" color="text-yellow-400" />
         </div>
       )}
 
@@ -472,7 +472,10 @@ function AnalyticsView({ analytics, period, setPeriod }) {
         <div className="bg-surface border border-border rounded-xl p-5">
           <h3 className="text-sm font-semibold text-text mb-4">Daily Trend</h3>
           <div className="flex items-end gap-1 h-32">
-            {Object.entries(byDay).sort(([a], [b]) => a.localeCompare(b)).map(([day, data]) => {
+            {Object.entries(byDay).sort(([a], [b]) => {
+              if (!a || !b) return 0;
+              return a.localeCompare(b);
+            }).map(([day, data]) => {
               const maxVal = Math.max(...Object.values(byDay).map(d => d.sent), 1);
               return (
                 <div key={day} className="flex-1 flex flex-col items-center gap-1" title={`${day}: ${data.sent} sent`}>

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 
 const QUOTES = [
@@ -37,13 +37,25 @@ export default function MotivationCard() {
   }, []);
 
   return (
-    <div className="hidden md:flex items-center gap-3 px-5 py-3 rounded-full bg-gradient-to-r from-rose-500/10 to-orange-500/10 border border-rose-500/20 backdrop-blur-md shadow-lg animate-fade-in" style={{ backdropFilter: 'blur(12px)' }}>
+    <div
+      className="flex items-center gap-3 px-5 py-3 rounded-full animate-fade-in"
+      style={{
+        background: 'rgba(10, 15, 30, 0.18)',
+        backdropFilter: 'blur(18px) saturate(1.5)',
+        WebkitBackdropFilter: 'blur(18px) saturate(1.5)',
+        border: '1px solid rgba(124, 58, 237, 0.12)',
+        boxShadow: `
+          0 0 0 1px rgba(255,255,255,0.04) inset,
+          0 8px 24px -8px rgba(0,0,0,0.3),
+          0 0 40px -12px rgba(124,58,237,0.08)
+        `,
+      }}
+    >
       <span className="text-xl">🔥</span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-white truncate" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>{quote.quote}</p>
-        <p className="text-xs text-text2 truncate">— {quote.author}</p>
+        <p className="text-sm font-medium text-white/90 truncate">{quote.quote}</p>
+        <p className="text-xs text-white/40 truncate">— {quote.author}</p>
       </div>
     </div>
   );
 }
-

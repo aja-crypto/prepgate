@@ -1,4 +1,4 @@
-﻿// src/App.jsx – Main Router
+// src/App.jsx – Main Router
 import React, { Suspense, lazy, useState, useCallback, useEffect, useMemo, Profiler } from 'react';
 import { motion } from 'framer-motion';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';

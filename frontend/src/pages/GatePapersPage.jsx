@@ -12,7 +12,7 @@ export default function GatePapersPage() {
     setLoading(true);
     gatePaperService.getAll()
       .then(r => { setPapers(r.data.data); setYears(r.data.years || []); })
-      .catch(() => {})
+      .catch(err => console.error('Failed to load gate papers:', err?.message))
       .finally(() => setLoading(false));
   }, []);
 
@@ -27,12 +27,12 @@ export default function GatePapersPage() {
   }, [papers, selectedYear]);
 
   const totalPapers = papers.length;
-  const yearRange = years.length ? `${years[0]}–${years[years.length - 1]}` : '';
+  const yearRange = years.length ? `${years[0]}ΓÇô${years[years.length - 1]}` : '';
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-2 border-white/20 border-t-primary rounded-full animate-spin" />
+      <div className="flex items-center justify-center py-12">
+        <div className="w-7 h-7 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
@@ -95,7 +95,7 @@ export default function GatePapersPage() {
                     </div>
                     <div className="min-w-0">
                       <div className="text-sm text-text font-medium truncate">{paper.title}</div>
-                      <div className="text-[10px] text-text3 mt-0.5">{paper.set} • PDF</div>
+                      <div className="text-[10px] text-text3 mt-0.5">{paper.set} ΓÇó PDF</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">

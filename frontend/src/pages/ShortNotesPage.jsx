@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { shortNoteService } from '../services/api';
 import { silentCatch } from '../utils/errorHandler';
+import { resolveMediaUrl } from '../utils/mediaUrl';
 import { PageLoading } from '../components/common/GateLoadingScreen';
+import PremiumPdfViewer from '../components/common/PremiumPdfViewer';
 
 export default function ShortNotesPage() {
   const [subjects, setSubjects] = useState([]);
@@ -71,7 +73,7 @@ export default function ShortNotesPage() {
               {sub.files.map((file, fileIdx) => (
                 <div key={`file-${subIdx}-${fileIdx}-${file.name}`} className="flex items-center justify-between bg-bg-2 border border-border rounded-lg px-3 py-2">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className="text-xs">{file.type === 'pdf' ? '📄' : '🖼'}</span>
+                    <span className="text-xs">{file.type === 'pdf' ? '≡ƒôä' : '≡ƒû╝'}</span>
                     <span className="text-[11px] text-text truncate">{file.name}</span>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
@@ -87,7 +89,14 @@ export default function ShortNotesPage() {
         {filtered.length === 0 && <div className="col-span-full text-center py-16 text-text3 text-sm">No short notes found</div>}
       </div>
 
-      {preview && (
+      {preview && preview.type === 'pdf' && (
+        <PremiumPdfViewer
+          url={resolveMediaUrl(preview.fileUrl)}
+          fileName={preview.name}
+          onClose={() => setPreview(null)}
+        />
+      )}
+      {preview && preview.type !== 'pdf' && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => setPreview(null)}>
           <div className="max-w-4xl max-h-[90vh] w-full bg-surface rounded-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
@@ -95,11 +104,7 @@ export default function ShortNotesPage() {
               <button onClick={() => setPreview(null)} className="text-text3 hover:text-text p-1">&times;</button>
             </div>
             <div className="p-2">
-              {preview.type === 'pdf' ? (
-                <iframe src={preview.fileUrl} className="w-full h-[75vh] rounded" title={preview.name} />
-              ) : (
-                <img src={preview.fileUrl} alt={preview.name} className="max-w-full max-h-[75vh] mx-auto object-contain" />
-              )}
+              <img src={resolveMediaUrl(preview.fileUrl)} alt={preview.name} className="max-w-full max-h-[75vh] mx-auto object-contain" />
             </div>
           </div>
         </div>

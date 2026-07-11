@@ -1,9 +1,11 @@
-﻿// Premium app shell — glass sidebar, modern nav
-import { useState, useEffect } from 'react';
+// Premium app shell — glass sidebar, modern nav
+import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { throttle } from '../../utils/perf';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useProgress } from '../../context/ProgressContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BRAND } from '../../design/tokens';
 import GlobalSearch, { useGlobalSearchShortcut } from './GlobalSearch';
 import Icon from '../ui/Icon';
@@ -11,13 +13,55 @@ import BrandText from '../ui/BrandText';
 import OnboardingFlow from '../onboarding/OnboardingFlow';
 import VirtualCalculator from './VirtualCalculator';
 import NotificationBell from './NotificationBell';
+import SmartScrollNavigator from './SmartScrollNavigator';
+import NexaPersona from './NexaPersona';
+
+function GateVaultIcon() {
+  return (
+    <motion.svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="w-5 h-5 shrink-0"
+      style={{ filter: 'drop-shadow(0 0 6px rgba(168,85,247,0.4))' }}
+      animate={{ y: [0, -2, 0] }}
+      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+      whileHover={{ scale: 1.15, filter: 'drop-shadow(0 0 12px rgba(168,85,247,0.7))' }}
+      whileTap={{ scale: 0.9 }}
+    >
+      <motion.rect x="3" y="8" width="18" height="12" rx="2"
+        animate={{ opacity: [0.8, 1, 0.8] }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.path d="M7 8V6a5 5 0 0 1 10 0v2"
+        animate={{ strokeOpacity: [0.6, 1, 0.6] }}
+        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.line x1="12" y1="12" x2="12" y2="16"
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.path d="M9 12v2a3 3 0 0 0 6 0v-2"
+        animate={{ strokeOpacity: [0.4, 0.8, 0.4] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.circle cx="12" cy="14" r="1" fill="currentColor" stroke="none"
+        animate={{ opacity: [0.3, 0.7, 0.3] }}
+        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    </motion.svg>
+  );
+}
 
 function BackToTop() {
   const [show, setShow] = useState(false);
   useEffect(() => {
     const main = document.querySelector('main');
     if (!main) return;
-    const onScroll = () => setShow(main.scrollTop > 400);
+    const onScroll = throttle(() => setShow(main.scrollTop > 400), 150);
     main.addEventListener('scroll', onScroll, { passive: true });
     return () => main.removeEventListener('scroll', onScroll);
   }, []);
@@ -35,26 +79,26 @@ function BackToTop() {
 
 const NAV = [
   { label: 'Dashboard', icon: 'dashboard', to: '/dashboard' },
-  { label: 'GateNexa AI', icon: 'zap', to: '/gatenexa-ai' },
-  { section: 'STUDY' },
+  { label: '✨ GateNexa AI', icon: 'zap', to: '/GateNexa-ai' },
+  { section: 'Study' },
   { label: 'Subjects', icon: 'subjects', to: '/subjects' },
   { label: 'Topics', icon: 'topics', to: '/topics' },
-  { label: 'Planner', icon: 'planner', to: '/planner' },
-  { label: 'Study Schedule', icon: 'planner', to: '/study-schedule' },
-  { label: 'Notes Hub', icon: 'notes', to: '/study-hub' },
-  { label: 'Focus Sessions', icon: 'productivity', to: '/productivity' },
-  { section: 'PRACTICE' },
-  { label: 'PYQ Practice', icon: 'pyq', to: '/pyq' },
+  { label: 'Notes', icon: 'notes', to: '/notes' },
+  { label: 'Focus', icon: 'productivity', to: '/productivity' },
+  { section: 'Practice' },
+  { label: 'PYQ', icon: 'pyq', to: '/pyq' },
   { label: 'Mock Tests', icon: 'mocks', to: '/mocks' },
-  { label: 'Mistake Notebook', icon: 'target', to: '/mistakes' },
-  { label: 'Gate Vault', icon: 'folder', to: '/gate-vault' },
-  { label: 'GATE Papers', icon: 'pyq', to: '/gate-papers' },
-  { section: 'ANALYTICS' },
-  { label: 'Progress Analytics', icon: 'analytics', to: '/analytics' },
+  { label: 'Planner', icon: 'planner', to: '/planner' },
+  { section: 'Insights' },
+  { label: 'Analytics', icon: 'analytics', to: '/analytics' },
   { label: 'AIR Predictor', icon: 'analytics', to: '/air-predictor' },
-  { section: 'TOOLS' },
+  { section: 'More' },
+  { label: 'Gate Vault', icon: 'folder', to: '/gate-vault' },
+  { label: 'NEXA Predictor', icon: 'analytics', to: '/opportunity-predictor' },
+  { label: 'Mistakes', icon: 'target', to: '/mistakes' },
+  { label: 'GATE Papers', icon: 'pyq', to: '/gate-papers' },
   { label: 'Calculator', icon: 'calculator', onClick: 'toggleCalc' },
-  { section: 'ACCOUNT' },
+  { section: 'Account' },
   { label: 'Settings', icon: 'settings', to: '/settings' },
   { label: 'Feedback', icon: 'feedback', to: '/feedback' },
 ];
@@ -64,10 +108,124 @@ function BackupBadge({ status }) {
   return <span className={`w-1.5 h-1.5 rounded-full ${colors[status] || colors.saved}`} />;
 }
 
+/* Prefetch NavLink — loads JS chunk on hover/touch for instant navigation */
+const PrefetchLink = React.memo(({ to, children, className, onClick }) => {
+  const prefetched = useRef(false);
+  const handlePrefetch = useCallback(() => {
+    if (prefetched.current) return;
+    prefetched.current = true;
+    const pageMap = {
+      '/dashboard': () => import('../../pages/DashboardPage'),
+      '/subjects': () => import('../../pages/SubjectsPage'),
+      '/topics': () => import('../../pages/TopicsPage'),
+      '/GateNexa-ai': () => import('../../pages/GateNexaAIPage'),
+      '/notes': () => import('../../pages/NotesPage'),
+      '/pyq': () => import('../../pages/PYQPage'),
+      '/mocks': () => import('../../pages/MocksPage'),
+      '/planner': () => import('../../pages/StudyPlannerPage'),
+      '/analytics': () => import('../../pages/AnalyticsPage'),
+      '/settings': () => import('../../pages/SettingsPage'),
+      '/productivity': () => import('../../pages/ProductivityPage'),
+      '/air-predictor': () => import('../../pages/AirPredictorPage'),
+      '/gate-vault': () => import('../../pages/GateVaultPage'),
+      '/opportunity-predictor': () => import('../../pages/OpportunityPredictorPage'),
+      '/mistakes': () => import('../../pages/MistakeNotebookPage'),
+      '/gate-papers': () => import('../../pages/GatePapersPage'),
+      '/feedback': () => import('../../pages/FeedbackPage'),
+    };
+    const loader = pageMap[to];
+    if (loader) loader().catch(() => {});
+  }, [to]);
+  return React.createElement(NavLink, {
+    to,
+    className,
+    onClick,
+    onMouseEnter: handlePrefetch,
+    onTouchStart: handlePrefetch,
+    children,
+  });
+});
+
+/* Memoized sidebar nav — only re-renders when user role changes */
+const SidebarNav = React.memo(({ onNavClick, onCalcClick }) => {
+  const { user } = useAuth();
+  return (
+    <>
+      {NAV.map((item, i) => {
+        if (item.section) {
+          return (
+            <div key={i} className="text-[10px] uppercase tracking-[0.12em] text-text3 font-semibold px-3 pt-5 pb-1.5">
+              {item.section}
+            </div>
+          );
+        }
+        if (item.onClick === 'toggleCalc') {
+          return (
+            <button
+              key={item.label}
+              onClick={onCalcClick}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all duration-200 my-0.5 text-text2 hover:bg-hover hover:text-text"
+            >
+              <Icon name={item.icon} />
+              {item.label}
+            </button>
+          );
+        }
+        if (item.label === 'Gate Vault') {
+          return (
+            <PrefetchLink
+              key={item.to}
+              to={item.to}
+              onClick={onNavClick}
+              className={({ isActive }) =>
+                `flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] transition-all duration-200 my-0.5 ${
+                  isActive ? 'nav-item-active text-primary' : 'text-text2 hover:bg-hover hover:text-text'
+                }`
+              }
+            >
+              <GateVaultIcon />
+              {item.label}
+            </PrefetchLink>
+          );
+        }
+        return (
+          <PrefetchLink
+            key={item.to}
+            to={item.to}
+            onClick={onNavClick}
+            className={({ isActive }) =>
+              `flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] transition-all duration-200 my-0.5 ${
+                isActive ? 'nav-item-active text-primary' : 'text-text2 hover:bg-hover hover:text-text'
+              }`
+            }
+          >
+            <Icon name={item.icon} />
+            {item.label}
+          </PrefetchLink>
+        );
+      })}
+      {(user?.role === 'owner' || user?.role === 'admin') && (
+        <>
+          <div className="text-[10px] uppercase tracking-[0.12em] text-text3 font-semibold px-3 pt-5 pb-1.5">Admin</div>
+          <NavLink
+            to="/admin"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all my-0.5 ${isActive ? 'nav-item-active text-primary' : 'text-text2 hover:bg-hover hover:text-text'}`
+            }
+          >
+            <Icon name="admin" />
+            Admin Panel
+          </NavLink>
+        </>
+      )}
+    </>
+  );
+});
+
 export default function Layout() {
-  const { user, logout } = useAuth();
+  useEffect(() => { const t = Date.now(); console.log('[Trace] Layout MOUNTED at', t); return () => console.log('[Trace] Layout UNMOUNTED after', Date.now() - t, 'ms'); }, []);
+  const { user, logout, isPremium, referralProgress } = useAuth();
   const { themeMode, toggleTheme, isDark, onboardingDone } = useTheme();
-  const { backupStatus } = useProgress();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -76,7 +234,6 @@ export default function Layout() {
   useEffect(() => {
     const handler = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
-      // Skip keyboard shortcuts on mobile devices
       if (window.innerWidth < 768 || ('ontouchstart' in window && !window.matchMedia('(pointer: fine)').matches)) return;
       const key = e.key.toLowerCase();
       if (key === 'f' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); navigate('/productivity'); }
@@ -92,26 +249,31 @@ export default function Layout() {
   }, [navigate]);
 
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef(false);
+  dropdownRef.current = profileDropdownOpen;
   const location = useLocation();
-  const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
 
   useGlobalSearchShortcut(setSearchOpen);
 
+  /* Only close sidebar if it's actually open — avoids wasteful re-render */
   useEffect(() => {
-    setSidebarOpen(false);
-  }, [location.pathname]);
+    if (sidebarOpen) setSidebarOpen(false);
+  }, [location.pathname, sidebarOpen]);
 
+  /* Click-outside handler — uses ref to avoid re-subscribing on every toggle */
   useEffect(() => {
     function handleClick(e) {
-      if (profileDropdownOpen && !e.target.closest('.profile-dropdown')) {
+      if (dropdownRef.current && !e.target.closest('.profile-dropdown')) {
         setProfileDropdownOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [profileDropdownOpen]);
+  }, []);
 
-  const initials = user?.name?.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
+
+  const handleNavClick = useCallback(() => setSidebarOpen(false), []);
+  const handleCalcOpen = useCallback(() => { setCalcOpen(true); setSidebarOpen(false); }, []);
 
   return (
     <div className="flex h-screen bg-bg overflow-hidden relative">
@@ -124,86 +286,32 @@ export default function Layout() {
       )}
 
       <aside className={`
-        fixed md:relative z-50 md:z-40 h-full w-[240px] max-w-[85vw] glass-sidebar flex flex-col
+        fixed md:relative z-50 md:z-40 h-full w-[220px] max-w-[85vw] glass-sidebar flex flex-col
         transition-transform duration-300 ease-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
-        <div className="p-5 border-b border-border">
-          <div className="flex items-center gap-3">
-            <Icon name="logo" className="w-10 h-10" />
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center gap-2.5">
+            <Icon name="logo" className="w-9 h-9" />
             <div>
               <div className="text-sm font-bold text-text tracking-tight">{BRAND.name}</div>
-              <div className="text-[10px] text-text3 font-medium">{BRAND.product}</div>
+              <div className="text-[9px] text-text3 font-medium">{BRAND.product}</div>
             </div>
           </div>
         </div>
 
         <nav className="flex-1 overflow-y-auto py-3 px-3">
-          {NAV.map((item, i) => {
-            if (item.section) {
-              return (
-                <div key={i} className="text-[10px] uppercase tracking-[0.12em] text-text3 font-semibold px-3 pt-5 pb-1.5">
-                  {item.section}
-                </div>
-              );
-            }
-            if (item.onClick === 'toggleCalc') {
-              return (
-                <button
-                  key={item.label}
-                  onClick={() => {
-                    setCalcOpen(true);
-                    setSidebarOpen(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all duration-200 my-0.5 text-text2 hover:bg-hover hover:text-text"
-                >
-                  <Icon name={item.icon} />
-                  {item.label}
-                </button>
-              );
-            }
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all duration-200 my-0.5 ${
-                    isActive ? 'nav-item-active text-primary' : 'text-text2 hover:bg-hover hover:text-text'
-                  }`
-                }
-                onClick={() => setSidebarOpen(false)}
-              >
-                <Icon name={item.icon} />
-                {item.label}
-              </NavLink>
-            );
-          })}
-          {user?.role === 'admin' && (
-            <>
-              <div className="text-[10px] uppercase tracking-[0.12em] text-text3 font-semibold px-3 pt-5 pb-1.5">Admin</div>
-              <NavLink
-                to="/admin"
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] transition-all my-0.5 ${isActive ? 'nav-item-active text-primary' : 'text-text2 hover:bg-hover hover:text-text'}`
-                }
-              >
-                <Icon name="admin" />
-                Admin Panel
-              </NavLink>
-            </>
-          )}
+          <SidebarNav onNavClick={handleNavClick} onCalcClick={handleCalcOpen} />
         </nav>
 
-        <div className="p-4 border-t border-border">
-          <div className="flex items-center gap-3 rounded-xl bg-bg-2/50 border border-border p-3">
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold text-white shrink-0"
-              style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}
-            >
-              {initials}
-            </div>
+        <div className="p-3 border-t border-border">
+          <div className="flex items-center gap-2 rounded-xl bg-bg-2/50 border border-border p-2.5">
+            <NexaPersona user={user} size={48} />
             <div className="flex-1 min-w-0">
               <div className="text-xs font-semibold text-text truncate">{user?.name}</div>
+              {user?.role === 'owner' && (
+                <span className="inline-block text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 font-semibold mt-0.5">👑 OWNER</span>
+              )}
               {user?.role === 'admin' && (
                 <span className="inline-block text-[9px] px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/20 font-semibold mt-0.5">Admin</span>
               )}
@@ -221,11 +329,12 @@ export default function Layout() {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto flex flex-col min-w-0 relative z-10 transition-all duration-300">
-        <header className="sticky top-0 z-30 flex items-center gap-2 md:gap-4 px-3 md:px-6 py-3 md:py-4 glass-header">
+      <main className="flex-1 overflow-y-auto flex flex-col min-w-0 relative z-10 transition-all duration-300 page-enter">
+        <header className="sticky top-0 z-30 flex items-center gap-2 md:gap-3 px-2 md:px-4 py-2 md:py-3 glass-header">
           {/* Mobile sidebar toggle */}
           <button
             onClick={() => setSidebarOpen(true)}
+            aria-label="Open navigation menu"
             className="md:hidden flex items-center justify-center w-11 h-11 rounded-xl text-text2 hover:text-text hover:bg-white/5 transition-all"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-5 h-5">
@@ -233,8 +342,12 @@ export default function Layout() {
             </svg>
           </button>
 
-          {/* Left: GateNexa AI Emblem - smaller on mobile */}
-          <div className="flex-shrink-0 hidden sm:block">
+          {/* Left: GateNexa AI Emblem - clickable for brand intro */}
+          <button
+            onClick={() => window.dispatchEvent(new Event('open-brand-intro'))}
+            className="flex-shrink-0 hidden sm:block cursor-pointer transition-transform hover:scale-105 active:scale-95"
+            aria-label="About GateNexa"
+          >
             <svg 
               viewBox="0 0 120 80" 
               fill="none" 
@@ -268,14 +381,15 @@ export default function Layout() {
                 </linearGradient>
               </defs>
             </svg>
-          </div>
+          </button>
 
           <NotificationBell />
 
           {/* Search Bar */}
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex-1 max-w-xs md:max-w-md flex items-center gap-2 md:gap-3 rounded-xl md:rounded-2xl border border-border/50 bg-bg-2/70 backdrop-blur-md px-3 md:px-5 py-2.5 md:py-4 text-left hover:border-primary/40 transition-all"
+            aria-label="Open search"
+            className="flex-1 max-w-xs md:max-w-sm flex items-center gap-2 md:gap-2 rounded-xl border border-border/50 bg-bg-2/70 backdrop-blur-md px-3 md:px-4 py-2 md:py-2.5 text-left hover:border-primary/40 transition-all"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5 md:w-6 md:h-6 text-text3 shrink-0">
               <circle cx="11" cy="11" r="7" />
@@ -286,7 +400,7 @@ export default function Layout() {
           </button>
 
           {/* Main Navigation Icons with Labels */}
-          <nav className="hidden xl:flex items-center gap-6">
+          <nav className="hidden xl:flex items-center gap-3">
             <NavLink to="/dashboard" className={({ isActive }) => `flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${isActive ? 'text-primary bg-primary/10 border-b-2 border-primary' : 'text-text2 hover:text-primary hover:bg-hover/50'}`}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-7 h-7">
                 <path d="M3 12l9-9 9 9" strokeLinecap="round" strokeLinejoin="round" />
@@ -346,6 +460,7 @@ export default function Layout() {
 
             <button
               onClick={() => { setCalcOpen(true); }}
+              aria-label="Open calculator"
               className="flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all text-text2 hover:text-primary hover:bg-hover/50"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-7 h-7">
@@ -354,6 +469,14 @@ export default function Layout() {
               </svg>
               <span className="text-xs font-semibold">Calculator</span>
             </button>
+
+            <NavLink to="/" title="Visit Homepage" className={({ isActive }) => `flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${isActive ? 'text-primary bg-primary/10 border-b-2 border-primary' : 'text-text2 hover:text-primary hover:bg-hover/50'}`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-7 h-7">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" strokeLinecap="round" strokeLinejoin="round" />
+                <polyline points="9 22 9 12 15 12 15 22" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="text-xs font-semibold">Home</span>
+            </NavLink>
           </nav>
 
           {/* Right Side: Controls */}
@@ -362,14 +485,11 @@ export default function Layout() {
             <div className="relative profile-dropdown">
               <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                aria-label="Open profile menu"
+                aria-expanded={profileDropdownOpen}
                 className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/5 transition-all"
               >
-                <div
-                  className="w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center text-xs md:text-sm font-bold text-white"
-                  style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}
-                >
-                  {initials}
-                </div>
+                <NexaPersona user={user} size={40} />
                 <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-text2 hidden md:block">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
@@ -380,8 +500,29 @@ export default function Layout() {
                   <div className="px-4 py-3 border-b border-white/5">
                     <div className="text-sm font-semibold text-text">{user?.name}</div>
                     <div className="text-xs text-text3 truncate">{user?.email}</div>
+                    {isPremium && (
+                      <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">
+                        ⭐ Premium
+                      </div>
+                    )}
                   </div>
                   <div className="py-2">
+                    <button onClick={() => { navigate('/referral'); setProfileDropdownOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text2 hover:bg-white/5 transition-colors">
+                      <span className="text-base">🎁</span>
+                      <span className="flex-1 text-left">Free Premium</span>
+                      {!isPremium && (
+                        <span className="text-[10px] text-purple-400 font-semibold">{Math.min(100, Math.round(referralProgress))}%</span>
+                      )}
+                      {isPremium && <span className="text-[10px] text-yellow-400">⭐ Active</span>}
+                    </button>
+                    <button onClick={() => { navigate('/'); setProfileDropdownOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text2 hover:bg-white/5 transition-colors">
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" clipRule="evenodd" /></svg>
+                      Visit Homepage
+                    </button>
+                    <button onClick={() => { window.dispatchEvent(new Event('open-brand-intro')); setProfileDropdownOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text2 hover:bg-white/5 transition-colors">
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+                      About GateNexa
+                    </button>
                     <button onClick={() => { navigate('/settings'); setProfileDropdownOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text2 hover:bg-white/5 transition-colors">
                       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
                       Account
@@ -419,11 +560,32 @@ export default function Layout() {
           </div>
         </header>
 
-        <div className="p-3 sm:p-4 md:p-6 lg:p-8 animate-fade-in flex-1 max-w-[1700px] w-full mx-auto overflow-x-hidden">
-          <Outlet />
+        <div className="p-2 sm:p-3 md:p-4 lg:p-5 max-w-full sm:max-w-[1600px] w-full mx-auto flex-1 flex flex-col">
+          <Suspense fallback={
+            <div className="flex-1 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3 animate-fade-in">
+                <div className="w-6 h-6 rounded-lg border-2 border-primary/20 border-t-primary animate-spin" />
+                <p className="text-[11px] text-text3 font-medium">Loading page...</p>
+              </div>
+            </div>
+          }>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="flex-1 flex flex-col"
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
+          </Suspense>
         </div>
       </main>
       <BackToTop />
+      <SmartScrollNavigator />
     </div>
   );
 }

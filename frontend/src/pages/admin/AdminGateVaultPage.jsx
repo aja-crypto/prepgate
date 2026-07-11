@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import adminApi, { adminFlashcardService, adminPyqService, adminMockTestService } from '../../services/adminApi';
 import toast from 'react-hot-toast';
 
@@ -304,7 +304,7 @@ export default function AdminGateVaultPage() {
       if (missingSubjects.length > 0) {
         toast.error(`Subject missing in question(s): ${missingSubjects.join(', ')}`);
       } else if (missingTopics.length > 0) {
-        toast.warning(`Topic missing in question(s): ${missingTopics.join(', ')}`);
+        toast(`Topic missing in question(s): ${missingTopics.join(', ')}`, { icon: '⚠️' });
       } else {
         toast.success(`✅ Parsed ${parsed.length} questions`);
       }

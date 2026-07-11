@@ -73,11 +73,15 @@ export default function AmbientBackground() {
     createParticles();
     draw();
 
-    window.addEventListener('resize', () => { resize(); createParticles(); });
-    window.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+    const handleResize = () => { resize(); createParticles(); };
+    const handleMouseMove = e => { mouseX = e.clientX; mouseY = e.clientY; };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('mousemove', handleMouseMove);
 
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
 

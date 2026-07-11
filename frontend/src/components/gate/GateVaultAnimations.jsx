@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ============================================
@@ -132,7 +132,7 @@ export function XPGainAnimation({ amount = 10, visible }) {
               boxShadow: '0 0 30px rgba(168,85,247,0.6), 0 0 60px rgba(168,85,247,0.3)',
             }}
           >
-            <span className="text-lg">⚡</span>
+            <span className="text-lg">ΓÜí</span>
             <span className="text-white font-bold text-lg">+{amount} XP</span>
           </div>
         </motion.div>
@@ -172,7 +172,7 @@ export function StreakCounter({ streak, visible }) {
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         className="flex items-center gap-1"
       >
-        <span className="text-lg">🔥</span>
+        <span className="text-lg">≡ƒöÑ</span>
         <span className="font-bold text-lg">{displayStreak}</span>
       </motion.div>
     </AnimatePresence>
@@ -324,7 +324,7 @@ export function TrophyAnimation({ visible, rank }) {
               style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.4), transparent 70%)' }}
             />
             {/* Trophy icon */}
-            <div className="text-8xl relative z-10">🏆</div>
+            <div className="text-8xl relative z-10">≡ƒÅå</div>
             {/* Sparkles */}
             {[...Array(8)].map((_, i) => (
               <motion.div
@@ -339,7 +339,7 @@ export function TrophyAnimation({ visible, rank }) {
                 transition={{ duration: 1, delay: i * 0.1 }}
                 className="absolute left-1/2 top-1/2 text-2xl"
               >
-                ✨
+                Γ£¿
               </motion.div>
             ))}
           </div>
@@ -434,7 +434,7 @@ export function RankReveal({ rank, visible }) {
             className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl"
             style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(99,102,241,0.1))', border: '1px solid rgba(168,85,247,0.3)' }}
           >
-            <span className="text-2xl">🎯</span>
+            <span className="text-2xl">≡ƒÄ»</span>
             <span className="text-3xl font-bold text-transparent bg-clip-text" style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}>
               {rank}
             </span>
@@ -533,7 +533,7 @@ export function NeuralBackground() {
 // ============================================
 // PREMIUM OPTION BUTTON
 // ============================================
-export function PremiumOptionButton({
+export const PremiumOptionButton = memo(function PremiumOptionButton({
   option,
   index,
   selected,
@@ -631,13 +631,13 @@ export function PremiumOptionButton({
               isCorrectOpt ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
             }`}
           >
-            {isCorrectOpt ? '✓ Correct' : '✗ Wrong'}
+            {isCorrectOpt ? 'Γ£ô Correct' : 'Γ£ù Wrong'}
           </motion.span>
         )}
       </AnimatePresence>
     </motion.button>
   );
-}
+});
 
 // ============================================
 // PROGRESS BAR PREMIUM
@@ -760,6 +760,8 @@ export function CompletionScreen({
 }) {
   const accuracy = Math.round((correctCount / totalQuestions) * 100);
   const rank = calculateRank(accuracy, score);
+  const xpEarned = correctCount * 12 + streak * 5;
+  const incorrectCount = totalQuestions - correctCount;
 
   return (
     <AnimatePresence>
@@ -768,11 +770,11 @@ export function CompletionScreen({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 overflow-y-auto"
           style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)' }}
         >
           {/* Neural background */}
-          <NeuralBackground />
+          <div className="fixed inset-0 pointer-events-none"><NeuralBackground /></div>
 
           {/* Confetti */}
           <ConfettiCelebration active={true} count={100} />
@@ -782,7 +784,7 @@ export function CompletionScreen({
             initial={{ scale: 0.8, y: 30 }}
             animate={{ scale: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-            className="relative max-w-md w-full text-center"
+            className="relative w-full max-w-sm mx-auto text-center px-2"
           >
             {/* Trophy */}
             <TrophyAnimation visible={true} />
@@ -792,38 +794,70 @@ export function CompletionScreen({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-3xl font-bold text-text mb-2"
+              className="text-2xl md:text-3xl font-bold text-text mb-1"
             >
-              Challenge Complete! 🎉
+              Congratulations! ≡ƒÄë
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="text-text3 mb-8"
+              transition={{ delay: 0.3 }}
+              className="text-sm text-text3 mb-6"
             >
-              You've conquered this month's Top 50!
+              Session Completed
+            </motion.p>
+
+            {/* Progress */}
+            <motion.p
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.35 }}
+              className="text-sm text-text2 font-medium mb-5"
+            >
+              {correctCount} / {totalQuestions} Cards Reviewed
             </motion.p>
 
             {/* Stats Grid */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="grid grid-cols-3 gap-4 mb-8"
+              transition={{ delay: 0.4 }}
+              className="grid grid-cols-3 gap-2 md:gap-3 mb-5"
             >
-              <div className="bg-bg-2/80 backdrop-blur-sm border border-border rounded-2xl p-4">
-                <div className="text-3xl font-bold text-purple-400">{score}%</div>
-                <div className="text-xs text-text3 mt-1">Score</div>
+              <div className="bg-bg-2/80 backdrop-blur-sm border border-border rounded-xl md:rounded-2xl p-3 md:p-4">
+                <motion.div
+                  className="text-2xl md:text-3xl font-bold"
+                  style={{ color: accuracy >= 80 ? '#22C55E' : accuracy >= 60 ? '#EAB308' : '#EF4444' }}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', delay: 0.6 }}
+                >
+                  {accuracy}%
+                </motion.div>
+                <div className="text-[10px] md:text-xs text-text3 mt-0.5">Accuracy</div>
               </div>
-              <div className="bg-bg-2/80 backdrop-blur-sm border border-border rounded-2xl p-4">
-                <div className="text-3xl font-bold text-emerald-400">{correctCount}</div>
-                <div className="text-xs text-text3 mt-1">Correct</div>
+              <div className="bg-bg-2/80 backdrop-blur-sm border border-border rounded-xl md:rounded-2xl p-3 md:p-4">
+                <motion.div
+                  className="text-2xl md:text-3xl font-bold text-amber-400"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', delay: 0.7 }}
+                >
+                  +{xpEarned}
+                </motion.div>
+                <div className="text-[10px] md:text-xs text-text3 mt-0.5">XP Earned</div>
               </div>
-              <div className="bg-bg-2/80 backdrop-blur-sm border border-border rounded-2xl p-4">
-                <div className="text-3xl font-bold text-amber-400">{streak}🔥</div>
-                <div className="text-xs text-text3 mt-1">Streak</div>
+              <div className="bg-bg-2/80 backdrop-blur-sm border border-border rounded-xl md:rounded-2xl p-3 md:p-4">
+                <motion.div
+                  className="text-2xl md:text-3xl font-bold text-purple-400"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', delay: 0.8 }}
+                >
+                  {streak}≡ƒöÑ
+                </motion.div>
+                <div className="text-[10px] md:text-xs text-text3 mt-0.5">Best Streak</div>
               </div>
             </motion.div>
 
@@ -833,20 +867,53 @@ export function CompletionScreen({
             {/* Rank */}
             <RankReveal rank={rank} visible={true} />
 
-            {/* Finish Button */}
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 2 }}
-              onClick={onFinish}
-              className="mt-8 w-full py-4 rounded-xl font-bold text-white transition-all hover:scale-[1.02]"
-              style={{
-                background: 'linear-gradient(135deg, #a855f7, #6366f1)',
-                boxShadow: '0 0 30px rgba(168,85,247,0.4)',
-              }}
-            >
-              Continue Learning
-            </motion.button>
+            {/* Action Buttons */}
+            <div className="mt-6 space-y-2.5">
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.5 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={onFinish}
+                className="w-full py-3.5 rounded-xl font-bold text-white text-sm transition-all"
+                style={{
+                  background: 'linear-gradient(135deg, #a855f7, #6366f1)',
+                  boxShadow: '0 0 30px rgba(168,85,247,0.35)',
+                }}
+              >
+                Continue Learning
+              </motion.button>
+
+              {incorrectCount > 0 && (
+                <motion.button
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.6 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="w-full py-3 rounded-xl font-semibold text-amber-300 text-sm transition-all"
+                  style={{
+                    background: 'rgba(217,119,6,0.12)',
+                    border: '1px solid rgba(217,119,6,0.3)',
+                  }}
+                >
+                  Review Difficult Cards
+                </motion.button>
+              )}
+
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.7 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={onFinish}
+                className="w-full py-2.5 rounded-xl text-xs text-text3 hover:text-text transition-all"
+              >
+                Back to Dashboard
+              </motion.button>
+            </div>
           </motion.div>
         </motion.div>
       )}
