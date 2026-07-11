@@ -79,7 +79,7 @@ export default function TopicsPage() {
       const subMap = new Map(fallbackSubjects.map(s => [s.name, s]));
       setTopics((localTopics || []).map((t, idx) => ({
         ...t,
-        subject: subMap.get(t.subject) || { name: t.subject, icon: '≡ƒôÿ', color: '#4f8dff' },
+        subject: subMap.get(t.subject) || { name: t.subject, icon: '📘', color: '#4f8dff' },
         _id: String(t.id != null ? t.id : `fallback-${idx}`),
         progress: {
           lecture: t.progress?.lecture || false,
@@ -174,8 +174,8 @@ export default function TopicsPage() {
       {loadError && topics.length > 0 && (
         <div className="mb-4 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-yellow-400 text-sm">ΓÜá</span>
-            <span className="text-xs text-yellow-300">Using offline data ΓÇö server unreachable.</span>
+            <span className="text-yellow-400 text-sm">⚠</span>
+            <span className="text-xs text-yellow-300">Using offline data — server unreachable.</span>
           </div>
           <button type="button" onClick={load} className="text-[10px] px-2.5 py-1 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 hover:bg-yellow-500/20">Retry</button>
         </div>
@@ -183,15 +183,15 @@ export default function TopicsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-text">Smart Topic Tracker</h1>
-          <p className="text-sm text-text3 mt-0.5">{topics.length} GATE syllabus topics ┬╖ smart progress system</p>
+          <p className="text-sm text-text3 mt-0.5">{topics.length} GATE syllabus topics · smart progress system</p>
         </div>
-        <Link to="/subjects" className="text-xs text-primary hover:opacity-80">View by Subject ΓåÆ</Link>
+        <Link to="/subjects" className="text-xs text-primary hover:opacity-80">View by Subject →</Link>
       </div>
 
       {revisionDueTopics.length > 0 && (
         <div className="mb-5 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-yellow-400 text-sm">Γå╗</span>
+            <span className="text-yellow-400 text-sm">↻</span>
             <span className="text-xs font-semibold text-yellow-400">{revisionDueTopics.length} topic(s) due for revision</span>
           </div>
           <div className="flex flex-wrap gap-1">
@@ -235,7 +235,7 @@ export default function TopicsPage() {
 
       {weakTopics.length > 0 && (
         <div className="mb-5 p-3 rounded-xl bg-red-500/5 border border-red-500/15">
-          <div className="text-xs font-semibold text-red-400 mb-2">Weak Topics ΓÇö Start Here</div>
+          <div className="text-xs font-semibold text-red-400 mb-2">Weak Topics — Start Here</div>
           <div className="flex flex-wrap gap-1">
             {weakTopics.map((t) => (
               <Link key={t._id} to={`/learn/topic/${t._id}`}
@@ -250,7 +250,7 @@ export default function TopicsPage() {
 
       {highValueTopics.length > 0 && (
         <div className="mb-5 p-3 rounded-xl bg-primary/5 border border-primary/15">
-          <div className="text-xs font-semibold text-primary mb-2">High Weightage ΓÇö Priority Topics</div>
+          <div className="text-xs font-semibold text-primary mb-2">High Weightage — Priority Topics</div>
           <div className="flex flex-wrap gap-1">
             {highValueTopics.map((t) => (
               <Link key={t._id} to={`/learn/topic/${t._id}`}
@@ -268,7 +268,7 @@ export default function TopicsPage() {
           <Link key={s.name} to={`/subjects/${nameToCode[s.name.toLowerCase()] || s.name}`}
             className="bg-surface border border-border rounded-xl p-3 text-center hover:border-primary/30 transition-all"
           >
-            <div className="text-lg">{s.icon || '≡ƒôÿ'}</div>
+            <div className="text-lg">{s.icon || '📘'}</div>
             <div className="text-[10px] font-semibold text-text mt-1 truncate">{s.name}</div>
             <div className="flex items-center gap-1 justify-center mt-1">
               <div className="w-full h-1.5 bg-bg-3 rounded-full overflow-hidden max-w-[60px]">
@@ -302,7 +302,7 @@ export default function TopicsPage() {
           <button key={s} type="button" onClick={() => setStatusFilter(s)}
             className={`text-xs px-3 py-1.5 rounded-lg border ${statusFilter === s ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3'}`}
           >
-            {s === 'Revision Due' && 'Γå╗ '}{s}
+            {s === 'Revision Due' && '↻ '}{s}
           </button>
         ))}
       </div>
@@ -313,7 +313,7 @@ export default function TopicsPage() {
             {filtered.length > 0 ? `${done}/${filtered.length} completed` : 'No topics loaded yet'}
             {statusFilter !== 'All' && ` (filtered)`}
           </span>
-          <span className="text-primary font-mono">{filtered.length > 0 ? `${pct}%` : 'ΓÇö'}</span>
+          <span className="text-primary font-mono">{filtered.length > 0 ? `${pct}%` : '—'}</span>
         </div>
         <div className="h-2 bg-bg-3 rounded-full overflow-hidden">
           <div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all" style={{ width: `${pct}%` }} />
@@ -337,7 +337,7 @@ export default function TopicsPage() {
           </p>
           {topics.length === 0 ? (
             <Link to="/subjects" className="text-xs px-5 py-2.5 rounded-lg font-semibold transition-all hover:scale-[1.02]" style={{ background: 'rgba(168,85,247,0.12)', color: '#A78BFA', border: '1px solid rgba(168,85,247,0.25)' }}>
-              Browse Subjects ΓåÆ
+              Browse Subjects →
             </Link>
           ) : (
             <Link to="/topics" className="text-xs px-5 py-2.5 rounded-lg font-semibold transition-all hover:scale-[1.02]" style={{ background: 'rgba(168,85,247,0.12)', color: '#A78BFA', border: '1px solid rgba(168,85,247,0.25)' }}>

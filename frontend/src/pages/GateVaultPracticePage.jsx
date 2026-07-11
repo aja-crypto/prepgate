@@ -241,7 +241,7 @@ export default function GateVaultPracticePage() {
             style={{ background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.3)' }}
             whileHover={{ scale: 1.05 }}
           >
-            <span className="text-lg">≡ƒöÑ</span>
+            <span className="text-lg">🔥</span>
             <span className="text-sm font-medium text-purple-400">GateVault</span>
           </motion.div>
 
@@ -263,7 +263,7 @@ export default function GateVaultPracticePage() {
               border: `1px solid ${getSubjectColor(currentQuestion?.subject)}40`,
             }}
           >
-            {currentQuestion?.subject} ΓÇó {currentQuestion?.topic || 'General'}
+            {currentQuestion?.subject} • {currentQuestion?.topic || 'General'}
           </motion.span>
         </div>
 
@@ -281,14 +281,14 @@ export default function GateVaultPracticePage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={showKnown ? { opacity: 1, x: 0, scale: [1, 1.3, 0], transition: { duration: 0.4 } } : {}}
               >
-                <span className="text-2xl">Γ£à</span>
+                <span className="text-2xl">✅</span>
               </motion.div>
               <motion.div
                 className="absolute -left-3 top-1/3 z-20 pointer-events-none"
                 initial={{ opacity: 0, x: -20 }}
                 animate={showReview ? { opacity: 1, x: 0, scale: [1, 1.3, 0], transition: { duration: 0.4 } } : {}}
               >
-                <span className="text-2xl">≡ƒöä</span>
+                <span className="text-2xl">🔄</span>
               </motion.div>
             </>
           )}
@@ -369,7 +369,7 @@ export default function GateVaultPracticePage() {
                           animate={{ y: [0, -3, 0] }}
                           transition={{ duration: 1.5, repeat: Infinity }}
                         >
-                          ≡ƒæå
+                          👆
                         </motion.span>
                       </motion.p>
                     </div>
@@ -436,7 +436,7 @@ export default function GateVaultPracticePage() {
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-sm font-semibold" style={{ color: isCorrect ? '#10b981' : '#ef4444' }}>
-                  {isCorrect ? 'Γ£ô Correct!' : 'Γ£ù Incorrect'}
+                  {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
                 </span>
                 {isCorrect && (
                   <motion.span
@@ -445,7 +445,7 @@ export default function GateVaultPracticePage() {
                     transition={{ type: 'spring', delay: 0.2 }}
                     className="text-lg"
                   >
-                    ΓÜí
+                    ⚡
                   </motion.span>
                 )}
               </div>
@@ -474,7 +474,7 @@ export default function GateVaultPracticePage() {
                 animate={showReview ? { opacity: [0, 1, 0], scale: [0.95, 1.05, 0.95] } : {}}
                 transition={{ duration: 0.4 }}
               />
-              <span className="relative">≡ƒöä Review Again</span>
+              <span className="relative">🔄 Review Again</span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -492,7 +492,7 @@ export default function GateVaultPracticePage() {
                 animate={showKnown ? { opacity: [0, 1, 0], scale: [0.95, 1.05, 0.95] } : {}}
                 transition={{ duration: 0.4 }}
               />
-              <span className="relative">Γ£à Known</span>
+              <span className="relative">✅ Known</span>
             </motion.button>
           </div>
         ) : (
@@ -504,7 +504,7 @@ export default function GateVaultPracticePage() {
               disabled={currentIndex === 0}
               className="flex-1 py-3.5 min-h-[48px] rounded-xl border border-border bg-bg-2/80 backdrop-blur-sm text-text disabled:opacity-30 hover:bg-bg-3 transition-all flex items-center justify-center gap-2"
             >
-              <span>ΓåÉ</span>
+              <span>←</span>
               <span>Previous</span>
             </motion.button>
             <motion.button
@@ -519,7 +519,7 @@ export default function GateVaultPracticePage() {
               }}
             >
               <span>Next</span>
-              <span>ΓåÆ</span>
+              <span>→</span>
             </motion.button>
           </div>
         )}
@@ -530,7 +530,7 @@ export default function GateVaultPracticePage() {
           animate={{ opacity: 0.5 }}
           className="text-center text-xs text-text3 mt-2"
         >
-          ΓåÉ Swipe to navigate ΓåÆ
+          ← Swipe to navigate →
         </motion.p>
       </div>
     </div>

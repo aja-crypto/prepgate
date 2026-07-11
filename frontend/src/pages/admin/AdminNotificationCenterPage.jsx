@@ -297,12 +297,12 @@ export default function AdminNotificationCenterPage() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <StatCard label="Total Sent" value={stats.totalSent} icon="≡ƒôñ" />
-          <StatCard label="Today" value={stats.todayNotifications} icon="≡ƒôà" />
-          <StatCard label="Scheduled" value={stats.scheduledNotifications} icon="ΓÅ░" />
-          <StatCard label="Delivery Rate" value={stats.deliveryRate} icon="Γ£à" color="text-green-400" />
-          <StatCard label="Open Rate" value={stats.openRate} icon="≡ƒæü" color="text-blue-400" />
-          <StatCard label="Click Rate" value={stats.clickRate} icon="≡ƒû▒" color="text-yellow-400" />
+          <StatCard label="Total Sent" value={stats.totalSent} icon="📤" />
+          <StatCard label="Today" value={stats.todayNotifications} icon="📅" />
+          <StatCard label="Scheduled" value={stats.scheduledNotifications} icon="⏰" />
+          <StatCard label="Delivery Rate" value={stats.deliveryRate} icon="✅" color="text-green-400" />
+          <StatCard label="Open Rate" value={stats.openRate} icon="👁" color="text-blue-400" />
+          <StatCard label="Click Rate" value={stats.clickRate} icon="🖱" color="text-yellow-400" />
         </div>
       )}
 

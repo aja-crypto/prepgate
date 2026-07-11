@@ -145,7 +145,7 @@ export default function NotificationBell() {
           <div className="overflow-y-auto max-h-[380px]">
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center px-6">
-                <div className="text-3xl mb-3">≡ƒöö</div>
+                <div className="text-3xl mb-3">🔔</div>
                 <p className="text-xs text-text3">No notifications yet. Start studying to get personalized tips and motivation!</p>
               </div>
             ) : (
@@ -172,14 +172,14 @@ export default function NotificationBell() {
                           </span>
                           {n.actionUrl && (
                             <Link to={n.actionUrl} className="text-[10px] font-medium" style={{ color: style.color }} onClick={(e) => e.stopPropagation()}>
-                              View ΓåÆ
+                              View →
                             </Link>
                           )}
                           <button
                             onClick={(e) => { e.stopPropagation(); deleteNote(n.id); }}
                             className="text-[10px] text-text3 hover:text-text ml-auto transition-colors p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center"
                           >
-                            Γ£ò
+                            ✕
                           </button>
                         </div>
                       </div>

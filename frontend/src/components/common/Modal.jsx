@@ -10,7 +10,7 @@ export default function Modal({ open, onClose, title, children, maxWidth = 'max-
         {title && (
           <div className="flex justify-between items-center mb-5">
             <h3 className="font-semibold text-text">{title}</h3>
-            <button onClick={onClose} aria-label="Close dialog" className="text-text3 hover:text-text transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 min-w-[44px] min-h-[44px] md:min-w-[32px] md:min-h-[32px]">Γ£ò</button>
+            <button onClick={onClose} aria-label="Close dialog" className="text-text3 hover:text-text transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 min-w-[44px] min-h-[44px] md:min-w-[32px] md:min-h-[32px]">✕</button>
           </div>
         )}
         {children}

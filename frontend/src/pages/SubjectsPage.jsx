@@ -1,4 +1,4 @@
-// GateForge ΓÇö GATE CSE 2027 syllabus with subject-wise weightage
+// GateForge — GATE CSE 2027 syllabus with subject-wise weightage
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useProgress } from '../context/ProgressContext';
@@ -12,20 +12,20 @@ const DIFF_DOT = { easy: 'bg-green-400', medium: 'bg-orange-400', hard: 'bg-red-
 
 const WEIGHTAGE_TABLE = [
   { subject: 'General Aptitude', marks: '~15' },
-  { subject: 'Engineering Mathematics', marks: '10ΓÇô15' },
-  { subject: 'Programming & Data Structures', marks: '10ΓÇô13' },
-  { subject: 'Computer Networks', marks: '7ΓÇô10' },
-  { subject: 'Operating Systems', marks: '8ΓÇô10' },
-  { subject: 'DBMS', marks: '7ΓÇô9' },
-  { subject: 'Computer Organization', marks: '7ΓÇô10' },
-  { subject: 'Theory of Computation', marks: '7ΓÇô9' },
-  { subject: 'Algorithms', marks: '6ΓÇô9' },
-  { subject: 'Compiler Design', marks: '4ΓÇô6' },
-  { subject: 'Digital Logic', marks: '4ΓÇô6' },
+  { subject: 'Engineering Mathematics', marks: '10–15' },
+  { subject: 'Programming & Data Structures', marks: '10–13' },
+  { subject: 'Computer Networks', marks: '7–10' },
+  { subject: 'Operating Systems', marks: '8–10' },
+  { subject: 'DBMS', marks: '7–9' },
+  { subject: 'Computer Organization', marks: '7–10' },
+  { subject: 'Theory of Computation', marks: '7–9' },
+  { subject: 'Algorithms', marks: '6–9' },
+  { subject: 'Compiler Design', marks: '4–6' },
+  { subject: 'Digital Logic', marks: '4–6' },
 ];
 
 export default function SubjectsPage() {
-  useSEO({ title: 'Subjects', description: 'Browse all GATE CSE subjects ΓÇö topics, syllabus, weightage, PYQs, and progress.' });
+  useSEO({ title: 'Subjects', description: 'Browse all GATE CSE subjects — topics, syllabus, weightage, PYQs, and progress.' });
   const { topics: localTopics, studyStats } = useProgress();
 
   const loadData = async () => {
@@ -59,17 +59,17 @@ export default function SubjectsPage() {
       'Computer Organization': '6-8', 'Theory of Computation': '6-8', 'Compiler Design': '4-5', 'Digital Logic': '4-5',
     };
     const defaultSubjects = [
-      { name: 'General Aptitude', code: 'aptitude', icon: '≡ƒºá', color: '#10b981', weightage: 15, isHighPriority: false, marksRange: '10-15' },
-      { name: 'Engineering Mathematics', code: 'math', icon: '≡ƒôÉ', color: '#3b82f6', weightage: 13, isHighPriority: true, marksRange: '10-13' },
-      { name: 'Programming & Data Structures', code: 'ds', icon: '≡ƒÆ╗', color: '#8b5cf6', weightage: 12, isHighPriority: true, marksRange: '8-12' },
-      { name: 'Algorithms', code: 'algo', icon: 'ΓÜí', color: '#f59e0b', weightage: 8, isHighPriority: true, marksRange: '6-8' },
-      { name: 'Operating Systems', code: 'os', icon: '≡ƒûÑ∩╕Å', color: '#ec4899', weightage: 9, isHighPriority: true, marksRange: '7-9' },
-      { name: 'DBMS', code: 'dbms', icon: '≡ƒùâ∩╕Å', color: '#06b6d4', weightage: 8, isHighPriority: true, marksRange: '6-8' },
-      { name: 'Computer Networks', code: 'cn', icon: '≡ƒîÉ', color: '#14b8a6', weightage: 9, isHighPriority: true, marksRange: '7-9' },
-      { name: 'Computer Organization', code: 'coa', icon: '≡ƒöº', color: '#f97316', weightage: 8, isHighPriority: true, marksRange: '6-8' },
-      { name: 'Theory of Computation', code: 'toc', icon: '≡ƒô£', color: '#a855f7', weightage: 8, isHighPriority: false, marksRange: '6-8' },
-      { name: 'Compiler Design', code: 'cd', icon: 'ΓÜÖ∩╕Å', color: '#64748b', weightage: 5, isHighPriority: false, marksRange: '4-5' },
-      { name: 'Digital Logic', code: 'dl', icon: '≡ƒöî', color: '#6366f1', weightage: 5, isHighPriority: false, marksRange: '4-5' },
+      { name: 'General Aptitude', code: 'aptitude', icon: '🧠', color: '#10b981', weightage: 15, isHighPriority: false, marksRange: '10-15' },
+      { name: 'Engineering Mathematics', code: 'math', icon: '📐', color: '#3b82f6', weightage: 13, isHighPriority: true, marksRange: '10-13' },
+      { name: 'Programming & Data Structures', code: 'ds', icon: '💻', color: '#8b5cf6', weightage: 12, isHighPriority: true, marksRange: '8-12' },
+      { name: 'Algorithms', code: 'algo', icon: '⚡', color: '#f59e0b', weightage: 8, isHighPriority: true, marksRange: '6-8' },
+      { name: 'Operating Systems', code: 'os', icon: '🖥️', color: '#ec4899', weightage: 9, isHighPriority: true, marksRange: '7-9' },
+      { name: 'DBMS', code: 'dbms', icon: '🗃️', color: '#06b6d4', weightage: 8, isHighPriority: true, marksRange: '6-8' },
+      { name: 'Computer Networks', code: 'cn', icon: '🌐', color: '#14b8a6', weightage: 9, isHighPriority: true, marksRange: '7-9' },
+      { name: 'Computer Organization', code: 'coa', icon: '🔧', color: '#f97316', weightage: 8, isHighPriority: true, marksRange: '6-8' },
+      { name: 'Theory of Computation', code: 'toc', icon: '📜', color: '#a855f7', weightage: 8, isHighPriority: false, marksRange: '6-8' },
+      { name: 'Compiler Design', code: 'cd', icon: '⚙️', color: '#64748b', weightage: 5, isHighPriority: false, marksRange: '4-5' },
+      { name: 'Digital Logic', code: 'dl', icon: '🔌', color: '#6366f1', weightage: 5, isHighPriority: false, marksRange: '4-5' },
     ];
 
     const subjectsToUse = studyStats?.subjects?.length ? studyStats.subjects : defaultSubjects;
@@ -95,7 +95,7 @@ export default function SubjectsPage() {
         _id: sub._id || sub.code || sub.name || `sub-${subIdx}`,
         name: sub.name,
         code: sub.code || sub.name,
-        icon: sub.icon || '≡ƒôÿ',
+        icon: sub.icon || '📘',
         color: sub.color || '#4f8dff',
         weightage: sub.weightage || 0,
         isHighPriority: !!sub.isHighPriority,
@@ -156,18 +156,18 @@ export default function SubjectsPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-text">GATE CSE 2027 ΓÇö Syllabus</h1>
+        <h1 className="text-xl font-bold text-text">GATE CSE 2027 — Syllabus</h1>
         <p className="text-sm text-text3 mt-0.5">
-          Complete official syllabus ┬╖ {analytics ? `${analytics.overall.completedTopics}/${analytics.overall.totalTopics} topics (${analytics.overall.topicCompletionPct}%)` : `${subjects.length} subjects`}
+          Complete official syllabus · {analytics ? `${analytics.overall.completedTopics}/${analytics.overall.totalTopics} topics (${analytics.overall.topicCompletionPct}%)` : `${subjects.length} subjects`}
         </p>
       </div>
 
       {analytics && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
           {[
-            { label: 'Overall Completion', value: analytics.overall.totalTopics > 0 ? `${analytics.overall.topicCompletionPct}%` : 'ΓÇö', color: 'text-primary' },
-            { label: 'Topics Completed', value: analytics.overall.totalTopics > 0 ? analytics.overall.completedTopics : 'ΓÇö', color: 'text-green-400' },
-            { label: 'Total Topics', value: analytics.overall.totalTopics || 'ΓÇö', color: 'text-text' },
+            { label: 'Overall Completion', value: analytics.overall.totalTopics > 0 ? `${analytics.overall.topicCompletionPct}%` : '—', color: 'text-primary' },
+            { label: 'Topics Completed', value: analytics.overall.totalTopics > 0 ? analytics.overall.completedTopics : '—', color: 'text-green-400' },
+            { label: 'Total Topics', value: analytics.overall.totalTopics || '—', color: 'text-text' },
             { label: 'High-Priority Subjects', value: subjects.filter((s) => s.isHighPriority).length, color: 'text-orange-400' },
           ].map((s) => (
             <div key={s.label} className="bg-surface border border-border rounded-xl p-4 text-center">
@@ -198,7 +198,7 @@ export default function SubjectsPage() {
               to={`/subjects/${sub?.code || row.subject}`}
               className="bg-surface border border-border rounded-xl p-3 text-center hover:border-primary/30 transition-all"
             >
-              <div className="text-lg mb-1">{sub?.icon || '≡ƒôÿ'}</div>
+              <div className="text-lg mb-1">{sub?.icon || '📘'}</div>
               <div className="text-[10px] font-semibold text-text truncate">{row.subject}</div>
               <div className="text-[10px] sm:text-[11px] text-text3 mt-0.5">{row.marks} marks</div>
               <div className="flex items-center gap-1 justify-center mt-2">
@@ -207,7 +207,7 @@ export default function SubjectsPage() {
                 </div>
                 <span className={`text-[10px] sm:text-[11px] font-mono ${pct >= 70 ? 'text-green-400' : pct >= 40 ? 'text-orange-400' : 'text-text3'}`}>{pct}%</span>
               </div>
-              {sub?.isHighPriority && <span className="text-[8px] text-primary font-bold block mt-1">Γÿà HIGH</span>}
+              {sub?.isHighPriority && <span className="text-[8px] text-primary font-bold block mt-1">★ HIGH</span>}
             </Link>
           );
         })}
@@ -235,7 +235,7 @@ export default function SubjectsPage() {
                     {s.isHighPriority && <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/20">HIGH</span>}
                   </div>
                   <div className="text-[11px] text-text3 mt-0.5">
-                    {s.completedTopics || 0}/{s.topicCount || 0} topics ┬╖ {s.marksRange || `~${s.weightage} marks`}
+                    {s.completedTopics || 0}/{s.topicCount || 0} topics · {s.marksRange || `~${s.weightage} marks`}
                   </div>
                   <div className="h-1.5 bg-bg-3 rounded-full overflow-hidden mt-2">
                     <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: s.color }} />
@@ -243,7 +243,7 @@ export default function SubjectsPage() {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="text-base font-bold font-mono" style={{ color: s.color }}>{pct}%</div>
-                  <div className="text-xs text-text3 mt-1">{isOpen ? 'Γû▓' : 'Γû╝'}</div>
+                  <div className="text-xs text-text3 mt-1">{isOpen ? '▲' : '▼'}</div>
                 </div>
               </button>
 
@@ -252,7 +252,7 @@ export default function SubjectsPage() {
                   {s.frequentlyAsked?.length > 0 && (
                     <div className="mb-3 text-[10px] text-text3">
                       <span className="text-primary font-semibold">FAQ: </span>
-                      {(s.frequentlyAsked || []).slice(0, 4).join(' ┬╖ ')}
+                      {(s.frequentlyAsked || []).slice(0, 4).join(' · ')}
                     </div>
                   )}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -268,11 +268,11 @@ export default function SubjectsPage() {
                         <div className="flex-1 min-w-0">
                           <div className={`truncate ${t.isCompleted ? 'text-text3 line-through' : 'text-text'}`}>{t.name}</div>
                           <div className="text-[9px] text-text3">
-                            {t.difficulty} ┬╖ ~{t.weightage}%
-                            {t.isBookmarked && ' ┬╖ Γÿà'}{t.revisionNeeded && ' ┬╖ Γå╗'}
+                            {t.difficulty} · ~{t.weightage}%
+                            {t.isBookmarked && ' · ★'}{t.revisionNeeded && ' · ↻'}
                           </div>
                         </div>
-                        {t.isCompleted && <span className="text-green-400 text-[10px]">Γ£ô</span>}
+                        {t.isCompleted && <span className="text-green-400 text-[10px]">✓</span>}
                       </Link>
                     ))}
                   </div>
@@ -286,7 +286,7 @@ export default function SubjectsPage() {
       {!subjects.length && (
         <div className="text-center py-16">
           <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(79,141,255,0.12), rgba(79,141,255,0.06))', border: '1px solid rgba(79,141,255,0.15)' }}>
-            <span className="text-3xl">≡ƒôÜ</span>
+            <span className="text-3xl">📚</span>
           </div>
           <h3 className="text-base font-bold text-text mb-1">No Subjects Available</h3>
           <p className="text-sm text-text3 max-w-sm mx-auto">The GATE 2027 syllabus hasn&apos;t been loaded yet. Please contact an admin to seed the subject data.</p>

@@ -7,10 +7,10 @@ import GlassCard from '../ui/GlassCard';
 const SUBJECTS = ['APT', 'MA', 'DL', 'CO', 'DS', 'AL', 'OS', 'DBMS', 'CN', 'TOC', 'CD'];
 
 const CHALLENGE_TABS = [
-  { id: 'top50', label: 'Top 50 Challenge', icon: '≡ƒÅå' },
-  { id: 'pyq100', label: '100 PYQ Challenge', icon: '≡ƒôÜ' },
-  { id: 'stats', label: 'My Stats', icon: '≡ƒôè' },
-  { id: 'badges', label: 'Achievement Badges', icon: '≡ƒÄû∩╕Å' },
+  { id: 'top50', label: 'Top 50 Challenge', icon: '🏆' },
+  { id: 'pyq100', label: '100 PYQ Challenge', icon: '📚' },
+  { id: 'stats', label: 'My Stats', icon: '📊' },
+  { id: 'badges', label: 'Achievement Badges', icon: '🎖️' },
 ];
 
 const SUBJECT_NAMES = {
@@ -64,7 +64,7 @@ export default function GateVaultWidget() {
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-white truncate">Top 50 Challenge</p>
               <Link to="/gate-vault" className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(167,139,250,0.1)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.2)' }}>
-                {prog ? 'Continue ΓåÆ' : 'Start Practice'}
+                {prog ? 'Continue →' : 'Start Practice'}
               </Link>
             </div>
             {prog ? (
@@ -81,7 +81,7 @@ export default function GateVaultWidget() {
                 <div className="flex gap-4 text-[10px] text-gray-400">
                   <span>Answered: {prog.answers?.length || 0}/{totalQuestions || '?'}</span>
                   <span>Correct: {prog.correctCount || 0}</span>
-                  <span>Streak: {prog.streak || 0}≡ƒöÑ</span>
+                  <span>Streak: {prog.streak || 0}🔥</span>
                 </div>
               </div>
             ) : (
@@ -107,7 +107,7 @@ export default function GateVaultWidget() {
             </div>
             <div className="flex items-center justify-between text-[10px] text-gray-400">
               <span>Solved: {solvedPyqs} PYQs</span>
-              <Link to="/pyq" className="font-medium" style={{ color: '#34D399' }}>Solve more ΓåÆ</Link>
+              <Link to="/pyq" className="font-medium" style={{ color: '#34D399' }}>Solve more →</Link>
             </div>
           </div>
         );
@@ -132,12 +132,12 @@ export default function GateVaultWidget() {
                 <p className="text-[9px] text-gray-500">Best Score</p>
               </div>
               <div className="p-2 rounded-lg text-center" style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.1)' }}>
-                <p className="text-lg font-bold font-mono" style={{ color: '#22D3EE' }}>{(flashcardProgress?.streak || 0) > 0 ? '≡ƒöÑ' : 'ΓÇö'}</p>
+                <p className="text-lg font-bold font-mono" style={{ color: '#22D3EE' }}>{(flashcardProgress?.streak || 0) > 0 ? '🔥' : '—'}</p>
                 <p className="text-[9px] text-gray-500">Streak</p>
               </div>
             </div>
             <Link to="/gate-vault" className="inline-block text-[10px] font-medium" style={{ color: '#A78BFA' }}>
-              View detailed analytics ΓåÆ
+              View detailed analytics →
             </Link>
           </div>
         );
@@ -150,14 +150,14 @@ export default function GateVaultWidget() {
             <div className="grid grid-cols-4 gap-2">
               {badges.length > 0 ? badges.slice(0, 8).map((b, i) => (
                 <div key={i} className="flex flex-col items-center gap-1 p-2 rounded-lg" style={{ background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.08)' }}>
-                  <span className="text-lg">≡ƒÅà</span>
+                  <span className="text-lg">🏅</span>
                   <span className="text-[8px] text-gray-400 text-center truncate w-full">{b}</span>
                 </div>
               )) : (
                 <>
                   {['First PYQ Solved', '7-Day Streak', 'Mock Master', 'Topic Completed'].map((name, i) => (
                     <div key={i} className="flex flex-col items-center gap-1 p-2 rounded-lg opacity-40" style={{ background: 'rgba(167,139,250,0.03)', border: '1px solid rgba(167,139,250,0.05)' }}>
-                      <span className="text-lg">≡ƒöÆ</span>
+                      <span className="text-lg">🔒</span>
                       <span className="text-[8px] text-gray-500 text-center">{name}</span>
                     </div>
                   ))}
@@ -166,7 +166,7 @@ export default function GateVaultWidget() {
             </div>
             {badges.length > 0 && (
               <Link to="/gate-vault" className="inline-block text-xs font-medium" style={{ color: '#FBBF24' }}>
-                View all badges ΓåÆ
+                View all badges →
               </Link>
             )}
           </div>
@@ -183,7 +183,7 @@ export default function GateVaultWidget() {
         <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base" style={{
           background: 'linear-gradient(135deg, rgba(251,191,36,0.2), rgba(167,139,250,0.15))',
         }}>
-          ≡ƒÅå
+          🏆
         </div>
         <div>
           <h3 className="text-sm font-bold text-white">Gate Vault</h3>
@@ -196,7 +196,7 @@ export default function GateVaultWidget() {
           style={{ background: 'rgba(167,139,250,0.1)', color: refreshing ? '#6B7280' : '#A78BFA', border: '1px solid rgba(167,139,250,0.2)' }}
           title="Refresh data"
         >
-          {refreshing ? 'Γƒ│' : 'Γå╗'} Update
+          {refreshing ? '⟳' : '↻'} Update
         </button>
       </div>
 
@@ -219,7 +219,7 @@ export default function GateVaultWidget() {
         {renderTab()}
       </div>
       <Link to="/gate-vault" className="block mt-3 text-center text-[10px] font-medium py-1.5 rounded-lg transition-all hover:scale-[1.02]" style={{ background: 'rgba(167,139,250,0.08)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.15)' }}>
-        Open full Gate Vault ΓåÆ
+        Open full Gate Vault →
       </Link>
     </GlassCard>
   );

@@ -10,11 +10,11 @@ import Modal from '../components/common/Modal';
 import toast from 'react-hot-toast';
 import { Sparkles, ChevronLeft, ChevronRight, Clock, BookOpen, Target, CheckCircle, Play, BarChart3, Brain, AlertCircle, GripVertical, X, Plus, Layers } from 'lucide-react';
 
-const HOURS = Array.from({ length: 16 }, (_, i) => i + 6); // 6 AM ΓÇô 9 PM
+const HOURS = Array.from({ length: 16 }, (_, i) => i + 6); // 6 AM – 9 PM
 const COLORS_BY_NAME = Object.fromEntries(GATE_SUBJECTS.map(s => [s.name, { color: s.color, icon: s.icon }]));
 function subjectMeta(name) {
   const m = Object.values(GATE_SUBJECTS).find(s => s.name === name);
-  return { color: m?.color || '#7C3AED', icon: m?.icon || '≡ƒôÿ' };
+  return { color: m?.color || '#7C3AED', icon: m?.icon || '📘' };
 }
 const SUBJECT_DIFFICULTY = {
   'Operating Systems': 4, 'Computer Networks': 4, 'DBMS': 3,
@@ -24,62 +24,62 @@ const SUBJECT_DIFFICULTY = {
 };
 function getSubjectDifficulty(name) { return SUBJECT_DIFFICULTY[name] || 3; }
 
-// Activity styles ΓÇö permanent gradient colors and icons for each activity type
+// Activity styles — permanent gradient colors and icons for each activity type
 const ACTIVITY_STYLES = {
-  'Wake Up': { icon: 'ΓÿÇ∩╕Å', bg: 'linear-gradient(135deg, #FBBF24, #F59E0B)' },
-  'Freshen Up': { icon: '≡ƒÜ┐', bg: 'linear-gradient(135deg, #60A5FA, #2563EB)' },
-  'Meditation': { icon: '≡ƒºÿ', bg: 'linear-gradient(135deg, #A78BFA, #7C3AED)' },
-  'Study Block 1': { icon: '≡ƒôÿ', bg: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' },
-  'Study Block 2': { icon: '≡ƒôÿ', bg: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' },
-  'Study Block 3': { icon: '≡ƒôÿ', bg: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' },
-  'New Concepts': { icon: '≡ƒôÿ', bg: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' },
-  'PYQ Practice': { icon: 'Γ¥ô', bg: 'linear-gradient(135deg, #2563EB, #1D4ED8)' },
-  'Revision': { icon: '≡ƒºá', bg: 'linear-gradient(135deg, #22C55E, #15803D)' },
-  'Formula Sheet': { icon: '≡ƒôä', bg: 'linear-gradient(135deg, #14B8A6, #0F766E)' },
-  'Formula Revision': { icon: '≡ƒôä', bg: 'linear-gradient(135deg, #14B8A6, #0F766E)' },
-  'Mock Test': { icon: '≡ƒÄ»', bg: 'linear-gradient(135deg, #EF4444, #B91C1C)' },
-  'Mock Analysis': { icon: '≡ƒôè', bg: 'linear-gradient(135deg, #F97316, #C2410C)' },
-  'Notes': { icon: '≡ƒô¥', bg: 'linear-gradient(135deg, #EC4899, #BE185D)' },
-  'Exercise': { icon: '≡ƒÆ¬', bg: 'linear-gradient(135deg, #10B981, #047857)' },
-  'Breakfast': { icon: '≡ƒì│', bg: 'linear-gradient(135deg, #F59E0B, #D97706)' },
-  'Lunch': { icon: '≡ƒì¢', bg: 'linear-gradient(135deg, #F97316, #EA580C)' },
-  'Dinner': { icon: '≡ƒì╜', bg: 'linear-gradient(135deg, #FB7185, #E11D48)' },
-  'Tea Break': { icon: 'Γÿò', bg: 'linear-gradient(135deg, #9CA3AF, #6B7280)' },
-  'Break': { icon: 'Γÿò', bg: 'linear-gradient(135deg, #9CA3AF, #6B7280)' },
-  'Sleep': { icon: '≡ƒîÖ', bg: 'linear-gradient(135deg, #1E3A8A, #312E81)' },
-  'Power Nap': { icon: '≡ƒÿ┤', bg: 'linear-gradient(135deg, #1E3A8A, #312E81)' },
-  'Free Time': { icon: '≡ƒô▒', bg: 'linear-gradient(135deg, #06B6D4, #0E7490)' },
-  'Walking': { icon: '≡ƒÜ╢', bg: 'linear-gradient(135deg, #34D399, #059669)' },
-  'AI Tomorrow Planning': { icon: '≡ƒñû', bg: 'linear-gradient(135deg, #A78BFA, #7C3AED)' },
-  'Goal Planning': { icon: '≡ƒÄ»', bg: 'linear-gradient(135deg, #F97316, #C2410C)' },
-  'Full Mock Test': { icon: '≡ƒÄ»', bg: 'linear-gradient(135deg, #EF4444, #B91C1C)' },
-  'Weekly Review': { icon: '≡ƒôè', bg: 'linear-gradient(135deg, #F97316, #C2410C)' },
-  'Tomorrow Planning': { icon: '≡ƒñû', bg: 'linear-gradient(135deg, #A78BFA, #7C3AED)' },
+  'Wake Up': { icon: '☀️', bg: 'linear-gradient(135deg, #FBBF24, #F59E0B)' },
+  'Freshen Up': { icon: '🚿', bg: 'linear-gradient(135deg, #60A5FA, #2563EB)' },
+  'Meditation': { icon: '🧘', bg: 'linear-gradient(135deg, #A78BFA, #7C3AED)' },
+  'Study Block 1': { icon: '📘', bg: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' },
+  'Study Block 2': { icon: '📘', bg: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' },
+  'Study Block 3': { icon: '📘', bg: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' },
+  'New Concepts': { icon: '📘', bg: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' },
+  'PYQ Practice': { icon: '❓', bg: 'linear-gradient(135deg, #2563EB, #1D4ED8)' },
+  'Revision': { icon: '🧠', bg: 'linear-gradient(135deg, #22C55E, #15803D)' },
+  'Formula Sheet': { icon: '📄', bg: 'linear-gradient(135deg, #14B8A6, #0F766E)' },
+  'Formula Revision': { icon: '📄', bg: 'linear-gradient(135deg, #14B8A6, #0F766E)' },
+  'Mock Test': { icon: '🎯', bg: 'linear-gradient(135deg, #EF4444, #B91C1C)' },
+  'Mock Analysis': { icon: '📊', bg: 'linear-gradient(135deg, #F97316, #C2410C)' },
+  'Notes': { icon: '📝', bg: 'linear-gradient(135deg, #EC4899, #BE185D)' },
+  'Exercise': { icon: '💪', bg: 'linear-gradient(135deg, #10B981, #047857)' },
+  'Breakfast': { icon: '🍳', bg: 'linear-gradient(135deg, #F59E0B, #D97706)' },
+  'Lunch': { icon: '🍛', bg: 'linear-gradient(135deg, #F97316, #EA580C)' },
+  'Dinner': { icon: '🍽', bg: 'linear-gradient(135deg, #FB7185, #E11D48)' },
+  'Tea Break': { icon: '☕', bg: 'linear-gradient(135deg, #9CA3AF, #6B7280)' },
+  'Break': { icon: '☕', bg: 'linear-gradient(135deg, #9CA3AF, #6B7280)' },
+  'Sleep': { icon: '🌙', bg: 'linear-gradient(135deg, #1E3A8A, #312E81)' },
+  'Power Nap': { icon: '😴', bg: 'linear-gradient(135deg, #1E3A8A, #312E81)' },
+  'Free Time': { icon: '📱', bg: 'linear-gradient(135deg, #06B6D4, #0E7490)' },
+  'Walking': { icon: '🚶', bg: 'linear-gradient(135deg, #34D399, #059669)' },
+  'AI Tomorrow Planning': { icon: '🤖', bg: 'linear-gradient(135deg, #A78BFA, #7C3AED)' },
+  'Goal Planning': { icon: '🎯', bg: 'linear-gradient(135deg, #F97316, #C2410C)' },
+  'Full Mock Test': { icon: '🎯', bg: 'linear-gradient(135deg, #EF4444, #B91C1C)' },
+  'Weekly Review': { icon: '📊', bg: 'linear-gradient(135deg, #F97316, #C2410C)' },
+  'Tomorrow Planning': { icon: '🤖', bg: 'linear-gradient(135deg, #A78BFA, #7C3AED)' },
 };
 
-// Default daily schedule ΓÇö complete 05:45 ΓåÆ 22:30 timetable
+// Default daily schedule — complete 05:45 → 22:30 timetable
 const DEFAULT_SCHEDULE = [
-  { label: 'Wake Up', startHour: 5.75, duration: 15, icon: 'ΓÿÇ∩╕Å' },
-  { label: 'Freshen Up', startHour: 6, duration: 20, icon: '≡ƒÜ┐' },
-  { label: 'Meditation', startHour: 6.33, duration: 20, icon: '≡ƒºÿ' },
-  { label: 'New Concepts', startHour: 6.67, duration: 120, icon: '≡ƒôÿ' },
-  { label: 'Breakfast', startHour: 8.67, duration: 30, icon: '≡ƒì│' },
-  { label: 'PYQ Practice', startHour: 9.17, duration: 120, icon: 'Γ¥ô' },
-  { label: 'Break', startHour: 11.17, duration: 20, icon: 'Γÿò' },
-  { label: 'Formula Sheet', startHour: 11.5, duration: 60, icon: '≡ƒôä' },
-  { label: 'Lunch', startHour: 12.5, duration: 60, icon: '≡ƒì¢' },
-  { label: 'Power Nap', startHour: 13.5, duration: 30, icon: '≡ƒÿ┤' },
-  { label: 'New Concepts', startHour: 14, duration: 120, icon: '≡ƒôÿ' },
-  { label: 'Break', startHour: 16, duration: 20, icon: 'Γÿò' },
-  { label: 'Notes', startHour: 16.33, duration: 60, icon: '≡ƒô¥' },
-  { label: 'Exercise', startHour: 17.33, duration: 40, icon: '≡ƒÆ¬' },
-  { label: 'Revision', startHour: 18, duration: 60, icon: '≡ƒºá' },
-  { label: 'Dinner', startHour: 19, duration: 40, icon: '≡ƒì╜' },
-  { label: 'Mock Test', startHour: 19.67, duration: 60, icon: '≡ƒÄ»' },
-  { label: 'Formula Revision', startHour: 20.67, duration: 40, icon: '≡ƒôä' },
-  { label: 'Tomorrow Planning', startHour: 21.33, duration: 30, icon: '≡ƒñû' },
-  { label: 'Free Time', startHour: 21.83, duration: 40, icon: '≡ƒô▒' },
-  { label: 'Sleep', startHour: 22.5, duration: 0, icon: '≡ƒîÖ' },
+  { label: 'Wake Up', startHour: 5.75, duration: 15, icon: '☀️' },
+  { label: 'Freshen Up', startHour: 6, duration: 20, icon: '🚿' },
+  { label: 'Meditation', startHour: 6.33, duration: 20, icon: '🧘' },
+  { label: 'New Concepts', startHour: 6.67, duration: 120, icon: '📘' },
+  { label: 'Breakfast', startHour: 8.67, duration: 30, icon: '🍳' },
+  { label: 'PYQ Practice', startHour: 9.17, duration: 120, icon: '❓' },
+  { label: 'Break', startHour: 11.17, duration: 20, icon: '☕' },
+  { label: 'Formula Sheet', startHour: 11.5, duration: 60, icon: '📄' },
+  { label: 'Lunch', startHour: 12.5, duration: 60, icon: '🍛' },
+  { label: 'Power Nap', startHour: 13.5, duration: 30, icon: '😴' },
+  { label: 'New Concepts', startHour: 14, duration: 120, icon: '📘' },
+  { label: 'Break', startHour: 16, duration: 20, icon: '☕' },
+  { label: 'Notes', startHour: 16.33, duration: 60, icon: '📝' },
+  { label: 'Exercise', startHour: 17.33, duration: 40, icon: '💪' },
+  { label: 'Revision', startHour: 18, duration: 60, icon: '🧠' },
+  { label: 'Dinner', startHour: 19, duration: 40, icon: '🍽' },
+  { label: 'Mock Test', startHour: 19.67, duration: 60, icon: '🎯' },
+  { label: 'Formula Revision', startHour: 20.67, duration: 40, icon: '📄' },
+  { label: 'Tomorrow Planning', startHour: 21.33, duration: 30, icon: '🤖' },
+  { label: 'Free Time', startHour: 21.83, duration: 40, icon: '📱' },
+  { label: 'Sleep', startHour: 22.5, duration: 0, icon: '🌙' },
 ];
 
 // Weekly subject rotation
@@ -123,7 +123,7 @@ function generateDefaultSchedule(today) {
       : isSunday && slot.label === 'Mock Test' ? 'General'
       : slot.label === 'New Concepts' && isSunday ? 'Revision'
       : '';
-    const topic = subject ? `${slot.label} ΓÇö ${rotation.label}` : '';
+    const topic = subject ? `${slot.label} — ${rotation.label}` : '';
 
     return {
       id,
@@ -346,7 +346,7 @@ export default function StudyPlannerPage() {
           return { ...gf, studyPlans: { ...gf.studyPlans, [key]: smart } };
         });
         await syncToCloud();
-        toast('Smart schedule created', { icon: '≡ƒôï' });
+        toast('Smart schedule created', { icon: '📋' });
       }
     } catch {
       // Fallback: smart heuristic
@@ -359,7 +359,7 @@ export default function StudyPlannerPage() {
         return { ...gf, studyPlans: { ...gf.studyPlans, [key]: smart } };
       });
       await syncToCloud();
-      toast('Created smart schedule', { icon: '≡ƒôï' });
+      toast('Created smart schedule', { icon: '📋' });
     } finally {
       setAiGenerating(false);
     }
@@ -410,7 +410,7 @@ export default function StudyPlannerPage() {
               <div className="text-[10px] text-text3 mb-1.5">Current</div>
               <div className="text-xs font-medium text-text truncate">{todayPlans[0]?.topic || ''}</div>
               <div className="text-xs text-text3 mt-2 mb-1.5">Next</div>
-              <div className="text-xs text-text truncate">{todayPlans[1]?.topic || 'ΓÇö'}</div>
+              <div className="text-xs text-text truncate">{todayPlans[1]?.topic || '—'}</div>
             </div>
           )}
         </div>
@@ -426,13 +426,13 @@ export default function StudyPlannerPage() {
             <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min(100, (totalHours / (gateFeatures?.dailyTarget?.hours || 8)) * 100)}%`, background: 'linear-gradient(90deg, #22C55E, #4ADE80)' }} />
           </div>
           <div className="flex items-center justify-between text-[10px]">
-            <span className="text-text3 flex items-center gap-1">≡ƒöÑ {gateFeatures?.streak?.current || 0} Day Streak</span>
+            <span className="text-text3 flex items-center gap-1">🔥 {gateFeatures?.streak?.current || 0} Day Streak</span>
             <span className="text-text3">Next:{' '}
               {todayPlans.find(p => !p.done) ? (() => {
                 const p = todayPlans.find(pl => !pl.done);
                 const h = p.startHour || 14;
                 return `${h > 12 ? h - 12 : h}${h >= 12 ? 'PM' : 'AM'}`;
-              })() : 'ΓÇö'}
+              })() : '—'}
             </span>
           </div>
         </div>
@@ -470,7 +470,7 @@ export default function StudyPlannerPage() {
         </div>
       </div>
 
-      {/* ===== CENTER ΓÇö TIMELINE ===== */}
+      {/* ===== CENTER — TIMELINE ===== */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Week selector */}
         <div className="flex items-center gap-1 mb-4 overflow-x-auto pb-1 scrollbar-thin">
@@ -566,7 +566,7 @@ export default function StudyPlannerPage() {
                         {hourFloat >= 8 && hourFloat <= 16 && (
                           <button onClick={generateAiSchedule} disabled={aiGenerating}
                             className="text-[10px] px-3 py-1.5 rounded-lg border border-dashed border-purple-500/20 hover:border-purple-500/40 hover:bg-purple-500/[0.03] text-purple-400/40 hover:text-purple-400/60 transition-all">
-                            {aiGenerating ? '┬╖┬╖┬╖' : 'Γ£¿ AI Suggest'}
+                            {aiGenerating ? '···' : '✨ AI Suggest'}
                           </button>
                         )}
                       </div>
@@ -602,29 +602,29 @@ export default function StudyPlannerPage() {
                                   <span className="text-[11px] font-semibold truncate" style={{ color: meta.color }}>{meta.icon} {plan.subject}</span>
                                   {(plan.priority || getSubjectDifficulty(plan.subject) >= 4) && (
                                     <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0" title="High priority">
-                                      ≡ƒöÑ High
+                                      🔥 High
                                     </span>
                                   )}
                                 </div>
                                 {/* Status badge */}
                                 {plan.done ? (
-                                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-success/10 text-success border border-success/20 shrink-0">Γ£ô Done</span>
+                                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-success/10 text-success border border-success/20 shrink-0">✓ Done</span>
                                 ) : plan.started ? (
-                                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0 animate-pulse">ΓùÅ Active</span>
+                                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0 animate-pulse">● Active</span>
                                 ) : (
-                                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-white/[0.04] text-text3 border border-white/[0.06] shrink-0">ΓÿÉ Pending</span>
+                                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-white/[0.04] text-text3 border border-white/[0.06] shrink-0">☐ Pending</span>
                                 )}
                               </div>
 
                               {/* Topic + Goal */}
                               <div className="pl-[22px]">
                                 <div className="text-xs font-semibold text-text truncate flex items-center gap-1.5">
-                                  <span>{(ACTIVITY_STYLES[plan.topic]?.icon || plan.icon || '≡ƒôÿ')}</span>
+                                  <span>{(ACTIVITY_STYLES[plan.topic]?.icon || plan.icon || '📘')}</span>
                                   <span className="truncate">{plan.topic}</span>
                                 </div>
                                 {plan.goal && (
                                   <div className="flex items-center gap-1 mt-0.5 text-[10px] text-text3">
-                                    <span>≡ƒÄ»</span>
+                                    <span>🎯</span>
                                     <span className="truncate">{plan.goal}</span>
                                   </div>
                                 )}
@@ -645,17 +645,17 @@ export default function StudyPlannerPage() {
                               {/* Duration + meta */}
                               <div className="flex items-center gap-3 mt-1 pl-[22px]">
                                 <span className="text-[9px] text-text3">{dur}min</span>
-                                <span className="text-[9px] text-text3">{format(new Date().setHours(h, 0, 0, 0), 'h:mm a')} ΓÇô {format(new Date().setHours(Math.min(endHour, 23), 0, 0, 0), 'h:mm a')}</span>
+                                <span className="text-[9px] text-text3">{format(new Date().setHours(h, 0, 0, 0), 'h:mm a')} – {format(new Date().setHours(Math.min(endHour, 23), 0, 0, 0), 'h:mm a')}</span>
                               </div>
 
                               {/* Quick actions row */}
                               <div className="flex items-center gap-2 mt-1.5 pl-[22px]">
                                 <button onClick={e => { e.stopPropagation(); navigate('/notes'); }}
-                                  className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/[0.04] text-text3 hover:text-text hover:bg-white/[0.08] transition-all" title="Notes">≡ƒôä Notes</button>
+                                  className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/[0.04] text-text3 hover:text-text hover:bg-white/[0.08] transition-all" title="Notes">📄 Notes</button>
                                 <button onClick={e => { e.stopPropagation(); navigate('/pyq'); }}
-                                  className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/[0.04] text-text3 hover:text-text hover:bg-white/[0.08] transition-all" title="PYQs">Γ¥ô PYQs</button>
+                                  className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/[0.04] text-text3 hover:text-text hover:bg-white/[0.08] transition-all" title="PYQs">❓ PYQs</button>
                                 <button onClick={e => { e.stopPropagation(); navigate('/formulas'); }}
-                                  className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/[0.04] text-text3 hover:text-text hover:bg-white/[0.08] transition-all" title="Formula Sheet">≡ƒô¥ Formula</button>
+                                  className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/[0.04] text-text3 hover:text-text hover:bg-white/[0.08] transition-all" title="Formula Sheet">📝 Formula</button>
                               </div>
 
                               {/* Action row: Start/Done */}
@@ -664,12 +664,12 @@ export default function StudyPlannerPage() {
                                   {!plan.done && (
                                     <button onClick={e => { e.stopPropagation(); startFocusSession(plan); }}
                                       className="text-xs px-4 min-h-[36px] rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all font-semibold flex items-center gap-1.5">
-                                      Γû╢ Start
+                                      ▶ Start
                                     </button>
                                   )}
                                   <button onClick={e => { e.stopPropagation(); toggleDone(activeDate, plan.id); }}
                                     className={"text-xs px-3 min-h-[36px] rounded-lg border transition-all flex items-center gap-1.5 " + (plan.done ? 'bg-success/10 border-success/20 text-success' : 'bg-white/5 border-white/10 text-text3 hover:text-text')}>
-                                    {plan.done ? 'Γ£ô Done' : plan.started ? 'ΓÅ╕ Mark' : 'ΓÿÉ Done'}
+                                    {plan.done ? '✓ Done' : plan.started ? '⏸ Mark' : '☐ Done'}
                                   </button>
                                 </div>
                               </div>
@@ -710,7 +710,7 @@ export default function StudyPlannerPage() {
         {todayPlans.length > 0 && completedCount < todayPlans.length && (
           <div className="mt-3 text-center">
             <p className="text-[10px] text-text3/60">
-              ≡ƒöÑ {completedCount > 0 ? `Only ${todayPlans.length - completedCount} more sessions to reach today's goal. Keep going!` : 'Start your first session to begin the momentum.'}
+              🔥 {completedCount > 0 ? `Only ${todayPlans.length - completedCount} more sessions to reach today's goal. Keep going!` : 'Start your first session to begin the momentum.'}
             </p>
           </div>
         )}
@@ -745,7 +745,7 @@ export default function StudyPlannerPage() {
 
         <div className="bg-surface border border-border rounded-xl p-4">
           <div className="text-xs font-semibold text-text mb-3 flex items-center gap-1.5">
-            <span>≡ƒôï</span> Revision Due Today
+            <span>📋</span> Revision Due Today
           </div>
           {subjects.length > 0 ? (
             <div>
@@ -754,8 +754,8 @@ export default function StudyPlannerPage() {
                 <span className="text-xs font-medium text-text">{subjects.sort((a, b) => a.progress - b.progress)[0].name}</span>
                 <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">High</span>
               </div>
-              <div className="text-[10px] text-text3 mb-2">{subjects.sort((a, b) => a.progress - b.progress)[0].progress}% complete ┬╖ 2 topics pending</div>
-              <a href={`/topics`} className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline">Start Revision ΓåÆ</a>
+              <div className="text-[10px] text-text3 mb-2">{subjects.sort((a, b) => a.progress - b.progress)[0].progress}% complete · 2 topics pending</div>
+              <a href={`/topics`} className="inline-flex items-center gap-1 text-[10px] text-primary hover:underline">Start Revision →</a>
             </div>
           ) : (
             <p className="text-[10px] text-text3 py-2">Complete topics to build revision queue</p>
@@ -764,23 +764,23 @@ export default function StudyPlannerPage() {
 
         <div className="bg-surface border border-border rounded-xl p-4">
           <div className="text-xs font-semibold text-text mb-3 flex items-center gap-1.5">
-            <span>Γ¥ô</span> Today's PYQs
+            <span>❓</span> Today's PYQs
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-primary font-mono mb-1">{pyqs?.filter(p => p.solved)?.length || 0}</div>
             <div className="text-[10px] text-text3">questions solved</div>
-            <a href="/pyq" className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline">Solve PYQs ΓåÆ</a>
+            <a href="/pyq" className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline">Solve PYQs →</a>
           </div>
         </div>
 
         <div className="bg-surface border border-border rounded-xl p-4">
           <div className="text-xs font-semibold text-text mb-3 flex items-center gap-1.5">
-            <span>≡ƒÄ»</span> Mock Reminder
+            <span>🎯</span> Mock Reminder
           </div>
           <div className="text-center">
-            <div className="text-lg mb-1">≡ƒôà Sunday 9 AM</div>
+            <div className="text-lg mb-1">📅 Sunday 9 AM</div>
             <div className="text-[10px] text-text3 mb-2">Full-length mock every Sunday</div>
-            <a href="/mocks" className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline">Schedule Mock ΓåÆ</a>
+            <a href="/mocks" className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline">Schedule Mock →</a>
           </div>
         </div>
 
@@ -837,7 +837,7 @@ export default function StudyPlannerPage() {
 
             <div className="flex gap-2 mt-6">
               <button onClick={() => toggleDone(drawerDate, drawerPlan.id)} className={`flex-1 py-2.5 rounded-xl text-sm font-semibold ${drawerPlan.done ? 'bg-bg-2 border border-border text-text2' : 'bg-success text-white'}`}>
-                {drawerPlan.done ? 'Γ£ô Completed' : 'Mark Complete'}
+                {drawerPlan.done ? '✓ Completed' : 'Mark Complete'}
               </button>
               <button onClick={() => deletePlan(drawerDate, drawerPlan.id)} className="py-2.5 px-4 rounded-xl border border-red-500/20 text-red-400 text-sm hover:bg-red-500/10">Delete</button>
             </div>

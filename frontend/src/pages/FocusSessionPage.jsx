@@ -11,7 +11,7 @@ import StreakIndicator from '../components/common/StreakIndicator';
 import { Eye, EyeOff, Pause, Play, SkipForward, Award, BarChart3, Flame, Zap, Calendar } from 'lucide-react';
 import { GATE_SUBJECTS } from '../data/gateSubjectsData';
 
-// ΓöÇΓöÇΓöÇ COSMIC BACKGROUND ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── COSMIC BACKGROUND ─────────────────────────────────────
 function CosmicBackground({ deepFocus }) {
   const canvasRef = useRef(null);
   useEffect(() => {
@@ -74,7 +74,7 @@ function CosmicBackground({ deepFocus }) {
   return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full" style={{ opacity: deepFocus ? 0.4 : 1, transition: 'opacity 1s ease' }} />;
 }
 
-// ΓöÇΓöÇΓöÇ TIMER RING ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── TIMER RING ────────────────────────────────────────────
 function formatTimeLocal(secs) {
   const m = Math.floor(secs / 60);
   const s = secs % 60;
@@ -132,7 +132,7 @@ function TimerRing({ timeRemaining, sessionDuration, mode, isActive, isPaused, d
           {formatTimeLocal(timeRemaining)}
         </span>
         <span className="text-sm mt-1 font-medium" style={{ color: mode === 'break' ? '#22D3EE' : '#94A3B8' }}>
-          {mode === 'break' ? 'Γÿò Break Time' : isActive ? '≡ƒÄ» Focusing' : 'Ready to Focus'}
+          {mode === 'break' ? '☕ Break Time' : isActive ? '🎯 Focusing' : 'Ready to Focus'}
         </span>
       </div>
       <style>{`@keyframes breathe { 0%,100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.02); } }`}</style>
@@ -140,7 +140,7 @@ function TimerRing({ timeRemaining, sessionDuration, mode, isActive, isPaused, d
   );
 }
 
-// ΓöÇΓöÇΓöÇ CONFETTI ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── CONFETTI ──────────────────────────────────────────────
 function Confetti() {
   const pieces = Array.from({ length: 60 }, (_, i) => ({
     id: i, left: Math.random() * 100, delay: Math.random() * 2, duration: 2 + Math.random() * 3,
@@ -159,18 +159,18 @@ function Confetti() {
   );
 }
 
-// ΓöÇΓöÇΓöÇ XP POPUP ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── XP POPUP ──────────────────────────────────────────────
 function XpPopup({ amount }) {
   return (
     <motion.div initial={{ opacity: 0, y: 20, scale: 0.8 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -30 }}
       className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl font-bold text-lg"
       style={{ background: 'linear-gradient(135deg, rgba(234,179,8,0.2), rgba(245,158,11,0.1))', border: '1px solid rgba(234,179,8,0.3)', color: '#FBBF24', boxShadow: '0 8px 32px rgba(234,179,8,0.2)' }}>
-      +{amount} XP ΓÜí
+      +{amount} XP ⚡
     </motion.div>
   );
 }
 
-// ΓöÇΓöÇΓöÇ DISTRACTION TRACKER ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── DISTRACTION TRACKER ───────────────────────────────────
 function DistractionPanel({ distractions, sessionDuration, timeRemaining }) {
   const elapsed = sessionDuration - timeRemaining;
   const focusPct = elapsed > 0 ? Math.max(0, Math.min(100, Math.round(100 - distractions.tabSwitches * 3 - distractions.pauses * 5))) : 100;
@@ -202,7 +202,7 @@ function DistractionPanel({ distractions, sessionDuration, timeRemaining }) {
   );
 }
 
-// ΓöÇΓöÇΓöÇ ACHIEVEMENT POPUP ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── ACHIEVEMENT POPUP ─────────────────────────────────────
 function AchievementPopup({ achievement }) {
   if (!achievement) return null;
   return (
@@ -219,7 +219,7 @@ function AchievementPopup({ achievement }) {
   );
 }
 
-// ΓöÇΓöÇΓöÇ MAIN COMPONENT ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── MAIN COMPONENT ────────────────────────────────────────
 export default function FocusSessionPage() {
   const {
     isActive, isPaused, mode, sessionDuration, timeRemaining,
@@ -365,11 +365,11 @@ export default function FocusSessionPage() {
 
                   {/* XP display */}
                   <div className="flex items-center justify-center gap-4 text-[11px] text-slate-500">
-                    <span>ΓÜí Lv.{xpLevel}</span>
-                    <span>┬╖</span>
+                    <span>⚡ Lv.{xpLevel}</span>
+                    <span>·</span>
                     <span>{totalXp} XP</span>
-                    <span>┬╖</span>
-                    <span>≡ƒÅå {earnedAchievements.length} badges</span>
+                    <span>·</span>
+                    <span>🏆 {earnedAchievements.length} badges</span>
                   </div>
 
                   <MotivationalQuote context={{ focus: true }} className="text-center" />
@@ -389,7 +389,7 @@ export default function FocusSessionPage() {
                   {/* Subject & Streak */}
                   <div className="space-y-1">
                     <p className="text-lg font-medium text-white">{formatSubject(currentSubject)}</p>
-                    {dailyStreak > 0 && <p className="text-sm text-amber-400">≡ƒöÑ {dailyStreak} day streak</p>}
+                    {dailyStreak > 0 && <p className="text-sm text-amber-400">🔥 {dailyStreak} day streak</p>}
                   </div>
 
                   {/* Controls */}
@@ -452,12 +452,12 @@ export default function FocusSessionPage() {
                         <p className="text-[10px] text-slate-500">Avg/Day</p>
                       </div>
                       <div>
-                        <p className="text-lg font-bold" style={{ color: '#FBBF24' }}>ΓÜí{totalXp}</p>
+                        <p className="text-lg font-bold" style={{ color: '#FBBF24' }}>⚡{totalXp}</p>
                         <p className="text-[10px] text-slate-500">Total XP</p>
                       </div>
                     </div>
                     {dailyStreak > 0 && (
-                      <p className="text-xs mt-3 text-center text-amber-400">≡ƒöÑ {dailyStreak} day streak ΓÇö keep going!</p>
+                      <p className="text-xs mt-3 text-center text-amber-400">🔥 {dailyStreak} day streak — keep going!</p>
                     )}
                   </div>
                 </div>
@@ -503,7 +503,7 @@ export default function FocusSessionPage() {
                         <div className="flex-1 min-w-0">
                           <div className="text-[10px] font-medium text-white truncate">{def.name}</div>
                           <div className="text-[8px] text-slate-500 truncate">{def.desc}</div>
-                          {earned && <div className="text-[8px] text-green-400">Γ£ô Earned</div>}
+                          {earned && <div className="text-[8px] text-green-400">✓ Earned</div>}
                         </div>
                       </div>
                     );

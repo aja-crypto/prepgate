@@ -88,10 +88,10 @@ export default function InsightsPage() {
     <div>
       <div className="mb-6">
         <Link to="/" className="text-xs text-primary hover:opacity-80 inline-flex items-center gap-1 mb-2">
-          ΓåÉ Back to Home
+          ← Back to Home
         </Link>
         <h1 className="text-xl font-bold text-text">GATE 2027 Insights</h1>
-        <p className="text-sm text-text3 mt-0.5">Curated strategies, topper advice, subject insights, and success principles ΓÇö powered by 8 expert sources.</p>
+        <p className="text-sm text-text3 mt-0.5">Curated strategies, topper advice, subject insights, and success principles — powered by 8 expert sources.</p>
       </div>
 
       {/* Tabs */}
@@ -131,7 +131,7 @@ export default function InsightsPage() {
             style={{ background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.12)' }}
           >
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-lg">≡ƒôà</span>
+              <span className="text-lg">📅</span>
               <span className="text-sm font-bold text-text">{STUDY_BLUEPRINT.title}</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
@@ -312,7 +312,7 @@ export default function InsightsPage() {
                 </span>
                 <h3 className="text-xs font-semibold text-text mt-2 leading-relaxed">{item.q}</h3>
                 <p className="text-[11px] text-text2 mt-1.5 leading-relaxed">{item.a}</p>
-                <span className="text-[8px] text-text3 mt-2 block">ΓÇö {item.source}</span>
+                <span className="text-[8px] text-text3 mt-2 block">— {item.source}</span>
               </div>
             ))}
           </div>
@@ -396,7 +396,7 @@ export default function InsightsPage() {
             style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.1)' }}
           >
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-sm">≡ƒÅå</span>
+              <span className="text-sm">🏆</span>
               <span className="text-xs font-bold text-text">Top Ranker Principles</span>
             </div>
             <div className="grid sm:grid-cols-2 gap-2">

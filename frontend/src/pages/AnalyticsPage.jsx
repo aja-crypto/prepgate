@@ -174,7 +174,7 @@ export default function AnalyticsPage() {
         </div>
         <div className="bg-surface border border-border rounded-xl p-12 text-center">
           <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-primary/10 border border-primary/20">
-            <span className="text-3xl">≡ƒôè</span>
+            <span className="text-3xl">📊</span>
           </div>
           <h2 className="text-lg font-bold text-text mb-2">No Analytics Yet</h2>
           <p className="text-sm text-text3 max-w-md mx-auto mb-6 leading-relaxed">
@@ -283,7 +283,7 @@ export default function AnalyticsPage() {
                 <div className="flex flex-wrap gap-2 mt-2">
                   {item.plan.map((step) => <span key={step} className="text-[10px] px-2 py-1 rounded bg-primary/10 text-primary border border-primary/20">{step}</span>)}
                 </div>
-                <a href={`/topics`} className="mt-2 inline-block text-[10px] text-primary hover:underline">Study this topic ΓåÆ</a>
+                <a href={`/topics`} className="mt-2 inline-block text-[10px] text-primary hover:underline">Study this topic →</a>
               </div>
             ))}
           </div>

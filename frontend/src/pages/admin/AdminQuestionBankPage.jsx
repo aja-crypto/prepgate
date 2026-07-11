@@ -203,7 +203,7 @@ export default function AdminQuestionBankPage() {
             ))}
           </div>
           <div className="flex-1" />
-          <button onClick={loadDuplicates} className="text-[10px] px-3 py-1.5 rounded-lg border border-border text-text3 hover:text-amber-400 hover:border-amber-500/30">≡ƒöì Find Duplicates</button>
+          <button onClick={loadDuplicates} className="text-[10px] px-3 py-1.5 rounded-lg border border-border text-text3 hover:text-amber-400 hover:border-amber-500/30">🔍 Find Duplicates</button>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
@@ -261,7 +261,7 @@ export default function AdminQuestionBankPage() {
             <div className="text-center py-16">
               <p className="text-sm text-text3 mb-4">No questions found matching filters</p>
               <button onClick={() => { setFilters({ search: '', subject: '', difficulty: '', questionType: '', topic: '', marks: '', sort: '-createdAt' }); setPage(1); }} className="px-4 py-2 rounded-lg text-xs font-medium text-white" style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}>
-                ≡ƒöä Reset All Filters
+                🔄 Reset All Filters
               </button>
             </div>
           ) : groups.map(g => (
@@ -324,7 +324,7 @@ export default function AdminQuestionBankPage() {
                       <div className="flex flex-wrap gap-2 mt-2">
                         {q.options.map((opt, i) => (
                           <span key={i} className={`text-[10px] px-2 py-0.5 rounded ${i === q.correctAnswer ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-bg-2 text-text3 border border-border'}`}>
-                            {i === q.correctAnswer && 'Γ£ô '}{opt}
+                            {i === q.correctAnswer && '✓ '}{opt}
                           </span>
                         ))}
                       </div>
@@ -354,14 +354,14 @@ export default function AdminQuestionBankPage() {
           <div className="bg-surface border border-white/10 rounded-2xl p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between mb-5">
               <h3 className="font-semibold text-text">{editing ? 'Edit Question' : 'Add Question'}</h3>
-              <button onClick={() => { setShowForm(false); setEditing(null); }} className="text-text3 hover:text-text">Γ£ò</button>
+              <button onClick={() => { setShowForm(false); setEditing(null); }} className="text-text3 hover:text-text">✕</button>
             </div>
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-3">
                 <div>
                   <label className="text-[10px] uppercase tracking-wider text-text3 font-semibold block mb-1">Subject</label>
                   <select value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))} className="w-full bg-bg-2 border border-border rounded-lg px-3 py-2 text-sm text-text">
-                    {SUBJECTS.map(s => <option key={s.code} value={s.code}>{s.code} ΓÇö {s.name}</option>)}
+                    {SUBJECTS.map(s => <option key={s.code} value={s.code}>{s.code} — {s.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -436,7 +436,7 @@ export default function AdminQuestionBankPage() {
           <div className="bg-surface border border-white/10 rounded-2xl p-6 w-full max-w-2xl">
             <div className="flex justify-between mb-5">
               <h3 className="font-semibold text-text">Import Questions</h3>
-              <button onClick={() => setImportMode(null)} className="text-text3 hover:text-text">Γ£ò</button>
+              <button onClick={() => setImportMode(null)} className="text-text3 hover:text-text">✕</button>
             </div>
             <div className="flex gap-2 mb-4">
               <button onClick={() => setImportMode('json')} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${importMode === 'json' ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3'}`}>JSON</button>
@@ -454,7 +454,7 @@ export default function AdminQuestionBankPage() {
           <div className="bg-surface border border-white/10 rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between mb-4">
               <h3 className="font-semibold text-text">Duplicate Questions ({duplicates.length})</h3>
-              <button onClick={() => setShowDuplicates(false)} className="text-text3 hover:text-text">Γ£ò</button>
+              <button onClick={() => setShowDuplicates(false)} className="text-text3 hover:text-text">✕</button>
             </div>
             {duplicates.length === 0 ? (
               <p className="text-sm text-text3">No duplicates found</p>

@@ -13,25 +13,25 @@ import { BRAND } from '../design/tokens';
 import toast from 'react-hot-toast';
 
 const SUBJECT_MAP = {
-  APT: { name: 'General Aptitude', icon: '≡ƒº«', color: '#43aa8b' },
-  EM: { name: 'Engineering Mathematics', icon: '≡ƒöó', color: '#4f8dff' },
-  DS: { name: 'Programming & Data Structures', icon: '≡ƒÉì', color: '#ff9f43' },
-  AL: { name: 'Algorithms', icon: 'ΓÜí', color: '#ff6b6b' },
-  DB: { name: 'DBMS', icon: '≡ƒùä', color: '#06b6d4' },
-  OS: { name: 'Operating Systems', icon: 'ΓÜÖ∩╕Å', color: '#a855f7' },
-  CN: { name: 'Computer Networks', icon: '≡ƒîÉ', color: '#ffd166' },
-  CO: { name: 'Computer Organization (COA)', icon: '≡ƒûÑ', color: '#06d6a0' },
-  TOC: { name: 'Theory of Computation', icon: '≡ƒñû', color: '#f72585' },
-  CD: { name: 'Compiler Design', icon: '≡ƒöº', color: '#4cc9f0' },
-  DL: { name: 'Digital Logic', icon: '≡ƒÆ╗', color: '#7c5cfc' },
+  APT: { name: 'General Aptitude', icon: '🧮', color: '#43aa8b' },
+  EM: { name: 'Engineering Mathematics', icon: '🔢', color: '#4f8dff' },
+  DS: { name: 'Programming & Data Structures', icon: '🐍', color: '#ff9f43' },
+  AL: { name: 'Algorithms', icon: '⚡', color: '#ff6b6b' },
+  DB: { name: 'DBMS', icon: '🗄', color: '#06b6d4' },
+  OS: { name: 'Operating Systems', icon: '⚙️', color: '#a855f7' },
+  CN: { name: 'Computer Networks', icon: '🌐', color: '#ffd166' },
+  CO: { name: 'Computer Organization (COA)', icon: '🖥', color: '#06d6a0' },
+  TOC: { name: 'Theory of Computation', icon: '🤖', color: '#f72585' },
+  CD: { name: 'Compiler Design', icon: '🔧', color: '#4cc9f0' },
+  DL: { name: 'Digital Logic', icon: '💻', color: '#7c5cfc' },
 };
 
 const TABS = [
-  { key: 'theory', label: 'Theory', icon: '≡ƒôû' },
-  { key: 'notes', label: 'Notes', icon: '≡ƒô¥' },
-  { key: 'pyq', label: 'PYQs', icon: '≡ƒôï' },
-  { key: 'tests', label: 'Weekly Tests', icon: '≡ƒôè' },
-  { key: 'mocks', label: 'Mock Tests', icon: '≡ƒÄ»' },
+  { key: 'theory', label: 'Theory', icon: '📖' },
+  { key: 'notes', label: 'Notes', icon: '📝' },
+  { key: 'pyq', label: 'PYQs', icon: '📋' },
+  { key: 'tests', label: 'Weekly Tests', icon: '📊' },
+  { key: 'mocks', label: 'Mock Tests', icon: '🎯' },
 ];
 
 const DIFF_BADGE = {
@@ -58,7 +58,7 @@ function TopicCard({ topic, isDone, onClick, subjectColor }) {
             boxShadow: `0 0 20px -4px ${subjectColor}20`,
           }}
         >
-          {topic.difficulty === 'easy' ? '≡ƒƒó' : topic.difficulty === 'hard' ? '≡ƒö┤' : '≡ƒƒá'}
+          {topic.difficulty === 'easy' ? '🟢' : topic.difficulty === 'hard' ? '🔴' : '🟠'}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -72,8 +72,8 @@ function TopicCard({ topic, isDone, onClick, subjectColor }) {
             )}
           </div>
           <div className="flex items-center gap-3 mt-1.5 text-[11px] text-text3">
-            {topic.weightage && <span>≡ƒôè ~{topic.weightage}% weightage</span>}
-            {topic.questionCount && <span>≡ƒôä {topic.questionCount} questions</span>}
+            {topic.weightage && <span>📊 ~{topic.weightage}% weightage</span>}
+            {topic.questionCount && <span>📄 {topic.questionCount} questions</span>}
             {!topic.weightage && !topic.questionCount && <span>Click to start learning</span>}
           </div>
         </div>
@@ -214,7 +214,7 @@ export default function SubjectDetailPage() {
           <div>
             <h1 className="text-2xl font-bold text-text">{subjectName}</h1>
             <p className="text-sm text-text3 mt-1">
-              {subject?.topicCount || topics.length} topics ┬╖ {BRAND.product}
+              {subject?.topicCount || topics.length} topics · {BRAND.product}
             </p>
           </div>
         </div>
@@ -294,7 +294,7 @@ export default function SubjectDetailPage() {
                 {(sub.files || []).map((file) => (
                   <div key={file.name} className="flex items-center justify-between bg-bg-2 border border-border rounded-lg px-4 py-2.5">
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <span className="text-sm">{file.type === 'pdf' ? '≡ƒôä' : '≡ƒû╝'}</span>
+                      <span className="text-sm">{file.type === 'pdf' ? '📄' : '🖼'}</span>
                       <span className="text-xs text-text truncate">{file.name}</span>
                     </div>
                     <button
@@ -314,7 +314,7 @@ export default function SubjectDetailPage() {
       {/* PYQ Tab */}
       {activeTab === 'pyq' && (
         <div className="rounded-xl border border-border bg-surface p-10 text-center">
-          <span className="text-4xl block mb-4">≡ƒôï</span>
+          <span className="text-4xl block mb-4">📋</span>
           <h3 className="text-base font-semibold text-text mb-2">Practice PYQs for {subjectName}</h3>
           <p className="text-sm text-text3 mb-5 max-w-md mx-auto">
             Solve previous year questions tailored for this subject to strengthen your GATE preparation.
@@ -349,8 +349,8 @@ export default function SubjectDetailPage() {
                     )}
                   </div>
                   <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-text3">
-                    {test.duration && <span>ΓÅ▒ {test.duration} min</span>}
-                    {test.questionsCount && <span>≡ƒôä {test.questionsCount} questions</span>}
+                    {test.duration && <span>⏱ {test.duration} min</span>}
+                    {test.questionsCount && <span>📄 {test.questionsCount} questions</span>}
                     {(test.topics || []).length > 0 && (
                       <span>Topics: {(test.topics || []).slice(0, 3).join(', ')}</span>
                     )}
@@ -398,16 +398,16 @@ export default function SubjectDetailPage() {
                             )}
                           </div>
                           <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-text3">
-                            {test.duration && <span>ΓÅ▒ {test.duration} min</span>}
-                            {test.questionsCount && <span>≡ƒôä {test.questionsCount} questions</span>}
-                            {test.marks && <span>≡ƒÄ» {test.marks} marks</span>}
+                            {test.duration && <span>⏱ {test.duration} min</span>}
+                            {test.questionsCount && <span>📄 {test.questionsCount} questions</span>}
+                            {test.marks && <span>🎯 {test.marks} marks</span>}
                             {test.attemptStatus && (
                               <span className={
                                 test.attemptStatus === 'completed' ? 'text-green-400' :
                                 test.attemptStatus === 'in-progress' ? 'text-orange-400' : 'text-text3'
                               }>
-                                {test.attemptStatus === 'completed' ? 'Γ£ô Completed' :
-                                 test.attemptStatus === 'in-progress' ? 'ΓÅ│ In Progress' : 'Not Attempted'}
+                                {test.attemptStatus === 'completed' ? '✓ Completed' :
+                                 test.attemptStatus === 'in-progress' ? '⏳ In Progress' : 'Not Attempted'}
                               </span>
                             )}
                           </div>

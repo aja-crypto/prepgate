@@ -132,7 +132,7 @@ export function XPGainAnimation({ amount = 10, visible }) {
               boxShadow: '0 0 30px rgba(168,85,247,0.6), 0 0 60px rgba(168,85,247,0.3)',
             }}
           >
-            <span className="text-lg">ΓÜí</span>
+            <span className="text-lg">⚡</span>
             <span className="text-white font-bold text-lg">+{amount} XP</span>
           </div>
         </motion.div>
@@ -172,7 +172,7 @@ export function StreakCounter({ streak, visible }) {
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         className="flex items-center gap-1"
       >
-        <span className="text-lg">≡ƒöÑ</span>
+        <span className="text-lg">🔥</span>
         <span className="font-bold text-lg">{displayStreak}</span>
       </motion.div>
     </AnimatePresence>
@@ -324,7 +324,7 @@ export function TrophyAnimation({ visible, rank }) {
               style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.4), transparent 70%)' }}
             />
             {/* Trophy icon */}
-            <div className="text-8xl relative z-10">≡ƒÅå</div>
+            <div className="text-8xl relative z-10">🏆</div>
             {/* Sparkles */}
             {[...Array(8)].map((_, i) => (
               <motion.div
@@ -339,7 +339,7 @@ export function TrophyAnimation({ visible, rank }) {
                 transition={{ duration: 1, delay: i * 0.1 }}
                 className="absolute left-1/2 top-1/2 text-2xl"
               >
-                Γ£¿
+                ✨
               </motion.div>
             ))}
           </div>
@@ -434,7 +434,7 @@ export function RankReveal({ rank, visible }) {
             className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl"
             style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(99,102,241,0.1))', border: '1px solid rgba(168,85,247,0.3)' }}
           >
-            <span className="text-2xl">≡ƒÄ»</span>
+            <span className="text-2xl">🎯</span>
             <span className="text-3xl font-bold text-transparent bg-clip-text" style={{ background: 'linear-gradient(135deg, #a855f7, #6366f1)' }}>
               {rank}
             </span>
@@ -631,7 +631,7 @@ export const PremiumOptionButton = memo(function PremiumOptionButton({
               isCorrectOpt ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
             }`}
           >
-            {isCorrectOpt ? 'Γ£ô Correct' : 'Γ£ù Wrong'}
+            {isCorrectOpt ? '✓ Correct' : '✗ Wrong'}
           </motion.span>
         )}
       </AnimatePresence>
@@ -796,7 +796,7 @@ export function CompletionScreen({
               transition={{ delay: 0.2 }}
               className="text-2xl md:text-3xl font-bold text-text mb-1"
             >
-              Congratulations! ≡ƒÄë
+              Congratulations! 🎉
             </motion.h1>
 
             <motion.p
@@ -855,7 +855,7 @@ export function CompletionScreen({
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', delay: 0.8 }}
                 >
-                  {streak}≡ƒöÑ
+                  {streak}🔥
                 </motion.div>
                 <div className="text-[10px] md:text-xs text-text3 mt-0.5">Best Streak</div>
               </div>

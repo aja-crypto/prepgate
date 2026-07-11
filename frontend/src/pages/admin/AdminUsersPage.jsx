@@ -97,7 +97,7 @@ export default function AdminUsersPage() {
       setTotal(res.data.count || 0);
       setTotalPages(res.data.pages || 1);
 
-      // Summary stats ΓÇö note: activeToday/studyingNow are approximate (from current page)
+      // Summary stats — note: activeToday/studyingNow are approximate (from current page)
       const activeToday = realUsers.filter(u => {
         const last = u.lastLogin ? new Date(u.lastLogin) : null;
         if (!last) return false;
@@ -177,12 +177,12 @@ export default function AdminUsersPage() {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-        <StatCard icon="≡ƒæÑ" label="Total Users" value={summary.total} sub="Real users only" color="var(--color-primary)" />
-        <StatCard icon="≡ƒƒó" label="Active Users" value={summary.active} sub="Enrolled & active" color="#34D399" />
-        <StatCard icon="≡ƒôà" label="New This Week" value={summary.newThisWeek} sub="Last 7 days" color="#FBBF24" />
-        <StatCard icon="≡ƒÄ»" label="Active Today" value={summary.activeToday} sub="Logged in today" color="#60A5FA" />
-        <StatCard icon="≡ƒôÜ" label="Studying Now" value={summary.studyingNow} sub="Active <5 min ago" color="#FBBF24" />
-        <StatCard icon="≡ƒÅå" label="Power Users" value={summary.powerUsers} sub="High engagement" color="#F87171" />
+        <StatCard icon="👥" label="Total Users" value={summary.total} sub="Real users only" color="var(--color-primary)" />
+        <StatCard icon="🟢" label="Active Users" value={summary.active} sub="Enrolled & active" color="#34D399" />
+        <StatCard icon="📅" label="New This Week" value={summary.newThisWeek} sub="Last 7 days" color="#FBBF24" />
+        <StatCard icon="🎯" label="Active Today" value={summary.activeToday} sub="Logged in today" color="#60A5FA" />
+        <StatCard icon="📚" label="Studying Now" value={summary.studyingNow} sub="Active <5 min ago" color="#FBBF24" />
+        <StatCard icon="🏆" label="Power Users" value={summary.powerUsers} sub="High engagement" color="#F87171" />
       </div>
 
       {/* Filters */}
@@ -245,7 +245,7 @@ export default function AdminUsersPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-xs text-text2 hidden md:table-cell">
-                      {user.lastLogin || 'ΓÇö'}
+                      {user.lastLogin || '—'}
                     </td>
                     <td className="px-4 py-3 text-center hidden lg:table-cell">
                       <span className="font-mono text-sm text-text2">{user.totalLogins || 0}</span>
@@ -259,7 +259,7 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3 text-center hidden sm:table-cell">
                       <span className="font-mono text-sm text-text2">
                         {user.streakCurrent || 0}
-                        <span className="text-[10px] text-text3 ml-0.5">≡ƒöÑ</span>
+                        <span className="text-[10px] text-text3 ml-0.5">🔥</span>
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -326,7 +326,7 @@ export default function AdminUsersPage() {
             Previous
           </button>
           <span className="text-xs text-text3 px-3">
-            Page {page} of {totalPages} ┬╖ {total} users
+            Page {page} of {totalPages} · {total} users
           </span>
           <button
             disabled={page >= totalPages}

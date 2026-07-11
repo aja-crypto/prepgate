@@ -142,12 +142,12 @@ export default function AdminPyqPapersPage() {
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="mb-4 p-4 rounded-lg bg-success/10 border border-success/20">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center text-success font-bold">Γ£ô</div>
+              <div className="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center text-success font-bold">✓</div>
               <div>
                 <div className="text-sm font-semibold text-success">Upload Complete</div>
-                <div className="text-xs text-text3 mt-1">{success.title} ΓÇö Year {success.year}, Set {success.set}</div>
+                <div className="text-xs text-text3 mt-1">{success.title} — Year {success.year}, Set {success.set}</div>
               </div>
-              <button onClick={() => setSuccess(null)} className="ml-auto text-text3 hover:text-text text-sm">├ù</button>
+              <button onClick={() => setSuccess(null)} className="ml-auto text-text3 hover:text-text text-sm">×</button>
             </div>
           </motion.div>
         )}
@@ -203,7 +203,7 @@ export default function AdminPyqPapersPage() {
                   <div className="text-sm text-primary font-medium">{selectedFile.name}</div>
                 ) : (
                   <div className="text-text3 text-sm">
-                    <div className="text-2xl mb-2">≡ƒôä</div>
+                    <div className="text-2xl mb-2">📄</div>
                     Drag & drop PDF here<br />or click to select
                   </div>
                 )}
@@ -239,7 +239,7 @@ export default function AdminPyqPapersPage() {
               </div>
             ) : papers.length === 0 ? (
               <div className="text-center py-8 text-text3">
-                <div className="text-3xl mb-2">≡ƒôä</div>
+                <div className="text-3xl mb-2">📄</div>
                 <p className="text-sm">No papers uploaded yet.</p>
                 <p className="text-[10px] text-text3/60 mt-1">Upload your first GATE paper to get started.</p>
               </div>

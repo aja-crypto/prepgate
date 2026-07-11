@@ -84,7 +84,7 @@ export default function MockTestResultPage() {
       count++;
     }
     if (count > 0) {
-      toast(`≡ƒôà ${count} revision${count > 1 ? 's' : ''} scheduled for weak topics`, { icon: '≡ƒôà', duration: 4000 });
+      toast(`📅 ${count} revision${count > 1 ? 's' : ''} scheduled for weak topics`, { icon: '📅', duration: 4000 });
     }
   }, [result, revisionSchedule, updateRevision]);
 
@@ -98,7 +98,7 @@ export default function MockTestResultPage() {
   };
 
   const formatTime = (seconds) => {
-    if (!seconds && seconds !== 0) return 'ΓÇö';
+    if (!seconds && seconds !== 0) return '—';
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     if (m === 0) return `${s}s`;
@@ -233,13 +233,13 @@ export default function MockTestResultPage() {
 
           <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-text3">
             <span className="flex items-center gap-1">
-              <Icon name="target" className="w-3.5 h-3.5" /> Accuracy: {accuracy != null ? `${accuracy}%` : 'ΓÇö'}
+              <Icon name="target" className="w-3.5 h-3.5" /> Accuracy: {accuracy != null ? `${accuracy}%` : '—'}
             </span>
             <span className="flex items-center gap-1">
               <Icon name="calendar" className="w-3.5 h-3.5" /> Time: {formatTime(timeTaken)}
             </span>
             <span className="flex items-center gap-1">
-              <Icon name="award" className="w-3.5 h-3.5" /> Rank: {rank != null ? rank : 'ΓÇö'}
+              <Icon name="award" className="w-3.5 h-3.5" /> Rank: {rank != null ? rank : '—'}
             </span>
             {percentile != null && (
               <span className="flex items-center gap-1">
@@ -337,7 +337,7 @@ export default function MockTestResultPage() {
                       <div key={name} className="flex items-center gap-2 text-xs">
                         <span className="text-text3 flex-1 truncate">{name}</span>
                         <span className="font-mono text-cyan-400">{formatTime(Math.round(time / count))}</span>
-                        <span className="text-text3 w-16 text-right">avg ├ù {count}q</span>
+                        <span className="text-text3 w-16 text-right">avg × {count}q</span>
                       </div>
                     ))}
                   </div>
@@ -354,7 +354,7 @@ export default function MockTestResultPage() {
                           <span className={`font-mono ${Math.round(time / count) > avgTime * 1.5 ? 'text-red-400' : 'text-cyan-400'}`}>
                             {formatTime(Math.round(time / count))}
                           </span>
-                          <span className="text-text3 w-16 text-right">avg ├ù {count}q</span>
+                          <span className="text-text3 w-16 text-right">avg × {count}q</span>
                         </div>
                       ))}
                   </div>
@@ -379,8 +379,8 @@ export default function MockTestResultPage() {
                   <div key={i} className="bg-red-500/5 border border-red-500/10 rounded-lg p-3">
                     <div className="text-xs font-medium text-red-300">{area}</div>
                     <div className="flex gap-2 mt-2">
-                      <a href="/pyq" className="text-[10px] px-2 py-1 rounded bg-primary/10 border border-primary/20 text-primary hover:bg-primary/15">Practice PYQs ΓåÆ</a>
-                      <a href="/topics" className="text-[10px] px-2 py-1 rounded bg-bg-2 border border-border text-text3 hover:border-white/10">Study Topic ΓåÆ</a>
+                      <a href="/pyq" className="text-[10px] px-2 py-1 rounded bg-primary/10 border border-primary/20 text-primary hover:bg-primary/15">Practice PYQs →</a>
+                      <a href="/topics" className="text-[10px] px-2 py-1 rounded bg-bg-2 border border-border text-text3 hover:border-white/10">Study Topic →</a>
                     </div>
                   </div>
                 ))}
@@ -497,7 +497,7 @@ export default function MockTestResultPage() {
                         <div className="flex items-center gap-4">
                           <span className="text-text3">Your answer:</span>
                           <span className={`font-mono font-semibold ${isCorrect ? 'text-green-400' : isWrong ? 'text-red-400' : 'text-text3'}`}>
-                            {isUnanswered ? 'ΓÇö' : q.selectedOption}
+                            {isUnanswered ? '—' : q.selectedOption}
                           </span>
                         </div>
                         <div className="flex items-center gap-4">
