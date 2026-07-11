@@ -386,7 +386,6 @@ export default function App() {
       <Route path="/study-resources" element={<ResourcesPage />} />
       {/* Standalone routes (no sidebar) */}
       <Route path="/platform" element={<PlatformPage />} />
-      <Route path="/platform" element={<PlatformPage />} />
       <Route path="/protected/view/:id" element={<PrivateRoute><ProtectedViewPage /></PrivateRoute>} />
       <Route path="/deep-focus" element={<PrivateRoute><DeepFocusPage /></PrivateRoute>} />
       <Route path="/focus-session" element={<PrivateRoute><FocusSessionPage /></PrivateRoute>} />
