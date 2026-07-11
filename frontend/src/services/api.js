@@ -208,7 +208,7 @@ export const aiService = {
     } else if (localStorage.getItem('isGuest') === 'true') {
       headers['X-Demo-User'] = 'true';
     }
-    return fetch(`${api.defaults.baseURL}/ai/chat/stream`, {
+    return fetch(`${api.defaults.baseURL}/ai/chat`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ message, context, sessionId }),
