@@ -165,9 +165,11 @@ export const AuthProvider = ({ children }) => {
     const { user: u, accessToken, refreshToken, isNewUser } = res.data.data;
     if (isNewUser) localStorage.removeItem(progressKey(u.id || u._id));
     storeSession(u, accessToken, refreshToken);
+    if (u.isPremium) setIsPremium(true);
+    refreshReferralStatus();
     toast.success(isNewUser ? 'Welcome! Your progress starts at 0%.' : `Welcome back, ${u.name.split(' ')[0]}!`);
     return u;
-  }, [storeSession]);
+  }, [storeSession, refreshReferralStatus]);
 
   const loginAsGuest = useCallback(() => {
      localStorage.removeItem('accessToken');
