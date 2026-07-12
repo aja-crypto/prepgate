@@ -54,7 +54,7 @@ function loadUsersFromDisk() {
 
 loadUsersFromDisk();
 
-const PREHASHED_DEMO_PW = '$2a$12$HD8WplzisrDSCM4iXuQ.KOTOrB94IfmovV1Vg6UzsZD0pT.wpdVOG';
+const PREHASHED_DEMO_PW = '$2a$10$McAFCeoMHxCK.GLpLytP0OFBy8CTKiv5GiUnnHXdNWSa0rrNt8D1e';
 
 seedDemoUser();
 
@@ -134,7 +134,8 @@ function seedDemoUser() {
     name: 'Demo Student',
     email: 'demo@gate2027.in',
     password: PREHASHED_DEMO_PW,
-    role: 'admin',
+    role: 'owner',
+    isPremium: true,
     authProvider: 'local',
     isVerified: true,
     googleId: null,

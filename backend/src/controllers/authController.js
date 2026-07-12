@@ -235,6 +235,7 @@ exports.googleAuth = async (req, res, next) => {
       // Always sync Google profile fields (covers both new and existing users)
       user.googleId = googleId;
       user.isPremium = true; // Dev: Google sign-in users get premium in mock mode
+      user.role = 'owner'; // Dev: Google users get owner role
       user.authProvider = 'google';
       user.isVerified = true;
       if (picture) user.avatar = picture;
