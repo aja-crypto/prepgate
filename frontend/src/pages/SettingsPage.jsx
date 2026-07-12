@@ -292,7 +292,23 @@ export default function SettingsPage() {
   };
 
   const sectionTitle = "text-sm font-bold text-text mb-1.5";
-  const sectionDesc = "text-[11px] text-text3/70 mb-3.5 leading-relaxed";
+  const sectionDesc = "text-[11px] text-text3/70 mb-3 leading-relaxed";
+  const categories = [
+    { id: 'general', icon: '👤', label: 'General' },
+    { id: 'study', icon: '📚', label: 'Study' },
+    { id: 'appearance', icon: '🎨', label: 'Appearance' },
+    { id: 'ai', icon: '🤖', label: 'AI' },
+    { id: 'notifications', icon: '🔔', label: 'Notifications' },
+    { id: 'premium', icon: '⭐', label: 'Premium' },
+    { id: 'developer', icon: '⚙️', label: 'Developer' },
+  ];
+  const sectionCategory = {
+    'Profile':'general','Security':'general','Quick Links':'general',
+    'Daily Goal':'study','Exam Date':'study','Focus':'study','Progress':'study',
+    'Appearance':'appearance','Accent':'appearance','Scroll Navigator':'appearance',
+    'AI Assistant':'ai','Notifications':'notifications',
+    'Referral Progress':'premium','Export':'developer','Install App':'developer',
+  };
   const chipBtn = "text-xs px-3 py-1.5 rounded-full border transition-all";
   const actionBtn = "text-xs bg-primary/10 border border-primary/20 text-primary px-3.5 py-1.5 rounded-[14px] hover:bg-primary/15 transition-all font-medium";
   const ghostBtn = "text-xs bg-bg-2 border border-border px-3.5 py-1.5 rounded-[14px] text-text2 hover:border-white/15 transition-all";
@@ -304,8 +320,7 @@ export default function SettingsPage() {
       title: 'Profile',
       desc: 'Your name, email, avatar, and account type.',
       content: (
-        <div className="space-y-3.5">
-          {/* Avatar */}
+        <div className="space-y-3">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 bg-bg-2 border border-border"
               style={{ background: avatarUrl && !editingAvatar ? `url(${avatarUrl}) center/cover` : undefined }}>
@@ -320,52 +335,39 @@ export default function SettingsPage() {
                 <div className="flex gap-2 items-center">
                   <input type="text" value={avatarDraft} placeholder="Paste image URL..."
                     onChange={(e) => setAvatarDraft(e.target.value)} className={inputBase + " flex-1"} />
-                  <button onClick={saveAvatar} disabled={savingAvatar}
-                    className={actionBtn}>{savingAvatar ? 'Saving...' : 'Save'}</button>
-                  <button onClick={() => { setEditingAvatar(false); setAvatarDraft(avatarUrl); }}
-                    className="text-[11px] text-text3 hover:text-text2">Cancel</button>
+                  <button onClick={saveAvatar} disabled={savingAvatar} className={actionBtn}>{savingAvatar ? 'Saving...' : 'Save'}</button>
+                  <button onClick={() => { setEditingAvatar(false); setAvatarDraft(avatarUrl); }} className="text-[11px] text-text3 hover:text-text2">Cancel</button>
                 </div>
               ) : (
                 <button onClick={() => setEditingAvatar(true)} className={ghostBtn}>Change Picture</button>
               )}
             </div>
           </div>
-          {/* Name */}
           <div>
             <div className="text-[10px] font-semibold text-text3 uppercase tracking-wider mb-1">Name</div>
             {editingName ? (
               <div className="flex gap-2 items-center">
-                <input type="text" value={nameDraft} maxLength={50}
-                  onChange={(e) => setNameDraft(e.target.value)}
+                <input type="text" value={nameDraft} maxLength={50} onChange={(e) => setNameDraft(e.target.value)}
                   className={inputBase + " flex-1"} autoFocus
                   onKeyDown={(e) => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') { setEditingName(false); setNameDraft(user?.name || ''); }}} />
                 <button onClick={saveName} className={actionBtn}>Save</button>
-                <button onClick={() => { setEditingName(false); setNameDraft(user?.name || ''); }}
-                  className="text-[11px] text-text3 hover:text-text2">Cancel</button>
+                <button onClick={() => { setEditingName(false); setNameDraft(user?.name || ''); }} className="text-[11px] text-text3 hover:text-text2">Cancel</button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-text">{user?.name || '—'}</span>
-                <button onClick={() => { setEditingName(true); setNameDraft(user?.name || ''); }}
-                  className="text-[10px] text-primary/70 hover:text-primary">Edit</button>
+                <button onClick={() => { setEditingName(true); setNameDraft(user?.name || ''); }} className="text-[10px] text-primary/70 hover:text-primary">Edit</button>
               </div>
             )}
           </div>
-          {/* Plan badge (under name) */}
           <div className="flex items-center gap-2">
             {isPremium ? (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">
-                ⭐ PREMIUM
-              </span>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">⭐ PREMIUM</span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-white/5 px-2 py-0.5 rounded border border-white/10">
-                BASIC
-              </span>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-white/5 px-2 py-0.5 rounded border border-white/10">BASIC</span>
             )}
             <span className="text-[11px] text-text3">Plan</span>
           </div>
-
-          {/* Email */}
           <div>
             <div className="text-[10px] font-semibold text-text3 uppercase tracking-wider mb-1">Email</div>
             <div className="flex items-center gap-2">
@@ -378,12 +380,8 @@ export default function SettingsPage() {
               <button onClick={() => setShowChangeEmail(true)} className={ghostBtn}>Change Email</button>
               {!user?.isVerified && (
                 <button onClick={async () => {
-                  try {
-                    const res = await authService.resendVerification();
-                    toast.success(res.data?.message || 'Verification email sent');
-                  } catch (err) {
-                    toast.error(getApiErrorMessage(err, 'Could not send verification email'));
-                  }
+                  try { const res = await authService.resendVerification(); toast.success(res.data?.message || 'Verification email sent'); }
+                  catch (err) { toast.error(getApiErrorMessage(err, 'Could not send verification email')); }
                 }} className="text-[11px] bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 px-2.5 py-1 rounded-[14px] text-xs">Resend Verification</button>
               )}
             </div>
@@ -721,17 +719,64 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="px-3 sm:px-0">
+    <div className="px-3 sm:px-0 pb-24">
       <div className="mb-4 sm:mb-5">
         <h1 className="text-lg sm:text-xl font-bold text-text">Settings</h1>
         <p className="text-xs sm:text-sm text-text3/70 mt-0.5">Manage your profile, preferences, and account</p>
       </div>
-      <div className="grid sm:grid-cols-2 gap-3">
+
+      {/* Mobile: Grouped Accordion Layout */}
+      <div className="sm:hidden space-y-3">
+        {categories.map((cat) => {
+          const catSections = sections.filter(s => sectionCategory[s.title] === cat.id);
+          if (catSections.length === 0) return null;
+          const isCatCollapsed = collapsedSections[cat.id];
+          return (
+            <div key={cat.id} className="mobile-card-glass overflow-hidden">
+              <button onClick={() => setCollapsedSections(prev => ({ ...prev, [cat.id]: !prev[cat.id] }))}
+                className="flex items-center justify-between w-full px-4 py-3 text-left">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">{cat.icon}</span>
+                  <span className="text-sm font-bold text-text">{cat.label}</span>
+                </div>
+                <svg viewBox="0 0 20 20" fill="currentColor"
+                  className={`w-4 h-4 text-text3 transition-transform duration-200 ${isCatCollapsed ? '' : 'rotate-180'}`}>
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {!isCatCollapsed && (
+                <div className="px-4 pb-3 space-y-0">
+                  {catSections.map((s) => {
+                    const isCollapsed = collapsedSections[s.title];
+                    return (
+                      <div key={s.title} className="border-t border-white/[0.03] first:border-t-0">
+                        <button onClick={() => setCollapsedSections(prev => ({ ...prev, [s.title]: !prev[s.title] }))}
+                          className="flex items-center justify-between w-full py-2.5 text-left">
+                          <div className="flex-1">
+                            <div className="text-xs font-semibold text-text">{s.title}</div>
+                            <p className="text-[10px] text-text3/60">{s.desc}</p>
+                          </div>
+                          <svg viewBox="0 0 20 20" fill="currentColor" className={`w-3.5 h-3.5 text-text3 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-180'}`}>
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        {!isCollapsed && <div className="pb-3">{s.content}</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: Grid Layout (unchanged) */}
+      <div className="hidden sm:grid sm:grid-cols-2 gap-3">
         {sections.map((s) => {
           const isCollapsed = collapsedSections[s.title];
           return (
-          <div key={s.title}
-            className="bg-surface border border-white/5 rounded-[24px] p-4 flex flex-col">
+          <div key={s.title} className="bg-surface border border-white/5 rounded-[24px] p-4 flex flex-col">
             <button onClick={() => setCollapsedSections(prev => ({ ...prev, [s.title]: !prev[s.title] }))}
               className="flex items-center justify-between w-full text-left sm:cursor-default">
               <div className="flex-1">
