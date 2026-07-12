@@ -1,4 +1,4 @@
-// src/utils/exportUtils.js ΓÇô CSV & Excel export
+// src/utils/exportUtils.js – CSV & Excel export
 
 function escapeCsv(val) {
   const s = String(val ?? '');
@@ -21,7 +21,7 @@ export function exportToCsv(payload) {
   });
   payload.pyqs.forEach((p) => {
     const status = p.solved ? 'Solved' : p.revisionNeeded ? 'Revision Needed' : 'Unsolved';
-    rows.push(['PYQ', p.title, p.subject, status, `GATE ${p.year} ┬╖ ${p.difficulty}${p.bookmarked ? ' ┬╖ Γÿà' : ''}`]);
+    rows.push(['PYQ', p.title, p.subject, status, `GATE ${p.year} ┬╖ ${p.difficulty}${p.bookmarked ? ' ┬╖ ★' : ''}`]);
   });
   payload.mocks.forEach((m) => {
     rows.push(['Mock Test', m.name, '', `Score: ${m.score}`, `Rank: ${m.rank ?? 'N/A'} ┬╖ ${m.date}`]);
@@ -44,7 +44,7 @@ export async function exportToExcel(payload) {
   const summary = [
     ['GATE 2027 Progress Report'],
     ['Student', payload.user?.name || 'Student'],
-    ['Email', payload.user?.email || 'ΓÇö'],
+    ['Email', payload.user?.email || '—'],
     ['Exported', new Date().toLocaleString('en-IN')],
     [],
     ['Metric', 'Value'],

@@ -40,7 +40,7 @@ export const DashboardProvider = ({ children }) => {
   }, [widgets, userId]);
 
   const visibleWidgets = useMemo(() => [...widgets]
-    .filter((w) => w.visible)
+    .filter((w) => w.visible || w.id === 'motivation')
     .sort((a, b) => a.order - b.order), [widgets]);
 
   const toggleWidget = useCallback((id) => {

@@ -145,8 +145,8 @@ export default function SubjectsPage() {
     return (
       <PageState
         state="empty"
-        emptyMessage="No subjects found in the system. Would you like to load the GATE 2027 syllabus?"
-        emptyAction={{ label: 'Load Syllabus', onClick: () => window.location.reload() }}
+        emptyMessage="Your GATE syllabus hasn't been loaded yet. This will populate once you start your preparation journey."
+        emptyAction={{ label: 'Explore PYQs Instead', onClick: () => window.location.href = '/pyq' }}
       />
     );
   }
@@ -285,11 +285,15 @@ export default function SubjectsPage() {
 
       {!subjects.length && (
         <div className="text-center py-16">
-          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(79,141,255,0.12), rgba(79,141,255,0.06))', border: '1px solid rgba(79,141,255,0.15)' }}>
-            <span className="text-3xl">📚</span>
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(6,182,212,0.06))', border: '1px solid rgba(139,92,246,0.15)' }}>
+            <span className="text-3xl">🚀</span>
           </div>
-          <h3 className="text-base font-bold text-text mb-1">No Subjects Available</h3>
-          <p className="text-sm text-text3 max-w-sm mx-auto">The GATE 2027 syllabus hasn&apos;t been loaded yet. Please contact an admin to seed the subject data.</p>
+          <h3 className="text-base font-bold text-text mb-1">Your GATE Journey Starts Here</h3>
+          <p className="text-sm text-text3 max-w-sm mx-auto">Subjects will appear once the syllabus is loaded. Start by exploring PYQs or taking a mock test — your progress tracks automatically.</p>
+          <div className="flex items-center justify-center gap-3 mt-4">
+            <Link to="/pyq" className="text-xs px-4 py-2 rounded-xl bg-primary/15 text-primary border border-primary/20 hover:bg-primary/25 transition-all">Practice PYQs →</Link>
+            <Link to="/mocks" className="text-xs px-4 py-2 rounded-xl bg-surface border border-border text-text2 hover:text-text transition-all">Take a Mock →</Link>
+          </div>
         </div>
       )}
     </div>

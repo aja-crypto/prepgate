@@ -17,7 +17,9 @@ import { pullFromServer, pushToServer, checkMongoAvailable } from '../services/s
 import { mergePyqLists } from '../utils/pyqMapper';
 import toast from 'react-hot-toast';
 
-const ProgressContext = createContext(null);
+// Split contexts to prevent cascading re-renders
+const ProgressDataContext = createContext(null);
+const ProgressActionsContext = createContext(null);
 const storageKey = (userId) => `gatenexa_progress_${userId || 'guest'}`;
 const BACKUP_INTERVAL_MS = 5 * 60 * 1000;
 const PUSH_DEBOUNCE_MS = 2000;
@@ -422,8 +424,20 @@ export const ProgressProvider = ({ children }) => {
     backupIntervalMs: BACKUP_INTERVAL_MS,
   }), [data, isNewUser, backupStatus, lastBackupAt, cloudBackupStatus, lastCloudBackupAt, mongoAvailable]);
 
+  const actionsValue = useMemo(() => ({
+    syncToCloud, refreshPyqs, updateTopics, updateNotes, updatePyqs, updateMocks,
+    updateStudyStats, updateGateFeatures, updateGamification, updateRevision,
+    updateProductivity, updateNotifications, resetAllProgress, resetSubjectProgress,
+    resetTopicProgress, restoreFromSnapshot, importUserData, getSearchIndex, getExportPayload,
+    backupIntervalMs: BACKUP_INTERVAL_MS,
+  }), [syncToCloud, refreshPyqs, updateTopics, updateNotes, updatePyqs, updateMocks,
+    updateStudyStats, updateGateFeatures, updateGamification, updateRevision,
+    updateProductivity, updateNotifications, resetAllProgress, resetSubjectProgress,
+    resetTopicProgress, restoreFromSnapshot, importUserData, getSearchIndex, getExportPayload]);
+
   return (
-    <ProgressContext.Provider value={value}>
+    <ProgressActionsContext.Provider value={actionsValue}>
+    <ProgressDataContext.Provider value={value}>
       <TopicProvider data={data} setData={setData}>
         <NoteProvider data={data} setData={setData}>
           <PYQProvider data={data} setData={setData}>
@@ -435,12 +449,30 @@ export const ProgressProvider = ({ children }) => {
           </PYQProvider>
         </NoteProvider>
       </TopicProvider>
-    </ProgressContext.Provider>
+    </ProgressDataContext.Provider>
+    </ProgressActionsContext.Provider>
   );
 };
 
 export const useProgress = () => {
-  const ctx = useContext(ProgressContext);
-  if (!ctx) throw new Error('useProgress must be used within ProgressProvider');
-  return ctx;
+  const data = useContext(ProgressDataContext);
+  const actions = useContext(ProgressActionsContext);
+  if (!data || !actions) throw new Error('useProgress must be used within ProgressProvider');
+  const merged = useMemo(() => ({ ...data, ...actions }), [data, actions]);
+  return merged;
 };
+
+// Subscribe only to actions — NEVER re-renders when progress data changes
+export const useProgressActions = () => {
+  const actions = useContext(ProgressActionsContext);
+  if (!actions) throw new Error('useProgressActions must be used within ProgressProvider');
+  return actions;
+};
+
+// Subscribe only to specific data fields — re-renders only when those fields change
+export function useProgressData() {
+  const data = useContext(ProgressDataContext);
+  if (!data) throw new Error('useProgressData must be used within ProgressProvider');
+  return data;
+}
+

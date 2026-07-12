@@ -329,16 +329,21 @@ export default function TopicsPage() {
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.15)' }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6 text-text3"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" strokeLinecap="round" /></svg>
             </div>
-          <h4 className="text-sm font-semibold text-text mb-1">{topics.length === 0 ? 'No Topics Yet' : 'No Topics Found'}</h4>
+          <h4 className="text-sm font-semibold text-text mb-1">{topics.length === 0 ? '🚀 Your Topic Journey Starts Now' : 'No Topics Found'}</h4>
           <p className="text-sm text-text3 max-w-xs leading-relaxed mb-4">
             {topics.length === 0
-              ? 'Topics will appear here once you start studying. Complete PYQs and track progress to build your topic list.'
+              ? 'Every master was once a beginner. Start with PYQs or browse subjects — your progress builds your topic list automatically.'
               : 'Try adjusting your filters or search to find what you\'re looking for.'}
           </p>
           {topics.length === 0 ? (
-            <Link to="/subjects" className="text-xs px-5 py-2.5 rounded-lg font-semibold transition-all hover:scale-[1.02]" style={{ background: 'rgba(168,85,247,0.12)', color: '#A78BFA', border: '1px solid rgba(168,85,247,0.25)' }}>
-              Browse Subjects →
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link to="/pyq" className="text-xs px-5 py-2.5 rounded-lg font-semibold transition-all hover:scale-[1.02] text-white" style={{ background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' }}>
+                Practice PYQs →
+              </Link>
+              <Link to="/subjects" className="text-xs px-5 py-2.5 rounded-lg font-semibold transition-all hover:scale-[1.02]" style={{ background: 'rgba(168,85,247,0.12)', color: '#A78BFA', border: '1px solid rgba(168,85,247,0.25)' }}>
+                Browse Subjects
+              </Link>
+            </div>
           ) : (
             <Link to="/topics" className="text-xs px-5 py-2.5 rounded-lg font-semibold transition-all hover:scale-[1.02]" style={{ background: 'rgba(168,85,247,0.12)', color: '#A78BFA', border: '1px solid rgba(168,85,247,0.25)' }}>
               View All Topics

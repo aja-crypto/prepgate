@@ -1,5 +1,5 @@
 // Premium app shell — glass sidebar, modern nav
-import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense, memo } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { throttle } from '../../utils/perf';
 import { useAuth } from '../../context/AuthContext';
@@ -18,41 +18,22 @@ import NexaPersona from './NexaPersona';
 
 function GateVaultIcon() {
   return (
-    <motion.svg
+    <svg
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="w-5 h-5 shrink-0"
+      className="w-5 h-5 shrink-0 gate-vault-icon"
       style={{ filter: 'drop-shadow(0 0 6px rgba(168,85,247,0.4))' }}
-      animate={{ y: [0, -2, 0] }}
-      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-      whileHover={{ scale: 1.15, filter: 'drop-shadow(0 0 12px rgba(168,85,247,0.7))' }}
-      whileTap={{ scale: 0.9 }}
     >
-      <motion.rect x="3" y="8" width="18" height="12" rx="2"
-        animate={{ opacity: [0.8, 1, 0.8] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.path d="M7 8V6a5 5 0 0 1 10 0v2"
-        animate={{ strokeOpacity: [0.6, 1, 0.6] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.line x1="12" y1="12" x2="12" y2="16"
-        animate={{ opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.path d="M9 12v2a3 3 0 0 0 6 0v-2"
-        animate={{ strokeOpacity: [0.4, 0.8, 0.4] }}
-        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.circle cx="12" cy="14" r="1" fill="currentColor" stroke="none"
-        animate={{ opacity: [0.3, 0.7, 0.3] }}
-        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-      />
-    </motion.svg>
+      <rect x="3" y="8" width="18" height="12" rx="2" className="gv-rect" />
+      <path d="M7 8V6a5 5 0 0 1 10 0v2" className="gv-path" />
+      <line x1="12" y1="12" x2="12" y2="16" className="gv-line" />
+      <path d="M9 12v2a3 3 0 0 0 6 0v-2" className="gv-path2" />
+      <circle cx="12" cy="14" r="1" fill="currentColor" stroke="none" />
+    </svg>
   );
 }
 
@@ -95,6 +76,7 @@ const NAV = [
   { section: 'More' },
   { label: 'Gate Vault', icon: 'folder', to: '/gate-vault' },
   { label: 'NEXA Predictor', icon: 'analytics', to: '/opportunity-predictor' },
+  { label: 'Learning Hub', icon: 'zap', to: '/learning-hub' },
   { label: 'Mistakes', icon: 'target', to: '/mistakes' },
   { label: 'GATE Papers', icon: 'pyq', to: '/gate-papers' },
   { label: 'Calculator', icon: 'calculator', onClick: 'toggleCalc' },
@@ -222,7 +204,7 @@ const SidebarNav = React.memo(({ onNavClick, onCalcClick }) => {
   );
 });
 
-export default function Layout() {
+const Layout = memo(function Layout() {
   useEffect(() => { const t = Date.now(); console.log('[Trace] Layout MOUNTED at', t); return () => console.log('[Trace] Layout UNMOUNTED after', Date.now() - t, 'ms'); }, []);
   const { user, logout, isPremium, referralProgress } = useAuth();
   const { themeMode, toggleTheme, isDark, onboardingDone } = useTheme();
@@ -285,6 +267,14 @@ export default function Layout() {
         <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
+      <style>{`
+        .gate-vault-icon { animation: gv-float 3s ease-in-out infinite; }
+        .gate-vault-icon .gv-rect { animation: gv-pulse-op 4s ease-in-out infinite; }
+        .gate-vault-icon .gv-path { animation: gv-pulse-op 4s ease-in-out infinite; }
+        @keyframes gv-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+        @keyframes gv-pulse-op { 0%,100% { opacity: 0.8; } 50% { opacity: 1; } }
+      `}</style>
+
       <aside className={`
         fixed md:relative z-50 md:z-40 h-full w-[220px] max-w-[85vw] glass-sidebar flex flex-col
         transition-transform duration-300 ease-out
@@ -314,6 +304,13 @@ export default function Layout() {
               )}
               {user?.role === 'admin' && (
                 <span className="inline-block text-[9px] px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/20 font-semibold mt-0.5">Admin</span>
+              )}
+              {user?.role !== 'owner' && user?.role !== 'admin' && (
+                isPremium ? (
+                  <span className="inline-block text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 font-semibold mt-0.5">⭐ PREMIUM</span>
+                ) : (
+                  <span className="inline-block text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-slate-500 border border-white/10 font-semibold mt-0.5">BASIC</span>
+                )
               )}
             </div>
             <button
@@ -500,11 +497,17 @@ export default function Layout() {
                   <div className="px-4 py-3 border-b border-white/5">
                     <div className="text-sm font-semibold text-text">{user?.name}</div>
                     <div className="text-xs text-text3 truncate">{user?.email}</div>
-                    {isPremium && (
-                      <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">
-                        ⭐ Premium
-                      </div>
-                    )}
+                    <div className="mt-1.5">
+                      {isPremium ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">
+                          ⭐ PREMIUM
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-500 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                          BASIC
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="py-2">
                     <button onClick={() => { navigate('/referral'); setProfileDropdownOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text2 hover:bg-white/5 transition-colors">
@@ -588,5 +591,7 @@ export default function Layout() {
       <SmartScrollNavigator />
     </div>
   );
-}
+});
+
+export default Layout;
 

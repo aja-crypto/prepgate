@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-// SVG progress ring ΓÇö replaces basic progress bars
+// SVG progress ring — replaces basic progress bars
 const ProgressRing = memo(function ProgressRing({
   value = 0,
   size = 80,

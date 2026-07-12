@@ -54,17 +54,17 @@ function extractNumber(val) {
 }
 
 // Institute priority ranking for recommendation sorting
-// Higher priority = appears first in recommendations
+// Lower number = appears first (Elite IITs > Old IITs > NIT Trichy > NITs > IIITs > GFTIs)
 const INSTITUTE_PRIORITY = [
   'Indian Institute of Science',
-  'Indian Institute of Technology Madras',
   'Indian Institute of Technology Bombay',
   'Indian Institute of Technology Delhi',
+  'Indian Institute of Technology Madras',
   'Indian Institute of Technology Kanpur',
   'Indian Institute of Technology Kharagpur',
   'Indian Institute of Technology Roorkee',
-  'Indian Institute of Technology Guwahati',
   'Indian Institute of Technology Hyderabad',
+  'Indian Institute of Technology Guwahati',
   'Indian Institute of Technology BHU Varanasi',
   'Indian Institute of Technology Gandhinagar',
   'Indian Institute of Technology Ropar',
@@ -79,6 +79,34 @@ const INSTITUTE_PRIORITY = [
   'Indian Institute of Technology Goa',
   'Indian Institute of Technology Jammu',
   'Indian Institute of Technology Dharwad',
+  'National Institute of Technology Tiruchirappalli',
+  'National Institute of Technology Karnataka Surathkal',
+  'National Institute of Technology Warangal',
+  'National Institute of Technology Calicut',
+  'National Institute of Technology Durgapur',
+  'National Institute of Technology Rourkela',
+  'National Institute of Technology Kurukshetra',
+  'National Institute of Technology Allahabad',
+  'National Institute of Technology Silchar',
+  'National Institute of Technology Nagpur',
+  'National Institute of Technology Jaipur',
+  'National Institute of Technology Bhopal',
+  'National Institute of Technology Agartala',
+  'National Institute of Technology Hamirpur',
+  'National Institute of Technology Jalandhar',
+  'National Institute of Technology Patna',
+  'National Institute of Technology Raipur',
+  'National Institute of Technology Srinagar',
+  'National Institute of Technology Meghalaya',
+  'National Institute of Technology Mizoram',
+  'National Institute of Technology Nagaland',
+  'National Institute of Technology Manipur',
+  'National Institute of Technology Sikkim',
+  'National Institute of Technology Arunachal Pradesh',
+  'National Institute of Technology Delhi',
+  'National Institute of Technology Goa',
+  'National Institute of Technology Puducherry',
+  'National Institute of Technology Uttarakhand',
 ];
 const INSTITUTE_PRIORITY_MAP = new Map(INSTITUTE_PRIORITY.map((name, i) => [name, i]));
 
@@ -86,18 +114,26 @@ const INSTITUTE_PRIORITY_MAP = new Map(INSTITUTE_PRIORITY.map((name, i) => [name
 const PROGRAM_PRIORITY = {
   'Computer Science and Engineering': 100,
   'CSEE': 99,
-  'Information Technology': 90,
-  'Data Science': 85,
-  'Artificial Intelligence': 85,
-  'Electrical Engineering': 70,
+  'Information Technology': 92,
+  'Data Science': 88,
+  'Artificial Intelligence': 88,
+  'Electrical Engineering': 72,
   'Electronics and Communication Engineering': 68,
-  'Mechanical Engineering': 50,
-  'Civil Engineering': 40,
+  'Mechanical Engineering': 52,
+  'Civil Engineering': 42,
   'Chemical Engineering': 38,
 };
 
 function getInstitutePriority(institute) {
-  return INSTITUTE_PRIORITY_MAP.get(institute) ?? (institute?.includes('Indian Institute of Technology') ? 50 : institute?.includes('National Institute of Technology') ? 70 : institute?.includes('IIIT') ? 90 : 200);
+  const exact = INSTITUTE_PRIORITY_MAP.get(institute);
+  if (exact != null) return exact;
+  if (institute?.includes('Indian Institute of Science')) return 0;
+  if (institute?.includes('Indian Institute of Technology')) return 23; // after last IIT, before NITs
+  if (institute?.includes('National Institute of Technology')) return 50; // after last NIT
+  if (institute?.includes('IIIT')) return 75;
+  if (institute?.includes('IIEST')) return 80;
+  if (institute?.includes('GFTI')) return 90;
+  return 200;
 }
 
 function getProgramPriority(program) {
@@ -105,28 +141,34 @@ function getProgramPriority(program) {
   for (const [key, priority] of Object.entries(PROGRAM_PRIORITY)) {
     if (program.includes(key)) return priority;
   }
+  // General match: if program contains "Science" or "Engineering", medium priority
+  if (program.includes('Science') || program.includes('Engineering')) return 45;
   return 50;
 }
 
 function sortByRecommendationPriority(a, b) {
-  // 1. Institute reputation (lower = better)
+  // 1. Institute reputation (Elite Institutes first)
   const instA = getInstitutePriority(a.institute);
   const instB = getInstitutePriority(b.institute);
   if (instA !== instB) return instA - instB;
-  // 2. Program quality
+  // 2. Program quality (premium programs first)
   const progA = getProgramPriority(a.program);
   const progB = getProgramPriority(b.program);
   if (progA !== progB) return progB - progA;
-  // 3. Probability
+  // 3. Probability (higher chance first)
   if (a.probability !== b.probability) return b.probability - a.probability;
-  // 4. Placement
+  // 4. Placement (higher avg placement first)
   const placeA = a.avgPlacement || 0;
   const placeB = b.avgPlacement || 0;
   if (placeA !== placeB) return placeB - placeA;
-  // 5. ROI
+  // 5. ROI (higher score first)
   const roiA = a.roiScore || 0;
   const roiB = b.roiScore || 0;
-  return roiB - roiA;
+  if (roiA !== roiB) return roiB - roiA;
+  // 6. Fees (lower fees first)
+  const feesA = a.fees || Infinity;
+  const feesB = b.fees || Infinity;
+  return feesA - feesB;
 }
 
 function clamp(val, min, max) {
@@ -246,7 +288,7 @@ async function predict(input) {
     estimatedPercentile = Math.round(interpolateFromData(rankPercentileData, estimatedRank, 'rank', 'percentile') * 10) / 10;
   }
   if (!estimatedPercentile && estimatedRank) {
-    const totalCandidates = statistics?.totalCandidates || statistics?.registeredCandidates || 150000;
+    const totalCandidates = gateStats.find(s => s.year === baseYear)?.totalCandidates || 150000;
     estimatedPercentile = Math.round((1 - estimatedRank / totalCandidates) * 10000) / 100;
   }
 
@@ -345,12 +387,12 @@ async function predict(input) {
   const trendMap = await batchAnalyseTrends(filteredCcmt, category);
 
   // Helper: binary-search the score needed for a target probability
-  function estimateScoreForTargetProbability(targetProb, closingScore, openingScore, trendInfo, competition, popularity, yr) {
+  function estimateScoreForTargetProbability(targetProb, closingScore, openingScore, trendInfo, competition, popularity, yr, instName, progName) {
     let lo = Math.max(0, normalizedScore - 50);
     let hi = normalizedScore + 100;
     for (let i = 0; i < 30; i++) {
       const mid = (lo + hi) / 2;
-      const p = calcEnhancedProbability(mid, closingScore, openingScore, trendInfo, competition, popularity, yr).score;
+      const p = calcEnhancedProbability(mid, closingScore, openingScore, trendInfo, competition, popularity, yr, undefined, instName, progName).score;
       if (p >= targetProb) hi = mid; else lo = mid;
     }
     return Math.round((lo + hi) / 2 * 10) / 10;
@@ -381,7 +423,7 @@ async function predict(input) {
     const year = cc.year;
 
     const seatEntry = seatMap.get(`${cc.institute}|${cc.program}`);
-    const { score: prob, confidence: adConfidence, reasons: adReasons } = calcEnhancedProbability(normalizedScore, cc.closingScore, cc.openingScore, trend, competitionLevel, programPopularity, year, seatEntry?.totalSeats);
+    const { score: prob, confidence: adConfidence, reasons: adReasons } = calcEnhancedProbability(normalizedScore, cc.closingScore, cc.openingScore, trend, competitionLevel, programPopularity, year, seatEntry?.totalSeats, cc.institute, cc.program);
 
     groupInfo.bestProbability = Math.max(groupInfo.bestProbability, prob);
 
@@ -526,8 +568,8 @@ async function predict(input) {
       },
       // Improvement suggestion: what score needed to reach 90% and 70% probability
       improvementSuggestion: prob < 90 ? (() => {
-        const score90 = estimateScoreForTargetProbability(90, cc.closingScore, cc.openingScore, trend, competitionLevel, programPopularity, year);
-        const score70 = estimateScoreForTargetProbability(70, cc.closingScore, cc.openingScore, trend, competitionLevel, programPopularity, year);
+        const score90 = estimateScoreForTargetProbability(90, cc.closingScore, cc.openingScore, trend, competitionLevel, programPopularity, year, cc.institute, cc.program);
+        const score70 = estimateScoreForTargetProbability(70, cc.closingScore, cc.openingScore, trend, competitionLevel, programPopularity, year, cc.institute, cc.program);
         const needed90 = Math.max(0, score90 - normalizedScore);
         const needed70 = Math.max(0, score70 - normalizedScore);
         return {

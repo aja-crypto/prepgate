@@ -2,7 +2,8 @@
 const router = require('express').Router();
 const {
   register, login, refreshToken, getMe,
-  updateProfile, registerFcmToken, forgotPassword, resetPassword,
+  updateProfile, registerFcmToken, changeEmail, updateAvatar, updateBadges,
+  forgotPassword, resetPassword,
   googleAuth, demoLogin, verifyEmail, resendVerification, changePassword, deleteAccount,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
@@ -37,6 +38,9 @@ router.put('/change-password', protect, validateFields([
 router.delete('/account', protect, deleteAccount);
 router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);
+router.put('/change-email', protect, changeEmail);
+router.put('/avatar', protect, updateAvatar);
+router.put('/badges', protect, updateBadges);
 router.put('/fcm-token', protect, registerFcmToken);
 
 module.exports = router;

@@ -20,6 +20,7 @@ const NAV_ITEMS = [
   { path: '/admin/users', label: 'Users', icon: 'users' },
   { path: '/admin/analytics', label: 'Analytics', icon: 'bar-chart' },
   { path: '/admin/predictor', label: 'NEXA Predictor', icon: 'database' },
+  { path: '/admin/learning-hub', label: 'Learning Hub', icon: 'book' },
   { section: 'SYSTEM' },
   { path: '/admin/settings', label: 'Settings', icon: 'settings' },
   { path: '/admin/system-health', label: 'System Health', icon: 'activity' },

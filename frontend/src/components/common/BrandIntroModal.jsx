@@ -2,52 +2,87 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 
 const VIDEO_SRC = '/icons/gatenexa-brand-intro.mp4';
 const BRAND_IMG = '/images/logo.png';
-const DESKTOP_SCALE = 1.45;
-const MOBILE_SCALE = 1.8;
+
+function calcContainer(w, h) {
+  const ratio = 16 / 9;
+  if (w < 768) {
+    const cw = Math.min(w * 0.95, 480);
+    return { width: cw, height: Math.min(cw / ratio, h * 0.55) };
+  }
+  const maxCw = w * 0.70;
+  const maxCh = h * 0.68;
+  const cw = Math.min(maxCw, maxCh * ratio);
+  return { width: cw, height: Math.min(cw / ratio, maxCh) };
+}
 
 export default function BrandIntroModal({ open, onClose }) {
   const [phase, setPhase] = useState('video');
   const [visible, setVisible] = useState(false);
+  const [fadeIn, setFadeIn] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const containerStyle = useRef({});
   const videoRef = useRef(null);
   const closeTimerRef = useRef(null);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
+    const check = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      containerStyle.current = calcContainer(window.innerWidth, window.innerHeight);
+      forceUpdate({});
+    };
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  const [, forceUpdate] = useState({});
+
   useEffect(() => {
     if (open) {
       setVisible(true);
       setPhase('video');
-      closeTimerRef.current = setTimeout(() => {
-        const vid = videoRef.current;
-        if (vid) { vid.currentTime = 0; vid.play().catch(() => {}); }
-      }, 150);
+      requestAnimationFrame(() => setFadeIn(true));
+      containerStyle.current = calcContainer(window.innerWidth, window.innerHeight);
+    } else {
+      setFadeIn(false);
     }
-    return () => clearTimeout(closeTimerRef.current);
   }, [open]);
 
-  const handleVideoEnd = useCallback(() => setPhase('brand'), []);
+  const handleVideoEnd = useCallback(() => {
+    setPhase('brand');
+  }, []);
 
   const handleReplay = useCallback(() => {
     setPhase('video');
-    const vid = videoRef.current;
-    if (vid) { vid.currentTime = 0; vid.play().catch(() => {}); }
+    requestAnimationFrame(() => {
+      const vid = videoRef.current;
+      if (vid) {
+        vid.currentTime = 0;
+        vid.play().catch(() => {});
+      }
+    });
   }, []);
 
   const handleClose = useCallback(() => {
-    setVisible(false);
+    setFadeIn(false);
     clearTimeout(closeTimerRef.current);
-    closeTimerRef.current = setTimeout(onClose, 200);
+    closeTimerRef.current = setTimeout(() => {
+      setVisible(false);
+      onClose();
+    }, 250);
   }, [onClose]);
+
+  const handleCanPlayThrough = useCallback(() => {
+    const vid = videoRef.current;
+    if (vid && vid.paused && vid.readyState >= 4) {
+      vid.play().catch(() => {});
+    }
+  }, []);
 
   if (!open || !visible) return null;
 
-  const scale = isMobile ? MOBILE_SCALE : DESKTOP_SCALE;
+  const cs = containerStyle.current;
 
   return (
     <div
@@ -55,13 +90,15 @@ export default function BrandIntroModal({ open, onClose }) {
         position: 'fixed', inset: 0, zIndex: 200000,
         background: '#000000',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
+        opacity: fadeIn ? 1 : 0,
+        transition: 'opacity 300ms ease-out',
       }}
     >
       {/* Close Button */}
       <button
         onClick={handleClose}
         style={{
-          position: 'absolute', top: 24, right: 24, zIndex: 200001,
+          position: 'fixed', top: 24, right: 24, zIndex: 200001,
           width: 48, height: 48, borderRadius: '50%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'rgba(255,255,255,0.08)',
@@ -85,28 +122,28 @@ export default function BrandIntroModal({ open, onClose }) {
       {phase === 'video' && (
         <div
           style={{
-            width: isMobile ? '140vw' : '100vw',
-            height: isMobile ? '100vh' : '105vh',
             overflow: 'hidden',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            borderRadius: isMobile ? 12 : 16,
+            width: cs.width,
+            height: cs.height,
+            transform: 'translateZ(0)',
           }}
         >
           <video
             ref={videoRef}
             src={VIDEO_SRC}
             onEnded={handleVideoEnd}
+            onCanPlayThrough={handleCanPlayThrough}
             style={{
               width: '100%', height: '100%',
               objectFit: 'cover',
-              objectPosition: isMobile ? '50% 48%' : '50% 50%',
-              transform: `scale(${scale})`,
-              transformOrigin: 'center center',
+              objectPosition: 'center center',
               display: 'block', background: '#000000',
               willChange: 'transform',
             }}
             preload="auto"
             playsInline
-            autoPlay
+            muted
             disablePictureInPicture
           />
         </div>
@@ -116,18 +153,18 @@ export default function BrandIntroModal({ open, onClose }) {
       {phase === 'brand' && (
         <div
           style={{
-            width: '100%', height: '100%',
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center', gap: 32,
-            animation: 'brandFadeIn 0.3s ease-out forwards',
+            animation: 'brandFadeIn 0.35s ease-out forwards',
           }}
         >
           <img
             src={BRAND_IMG}
             alt="GateNexa"
             style={{
-              maxWidth: isMobile ? '70vw' : '60vw',
-              maxHeight: isMobile ? '50vh' : '60vh',
+              maxWidth: isMobile ? '55vw' : '35vw',
+              maxHeight: isMobile ? '40vh' : '45vh',
+              width: 'auto', height: 'auto',
               objectFit: 'contain', display: 'block',
             }}
           />

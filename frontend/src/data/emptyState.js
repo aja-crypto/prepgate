@@ -2,6 +2,18 @@ import { BADGE_DEFINITIONS, getDefaultGamification, getDefaultRevisionSchedule, 
 
 export { BADGE_DEFINITIONS };
 
+function getEmptyGateFeatures() {
+  const gf = getDefaultGateFeatures();
+  return {
+    ...gf,
+    todayProgress: { hours: 0, topicsCompleted: 0, date: new Date().toISOString().slice(0, 10) },
+    streak: { current: 0, longest: 0, activityLog: {} },
+    studyPlans: {},
+    monthlyHours: [],
+    weeklyAccuracy: [],
+  };
+}
+
 const EMPTY_STRUCTURE = {
   topics: [],
   notes: [],
@@ -14,7 +26,7 @@ const EMPTY_STRUCTURE = {
     weeklyHours: [],
     subjects: [],
   },
-  gateFeatures: getDefaultGateFeatures(),
+  gateFeatures: getEmptyGateFeatures(),
   gamification: getDefaultGamification(),
   revisionSchedule: [],
   resources: [],

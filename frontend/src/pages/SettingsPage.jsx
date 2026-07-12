@@ -7,9 +7,17 @@ import { useAuth } from '../context/AuthContext';
 import Modal from '../components/common/Modal';
 import { exportToCsv, exportToExcel } from '../utils/exportUtils';
 import { requestNotificationPermission } from '../utils/reminderUtils';
-import { authService, progressService, getApiErrorMessage } from '../services/api';
+import { authService, progressService, referralService, getApiErrorMessage } from '../services/api';
 import { silentCatch } from '../utils/errorHandler';
 import toast from 'react-hot-toast';
+
+const TARGET = 2;
+const REWARDS = [
+  { key: 'predictor', label: 'Full Predictor', icon: '🎯', minReferrals: 1 },
+  { key: 'pdf', label: 'Complete PDF', icon: '📄', minReferrals: 2 },
+  { key: 'choiceFilling', label: 'Choice Filling', icon: '📋', minReferrals: 2 },
+  { key: 'aiMentor', label: 'AI Mentor', icon: '🤖', minReferrals: 2 },
+];
 
 function BackupIndicator({ status, lastBackupAt }) {
   const statusMap = {
@@ -56,7 +64,7 @@ function Toggle({ enabled, onChange }) {
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const { user, deleteAccount, logout, setUser } = useAuth();
+  const { user, deleteAccount, logout, setUser, isPremium, referralCount, referralProgress, refreshReferralStatus } = useAuth();
   const { themeMode, setThemeMode, colorPreset, setColorPreset, colorPresets, resetOnboarding } = useTheme();
   const {
     backupStatus, lastBackupAt, cloudBackupStatus, mongoAvailable, syncToCloud,
@@ -82,6 +90,22 @@ export default function SettingsPage() {
   const [dailyGoalHours, setDailyGoalHours] = useState(gateFeatures?.dailyTarget?.hours || 2);
   const [pwdForm, setPwdForm] = useState({ current: '', newPwd: '', confirm: '' });
 
+  // Profile form state
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState(user?.name || '');
+  const [showChangeEmail, setShowChangeEmail] = useState(false);
+  const [emailForm, setEmailForm] = useState({ newEmail: '', password: '' });
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar || '');
+  const [editingAvatar, setEditingAvatar] = useState(false);
+  const [avatarDraft, setAvatarDraft] = useState(user?.avatar || '');
+  const [savingAvatar, setSavingAvatar] = useState(false);
+
+
+  // Referral state
+  const [referralLink, setReferralLink] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
+
   const todaySessions = (() => { try { return JSON.parse(localStorage.getItem('gatenexa_focus_sessions') || '[]'); } catch { return []; } })().filter(
     (s) => new Date(s.date).toDateString() === new Date().toDateString()
   );
@@ -91,6 +115,29 @@ export default function SettingsPage() {
   useEffect(() => {
     progressService.getSnapshots().then((res) => setSnapshots(res.data?.data || [])).catch(silentCatch('Load snapshots'));
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      setNameDraft(user.name || '');
+      setAvatarUrl(user.avatar || '');
+      setAvatarDraft(user.avatar || '');
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (referralCode || !user) return;
+    referralService.getStatus().then(res => {
+      const d = res.data?.data;
+      if (d?.referralCode) setReferralCode(d.referralCode);
+    }).catch(() => {});
+  }, [user, referralCode]);
+
+  useEffect(() => {
+    if (referralCode && !referralLink) {
+      const base = window.location.origin;
+      setReferralLink(`${base}/register?ref=${referralCode}`);
+    }
+  }, [referralCode, referralLink]);
 
   const toggleAiFab = (enabled) => {
     setAiFabEnabled(enabled);
@@ -178,6 +225,71 @@ export default function SettingsPage() {
     navigate('/login');
   };
 
+  const saveName = async () => {
+    if (!nameDraft.trim() || nameDraft === user?.name) {
+      setEditingName(false);
+      return;
+    }
+    try {
+      const res = await authService.updateProfile({ name: nameDraft.trim() });
+      setUser(res.data.data.user);
+      toast.success('Name updated');
+      setEditingName(false);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Failed to update name'));
+    }
+  };
+
+  const saveAvatar = async () => {
+    if (!avatarDraft.trim()) {
+      toast.error('Enter an image URL');
+      return;
+    }
+    setSavingAvatar(true);
+    try {
+      const res = await authService.updateAvatar(avatarDraft.trim());
+      setUser(res.data.data.user);
+      setAvatarUrl(avatarDraft.trim());
+      toast.success('Profile picture updated');
+      setEditingAvatar(false);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Failed to update avatar'));
+    }
+    setSavingAvatar(false);
+  };
+
+  const handleChangeEmail = async () => {
+    if (!emailForm.newEmail.trim()) return toast.error('Enter a new email');
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!emailRegex.test(emailForm.newEmail)) return toast.error('Invalid email format');
+    try {
+      const res = await authService.changeEmail(emailForm.newEmail.trim(), emailForm.password);
+      toast.success(res.data.message || 'Verification sent to new email');
+      setShowChangeEmail(false);
+      setEmailForm({ newEmail: '', password: '' });
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Email change failed'));
+    }
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(referralLink);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = referralLink;
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      setCopied(true);
+      toast.success('Referral link copied!');
+      setTimeout(() => setCopied(false), 2000);
+    } catch { toast.error('Copy failed'); }
+  };
+
   const sectionTitle = "text-sm font-bold text-text mb-1.5";
   const sectionDesc = "text-[11px] text-text3/70 mb-3.5 leading-relaxed";
   const chipBtn = "text-xs px-3 py-1.5 rounded-full border transition-all";
@@ -186,6 +298,196 @@ export default function SettingsPage() {
   const inputBase = "bg-bg-2 border border-border rounded-[12px] px-3 py-2 text-xs text-text focus:outline-none focus:border-primary/60 transition-all";
 
   const sections = [
+    // ─── P0: Profile (Name, Email, Avatar, Account Type) ───
+    {
+      title: 'Profile',
+      desc: 'Your name, email, avatar, and account type.',
+      content: (
+        <div className="space-y-3.5">
+          {/* Avatar */}
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 bg-bg-2 border border-border"
+              style={{ background: avatarUrl && !editingAvatar ? `url(${avatarUrl}) center/cover` : undefined }}>
+              {!avatarUrl || editingAvatar ? (
+                <div className="w-full h-full flex items-center justify-center text-lg font-bold text-primary">
+                  {(user?.name || '?')[0].toUpperCase()}
+                </div>
+              ) : null}
+            </div>
+            <div className="flex-1">
+              {editingAvatar ? (
+                <div className="flex gap-2 items-center">
+                  <input type="text" value={avatarDraft} placeholder="Paste image URL..."
+                    onChange={(e) => setAvatarDraft(e.target.value)} className={inputBase + " flex-1"} />
+                  <button onClick={saveAvatar} disabled={savingAvatar}
+                    className={actionBtn}>{savingAvatar ? 'Saving...' : 'Save'}</button>
+                  <button onClick={() => { setEditingAvatar(false); setAvatarDraft(avatarUrl); }}
+                    className="text-[11px] text-text3 hover:text-text2">Cancel</button>
+                </div>
+              ) : (
+                <button onClick={() => setEditingAvatar(true)} className={ghostBtn}>Change Picture</button>
+              )}
+            </div>
+          </div>
+          {/* Name */}
+          <div>
+            <div className="text-[10px] font-semibold text-text3 uppercase tracking-wider mb-1">Name</div>
+            {editingName ? (
+              <div className="flex gap-2 items-center">
+                <input type="text" value={nameDraft} maxLength={50}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  className={inputBase + " flex-1"} autoFocus
+                  onKeyDown={(e) => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') { setEditingName(false); setNameDraft(user?.name || ''); }}} />
+                <button onClick={saveName} className={actionBtn}>Save</button>
+                <button onClick={() => { setEditingName(false); setNameDraft(user?.name || ''); }}
+                  className="text-[11px] text-text3 hover:text-text2">Cancel</button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-text">{user?.name || '—'}</span>
+                <button onClick={() => { setEditingName(true); setNameDraft(user?.name || ''); }}
+                  className="text-[10px] text-primary/70 hover:text-primary">Edit</button>
+              </div>
+            )}
+          </div>
+          {/* Plan badge (under name) */}
+          <div className="flex items-center gap-2">
+            {isPremium ? (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">
+                ⭐ PREMIUM
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                BASIC
+              </span>
+            )}
+            <span className="text-[11px] text-text3">Plan</span>
+          </div>
+
+          {/* Email */}
+          <div>
+            <div className="text-[10px] font-semibold text-text3 uppercase tracking-wider mb-1">Email</div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-text">{user?.email}</span>
+              {user?.isVerified
+                ? <span className="text-[10px] text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded">Verified</span>
+                : <span className="text-[10px] text-yellow-400 bg-yellow-500/10 px-1.5 py-0.5 rounded">Unverified</span>}
+            </div>
+            <div className="flex gap-2 mt-1.5">
+              <button onClick={() => setShowChangeEmail(true)} className={ghostBtn}>Change Email</button>
+              {!user?.isVerified && (
+                <button onClick={async () => {
+                  try {
+                    const res = await authService.resendVerification();
+                    toast.success(res.data?.message || 'Verification email sent');
+                  } catch (err) {
+                    toast.error(getApiErrorMessage(err, 'Could not send verification email'));
+                  }
+                }} className="text-[11px] bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 px-2.5 py-1 rounded-[14px] text-xs">Resend Verification</button>
+              )}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+
+    // ─── P0: Referral Progress + Rewards ───
+    {
+      title: 'Referral Progress',
+      desc: 'Invite friends to unlock Premium for free.',
+      content: (
+        <div className="space-y-3.5">
+          {/* Progress bar */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs text-text2 font-medium">{referralCount} / {TARGET} Completed</span>
+              <span className="text-xs text-text3">{Math.min(100, Math.round((referralCount / TARGET) * 100))}%</span>
+            </div>
+            <div className="w-full h-2.5 rounded-full bg-bg-2 border border-border overflow-hidden">
+              <div className="h-full rounded-full transition-all duration-700 ease-out"
+                style={{
+                  width: `${Math.min(100, (referralCount / TARGET) * 100)}%`,
+                  background: 'linear-gradient(90deg, #8B5CF6, #A855F7)',
+                }} />
+            </div>
+          </div>
+          {/* Rewards checklist */}
+          <div className="space-y-1">
+            {REWARDS.map((r) => {
+              const unlocked = isPremium || referralCount >= r.minReferrals;
+              return (
+                <div key={r.key}
+                  className={`flex items-center gap-2 rounded-[12px] p-2 transition-all ${unlocked ? 'bg-green-500/5 border border-green-500/15' : 'bg-bg-2 border border-border opacity-50'}`}>
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${unlocked ? 'bg-green-500 text-white' : 'bg-text3/20 text-text3'}`}>
+                    {unlocked ? '✓' : String(r.minReferrals)}
+                  </span>
+                  <span className="text-xs text-text2">{r.icon} {r.label}</span>
+                  {!unlocked && !isPremium && (
+                    <span className="ml-auto text-[10px] text-text3">{r.minReferrals} friend{r.minReferrals > 1 ? 's' : ''}</span>
+                  )}
+                  {isPremium && unlocked && (
+                    <span className="ml-auto text-[10px] text-green-400">Unlocked</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {/* Invite button */}
+          <div className="flex gap-2">
+            <button onClick={() => navigate('/referral')} className="flex-1 bg-primary/15 border border-primary/25 text-primary text-[12px] font-semibold py-2 rounded-[14px] hover:bg-primary/20 transition-all">
+              🎁 Invite Friends
+            </button>
+            {referralLink && (
+              <button onClick={copyToClipboard} className="bg-bg-2 border border-border text-text2 text-[12px] px-3 py-2 rounded-[14px] hover:border-primary/30 transition-all">
+                {copied ? '✓ Copied' : '🔗 Copy Link'}
+              </button>
+            )}
+          </div>
+          {/* Referral code display */}
+          {referralCode && (
+            <div className="bg-bg-2 border border-border rounded-[12px] p-2.5">
+              <div className="text-[9px] text-text3 uppercase tracking-wider mb-1">Your Code</div>
+              <div className="text-sm font-bold tracking-[0.2em] text-primary">{referralCode}</div>
+            </div>
+          )}
+        </div>
+      ),
+    },
+
+    // ─── P0: Security ───
+    {
+      title: 'Security',
+      desc: 'Password, login activity, and account protection.',
+      content: (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-text2">Password</span>
+            <button onClick={() => setShowChangePassword(true)} className={ghostBtn}>Change</button>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-text2">Two-Factor Auth (2FA)</span>
+            <span className="text-[10px] text-text3/60 italic">Coming soon</span>
+          </div>
+          {user?.lastLogin && (
+            <div className="text-[10px] text-text3">
+              Last login: {new Date(user.lastLogin).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </div>
+          )}
+          <div className="border-t border-border pt-2 mt-1 flex gap-2">
+            <button onClick={() => setShowDeleteAccount(true)}
+              className="text-[11px] bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-[14px] hover:bg-red-500/15 transition-all">
+              Delete Account
+            </button>
+            <button onClick={handleLogout}
+              className="text-[11px] bg-bg-2 border border-border text-text2 px-3 py-1.5 rounded-[14px] hover:border-white/15 transition-all">
+              Logout
+            </button>
+          </div>
+        </div>
+      ),
+    },
+
+    // ─── Quick Links ───
     {
       title: 'Quick Links',
       desc: 'Navigate to key areas.',
@@ -415,47 +717,13 @@ export default function SettingsPage() {
         </div>
       ),
     },
-    {
-      title: 'Account',
-      desc: 'Sign out, manage password, or delete your account.',
-      content: (
-        <div className="space-y-2.5">
-          <div className="text-[12px] text-text2">
-            <span className="text-text3">Email:</span> {user?.email}
-            {user?.isVerified
-              ? <span className="ml-1.5 text-green-400 text-[11px]">Verified</span>
-              : <span className="ml-1.5 text-yellow-400 text-[11px]">Unverified</span>}
-          </div>
-          {!user?.isVerified && (
-            <button onClick={async () => {
-                try {
-                  const res = await authService.resendVerification();
-                  toast.success(res.data?.message || 'Verification email sent');
-                } catch (err) {
-                  toast.error(getApiErrorMessage(err, 'Could not send verification email'));
-                }
-              }}
-              className="text-[11px] bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 px-3 py-1.5 rounded-[14px] hover:bg-yellow-500/15 transition-all">
-              Resend Verification
-            </button>
-          )}
-          <div className="flex flex-wrap gap-1.5">
-            <button onClick={() => setShowChangePassword(true)} className={`${ghostBtn}`}>Change Password</button>
-            <button onClick={handleLogout} className={`${ghostBtn}`}>Logout</button>
-            <button onClick={() => setShowDeleteAccount(true)} className="text-[11px] bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1.5 rounded-[14px] hover:bg-red-500/15 transition-all">
-              Delete Account
-            </button>
-          </div>
-        </div>
-      ),
-    },
   ];
 
   return (
     <div className="px-3 sm:px-0">
       <div className="mb-4 sm:mb-5">
         <h1 className="text-lg sm:text-xl font-bold text-text">Settings</h1>
-        <p className="text-xs sm:text-sm text-text3/70 mt-0.5">Manage your preferences and account</p>
+        <p className="text-xs sm:text-sm text-text3/70 mt-0.5">Manage your profile, preferences, and account</p>
       </div>
       <div className="grid sm:grid-cols-2 gap-3">
         {sections.map((s) => (
@@ -501,6 +769,22 @@ export default function SettingsPage() {
               } catch (err) { toast.error(getApiErrorMessage(err, 'Password change failed')); }
             }}
             className="w-full bg-primary text-white py-2.5 rounded-[14px] text-sm font-semibold">Update Password</button>
+        </div>
+      </Modal>
+
+      <Modal open={showChangeEmail} onClose={() => setShowChangeEmail(false)} title="Change Email">
+        <p className="text-xs text-text3 mb-4">Enter your new email and confirm with your password.</p>
+        <div className="space-y-3">
+          <input type="email" placeholder="New email address" value={emailForm.newEmail}
+            onChange={(e) => setEmailForm((f) => ({ ...f, newEmail: e.target.value }))}
+            className={inputBase + " w-full"} />
+          {user?.authProvider === 'local' && (
+            <input type="password" placeholder="Current password" value={emailForm.password}
+              onChange={(e) => setEmailForm((f) => ({ ...f, password: e.target.value }))}
+              className={inputBase + " w-full"} />
+          )}
+          <button onClick={handleChangeEmail}
+            className="w-full bg-primary text-white py-2.5 rounded-[14px] text-sm font-semibold">Send Verification</button>
         </div>
       </Modal>
 

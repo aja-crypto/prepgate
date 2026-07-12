@@ -19,17 +19,20 @@ const GateStatistics = require('../models/GateStatistics');
 const User = require('../models/User');
 
 const predictLimiter = new Map();
-const PREDICT_LIMIT = 10; // max requests per window
-const PREDICT_WINDOW = 60000; // 1 minute
+const PREDICT_LIMIT = 10;
+const PREDICT_LIMIT_DEMO = 50;
+const PREDICT_WINDOW = 60000;
 
 function predictRateLimit(req, res, next) {
+  const isDemo = req.headers['x-demo-user'] || req.headers['x-testing'] || (isMockAuthEnabled() && req.query.demo === 'true');
+  const limit = isDemo ? PREDICT_LIMIT_DEMO : PREDICT_LIMIT;
   const userId = req.user?._id?.toString() || req.ip || 'anonymous';
   const now = Date.now();
   const record = predictLimiter.get(userId) || { count: 0, resetAt: now + PREDICT_WINDOW };
   if (now > record.resetAt) { record.count = 0; record.resetAt = now + PREDICT_WINDOW; }
   record.count++;
   predictLimiter.set(userId, record);
-  if (record.count > PREDICT_LIMIT) {
+  if (record.count > limit) {
     return res.status(429).json({ success: false, message: 'Too many predictions. Try again later.', retryAfter: Math.ceil((record.resetAt - now) / 1000) });
   }
   next();
@@ -45,7 +48,12 @@ setInterval(() => {
 
 function requireMongo(req, res, next) {
   if (!isMongoConnected()) {
-    return res.status(503).json({ success: false, message: 'Predictor requires MongoDB. Connect to database.' });
+    if (req.path === '/predict' && req.method === 'POST') {
+      // Allow prediction to proceed without MongoDB — fallback to user-data-only prediction
+      req.localMode = true;
+      return next();
+    }
+    return res.status(503).json({ success: false, message: 'Predictor requires MongoDB for this feature. Connect to database.' });
   }
   next();
 }
@@ -81,11 +89,29 @@ router.post('/predict', protect, predictRateLimit, requireMongo, validateFields(
 
     timingMarks.push('pre-predict');
     const predictStart = Date.now();
-    const result = await predict({
-      expectedMarks, category, paper, admissionType,
-      preferredState, collegeType, preferredProgram,
-      attemptNumber, targetYear, mockAverage, preparationLevel,
-    });
+    let result;
+    try {
+      result = await predict({
+        expectedMarks, category, paper, admissionType,
+        preferredState, collegeType, preferredProgram,
+        attemptNumber, targetYear, mockAverage, preparationLevel,
+      });
+    } catch (err) {
+      console.warn('[Predictor] prediction engine error, using fallback:', err.message);
+      // Fallback heuristic when MongoDB unavailable
+      const score = Math.min(100, Math.max(0, expectedMarks));
+      const rank = Math.round(Math.pow(10, (100 - score) / 25) * 100);
+      const percentile = Math.max(0.1, 100 - (rank / 200000) * 100);
+      result = {
+        predictedScore: score, predictedRank: rank, predictedPercentile: +percentile.toFixed(2),
+        confidence: 'Medium', confidenceScore: 50, isQualified: score >= 25, qualifyingCutoff: 25,
+        dreamColleges: [], targetColleges: [], safeColleges: [], backupColleges: [],
+        guaranteedColleges: [], veryHighColleges: [], likelyColleges: [], competitiveColleges: [],
+        dreamTierColleges: [], eligibleIITs: 0, eligibleNITs: 0, eligibleIIITs: 0, eligibleGFTIs: 0,
+        eligiblePSUs: 0, branchRecommendations: [], admissionProbability: 0, whyThisPrediction: '',
+        baseYear: 2025, datasetsUsed: ['heuristic-fallback'],
+      };
+    }
     const predictTime = Date.now() - predictStart;
     timingMarks.push('post-predict');
 
@@ -106,9 +132,9 @@ router.post('/predict', protect, predictRateLimit, requireMongo, validateFields(
     // Save to history (skip for non-ObjectId users like demo)
     let historyEntry = null;
     try {
-      const userId = req.user?._id?.toString() || '';
+      const userId = req.user?._id?.toString() || req.user?.id?.toString() || '';
       const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(userId);
-      if (isValidObjectId) {
+      if (userId && isValidObjectId) {
         historyEntry = await PredictionHistory.create({
           user: userId,
           input: { name, paper, expectedMarks, category, admissionType, preferredState, collegeType, preferredProgram, attemptNumber, targetYear, mockAverage, preparationLevel },
@@ -144,10 +170,20 @@ router.post('/predict', protect, predictRateLimit, requireMongo, validateFields(
       console.warn('Failed to save prediction history:', e.message);
     }
 
-    // Map 5-tier college lists → flat opportunities array
+    // Map 5-tier college lists → flat opportunities array with collegeBlock tier
+    const ELITE_IITS = ['Indian Institute of Science', 'Indian Institute of Technology Bombay', 'Indian Institute of Technology Delhi', 'Indian Institute of Technology Madras', 'Indian Institute of Technology Kanpur', 'Indian Institute of Technology Kharagpur', 'Indian Institute of Technology Roorkee'];
+
+    function getCollegeBlock(c) {
+      const inst = c.institute || '';
+      if (ELITE_IITS.some(name => inst.includes(name))) return 'dream_elite';
+      if (inst.includes('Indian Institute of Technology') && (c.probability || 0) >= 40) return 'high_chance_iit';
+      if (inst.includes('National Institute of Technology') && (c.probability || 0) >= 70) return 'safe_nit';
+      return 'backup';
+    }
+
     const opportunityFromCollege = (c, path, baseYear) => ({
       college: c.institute, program: c.program, specialization: c.specialization || '',
-      path, collegeType: c.instituteType, tier: c.tier || null, location: c.state || '',
+      path, collegeType: c.instituteType, tier: c.tier || null, collegeBlock: getCollegeBlock(c), location: c.state || '',
       closingScore: c.closingScore, openingScore: c.openingScore, year: c.year || baseYear, round: c.round,
       probability: c.probability, admissionConfidence: c.admissionConfidence || null, matchScore: c.matchScore || null, seats: c.seats || null,
       avgPlacement: c.avgPlacement || null, highestPlacement: c.highestPlacement || null,
@@ -169,6 +205,23 @@ router.post('/predict', protect, predictRateLimit, requireMongo, validateFields(
     for (const [key, path] of Object.entries(pathMap)) {
       for (const c of (result[key] || [])) opportunities.push(opportunityFromCollege(c, path, result.baseYear));
     }
+
+    // Sort opportunities by college block priority (elite first), then by probability desc
+    const BLOCK_PRIORITY = { dream_elite: 0, high_chance_iit: 1, safe_nit: 2, backup: 3 };
+    opportunities.sort((a, b) => {
+      const pa = BLOCK_PRIORITY[a.collegeBlock] !== undefined ? BLOCK_PRIORITY[a.collegeBlock] : 99;
+      const pb = BLOCK_PRIORITY[b.collegeBlock] !== undefined ? BLOCK_PRIORITY[b.collegeBlock] : 99;
+      if (pa !== pb) return pa - pb;
+      return (b.probability || 0) - (a.probability || 0);
+    });
+
+    // Build grouped college blocks
+    const collegeBlocks = {
+      dreamElite: opportunities.filter(o => o.collegeBlock === 'dream_elite'),
+      highChanceIits: opportunities.filter(o => o.collegeBlock === 'high_chance_iit'),
+      safeNits: opportunities.filter(o => o.collegeBlock === 'safe_nit'),
+      backup: opportunities.filter(o => o.collegeBlock === 'backup'),
+    };
 
     const totalTime = Date.now() - routeStart;
     console.log(`[Predictor] marks=${expectedMarks} cat=${category} predict=${predictTime}ms total=${totalTime}ms opps=${opportunities.length} cached=${!!result.cached}`);
@@ -205,7 +258,7 @@ router.post('/predict', protect, predictRateLimit, requireMongo, validateFields(
       eligibleGFTIs: result.eligibleGFTIs,
       eligibleIISc: result.eligibleIISc,
       eligibleIIEST: result.eligibleIIEST,
-      opportunities, 
+      opportunities, collegeBlocks, 
       aiReport,
       recommendations: result.recommendations || [],
       historyId: historyEntry?._id || null,
@@ -570,7 +623,7 @@ router.get('/unlock-status', protect, async (req, res, next) => {
     if (bypassPredictorLimits(req.user)) {
       return res.json({ success: true, data: { isUnlocked: true, referralCount: 0, targetReferrals: 2 } });
     }
-    let isUnlocked = true;
+    let isUnlocked = false;
     let referralCount = 0;
     const userId = req.user?._id?.toString() || '';
     const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(userId);

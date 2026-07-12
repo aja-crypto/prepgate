@@ -150,7 +150,7 @@ export default function MockTestTakingPage() {
     if (timeLeft !== 0 || !test || loading || autoSubmittedRef.current) return;
     autoSubmittedRef.current = true;
     setAutoSubmitted(true);
-    toast('Time up ΓÇö auto-submitting', { icon: '\u23F1' });
+    toast('Time up — auto-submitting', { icon: '\u23F1' });
     submitTest(false);
   }, [timeLeft]); // eslint-disable-line react-hooks/exhaustive-deps
 

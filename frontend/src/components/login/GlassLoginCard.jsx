@@ -329,8 +329,8 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                 <GoogleSignInButton
                   text="signin_with"
                   onSuccess={handleGoogleSuccess}
-                  onError={() => {
-                    setError('Google sign-in failed');
+                  onError={(err) => {
+                    setError(err?.message || 'Google sign-in failed');
                     onStatusChange?.('error');
                     setTimeout(() => onStatusChange?.('idle'), 2000);
                   }}

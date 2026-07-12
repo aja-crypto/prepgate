@@ -116,12 +116,12 @@ export default function AboutPage() {
           </div>
 
           <div className="hero-content">
-            <div className="hc-badge">About GateNexa</div>
+            <div className="hc-badge">AI-Assisted Admission Guidance</div>
             <h1 className="hc-heading">
-              One Platform.<br />Every Resource.<br />Complete Preparation.
+              Predict Your Rank.<br />Compare Colleges.<br />File with Confidence.
             </h1>
             <p className="hc-sub">
-              Organizing notes, PYQs, revision resources, formula sheets, mock tests, and AI assistance into one structured platform so aspirants can focus on preparation instead of searching.
+              AI-assisted admission predictions, choice filling guidance, college comparisons, study resources, mock tests, and personalized AI assistance — built to help GATE aspirants make informed decisions.
             </p>
             <div className="hc-stats">
               <div className="st-item"><span className="st-icon">&#128218;</span><span className="st-num">5000+</span><span className="st-label">Resources Organized</span></div>
@@ -140,10 +140,10 @@ export default function AboutPage() {
           <div className="mission-block">
             <h2 className="mission-heading">Our Mission</h2>
             <p className="mission-text">
-              Preparation should be challenging because of concepts, not because resources are difficult to find.
+              Preparation should be challenging because of concepts, not because the admission process is unclear.
             </p>
             <p className="mission-text">
-              GateNexa exists to make preparation more organized, accessible, and efficient for every aspirant.
+              GateNexa exists to help aspirants understand where they stand, explore their options, and make informed counselling decisions using AI-assisted guidance and verified historical data.
             </p>
             <div className="mission-accent" />
           </div>
@@ -160,13 +160,13 @@ export default function AboutPage() {
             </div>
             <h2 className="why-heading">Why I Built GateNexa</h2>
             <p className="why-text">
-              Most students waste countless hours searching for notes, PDFs, PYQs, and resources 
-              across Telegram, YouTube, blogs, and websites. I experienced this firsthand.
+              Most students spend too much time searching for resources, understanding counselling procedures, 
+              and figuring out where they stand instead of preparing. I experienced this firsthand.
             </p>
             <p className="why-text">
-              GateNexa was built to organize everything in one place so aspirants can focus on 
-              preparation instead of searching. Every feature exists because I wished it existed 
-              when I was preparing.
+              GateNexa was built to simplify the M.Tech admission journey — from preparation to counselling — 
+              so aspirants can make informed decisions with confidence. Every feature exists because I wished 
+              it existed when I was preparing.
             </p>
             <p className="why-text why-em">
               "Built by a student who understood the struggle. Designed for aspirants who deserve better."
@@ -179,16 +179,16 @@ export default function AboutPage() {
           <div className="resources-block">
             <h2 className="section-heading">What You Will Find Here</h2>
             <p className="section-sub">
-              Everything on GateNexa is designed around one goal — helping you prepare with clarity, consistency, and confidence.
+              From predicting your AIR to comparing colleges and filing choices — GateNexa brings together the tools you need for the GATE admission journey.
             </p>
             <div className="resource-grid">
               {[
-                { icon: '📓', title: 'Subject-wise Notes', desc: 'Structured notes for every GATE CSE subject' },
-                { icon: '📊', title: 'Formula Sheets', desc: 'Quick reference for formulas and key concepts' },
-                { icon: '📋', title: 'PYQs', desc: 'Previous year questions with community stats' },
-                { icon: '✍️', title: 'Mock Tests', desc: '55+ pre-seeded tests with detailed analytics' },
-                { icon: '📖', title: 'Revision Materials', desc: 'Short notes and summaries for last-minute revision' },
-                { icon: '🤖', title: 'AI Assistance', desc: 'Smart mentor, coach, and doubt solver' },
+                { icon: '🎯', title: 'AIR Predictor', desc: 'AI-assisted GATE score and rank prediction using historical admission data' },
+                { icon: '📋', title: 'Choice Filling', desc: 'Smart choice filling assistant for CCMT and COAP counselling' },
+                { icon: '🏛️', title: 'College Comparison', desc: 'Compare IITs, NITs, IIITs, IISc, and GFTIs side by side' },
+                { icon: '🎓', title: 'Career Guidance', desc: 'Personalized recommendations based on your profile and preferences' },
+                { icon: '📊', title: 'PYQs & Mock Tests', desc: 'Previous year questions and 55+ mock tests with analytics' },
+                { icon: '🤖', title: 'AI Assistance', desc: 'AI mentor, study planner, doubt solver, and personalized coaching' },
               ].map((item, i) => (
                 <div key={i} className="resource-card" style={{ animationDelay: `${i * 0.1}s` }}>
                   <span className="rc-icon">{item.icon}</span>
@@ -236,7 +236,27 @@ export default function AboutPage() {
             <div>
               <h2 className="section-heading" style={{ marginBottom: 8 }}>Copyright &amp; Content Policy</h2>
               <p className="cp-text">
-                If any creator would like content removed, updated, or attributed differently, requests are reviewed respectfully and promptly. We respect the work of educators, creators, coaching institutes, and content publishers. Our goal is to support the GATE community while respecting intellectual property rights.
+                GateNexa respects the work of educators, creators, and content publishers. Study resources and reference materials are curated from publicly available educational sources and are attributed where possible. If any content should be removed, updated, or credited differently, requests are reviewed promptly.
+              </p>
+            </div>
+          </div>
+        </ScrollReveal>
+
+        {/* ── DATA & PRIVACY ── */}
+        <ScrollReveal section="privacy" observe={observe} entries={entries}>
+          <div className="copyright-card">
+            <div className="cp-icon">&#128274;</div>
+            <div>
+              <h2 className="section-heading" style={{ marginBottom: 8 }}>Data Transparency &amp; Privacy</h2>
+              <p className="cp-text">
+                GateNexa uses only the information you provide to generate personalized predictions and recommendations. 
+                Your data is stored securely and is never shared with third parties. Prediction results are based on 
+                multi-year historical admission data from official counselling authorities and are intended as 
+                guidance, not guarantees.
+              </p>
+              <p className="cp-text" style={{ marginTop: 12 }}>
+                The admission database is continuously updated to reflect the latest CCMT and COAP cutoff trends, 
+                seat matrices, and institute-level admission data.
               </p>
             </div>
           </div>
@@ -246,7 +266,7 @@ export default function AboutPage() {
         <ScrollReveal section="feedback" observe={observe} entries={entries}>
           <div className="feedback-block">
             <h2 className="section-heading">Feedback &amp; Suggestions</h2>
-            <p className="section-sub">GateNexa is continuously improving. Help us make it better.</p>
+            <p className="section-sub">GateNexa evolves with every update. Your input helps shape what comes next.</p>
             <div className="feedback-grid">
               {[
                 { icon: '🔍', title: 'Missing Resources', desc: 'Found something we should add?' },
@@ -264,7 +284,7 @@ export default function AboutPage() {
           </div>
         </ScrollReveal>
 
-        {/* ── PERSONAL NOTE ── */}
+        {/* ── BUILT WITH PASSION ── */}
         <ScrollReveal section="founder" observe={observe} entries={entries}>
           <div className="founder-card-premium">
             <div className="fc-spotlight" aria-hidden="true" />
@@ -273,32 +293,39 @@ export default function AboutPage() {
                 <img src="/images/my dp.jpg" alt="Purru Ajay Kumar" />
               </div>
               <div className="fc-premium-body">
-                <h3 className="fc-premium-name">Purru Ajay Kumar</h3>
+                <h3 className="fc-premium-name">👨‍💻 Built with Passion</h3>
                 <div className="fc-premium-tags">
                   <span>B.Tech Final Year</span>
                   <span>Full Stack Developer</span>
                   <span>GATE 2027 Aspirant</span>
                 </div>
-                {/* Tech stack badges */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(97,218,251,0.1)', color: '#61DAFB', border: '1px solid rgba(97,218,251,0.2)' }}>⚛ React</span>
-                  <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(131,205,63,0.1)', color: '#83CD3F', border: '1px solid rgba(131,205,63,0.2)' }}>🟢 Node.js</span>
-                  <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(0,0,0,0.1)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.15)' }}>🚀 Express.js</span>
-                  <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(0,168,63,0.1)', color: '#00A83F', border: '1px solid rgba(0,168,63,0.2)' }}>🍃 MongoDB</span>
-                  <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(139,92,246,0.1)', color: '#A78BFA', border: '1px solid rgba(139,92,246,0.2)' }}>🤖 AI</span>
-                  <span className="text-[10px] px-2.5 py-1 rounded-full font-medium" style={{ background: 'rgba(79,143,255,0.1)', color: '#4F8DFF', border: '1px solid rgba(79,143,255,0.2)' }}>☁ Cloud</span>
+                <p className="fc-premium-text">
+                  GateNexa is the result of months of continuous learning, research, design, development, testing, and refinement.
+                </p>
+                <p className="fc-premium-text">
+                  As a Computer Science student and GATE aspirant, I wanted to build a platform that simplifies the M.Tech admission journey and helps students make informed counselling decisions.
+                </p>
+                <p className="fc-premium-text">
+                  Throughout the development of GateNexa, I explored modern full-stack technologies, AI-assisted development workflows, UI/UX design principles, database engineering, and performance optimization to continuously improve the platform.
+                </p>
+                <p className="fc-premium-text">
+                  Building GateNexa involved hundreds of iterations, extensive testing, debugging, and validation to create a faster, more reliable, and user-friendly experience.
+                </p>
+                <p className="fc-premium-text">
+                  Like many modern software projects, AI-assisted development tools were used to accelerate research, prototyping, debugging, and productivity. However, every feature, workflow, design decision, and platform integration was reviewed, tested, customized, and refined specifically for GateNexa.
+                </p>
+                <p className="fc-premium-text">
+                  The platform continues to evolve with new data, better prediction models, improved user experience, and additional features based on community feedback.
+                </p>
+                <div className="fc-premium-thanks">
+                  <p className="fc-premium-text" style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(139,92,246,0.1)' }}>
+                    ❤️ Thank you for using GateNexa.
+                  </p>
+                  <p className="fc-premium-text">
+                    Your feedback, suggestions, and support help improve the platform for every GATE aspirant.
+                    If GateNexa has helped you, consider sharing it with your friends and classmates so more students can benefit from it.
+                  </p>
                 </div>
-                <p className="fc-premium-text">
-                  I built GateNexa because I lived the struggle of GATE preparation myself. The scattered resources, 
-                  the endless Telegram channels, the fear of missing a good PDF or a mock test — I experienced it all. 
-                  This platform is my attempt to solve that problem for every aspirant who follows. Every feature, 
-                  every resource, every line of code was written with one question in mind: 
-                  "Would this have helped me when I was preparing?"
-                </p>
-                <p className="fc-premium-text">
-                  GateNexa is free, open, and always will be. Because quality preparation should not depend 
-                  on how much you can spend.
-                </p>
               </div>
             </div>
           </div>
@@ -312,7 +339,7 @@ export default function AboutPage() {
             <p className="ending-line" style={{ animationDelay: '0.6s' }}>Focus on revision.</p>
             <p className="ending-line" style={{ animationDelay: '0.9s' }}>Stay consistent.</p>
             <p className="ending-tagline" style={{ animationDelay: '1.5s' }}>
-              Built by a student. For students.
+              Built by a GATE aspirant. For every aspirant.
             </p>
             <p className="ending-signature" style={{ animationDelay: '2s' }}>
               — Purru Ajay Kumar
@@ -323,7 +350,7 @@ export default function AboutPage() {
       </main>
 
       <footer className="about-footer">
-        <p>&copy; {new Date().getFullYear()} {BRAND.name}. Built by PURRU AJAY KUMAR.</p>
+        <p>&copy; {new Date().getFullYear()} {BRAND.name}. Built by PURRU AJAY KUMAR. Not affiliated with IITs, NITs, or GATE official authority.</p>
       </footer>
 
       <style>{`

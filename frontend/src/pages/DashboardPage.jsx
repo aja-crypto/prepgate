@@ -59,7 +59,7 @@ import { useProgress } from '../context/ProgressContext';
 import { useDashboard } from '../context/DashboardContext';
 import { useLiveData } from '../hooks/useLiveData';
 import StartGuide from '../components/dashboard/StartGuide';
-import { computeSubjectCompletion, getDailyTargetProgress, computeReadinessScore } from '../utils/gateUtils';
+import { computeSubjectCompletion, getDailyTargetProgress, computeReadinessScore, predictRankRange } from '../utils/gateUtils';
 import DashboardWidget from '../components/dashboard/DashboardWidget';
 import DashboardCustomizer from '../components/dashboard/DashboardCustomizer';
 import OfficialCountdown from '../components/gate/OfficialCountdown';
@@ -171,7 +171,7 @@ function getInterruptedSession() {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
   const { studyStats, topics, pyqs, mocks, gateFeatures, gamification, isEmptyProgress, mongoAvailable } = useProgress();
   const { data: liveData, loading: liveLoading, refresh: refreshLive } = useLiveData();
   const { visibleWidgets, editMode, setEditMode } = useDashboard();
@@ -233,12 +233,19 @@ export default function DashboardPage() {
       />
     ),
     stats: (
-      <StatsGrid stats={[
-        { label: 'Readiness', value: readiness, sub: `${overall}% overall`, color: 'var(--color-primary)' },
-        { label: 'Study Today', value: Math.min(100, (dailyProgress.hours / (safeGF.dailyTarget?.hours || 8)) * 100), sub: `${dailyProgress.hours}h / ${safeGF.dailyTarget?.hours || 8}h`, color: 'var(--color-success)', display: `${dailyProgress.hours}h` },
-        { label: 'Daily Target', value: dailyProgress.overall, sub: `${dailyProgress.topicsCompleted} topics`, color: 'var(--color-accent)' },
-        { label: 'Streak', value: Math.min(100, streakCurrent * 5), sub: `Best ${(safeGF.streak?.longest || 0)}d`, color: 'var(--color-secondary)', display: streakCurrent },
-      ]} />
+      <StatsGrid stats={
+        isEmptyProgress ? [
+          { label: 'Readiness', value: 0, sub: 'No study data yet', color: 'var(--color-primary)', display: '—' },
+          { label: 'Study Today', value: 0, sub: 'No study activity yet', color: 'var(--color-success)', display: '0h' },
+          { label: 'Daily Target', value: 0, sub: 'Set your first goal', color: 'var(--color-accent)', display: '—' },
+          { label: 'Streak', value: 0, sub: 'Begin your journey', color: 'var(--color-secondary)', display: '0' },
+        ] : [
+          { label: 'Readiness', value: readiness, sub: `${overall}% overall`, color: 'var(--color-primary)' },
+          { label: 'Study Today', value: Math.min(100, (dailyProgress.hours / (safeGF.dailyTarget?.hours || 8)) * 100), sub: `${dailyProgress.hours}h / ${safeGF.dailyTarget?.hours || 8}h`, color: 'var(--color-success)', display: `${dailyProgress.hours}h` },
+          { label: 'Daily Target', value: dailyProgress.overall, sub: `${dailyProgress.topicsCompleted} topics`, color: 'var(--color-accent)' },
+          { label: 'Streak', value: Math.min(100, streakCurrent * 5), sub: `Best ${(safeGF.streak?.longest || 0)}d`, color: 'var(--color-secondary)', display: streakCurrent },
+        ]
+      } />
     ),
     'live-news': (
       <LiveNewsFeed 
@@ -271,6 +278,12 @@ export default function DashboardPage() {
       <GlassCard>
         <div className="text-sm font-semibold text-text mb-1">Weekly Study Hours</div>
         <div className="text-[11px] text-text3 mb-4">Daily distribution this week</div>
+        {isEmptyProgress || !safeSS.weeklyHours?.some(h => h > 0) ? (
+          <div className="flex flex-col items-center justify-center h-32 text-text3">
+            <p className="text-xs">No study history yet.</p>
+            <p className="text-[10px] mt-1">Complete your first study session to see progress.</p>
+          </div>
+        ) : (
         <div className="flex items-end gap-2 h-32">
           {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => {
             const weeklyHours = safeSS.weeklyHours || [];
@@ -292,6 +305,7 @@ export default function DashboardPage() {
             );
           })}
         </div>
+        )}
       </GlassCard>
     ),
     'pinned-notes': <PinnedNotesWidget />,
@@ -506,6 +520,15 @@ export default function DashboardPage() {
           <div>
             <div className="flex items-center gap-3 mb-1">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">AI Command Center</p>
+              {isPremium ? (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-yellow-400 bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20 ml-1">
+                  ⭐ PREMIUM
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-500 bg-white/5 px-1.5 py-0.5 rounded border border-white/10 ml-1">
+                  BASIC
+                </span>
+              )}
               {!mongoAvailable && (
                 <span className="text-[9px] px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20 font-bold uppercase tracking-widest">
                   Local Mode
@@ -581,112 +604,135 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── Today's Focus — Priority Section ── */}
-        <div className="glass-card mb-4 p-4 sm:p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            {/* Streak */}
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="text-2xl">{streakCurrent > 0 ? '🔥' : '✨'}</div>
-              <div>
-                <div className="text-lg font-bold text-text">{streakCurrent > 0 ? `Day ${streakCurrent}` : 'Start Today'}</div>
-                <div className="text-[10px] text-text3 uppercase tracking-wider">
-                  {streakCurrent > 0 ? 'Study Streak' : 'Begin your streak'}
+        {/* ── COMEBACK SECTION — The reason to return tomorrow ── */}
+        <div className="mb-4 relative overflow-hidden rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(6,182,212,0.03))', border: '1px solid rgba(255,255,255,0.06)' }}>
+          {/* Subtle glow */}
+          <div className="absolute -top-20 -right-20 w-52 h-52 rounded-full" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.08), transparent)' }} />
+          <div className="absolute -bottom-10 -left-10 w-36 h-36 rounded-full" style={{ background: 'radial-gradient(circle, rgba(6,182,212,0.06), transparent)' }} />
+
+          <div className="relative p-4 space-y-4">
+            {/* Row 1: Streak + Today's Goal + AIR Snapshot + Weekly Trend */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {/* 🔥 Streak */}
+              <Link to="/analytics" className="rounded-xl p-3 flex items-center gap-3 transition-all hover:scale-[1.02]" style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.1)' }}>
+                <div className="text-2xl">{streakCurrent > 0 ? '🔥' : '✨'}</div>
+                <div>
+                  <div className="text-lg font-bold text-text">{streakCurrent > 0 ? `Day ${streakCurrent}` : 'Start Today'}</div>
+                  <div className="text-[9px] text-text3 uppercase tracking-wider">
+                    {streakCurrent > 0 ? `${streakCurrent}d streak · Best ${safeGF.streak?.longest || 0}d` : 'Begin your streak'}
+                  </div>
+                  <div className="text-[9px] text-primary mt-0.5">
+                    {streakCurrent > 0
+                      ? streakCurrent < 7 ? `${7 - streakCurrent} more days to 1 week!` : streakCurrent < 30 ? `${30 - streakCurrent} more days to 1 month!` : 'Unstoppable!'
+                      : 'Tomorrow is day 1 →'}
+                  </div>
+                </div>
+              </Link>
+
+              {/* 📊 Today's Goal */}
+              <div className="rounded-xl p-3" style={{ background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.1)' }}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-medium text-text2">Today's Goal</span>
+                  <span className="text-xs font-bold text-text">
+                    {dailyProgress?.hours || 0}h / {gateFeatures?.dailyTarget?.hours || 2}h
+                  </span>
+                </div>
+                <div className="w-full h-2.5 rounded-full bg-white/5 overflow-hidden mb-1.5">
+                  <div className="h-full rounded-full transition-all duration-700" style={{
+                    width: `${Math.min(100, ((dailyProgress?.hours || 0) / (gateFeatures?.dailyTarget?.hours || 2)) * 100)}%`,
+                    background: 'linear-gradient(90deg, #7C3AED, #06B6D4)',
+                  }} />
+                </div>
+                <div className="flex justify-between text-[9px] text-text3">
+                  <span>{dailyProgress.topicsCompleted || 0} topics done</span>
+                  <span>{overall}% overall</span>
+                </div>
+              </div>
+
+              {/* 🏆 AIR Snapshot */}
+              <Link to="/opportunity-predictor" className="rounded-xl p-3 transition-all hover:scale-[1.02]" style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.1)' }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🏆</span>
+                  <div>
+                    <div className="text-sm font-bold text-text font-mono">
+                      {avgMock > 0 ? `AIR ~${predictRankRange ? predictRankRange(avgMock)?.label || '—' : '—'}` : '—'}
+                    </div>
+                    <div className="text-[9px] text-text3 uppercase tracking-wider">Est. AIR from mocks</div>
+                    <div className="text-[9px] text-green-400 mt-0.5">
+                      {safeMocks.length > 0 ? `Avg ${avgMock}% · ${safeMocks.length} mocks` : 'Take a mock to predict'}
+                    </div>
+                  </div>
+                </div>
+              </Link>
+
+              {/* 📈 Weekly Progress */}
+              <div className="rounded-xl p-3" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.1)' }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📈</span>
+                  <div>
+                    <div className="text-sm font-bold text-text">{readiness}%</div>
+                    <div className="text-[9px] text-text3 uppercase tracking-wider">Readiness Score</div>
+                    <div className="text-[9px] text-orange-400 mt-0.5">
+                      {readiness < 30 ? 'Building foundation' : readiness < 60 ? 'Gaining momentum' : readiness < 80 ? 'Strong progress' : 'Almost ready!'}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="hidden sm:block w-px h-10 bg-white/5" />
-
-            {/* Today's Goal */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-medium text-text2">Today's Goal</span>
-                <span className="text-xs font-bold text-text">
-                  {dailyProgress?.hours || 0}h / {gateFeatures?.dailyTarget?.hours || 2}h
-                </span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${Math.min(100, ((dailyProgress?.hours || 0) / (gateFeatures?.dailyTarget?.hours || 2)) * 100)}%`,
-                    background: 'linear-gradient(90deg, #7C3AED, #06B6D4)',
-                  }}
-                />
+            {/* Row 2: AI Suggestion of the Day */}
+            <div className="rounded-xl p-3" style={{ background: 'rgba(139,92,246,0.04)', border: '1px solid rgba(139,92,246,0.08)' }}>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(6,182,212,0.1))' }}>
+                  💡
+                </div>
+                <div className="flex-1">
+                  <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">AI Suggestion</span>
+                  <p className="text-xs text-text2 mt-0.5">
+                    {weakestSubject
+                      ? `Focus on ${weakestSubject.name} (${Math.round(weakestSubject.progress)}%). Improve this and see your readiness jump.`
+                      : subjects.length > 0
+                        ? `Great start! Complete PYQs to build momentum.`
+                        : `Start exploring subjects to build your study plan.`}
+                  </p>
+                </div>
+                <Link to="/mentor" className="text-[10px] text-primary hover:underline whitespace-nowrap">Ask AI →</Link>
               </div>
             </div>
 
-            <div className="hidden sm:block w-px h-10 bg-white/5" />
-
-            {/* Next Action */}
-            <div className="shrink-0">
-              <Link
-                to={subjects.length > 0 && subjects.some(s => s.progress < 50) ? '/subjects' : '/pyq'}
-                className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-medium text-white transition-all duration-200 hover:scale-[1.02]"
-                style={{ background: 'linear-gradient(135deg, #7C3AED, #06B6D4)' }}
-              >
-                {subjects.length > 0 && subjects.some(s => s.progress < 50)
-                  ? 'Review Weak Subjects'
-                  : 'Practice PYQs'}
-                <span className="text-white/70">→</span>
+            {/* Row 3: Quick Actions */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <Link to={subjects.some(s => s.progress < 50) ? '/subjects' : '/pyq'}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-white transition-all hover:scale-[1.02] text-center justify-center"
+                style={{ background: 'linear-gradient(135deg, #7C3AED, #06B6D4)' }}>
+                {subjects.some(s => s.progress < 50) ? '🎯 Review Weak Subjects' : '📝 Practice PYQs'}
+              </Link>
+              <Link to="/revision"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium transition-all hover:scale-[1.02] text-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)' }}>
+                🔄 Revision ({safePyqs.filter(p => p.revisionNeeded).length || 0})
+              </Link>
+              <Link to="/mocks"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium transition-all hover:scale-[1.02] text-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)' }}>
+                📝 Mock Tests ({safeMocks.length})
+              </Link>
+              <Link to="/opportunity-predictor"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium transition-all hover:scale-[1.02] text-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.8)' }}>
+                🏆 Predict AIR
               </Link>
             </div>
           </div>
         </div>
 
-        {/* ── Command Center — What should I do next? ── */}
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(6,182,212,0.1))' }}>
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-primary"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/></svg>
-            </div>
-            <h2 className="text-sm font-bold text-text">Command Center</h2>
-            <span className="text-[10px] text-text3">What should I do next?</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-in-stagger">
-            {/* Weak Topics */}
-            <Link to="/subjects" className="glass-card p-3.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="text-lg">🎯</div>
-                <div className="text-xs font-bold text-text">Weak Topics</div>
-              </div>
-              <div className="text-[10px] text-text3 line-clamp-2">
-                {subjects.filter(s => s.progress < 50).length > 0
-                  ? `${subjects.filter(s => s.progress < 50).length} subjects need attention`
-                  : 'All subjects on track'}
-              </div>
-            </Link>
-            {/* Revision Queue */}
-            <Link to="/revision" className="glass-card p-3.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="text-lg">🔄</div>
-                <div className="text-xs font-bold text-text">Revision</div>
-              </div>
-              <div className="text-[10px] text-text3 line-clamp-2">
-                {safePyqs.filter(p => p.revisionNeeded).length || 0} topics due · {subjects.length > 0 ? `${[...subjects].sort((a,b) => a.progress - b.progress)[0]?.name?.split(' ').slice(-1)[0] || ''} weakest` : ''}
-              </div>
-            </Link>
-            {/* Upcoming Mock */}
-            <Link to="/mocks" className="glass-card p-3.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="text-lg">📝</div>
-                <div className="text-xs font-bold text-text">Mock Tests</div>
-              </div>
-              <div className="text-[10px] text-text3 line-clamp-2">
-                {safeMocks.length > 0 ? `${safeMocks.length} taken · Avg ${avgMock}%` : 'Take your first mock'}
-              </div>
-            </Link>
-            {/* AI Recommendation */}
-            <Link to="/mentor" className="glass-card p-3.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group">
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="text-lg">🤖</div>
-                <div className="text-xs font-bold text-text">AI Mentor</div>
-              </div>
-              <div className="text-[10px] text-text3 line-clamp-2">
-                {weakestSubject ? `Focus on ${weakestSubject.name?.split(' ').slice(-1)[0]} (${Math.round(weakestSubject.progress)}%)` : 'Get AI recommendations'}
-              </div>
-            </Link>
-          </div>
+        {/* ── Message of the day — Why come back tomorrow ── */}
+        <div className="text-center mb-6">
+          <p className="text-[11px] text-text3/60 italic">
+            {streakCurrent > 0
+              ? `Day ${streakCurrent} — you're building something real. Come back tomorrow and make it ${streakCurrent + 1}.`
+              : 'Every topper started with Day 1. Today is yours.'}
+          </p>
         </div>
 
         {/* ── Widget Sections ── */}

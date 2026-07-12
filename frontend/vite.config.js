@@ -65,10 +65,10 @@ export default defineConfig({
     esbuild: {
       drop: ['console', 'debugger'],
     },
-    reportCompressedSize: true,
+    target: 'es2020',
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom', 'axios', 'lucide-react'],
-    exclude: ['three', 'framer-motion'],
+    exclude: ['three'],
   },
 });

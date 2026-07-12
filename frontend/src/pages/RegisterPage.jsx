@@ -197,7 +197,7 @@ export default function RegisterPage() {
           <GoogleSignInButton
             text="signup_with"
             onSuccess={async (token) => { await googleLogin(token); navigate('/dashboard'); }}
-            onError={() => toast.error('Google sign-up failed')}
+            onError={(err) => toast.error(err?.message || 'Google sign-up failed. Try email registration or Demo Mode.')}
           />
 
           <button

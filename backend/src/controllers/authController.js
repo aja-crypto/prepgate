@@ -21,18 +21,34 @@ const mockUserResponse = (user) => ({
   studyGoalHours: user.studyGoalHours,
   isVerified: user.isVerified ?? false,
   authProvider: user.authProvider || 'local',
+  isPremium: user.isPremium || false,
+  plan: user.isPremium ? 'premium' : 'basic',
+  avatar: user.avatar,
+  badges: user.badges || [],
 });
 
 async function verifyGoogleToken(idToken) {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  // Try google-auth-library first (more reliable, no rate limits)
+  try {
+    const { OAuth2Client } = require('google-auth-library');
+    const client = new OAuth2Client(clientId);
+    const ticket = await client.verifyIdToken({ idToken, audience: clientId });
+    const payload = ticket.getPayload();
+    return payload;
+  } catch (libErr) {
+    console.warn('[Google Auth] Library verification failed, falling back to tokeninfo:', libErr.message);
+  }
+  // Fallback: use tokeninfo endpoint
   const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     console.error('[Google TokenInfo] Status:', res.status, 'Body:', body);
-    throw new Error(`Invalid Google token (status ${res.status}): ${body}`);
+    throw new Error(`Google authentication failed (status ${res.status})`);
   }
   const payload = await res.json();
-  if (process.env.GOOGLE_CLIENT_ID && payload.aud !== process.env.GOOGLE_CLIENT_ID) {
-    console.error('[Google TokenInfo] Audience mismatch:', { expected: process.env.GOOGLE_CLIENT_ID, got: payload.aud });
+  if (clientId && payload.aud !== clientId) {
+    console.error('[Google TokenInfo] Audience mismatch:', { expected: clientId, got: payload.aud });
     throw new Error('Google token audience mismatch');
   }
   return payload;
@@ -62,17 +78,17 @@ async function sendVerificationEmail(user, rawToken) {
  */
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, refCode } = req.body;
 
     if (isMockAuthEnabled()) {
-      if (mockStore.emailExists(email)) {
-        return res.status(400).json({
-          success: false,
-          message: 'An account with this email already exists.',
-        });
-      }
       const user = await mockStore.createMockUser({ name, email, password });
       const { accessToken, refreshToken } = generateTokens(user._id);
+      if (refCode) {
+        try {
+          const localReferralStore = require('../store/localReferralStore');
+          localReferralStore.claimReferral(refCode.toUpperCase(), user._id.toString(), email);
+        } catch (e) {}
+      }
       return res.status(201).json({
         success: true,
         message: 'Account created successfully!',
@@ -91,10 +107,17 @@ exports.register = async (req, res, next) => {
 
     // Create user with empty progress — no demo data
     const emptyData = getEmptyProgressData();
+    function genRefCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+      return code;
+    }
     const user = await User.create({
       name,
       email,
       password,
+      referralCode: genRefCode(),
       progressBackup: { data: emptyData, updatedAt: new Date() },
     });
 
@@ -117,6 +140,23 @@ exports.register = async (req, res, next) => {
       }
     }
 
+    // Process referral code if present
+    if (refCode) {
+      try {
+        const referrer = await User.findOne({ referralCode: refCode.toUpperCase() });
+        if (referrer && referrer._id.toString() !== user._id.toString()) {
+          user.referredBy = referrer._id;
+          referrer.pendingReferrals = referrer.pendingReferrals || [];
+          if (!referrer.pendingReferrals.some(id => id.toString() === user._id.toString())) {
+            referrer.pendingReferrals.push(user._id);
+          }
+          referrer.markModified('pendingReferrals');
+          await referrer.save();
+          await user.save();
+        }
+      } catch (e) {}
+    }
+
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user._id);
 
@@ -124,15 +164,7 @@ exports.register = async (req, res, next) => {
       success: true,
       message: 'Account created successfully!',
       data: {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          streak: user.streak,
-          preferences: user.preferences,
-          isVerified: user.isVerified,
-        },
+        user: mockUserResponse(user),
         accessToken,
         refreshToken,
       },
@@ -250,7 +282,14 @@ exports.googleAuth = async (req, res, next) => {
     });
   } catch (error) {
     console.error('[Google Auth Error]', error.message || error);
-    return res.status(401).json({ success: false, message: 'Google authentication failed.', detail: error.message });
+    const msg = error.message || '';
+    if (msg.includes('audience mismatch') || msg.includes('Invalid token')) {
+      return res.status(401).json({ success: false, message: 'Google authentication failed. Invalid or expired token. Please try again.' });
+    }
+    if (msg.includes('Token used too late') || msg.includes('expired')) {
+      return res.status(401).json({ success: false, message: 'Google token expired. Please sign in again.' });
+    }
+    return res.status(401).json({ success: false, message: 'Google authentication failed. Please try again or use email/password.' });
   }
 };
 
@@ -530,7 +569,7 @@ exports.refreshToken = async (req, res, next) => {
 exports.getMe = (req, res) => {
   res.json({
     success: true,
-    data: { user: req.user },
+    data: { user: mockUserResponse(req.user) },
   });
 };
 
@@ -584,6 +623,129 @@ exports.registerFcmToken = async (req, res, next) => {
 
     await User.findByIdAndUpdate(req.user._id, { fcmToken: token });
     res.json({ success: true, message: 'FCM token registered' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route  PUT /api/auth/change-email
+ * @desc   Request email change with verification
+ * @access Private
+ */
+exports.changeEmail = async (req, res, next) => {
+  try {
+    const { newEmail, password } = req.body;
+    if (!newEmail) return res.status(400).json({ success: false, message: 'New email required.' });
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!emailRegex.test(newEmail)) return res.status(400).json({ success: false, message: 'Invalid email format.' });
+
+    if (isMockAuthEnabled()) {
+      const user = mockStore.findById(req.user._id);
+      if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+      user.email = newEmail;
+      user.isVerified = true;
+      await user.save();
+      return res.json({ success: true, message: 'Email updated (mock mode).', data: { user: mockUserResponse(user) } });
+    }
+
+    const user = await User.findById(req.user._id).select('+password');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+
+    if (user.authProvider === 'local' && password) {
+      if (!(await user.comparePassword(password))) {
+        return res.status(401).json({ success: false, message: 'Incorrect password.' });
+      }
+    }
+
+    const existing = await User.findOne({ email: newEmail });
+    if (existing) return res.status(400).json({ success: false, message: 'Email already in use.' });
+
+    const verifyToken = user.generateVerifyToken();
+    user.verifyEmailToken = crypto.createHash('sha256').update(verifyToken).digest('hex');
+    user.verifyEmailExpire = Date.now() + 24 * 60 * 60 * 1000;
+    user._pendingNewEmail = newEmail;
+    await user.save({ validateBeforeSave: false });
+
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-new-email/${verifyToken}`;
+    await sendEmail({
+      to: newEmail,
+      subject: 'GATE 2027 – Confirm Your New Email',
+      html: `
+        <h2>Email Change Request</h2>
+        <p>Hi ${user.name},</p>
+        <p>Click the link below to confirm your new email address:</p>
+        <a href="${verifyUrl}" style="background:#4f8dff;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;margin:16px 0">
+          Confirm New Email
+        </a>
+        <p>This link expires in 24 hours.</p>
+      `,
+    });
+
+    if (process.env.NODE_ENV === 'development' && !isSmtpConfigured()) {
+      user.email = newEmail;
+      user.isVerified = true;
+      user.verifyEmailToken = undefined;
+      user.verifyEmailExpire = undefined;
+      user._pendingNewEmail = undefined;
+      await user.save({ validateBeforeSave: false });
+      return res.json({
+        success: true, message: 'Email updated (dev auto-verify).', data: { user: mockUserResponse(user) },
+      });
+    }
+
+    res.json({ success: true, message: 'Verification sent to new email.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route  PUT /api/auth/avatar
+ * @desc   Update avatar URL
+ * @access Private
+ */
+exports.updateAvatar = async (req, res, next) => {
+  try {
+    const { avatar } = req.body;
+    if (!avatar) return res.status(400).json({ success: false, message: 'Avatar URL required.' });
+
+    if (isMockAuthEnabled()) {
+      const user = mockStore.findById(req.user._id);
+      if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+      user.avatar = avatar;
+      await user.save();
+      return res.json({ success: true, data: { user: mockUserResponse(user) } });
+    }
+
+    const user = await User.findByIdAndUpdate(req.user._id, { avatar }, { new: true });
+    res.json({ success: true, data: { user: mockUserResponse(user) } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route  PUT /api/auth/badges
+ * @desc   Update skill badges
+ * @access Private
+ */
+exports.updateBadges = async (req, res, next) => {
+  try {
+    const { badges } = req.body;
+    if (!Array.isArray(badges)) return res.status(400).json({ success: false, message: 'Badges must be an array.' });
+    const sanitized = badges.map(b => String(b).trim()).filter(Boolean).slice(0, 20);
+
+    if (isMockAuthEnabled()) {
+      const user = mockStore.findById(req.user._id);
+      if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+      user.badges = sanitized;
+      await user.save();
+      return res.json({ success: true, data: { user: mockUserResponse(user) } });
+    }
+
+    const user = await User.findByIdAndUpdate(req.user._id, { badges: sanitized }, { new: true });
+    res.json({ success: true, data: { user: mockUserResponse(user) } });
   } catch (error) {
     next(error);
   }

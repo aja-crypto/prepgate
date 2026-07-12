@@ -436,7 +436,7 @@ const AIMentorPage = () => {
         </GlassCard>
 
         <GlassCard className="flex flex-col items-center text-center py-6" glow>
-          <div className="text-3xl font-bold text-orange-500 mb-1">#{analysis?.predictions?.rank || 'ΓÇö'}</div>
+          <div className="text-3xl font-bold text-orange-500 mb-1">#{analysis?.predictions?.rank || '—'}</div>
           <div className="text-[10px] text-text3 uppercase tracking-wider font-bold">Predicted Rank</div>
         </GlassCard>
 
@@ -547,7 +547,7 @@ const AIMentorPage = () => {
                     </div>
                     <p className="text-[11px] text-text3 italic mt-2">
                       {pyqAccuracy < 50 ? 'Focus on building core concepts before attempting more PYQs.' :
-                       pyqAccuracy < 70 ? 'Review your mistake patterns ΓÇö are they conceptual or silly errors?' :
+                       pyqAccuracy < 70 ? 'Review your mistake patterns — are they conceptual or silly errors?' :
                        'Good accuracy! Now work on speed and time management.'}
                     </p>
                   </div>

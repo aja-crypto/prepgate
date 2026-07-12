@@ -74,6 +74,17 @@ const userSchema = new mongoose.Schema({
   verifyEmailExpire: Date,
   lastLogin: { type: Date, default: null },
   deletedAt: { type: Date, default: null },
+  // Referral & Premium fields
+  referralCode: { type: String, default: null, sparse: true },
+  referralCount: { type: Number, default: 0 },
+  isPremium: { type: Boolean, default: false },
+  premiumUnlockedViaReferral: { type: Boolean, default: false },
+  referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  referredUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  pendingReferrals: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  aiQuestionsUsed: { type: Number, default: 0 },
+  aiQuestionsDate: { type: Date, default: null },
+  badges: [{ type: String }],
 }, {
   timestamps: true,
 });

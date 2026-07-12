@@ -9,8 +9,9 @@ export default function AmbientBackground() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let w, h, particles = [], mouseX = -1000, mouseY = -1000;
-    const PARTICLE_COUNT = 35;
+    const PARTICLE_COUNT = 25;
     const CONNECTION_DIST = 120;
+    let hidden = false;
 
     function resize() {
       w = canvas.width = window.innerWidth;
@@ -32,9 +33,12 @@ export default function AmbientBackground() {
     }
 
     function draw() {
+      if (hidden) {
+        animRef.current = requestAnimationFrame(draw);
+        return;
+      }
       ctx.clearRect(0, 0, w, h);
 
-      // Draw and move particles
       particles.forEach(p => {
         p.x += p.vx;
         p.y += p.vy;
@@ -49,7 +53,6 @@ export default function AmbientBackground() {
         ctx.fill();
       });
 
-      // Draw connections
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
@@ -73,15 +76,15 @@ export default function AmbientBackground() {
     createParticles();
     draw();
 
+    const handleVisibility = () => { hidden = document.hidden; };
+    document.addEventListener('visibilitychange', handleVisibility);
     const handleResize = () => { resize(); createParticles(); };
-    const handleMouseMove = e => { mouseX = e.clientX; mouseY = e.clientY; };
     window.addEventListener('resize', handleResize);
-    window.addEventListener('mousemove', handleMouseMove);
 
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
 

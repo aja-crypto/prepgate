@@ -81,12 +81,26 @@ export default function ChoiceFillingAssistant({ opportunities, predictorService
       case 'placement': return (a, b) => (b.avgPlacement ?? 0) - (a.avgPlacement ?? 0);
       case 'fees': return (a, b) => (a.fees ?? Infinity) - (b.fees ?? Infinity);
       case 'name': return (a, b) => (a.college || '').localeCompare(b.college || '');
-      default: return (a, b) => (b.probability ?? 0) - (a.probability ?? 0);
+      default: {
+        const BLOCK_PRIORITY = { dream_elite: 0, high_chance_iit: 1, safe_nit: 2, backup: 3 };
+        return (a, b) => {
+          const pa = BLOCK_PRIORITY[a.collegeBlock] ?? 99;
+          const pb = BLOCK_PRIORITY[b.collegeBlock] ?? 99;
+          if (pa !== pb) return pa - pb;
+          return (b.probability ?? 0) - (a.probability ?? 0);
+        };
+      }
     }
   }
 
   function autoGenerate() {
-    const sorted = [...(opportunities || [])].sort((a, b) => (b.probability ?? 0) - (a.probability ?? 0));
+    const BLOCK_PRIORITY = { dream_elite: 0, high_chance_iit: 1, safe_nit: 2, backup: 3 };
+    const sorted = [...(opportunities || [])].sort((a, b) => {
+      const pa = BLOCK_PRIORITY[a.collegeBlock] ?? 99;
+      const pb = BLOCK_PRIORITY[b.collegeBlock] ?? 99;
+      if (pa !== pb) return pa - pb;
+      return (b.probability ?? 0) - (a.probability ?? 0);
+    });
     setOrderedList(sorted);
   }
 
@@ -103,7 +117,13 @@ export default function ChoiceFillingAssistant({ opportunities, predictorService
       const list = res.data.data || res.data.orderedList || [];
       setOrderedList(list.sort(getSortFn(sortBy)));
     } catch (e) {
-      const fallback = [...(opportunities || [])].sort((a, b) => (b.probability || 0) - (a.probability || 0));
+      const fallback = [...(opportunities || [])].sort((a, b) => {
+        const BLOCK_PRIORITY = { dream_elite: 0, high_chance_iit: 1, safe_nit: 2, backup: 3 };
+        const pa = BLOCK_PRIORITY[a.collegeBlock] ?? 99;
+        const pb = BLOCK_PRIORITY[b.collegeBlock] ?? 99;
+        if (pa !== pb) return pa - pb;
+        return (b.probability || 0) - (a.probability || 0);
+      });
       setOrderedList(fallback);
     } finally {
       setLoading(false);

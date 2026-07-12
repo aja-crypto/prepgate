@@ -77,6 +77,7 @@ export const AuthProvider = ({ children }) => {
           const userData = res.data.data.user;
           console.log('[Trace] AuthContext — getMe SUCCESS, user:', userData?.email);
           setUser(userData);
+          if (userData?.isPremium) setIsPremium(true);
           return true;
         })
         .catch((err) => {
@@ -90,6 +91,9 @@ export const AuthProvider = ({ children }) => {
             console.log('[Trace] AuthContext — retrying getMe...');
             return attempt();
           }
+        }
+        if (ok) {
+          refreshReferralStatus();
         }
       }).finally(() => {
         clearTimeout(timeoutId);
@@ -134,9 +138,11 @@ export const AuthProvider = ({ children }) => {
     const res = await authService.login({ email, password });
     const { user: u, accessToken, refreshToken } = res.data.data;
     storeSession(u, accessToken, refreshToken);
+    if (u.isPremium) setIsPremium(true);
+    refreshReferralStatus();
     toast.success(`Welcome back, ${u.name.split(' ')[0]}! 🎓`);
     return u;
-  }, [storeSession]);
+  }, [storeSession, refreshReferralStatus]);
 
   const register = useCallback(async (name, email, password, refCode) => {
     const payload = { name, email, password };
@@ -145,9 +151,10 @@ export const AuthProvider = ({ children }) => {
     const { user: u, accessToken, refreshToken } = res.data.data;
     localStorage.removeItem(progressKey(u.id || u._id));
     storeSession(u, accessToken, refreshToken);
+    refreshReferralStatus();
     toast.success('Account created! Start tracking your GATE prep from 0%. 🚀');
     return u;
-  }, [storeSession]);
+  }, [storeSession, refreshReferralStatus]);
 
   const googleLogin = useCallback(async (idToken) => {
     const res = await authService.googleAuth(idToken);

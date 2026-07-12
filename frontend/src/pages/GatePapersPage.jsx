@@ -27,7 +27,7 @@ export default function GatePapersPage() {
   }, [papers, selectedYear]);
 
   const totalPapers = papers.length;
-  const yearRange = years.length ? `${years[0]}ΓÇô${years[years.length - 1]}` : '';
+  const yearRange = years.length ? `${years[0]}–${years[years.length - 1]}` : '';
 
   if (loading) {
     return (
@@ -95,7 +95,7 @@ export default function GatePapersPage() {
                     </div>
                     <div className="min-w-0">
                       <div className="text-sm text-text font-medium truncate">{paper.title}</div>
-                      <div className="text-[10px] text-text3 mt-0.5">{paper.set} ΓÇó PDF</div>
+                      <div className="text-[10px] text-text3 mt-0.5">{paper.set} • PDF</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">

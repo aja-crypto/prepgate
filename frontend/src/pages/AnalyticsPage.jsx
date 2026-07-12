@@ -173,22 +173,25 @@ export default function AnalyticsPage() {
           <p className="text-sm text-text3 mt-0.5">Deep insights into your preparation</p>
         </div>
         <div className="bg-surface border border-border rounded-xl p-12 text-center">
-          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-primary/10 border border-primary/20">
-            <span className="text-3xl">📊</span>
+          <div className="w-20 h-20 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(6,182,212,0.06))', border: '1px solid rgba(139,92,246,0.15)' }}>
+            <span className="text-4xl">🚀</span>
           </div>
-          <h2 className="text-lg font-bold text-text mb-2">No Analytics Yet</h2>
-          <p className="text-sm text-text3 max-w-md mx-auto mb-6 leading-relaxed">
-            Complete focus sessions, solve PYQs, and take mock tests to see your progress analytics here. Your data will appear as you study.
+          <h2 className="text-lg font-bold text-text mb-2">Your Analytics Will Be Here</h2>
+          <p className="text-sm text-text3 max-w-md mx-auto mb-2 leading-relaxed">
+            Every topper started with zero data. Your progress charts, trends, and insights will appear here as you study. Here's what gets tracked:
           </p>
+          <div className="flex items-center justify-center gap-4 mb-6 flex-wrap text-[11px] text-text2">
+            <span className="flex items-center gap-1">📚 Subject completion</span>
+            <span className="flex items-center gap-1">📝 PYQ accuracy trends</span>
+            <span className="flex items-center gap-1">🧪 Mock score progress</span>
+            <span className="flex items-center gap-1">🔥 Study streak & heatmap</span>
+          </div>
           <div className="flex justify-center gap-3">
-            <Link to="/productivity" className="text-xs font-medium text-primary bg-primary/10 hover:bg-primary/15 px-5 py-2.5 rounded-xl border border-primary/20 transition-colors">
-              Start Focus Session
-            </Link>
-            <Link to="/pyq" className="text-xs font-medium text-text2 bg-bg-2 hover:bg-bg-3 px-5 py-2.5 rounded-xl border border-border transition-colors">
-              Practice PYQs
+            <Link to="/pyq" className="text-xs font-semibold text-white px-5 py-2.5 rounded-xl transition-all hover:scale-[1.02]" style={{ background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' }}>
+              📝 Start with PYQs
             </Link>
             <Link to="/mocks" className="text-xs font-medium text-text2 bg-bg-2 hover:bg-bg-3 px-5 py-2.5 rounded-xl border border-border transition-colors">
-              Take a Mock
+              Take a Mock Test
             </Link>
           </div>
         </div>

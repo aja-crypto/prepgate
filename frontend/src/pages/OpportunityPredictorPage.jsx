@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { predictorService, referralService } from '../services/api';
 import toast from 'react-hot-toast';
 import GuestGate from '../components/common/GuestGate';
-import PredictorGate from '../components/referral/PredictorGate';
 import {
   Target, TrendingUp, Award, MapPin, Building2, GraduationCap,
   ChevronDown, ChevronRight, Search, Star, AlertCircle, CheckCircle2,
@@ -15,13 +14,14 @@ import EnhancedCollegeCard from '../components/predictor/EnhancedCollegeCard';
 import CollegeComparisonModal from '../components/predictor/CollegeComparisonModal';
 import ChoiceFillingAssistant from '../components/predictor/ChoiceFillingAssistant';
 import PredictionReportModal from '../components/predictor/PredictionReportModal';
+import GateScoreGuide from '../components/predictor/GateScoreGuide';
 
 const CATEGORIES = ['General', 'EWS', 'OBC-NCL', 'SC', 'ST', 'PwD'];
 const ADMISSION_TYPES = ['M.Tech', 'MS Research', 'PhD', 'PSU', 'No Preference'];
 const COLLEGE_TYPES = ['Any', 'IIT', 'NIT', 'IIIT', 'GFTI'];
 const INDIAN_STATES = ['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu & Kashmir', 'Ladakh', 'Chandigarh', 'Puducherry'];
 
-const INSTITUTE_DISPLAY_ORDER = ['IIT', 'NIT', 'IIIT', 'IISc', 'IIEST', 'GFTI', 'Other'];
+const INSTITUTE_DISPLAY_ORDER = ['IISc', 'IIT', 'NIT', 'IIIT', 'IIEST', 'GFTI', 'Other'];
 
 const INSTITUTE_SECTION_CONFIG = {
   IIT: { icon: '\uD83C\uDFC6', title: 'IIT Opportunities', subtitle: 'Your Dream IIT Opportunities based on your current score.' },
@@ -55,6 +55,14 @@ const PATH_CONFIG = {
   Safe: { color: '#3B82F6', bg: 'rgba(59,130,246,0.1)', border: 'rgba(59,130,246,0.25)', label: 'Safe', icon: '🛡️', description: 'Your score has consistently been above the cutoff' },
   Target: { color: '#22C55E', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.25)', label: 'Target', icon: '🎯', description: 'Strong probability based on historical data' },
   Low: { color: '#EF4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)', label: 'Stretch', icon: '🔴', description: 'Score below historical cutoff' },
+};
+
+// 4-tier college block config (Elite → High → Safe → Backup)
+const BLOCK_CONFIG = {
+  dream_elite: { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)', label: 'Dream Elite Institutes', icon: '👑', description: 'IISc & Top 7 IITs — the most prestigious institutes. Even low probability here is a great achievement.' },
+  high_chance_iit: { color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.25)', label: 'High Chance IITs', icon: '🚀', description: 'Other IITs where you have a realistic shot at admission.' },
+  safe_nit: { color: '#22C55E', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.25)', label: 'Safe NITs', icon: '🛡️', description: 'NITs with high probability — strong backup options.' },
+  backup: { color: '#64748B', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.2)', label: 'Backup Colleges', icon: '📋', description: 'Additional options including IIITs and GFTIs.' },
 };
 
 const LOADING_STEPS = [
@@ -253,8 +261,7 @@ function PredictionForm({ onSubmit, loading }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       onSubmit={handleSubmit}
-      className="rounded-3xl p-6 md:p-8 max-w-4xl mx-auto"
-      style={{ background: 'rgba(18,24,40,0.6)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.08)' }}
+      className="glass-card rounded-3xl p-6 md:p-8 max-w-4xl mx-auto"
     >
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(6,182,212,0.1))' }}>
@@ -333,7 +340,7 @@ function PredictionForm({ onSubmit, loading }) {
   );
 }
 
-function ResultsView({ result, onReset, form }) {
+function ResultsView({ result, onReset, form, blurred, referralCode, referralProgress, referralCount }) {
   const [activeTab, setActiveTab] = useState('performance');
   const [filterPath, setFilterPath] = useState('All');
   const [filterType, setFilterType] = useState('All');
@@ -363,52 +370,52 @@ function ResultsView({ result, onReset, form }) {
     });
   };
 
-  const filteredOpps = (result.opportunities || []).filter(o => {
-    if (filterPath !== 'All' && o.path !== filterPath) return false;
-    if (filterType !== 'All' && o.collegeType !== filterType) return false;
-    return true;
-  }).sort((a, b) => {
-    const typeOrder = instituteSortKey(a.collegeType) - instituteSortKey(b.collegeType);
-    if (typeOrder !== 0) return typeOrder;
-    switch (sortBy) {
-      case 'confidence': return (b.probability || 0) - (a.probability || 0);
-      case 'match': return (b.matchScore || b.probability || 0) - (a.matchScore || a.probability || 0);
-      case 'package': return (b.avgPlacement || 0) - (a.avgPlacement || 0);
-      case 'fees': return (a.fees || Infinity) - (b.fees || Infinity);
-      case 'roi': return (b.roiScore || 0) - (a.roiScore || 0);
-      case 'tier': return (a.tier || 99) - (b.tier || 99);
-      default: return (b.probability || 0) - (a.probability || 0);
-    }
-  });
+  const filteredOpps = useMemo(() => {
+    return (result.opportunities || []).filter(o => {
+      if (filterPath !== 'All' && o.path !== filterPath) return false;
+      if (filterType !== 'All' && o.collegeType !== filterType) return false;
+      return true;
+    }).sort((a, b) => {
+      const typeOrder = instituteSortKey(a.collegeType) - instituteSortKey(b.collegeType);
+      if (typeOrder !== 0) return typeOrder;
+      const BLOCK_PRIORITY = { dream_elite: 0, high_chance_iit: 1, safe_nit: 2, backup: 3 };
+      const blockOrder = (BLOCK_PRIORITY[a.collegeBlock] ?? 99) - (BLOCK_PRIORITY[b.collegeBlock] ?? 99);
+      if (blockOrder !== 0) return blockOrder;
+      switch (sortBy) {
+        case 'confidence': return (b.probability || 0) - (a.probability || 0);
+        case 'match': return (b.matchScore || b.probability || 0) - (a.matchScore || a.probability || 0);
+        case 'package': return (b.avgPlacement || 0) - (a.avgPlacement || 0);
+        case 'fees': return (a.fees || Infinity) - (b.fees || Infinity);
+        case 'roi': return (b.roiScore || 0) - (a.roiScore || 0);
+        case 'tier': return (a.tier || 99) - (b.tier || 99);
+        default: return (b.probability || 0) - (a.probability || 0);
+      }
+    });
+  }, [result.opportunities, filterPath, filterType, sortBy]);
 
-  // Group by path (Dream/Target/Safe/Low)
-  const groupedByPath = {};
-  filteredOpps.forEach(o => {
-    const p = o.path || 'Low';
-    if (!groupedByPath[p]) groupedByPath[p] = [];
-    groupedByPath[p].push(o);
-  });
-
-  // Group by path (5-tier)
-  const groupedByPath2 = {};
-  filteredOpps.forEach(o => {
-    const p = o.path || 'Dream';
-    if (!groupedByPath2[p]) groupedByPath2[p] = [];
-    groupedByPath2[p].push(o);
-  });
+  // Group by path
+  const groupedByPath = useMemo(() => {
+    const groups = {};
+    filteredOpps.forEach(o => {
+      const p = o.path || 'Low';
+      if (!groups[p]) groups[p] = [];
+      groups[p].push(o);
+    });
+    return groups;
+  }, [filteredOpps]);
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-5xl mx-auto space-y-6">
-      <div className="rounded-2xl p-4 flex items-start gap-3" style={{ background: 'rgba(234,179,8,0.06)', border: '1px solid rgba(234,179,8,0.15)' }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="max-w-5xl mx-auto space-y-6">
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.35 }} className="rounded-2xl p-4 flex items-start gap-3" style={{ background: 'rgba(234,179,8,0.06)', border: '1px solid rgba(234,179,8,0.15)' }}>
         <AlertCircle size={16} className="text-yellow-400 shrink-0 mt-0.5" />
         <p className="text-[11px] text-yellow-300/80 leading-relaxed">
           <strong>Disclaimer:</strong> Predictions are based on previous years' official GATE results and admission trends. They are intended for guidance only and do not guarantee admission or rank. All data is from verified historical datasets uploaded by administrators.
         </p>
-      </div>
+      </motion.div>
 
       {/* Executive Summary Card */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl overflow-hidden"
-        style={{ background: 'rgba(15,18,35,0.8)', border: '1px solid rgba(139,92,246,0.2)', boxShadow: '0 8px 40px rgba(139,92,246,0.08)' }}>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4, ease: [0.16,1,0.3,1] }}
+        className="glass-card elevate rounded-2xl overflow-hidden">
         <div className="p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -432,11 +439,12 @@ function ResultsView({ result, onReset, form }) {
               { label: 'Confidence', value: `${result.confidence || '—'}${result.confidenceScore ? ` (${result.confidenceScore}%)` : ''}`, sub: 'Based on historical data', color: '#22C55E' },
               { label: 'Database', value: `${result.databaseCoverage || (result.opportunities||[]).length || '—'} Programmes`, sub: `IIT:${result.totalIITs||0} NIT:${result.totalNITs||0} IIIT:${result.totalIIITs||0}`, color: '#EAB308' },
             ].map((item, i) => (
-              <div key={i} className="rounded-xl p-4 text-center flex flex-col items-center justify-center min-h-[100px]" style={{ background: `${item.color}08`, border: `1px solid ${item.color}15` }}>
+              <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.06, duration: 0.35, ease: [0.16,1,0.3,1] }}
+                className="rounded-xl p-4 text-center flex flex-col items-center justify-center min-h-[100px]" style={{ background: `${item.color}08`, border: `1px solid ${item.color}15` }}>
                 <div className="text-lg font-bold font-mono text-white leading-none mb-1">{item.value}</div>
                 <div className="text-[10px] text-slate-500 uppercase tracking-wider font-medium">{item.label}</div>
                 <div className="text-[9px] text-slate-600 mt-0.5">{item.sub}</div>
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -450,7 +458,7 @@ function ResultsView({ result, onReset, form }) {
         </div>
       </motion.div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.35 }} className="flex gap-2 overflow-x-auto pb-1">
         {tabs.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'text-slate-500 hover:text-slate-300 border border-transparent'}`}>
@@ -461,11 +469,15 @@ function ResultsView({ result, onReset, form }) {
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-300 border border-transparent ml-auto">
           <Target size={14} /> New Prediction
         </button>
-      </div>
+      </motion.div>
+
+      {/* Premium content — blurred when curiosity mode active */}
+      <div className="relative">
+        <div className="transition-all duration-500 group/blur hover:blur-[8px]" style={{ filter: blurred ? 'blur(10px)' : 'none', opacity: blurred ? 0.85 : 1 }}>
 
       {result.lowMarksGuidance && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-5 mb-6" style={{ background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.15)' }}>
+          className="widget-card rounded-2xl p-5 mb-6" style={{ borderColor: 'rgba(234,179,8,0.15)' }}>
           <div className="flex items-start gap-3">
             <span className="text-2xl">💡</span>
             <div className="flex-1">
@@ -592,7 +604,43 @@ function ResultsView({ result, onReset, form }) {
               </div>
             </div>
 
-            {Object.entries(groupedByPath).length === 0 ? (
+            {/* 4-tier College Blocks — Recommendation View */}
+            {result.collegeBlocks && (
+              <div className="mb-8 space-y-6">
+                {['dream_elite', 'high_chance_iit', 'safe_nit', 'backup'].map(blockKey => {
+                  const rawBlock = result.collegeBlocks[blockKey];
+                  const cfg = BLOCK_CONFIG[blockKey];
+                  if (!rawBlock || rawBlock.length === 0) return null;
+                  const block = rawBlock.filter(o => {
+                    if (filterPath !== 'All' && o.path !== filterPath) return false;
+                    if (filterType !== 'All' && o.collegeType !== filterType) return false;
+                    return true;
+                  });
+                  if (block.length === 0) return null;
+                  return (
+                    <div key={blockKey}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-base">{cfg.icon}</span>
+                        <span className="text-sm font-bold" style={{ color: cfg.color }}>{cfg.label}</span>
+                        <span className="text-[10px] text-slate-600">({block.length})</span>
+                      </div>
+                      <p className="text-[9px] text-slate-600 mb-3 ml-0.5 leading-relaxed">{cfg.description}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {block.slice(0, 20).map((opp, idx) => (
+                          <EnhancedCollegeCard key={idx} opportunity={opp} onCompare={handleToggleCompare} inCompareList={compareList.some(c => c.college === opp.college && c.program === opp.program)} />
+                        ))}
+                        {block.length > 20 && (
+                          <div className="text-[10px] text-slate-600 mt-1 text-center">+ {block.length - 20} more in this block</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* 5-tier path grouping (below blocks) */}
+            {Object.entries(groupedByPath).length === 0 && !result.collegeBlocks ? (
               <div className="text-center py-12 px-4">
                 <p className="text-slate-500 text-sm mb-2">
                   {form.category === 'PwD'
@@ -603,7 +651,7 @@ function ResultsView({ result, onReset, form }) {
                   <p className="text-slate-600 text-[11px]">You may try selecting a different category for approximate results, or check back when PwD data becomes available.</p>
                 )}
               </div>
-            ) : (
+            ) : Object.entries(groupedByPath).length > 0 ? (
               <>
                 {['Very High Chance', 'High Chance', 'Good Chance', 'Competitive', 'Dream'].filter(p => groupedByPath[p]).map(path => {
                   const cfg = PATH_CONFIG[path];
@@ -676,7 +724,7 @@ function ResultsView({ result, onReset, form }) {
                   );
                 })}
               </>
-            )}
+            ) : null}
           </motion.div>
         )}
 
@@ -901,6 +949,139 @@ function ResultsView({ result, onReset, form }) {
           <span>✓ Every recommendation explained</span>
         </div>
       </div>
+        </div>
+        {/* Dark translucent overlay — preserves card silhouettes while hiding text */}
+        {blurred && (
+          <div className="absolute inset-0 z-10 pointer-events-none rounded-2xl"
+            style={{
+              background: 'linear-gradient(180deg, rgba(5,8,22,0.65) 0%, rgba(5,8,22,0.75) 50%, rgba(5,8,22,0.85) 100%)',
+              backdropFilter: 'blur(1px)',
+            }}
+          />
+        )}
+        {/* Curiosity mode CTA overlay */}
+        {blurred && (
+          <div className="absolute inset-0 flex items-center justify-center z-20" style={{ background: 'rgba(5,8,22,0.3)' }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="rounded-2xl p-6 sm:p-8 w-full max-w-sm mx-auto text-center relative overflow-hidden"
+              style={{
+                background: 'rgba(18,24,40,0.97)',
+                border: '1px solid rgba(139,92,246,0.3)',
+                boxShadow: '0 0 80px rgba(139,92,246,0.2), 0 0 160px rgba(139,92,246,0.06)',
+              }}
+            >
+              <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(139,92,246,0.15) 0%, transparent 60%)' }} />
+
+              {/* Floating particles */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                {[...Array(12)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1 h-1 rounded-full"
+                    style={{
+                      background: i % 3 === 0 ? '#8B5CF6' : i % 3 === 1 ? '#3B82F6' : '#EC4899',
+                      left: `${5 + (i * 8)}%`,
+                      top: `${10 + (i * 7)}%`,
+                    }}
+                    animate={{
+                      y: [0, -24, 0],
+                      opacity: [0.15, 0.5, 0.15],
+                      scale: [1, 1.4, 1],
+                    }}
+                    transition={{ duration: 2.5 + (i % 4) * 0.4, repeat: Infinity, delay: i * 0.25 }}
+                  />
+                ))}
+              </div>
+
+              <div className="relative z-10">
+                <motion.div
+                  className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(59,130,246,0.2))',
+                    border: '1px solid rgba(139,92,246,0.3)',
+                  }}
+                  whileHover={{ scale: 1.08, boxShadow: '0 0 40px rgba(139,92,246,0.4)' }}
+                  animate={{ boxShadow: ['0 0 20px rgba(139,92,246,0.2)', '0 0 35px rgba(139,92,246,0.35)', '0 0 20px rgba(139,92,246,0.2)'] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <motion.svg viewBox="0 0 24 24" fill="none" className="w-7 h-7 text-purple-400"
+                    animate={{ rotate: [0, -5, 5, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" strokeWidth="2" />
+                    <circle cx="12" cy="16" r="1.2" fill="currentColor" />
+                  </motion.svg>
+                </motion.div>
+
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2 tracking-tight">Unlock GateNexa Premium</h3>
+                <p className="text-white/45 text-xs mb-4 leading-relaxed">
+                  Refer <strong className="text-purple-400 font-semibold">{2 - (referralCount || 0)} friend{(2 - (referralCount || 0)) !== 1 ? 's' : ''}</strong> and unlock Premium for FREE.
+                </p>
+
+                {/* Premium feature grid */}
+                <div className="grid grid-cols-2 gap-2 mb-5 text-left">
+                  {[
+                    { icon: '🏛️', label: 'IIT Predictions' },
+                    { icon: '🏫', label: 'NIT & IIIT List' },
+                    { icon: '📊', label: 'College Compare' },
+                    { icon: '📋', label: 'Choice Filling' },
+                    { icon: '💳', label: 'Premium Report' },
+                    { icon: '🤖', label: 'AI Mentor' },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center gap-2 text-[11px] sm:text-xs text-white/55">
+                      <span className="shrink-0">{item.icon}</span> {item.label}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Progress bar */}
+                <div className="mb-5">
+                  <div className="flex justify-between text-[11px] text-white/45 mb-1.5">
+                    <span>Referral Progress</span>
+                    <span className="text-purple-400 font-semibold">{referralCount || 0} / 2</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${((referralCount || 0) / 2) * 100}%` }}
+                      className="h-full rounded-full"
+                      style={{ background: 'linear-gradient(90deg, #8B5CF6, #3B82F6)', boxShadow: '0 0 8px rgba(139,92,246,0.3)' }}
+                    />
+                  </div>
+                </div>
+
+                <motion.button
+                  className="w-full py-3.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
+                  style={{
+                    background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+                    boxShadow: '0 4px 24px rgba(139,92,246,0.45)',
+                  }}
+                  whileHover={{ scale: 1.02, boxShadow: '0 6px 32px rgba(139,92,246,0.6)' }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                  Refer & Unlock
+                </motion.button>
+
+                <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-center gap-4">
+                  <div className="flex items-center gap-1.5 text-[10px] text-white/35">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3 h-3"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Free
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-white/35">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3 h-3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Instant
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </div>
 
       <CollegeComparisonModal isOpen={showCompare} onClose={() => setShowCompare(false)} colleges={compareList} />
       <PredictionReportModal isOpen={showReport} onClose={() => setShowReport(false)} result={result} compareList={compareList} choiceOrder={choiceOrderResult} />
@@ -914,8 +1095,7 @@ function HowItWorksSection() {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl overflow-hidden mb-6 max-w-4xl mx-auto"
-      style={{ background: 'rgba(18,24,40,0.5)', border: '1px solid rgba(255,255,255,0.06)' }}
+      className="glass-card rounded-2xl overflow-hidden mb-6 max-w-4xl mx-auto"
     >
       <button
         onClick={() => setOpen(!open)}
@@ -1056,7 +1236,7 @@ function FloatingParticles() {
 }
 
 export default function OpportunityPredictorPage() {
-  const { user, isPremium, referralCode } = useAuth();
+  const { user, isPremium, referralCode, referralProgress, referralCount } = useAuth();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
@@ -1143,6 +1323,17 @@ export default function OpportunityPredictorPage() {
             <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
               Predict Your <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">GATE Rank</span>
             </h1>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              {isPremium ? (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">
+                  ⭐ PREMIUM
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-500 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                  BASIC
+                </span>
+              )}
+            </div>
             <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto leading-relaxed mb-4">
               AIR, college chances, cutoff trends — based on verified GATE data.
             </p>
@@ -1183,6 +1374,9 @@ export default function OpportunityPredictorPage() {
         </div>
       )}
 
+      {/* GATE Score Guide — educational guidance, does not affect predictions */}
+      {!result && !showLoading && <GateScoreGuide />}
+
       {/* Loading Screen */}
       <AnimatePresence>
         {showLoading && !result && (
@@ -1194,7 +1388,7 @@ export default function OpportunityPredictorPage() {
       <AnimatePresence>
         {showHistory && !result && !showLoading && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-            className="max-w-4xl mx-auto mb-8 rounded-2xl p-4" style={{ background: 'rgba(18,24,40,0.5)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            className="glass-card max-w-4xl mx-auto mb-8 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-white">Prediction History</span>
               <button onClick={() => setShowHistory(false)} className="text-slate-500 hover:text-white"><X size={14} /></button>
@@ -1226,9 +1420,15 @@ export default function OpportunityPredictorPage() {
       {result && (user?.role === 'owner' ? (
         <ResultsView result={result} onReset={() => setResult(null)} form={result.input || {}} />
       ) : (
-        <PredictorGate isUnlocked={predictorUnlocked} referralCode={referralCode}>
-          <ResultsView result={result} onReset={() => setResult(null)} form={result.input || {}} />
-        </PredictorGate>
+        <ResultsView
+          result={result}
+          onReset={() => setResult(null)}
+          form={result.input || {}}
+          blurred={!predictorUnlocked}
+          referralCode={referralCode}
+          referralProgress={referralProgress}
+          referralCount={referralCount}
+        />
       ))}
       </div>
     )}

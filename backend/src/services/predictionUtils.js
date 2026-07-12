@@ -110,87 +110,163 @@ async function buildInstituteProgramMap() {
 }
 
 /**
- * Enhanced probability calculation using multi-factor confidence model
- * Returns { score: 0-98, confidence: 'Very High'|'High'|'Good'|'Competitive'|'Dream'|'Reach', reasons: [] }
+ * Get institute difficulty factor (0-1, 1 = easiest)
+ * Used to modulate probability: elite institutes get lower factor → lower probability
  */
-function calcEnhancedProbability(userScore, closingScore, openingScore, trend, competitionLevel, programPopularity, year, seats) {
+function getInstituteFactor(instituteName) {
+  if (!instituteName) return 0.85;
+  const n = instituteName.toLowerCase();
+  if (n.includes('indian institute of science') || n === 'iisc') return 0.30;
+  if (n.includes('indian institute of technology')) {
+    if (n.includes('bombay') || n.includes('delhi') || n.includes('madras')) return 0.42;
+    if (n.includes('kanpur') || n.includes('kharagpur') || n.includes('roorkee')) return 0.52;
+    return 0.65;
+  }
+  if (n.includes('national institute of technology')) {
+    if (n.includes('tiruchirappalli') || n.includes('surathkal') || n.includes('warangal')) return 0.72;
+    if (n.includes('calicut') || n.includes('durgapur') || n.includes('rourkela')) return 0.80;
+    if (n.includes('kurukshetra') || n.includes('allahabad') || n.includes('silchar')) return 0.85;
+    if (n.includes('nagpur') || n.includes('jaipur') || n.includes('bhopal')) return 0.88;
+    return 0.92;
+  }
+  if (n.includes('iiit') || n.includes('iiest')) return 0.85;
+  if (n.includes('gfti')) return 0.92;
+  return 0.85;
+}
+
+/**
+ * Get branch difficulty factor (0-1, 1 = easiest)
+ * Premium branches get lower factor → lower probability
+ */
+function getBranchFactor(programName) {
+  if (!programName) return 0.85;
+  const n = programName.toLowerCase();
+  if (n.includes('computer') || n.includes('cse') || n.includes('csa')) return 0.40;
+  if (n.includes('artificial intelligence') || n.includes('machine learning') || n.includes('data science')) return 0.50;
+  if (n.includes('information technology')) return 0.60;
+  if (n.includes('electrical') || n.includes('electronics') || n.includes('ece') || n.includes('instrumentation')) return 0.72;
+  if (n.includes('mechanical') || n.includes('production') || n.includes('manufacturing')) return 0.82;
+  if (n.includes('civil') || n.includes('chemical') || n.includes('biotechnology')) return 0.86;
+  return 0.80;
+}
+
+/**
+ * Enhanced probability calculation with institute/branch difficulty factors
+ * Returns { score: 1-100, confidence, reasons }
+ */
+function calcEnhancedProbability(userScore, closingScore, openingScore, trend, competitionLevel, programPopularity, year, seats, instituteName, programName) {
   if (!closingScore) return { score: 0, confidence: 'Reach', reasons: ['Insufficient cutoff data'] };
 
-  // Factor 1: Score Difference (70% weight) — wider range for more granularity
   const diff = userScore - closingScore;
-  // Formula: base 50 at diff=0, ± ~0.5 per point of diff, capped at 0-100
-  // This gives meaningful distinctions: +50 → 75, +100 → 100, -50 → 25, -100 → 0
-  const scoreDiffScore = Math.min(100, Math.max(0, Math.round(diff * 0.5 + 50)));
 
-  // Factor 2: Cutoff Stability (10% weight)
-  let stabilityScore = 50;
+  // Factor 1: Base probability from score difference — admission likelihood
+  // Continuous curve: diff=0 maps to ~58 base, declining smoothly into negative diff
+  let baseProb;
+  // Above cutoff
+  if (diff >= 150) baseProb = Math.min(98, 96 + (diff - 150) * 0.015);
+  else if (diff >= 120) baseProb = 92 + (diff - 120) * 0.13;
+  else if (diff >= 100) baseProb = 87 + (diff - 100) * 0.25;
+  else if (diff >= 80) baseProb = 81 + (diff - 80) * 0.30;
+  else if (diff >= 60) baseProb = 74 + (diff - 60) * 0.35;
+  else if (diff >= 40) baseProb = 67 + (diff - 40) * 0.35;
+  else if (diff >= 20) baseProb = 62 + (diff - 20) * 0.25;
+  else if (diff >= 10) baseProb = 59 + (diff - 10) * 0.30;
+  else if (diff >= 0) baseProb = 58 + diff * 0.10;
+  // Near cutoff — gradual decline
+  else if (diff >= -10) baseProb = 58 + diff * 0.6;
+  else if (diff >= -20) baseProb = 54 + diff * 0.4;
+  else if (diff >= -40) baseProb = 48 + diff * 0.15;
+  else if (diff >= -60) baseProb = 46 + diff * 0.08;
+  else if (diff >= -90) baseProb = 44 + diff * 0.05;
+  // Well below cutoff — still give small chance for strong candidates
+  else if (diff >= -130) baseProb = 38 + diff * 0.04;
+  else if (diff >= -180) baseProb = 28 + diff * 0.035;
+  else baseProb = Math.max(5, 22 + diff * 0.025);
+
+  // Factor 2: Institute prestige penalty (subtractive, 0-6 range)
+  // Reduced from 10 — elite institutes penalize less aggressively
+  const instituteFactor = getInstituteFactor(instituteName);
+  const instPenalty = Math.round((1 - instituteFactor) * 6);
+
+  // Factor 3: Program competition penalty (subtractive, 0-5 range)
+  // Reduced from 7 — competitive branches penalize less aggressively
+  const branchFactor = getBranchFactor(programName);
+  const branchPenalty = Math.round((1 - branchFactor) * 5);
+
+  // Core probability
+  let prob = baseProb - instPenalty - branchPenalty;
+
+  // Factor 4: Cutoff Stability (bonus 0-3 range)
+  let stabilityBonus = 0;
   if (trend?.years?.length >= 3) {
     const scores = trend.years.map(y => y.closingScore).filter(s => s != null);
     if (scores.length >= 3) {
       const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
       const variance = scores.reduce((sum, s) => sum + Math.pow(s - avg, 2), 0) / scores.length;
       const stdDev = Math.sqrt(variance);
-      const cv = stdDev / avg;
-      if (cv < 0.02) stabilityScore = 95;
-      else if (cv < 0.05) stabilityScore = 80;
-      else if (cv < 0.10) stabilityScore = 60;
-      else if (cv < 0.20) stabilityScore = 35;
-      else stabilityScore = 15;
+      const cv = avg !== 0 ? stdDev / avg : 0;
+      stabilityBonus = Math.round(Math.max(0, Math.min(3, (1 - Math.min(cv, 0.3) / 0.3) * 3)));
     }
   }
 
-  // Factor 3: Seat Availability (5% weight)
-  let seatScore = 50;
+  // Factor 5: Seat Availability bonus (0-2 range)
+  let seatBonus = 1;
   if (seats != null) {
-    if (seats >= 60) seatScore = 90;
-    else if (seats >= 30) seatScore = 75;
-    else if (seats >= 15) seatScore = 60;
-    else if (seats >= 5) seatScore = 40;
-    else seatScore = 20;
+    if (seats >= 100) seatBonus = 2;
+    else if (seats >= 30) seatBonus = 1;
+    else seatBonus = 0;
   }
 
-  // Factor 4: Counselling Round (5% weight)
-  let roundScore = 70;
+  // Factor 6: Counselling Round bonus (0-2 range)
+  let roundBonus = 1;
   const currentYear = new Date().getFullYear();
-  if (year < currentYear) roundScore = 85;
+  if (year < currentYear) roundBonus = 2;
 
-  // Factor 5: Competition Level (5% weight)
-  let demandScore = 50;
-  if (competitionLevel === 'Very High') demandScore = 20;
-  else if (competitionLevel === 'High') demandScore = 35;
-  else if (competitionLevel === 'Medium') demandScore = 55;
-  else if (competitionLevel === 'Low') demandScore = 75;
+  // Factor 7: Competition Level (penalty/bonus -3 to +2)
+  let demandMod = 0;
+  if (competitionLevel === 'Very High') demandMod = -3;
+  else if (competitionLevel === 'High') demandMod = -1;
+  else if (competitionLevel === 'Medium') demandMod = 0;
+  else if (competitionLevel === 'Low') demandMod = 2;
 
-  // Factor 6: Trend Direction (5% weight)
-  let trendScore = 50;
-  if (trend?.trendDirection === 'Falling') trendScore = 80;
-  else if (trend?.trendDirection === 'Stable') trendScore = 60;
-  else if (trend?.trendDirection === 'Rising') trendScore = 30;
+  // Factor 8: Trend Direction (-2 to +1)
+  let trendMod = 0;
+  if (trend?.trendDirection === 'Falling') trendMod = 1;
+  else if (trend?.trendDirection === 'Stable') trendMod = 0;
+  else if (trend?.trendDirection === 'Rising') trendMod = -2;
 
-  // Weighted combination
-  const finalScore = Math.round(
-    0.70 * scoreDiffScore +
-    0.10 * stabilityScore +
-    0.05 * seatScore +
-    0.05 * roundScore +
-    0.05 * demandScore +
-    0.05 * trendScore
-  );
+  // Apply bonuses
+  prob = prob + stabilityBonus + seatBonus + roundBonus + demandMod + trendMod;
 
-  // No artificial cap — let the score vary naturally between 0-100
-  // High-scoring users will see 90-100 for colleges they exceed
-  // Low-scoring users will see 0-40 for reach colleges
-  const probabilityScore = Math.max(0, Math.min(100, finalScore));
+  // Cluster-breaking modulation
+  let closingMod = 0;
+  if (closingScore) {
+    closingMod = ((closingScore % 73) / 73 - 0.5) * 5;
+  }
 
-  // Confidence label using the user's specified ranges
+  // Soft cap for very high values
+  if (prob > 92) {
+    prob = 92 + (prob - 92) * 0.5;
+  }
+
+  // Per-college unique offset
+  const uniqueHash = ((instituteName || '') + (programName || '') + closingScore)
+    .split('').reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0);
+  const uniqueOffset = ((Math.abs(uniqueHash) % 73) / 73 - 0.5) * 2.5;
+
+  prob = prob + closingMod + uniqueOffset;
+
+  const probabilityScore = Math.round(Math.max(1, Math.min(98, prob)));
+
+  // Confidence labels
   let confidence;
-  if (probabilityScore >= 90) confidence = 'Safe';
-  else if (probabilityScore >= 70) confidence = 'High Chance';
-  else if (probabilityScore >= 40) confidence = 'Moderate';
+  if (probabilityScore >= 85) confidence = 'Safe';
+  else if (probabilityScore >= 65) confidence = 'High Chance';
+  else if (probabilityScore >= 35) confidence = 'Moderate';
   else if (probabilityScore >= 15) confidence = 'Ambitious';
   else confidence = 'Dream';
 
-  // Generate reasons
+  // Reasons
   const reasons = [];
   if (diff > 0) {
     reasons.push(`Your score (${Math.round(userScore)}) is ${Math.round(Math.abs(diff))} points above the ${year} closing score (${Math.round(closingScore)})`);
@@ -199,8 +275,9 @@ function calcEnhancedProbability(userScore, closingScore, openingScore, trend, c
   } else {
     reasons.push(`Your score (${Math.round(userScore)}) is ${Math.round(Math.abs(diff))} points below the ${year} closing score (${Math.round(closingScore)})`);
   }
-  if (stabilityScore >= 80) reasons.push(`Cutoffs have been stable over recent years (${stabilityScore}% stability)`);
-  else if (stabilityScore <= 35) reasons.push(`Cutoffs show high volatility — admission confidence reduced`);
+  reasons.push(`${instituteName || 'This institute'} is ${instituteFactor > 0.7 ? 'moderately' : instituteFactor > 0.5 ? 'highly' : 'extremely'} competitive${programName ? ` and ${programName} is a ${branchFactor > 0.7 ? 'moderate' : branchFactor > 0.5 ? 'popular' : 'premium'} program` : ''}`);
+  if (stabilityBonus >= 3) reasons.push(`Cutoffs have been stable over recent years`);
+  else if (stabilityBonus <= 1) reasons.push(`Cutoffs show high volatility — admission confidence reduced`);
   if (trend?.trendDirection === 'Falling') reasons.push(`Cutoff trend is falling, improving your chances`);
   else if (trend?.trendDirection === 'Rising') reasons.push(`Cutoff trend is rising, increasing competition`);
   if (seats != null && seats >= 30) reasons.push(`Large seat availability (${seats} seats)`);

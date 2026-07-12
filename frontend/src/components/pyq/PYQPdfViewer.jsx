@@ -4,7 +4,7 @@ export default function PYQPdfViewer({ subject, pdfUrl, startPage, endPage, onBa
   return (
     <PremiumPdfViewer
       url={pdfUrl}
-      fileName={`${subject?.label || 'PYQ'} (Pages ${startPage}ΓÇô${endPage})`}
+      fileName={`${subject?.label || 'PYQ'} (Pages ${startPage}–${endPage})`}
       onClose={onBack}
     />
   );

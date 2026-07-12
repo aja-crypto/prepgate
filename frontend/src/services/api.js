@@ -1,5 +1,18 @@
-// src/services/api.js ΓÇô Axios API Service with token refresh
+// src/services/api.js – Axios API Service with token refresh
 import axios from 'axios';
+
+// Simple in-memory cache with TTL for stable data
+const apiCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+export function getCached(key) {
+  const entry = apiCache.get(key);
+  if (entry && Date.now() - entry.timestamp < CACHE_TTL) return entry.data;
+  apiCache.delete(key);
+  return null;
+}
+export function setCache(key, data) {
+  apiCache.set(key, { data, timestamp: Date.now() });
+}
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
@@ -64,7 +77,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     if (!originalRequest) return Promise.reject(error);
 
-    // Auto-retry on network errors (backend down, DB disconnect) ΓÇö up to 2 tries
+    // Auto-retry on network errors (backend down, DB disconnect) — up to 2 tries
     const isNetworkError = !error.response && error.message === 'Network Error';
     const isServerUnavailable = error.response?.status === 503 || error.response?.status === 502 || error.response?.status === 504 || error.response?.status === 500;
     if ((isNetworkError || isServerUnavailable) && !originalRequest._retryCount) {
@@ -154,8 +167,11 @@ export const authService = {
   googleAuth: (idToken) => api.post('/auth/google', { idToken }),
   getMe: () => api.get('/auth/me'),
   updateProfile: (d) => api.put('/auth/profile', d),
+  changeEmail: (newEmail, password) => api.put('/auth/change-email', { newEmail, password }),
+  updateAvatar: (avatar) => api.put('/auth/avatar', { avatar }),
+  updateBadges: (badges) => api.put('/auth/badges', { badges }),
   registerFcmToken: (token) => api.put('/auth/fcm-token', { token }),
-  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  forgotPassword: (email) => api.post('/forgot-password', { email }),
   resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
   changePassword: (currentPassword, newPassword) => api.put('/auth/change-password', { currentPassword, newPassword }),
   deleteAccount: (password) => api.delete('/auth/account', { data: { password } }),

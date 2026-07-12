@@ -151,8 +151,39 @@ export default function FuturisticHero() {
           AI-Powered GATE 2027 Preparation Platform
         </div>
 
-        {/* Headline ΓÇö centered, big */}
-        <div className={`text-center mb-8 transition-all duration-250 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-6'}`}>
+        {/* Animated AIR numbers carousel — emotional hook */}
+        <div className="mb-6 transition-all duration-250 ease-out" style={{ animationDelay: '200ms' }}>
+          <div className="flex items-center justify-center gap-4 sm:gap-6" style={{ perspective: '800px' }}>
+            {[
+              { rank: 'AIR 27', sub: 'Your target', color: '#22D3EE', glow: 'rgba(34,211,238,0.15)' },
+              { rank: 'AIR 108', sub: 'Achievable', color: '#8B5CF6', glow: 'rgba(139,92,246,0.15)' },
+              { rank: 'AIR 412', sub: 'Your first goal', color: '#F59E0B', glow: 'rgba(245,158,11,0.15)' },
+            ].map((item, i) => (
+              <div
+                key={item.rank}
+                className="text-center animate-float"
+                style={{ animationDelay: `${i * 0.3}s`, animationDuration: '4s' }}
+              >
+                <div className="text-xl sm:text-2xl md:text-3xl font-black font-mono tracking-tight transition-all duration-300 hover:scale-110"
+                  style={{
+                    color: item.color,
+                    textShadow: `0 0 30px ${item.glow}, 0 0 60px ${item.glow}`,
+                    opacity: visible ? 1 : 0,
+                    transform: visible ? 'translateY(0)' : 'translateY(20px)',
+                    transitionDelay: `${i * 150}ms`,
+                  }}>
+                  {item.rank}
+                </div>
+                <div className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] mt-1" style={{ color: 'rgba(248,250,252,0.35)' }}>
+                  {item.sub}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Headline */}
+        <div className={`text-center mb-6 transition-all duration-250 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-6'}`}>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-tight" style={{ textShadow: '0 0 40px rgba(139,92,246,0.15), 0 0 80px rgba(139,92,246,0.06), 0 0 120px rgba(34,211,238,0.03)' }}>
             <span className="text-[#F8FAFC]">Build Your </span>
             <GradientText gradient="linear-gradient(135deg, #F0E8FF, #C4B5FD, #8B5CF6, #22D3EE)">
@@ -224,7 +255,7 @@ export default function FuturisticHero() {
         </div>
       </div>
 
-      {/* Premium Gift Card ΓÇö positioned right side on desktop, below on mobile */}
+      {/* Premium Gift Card — positioned right side on desktop, below on mobile */}
       <div className="hidden lg:block absolute right-8 top-1/2 -translate-y-1/2 z-20">
         <PremiumGiftCard />
       </div>

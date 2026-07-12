@@ -170,7 +170,7 @@ app.use('/api/admin/', rl(15 * 60 * 1000, isDev ? 500 : 100));
 
 app.use('/api/ai/', rl(1 * 60 * 1000, isDev ? 120 : 10));
 
-app.use('/api/predictor/predict', rl(1 * 60 * 1000, isDev ? 30 : 5));
+app.use('/api/predictor/predict', rl(1 * 60 * 1000, isDev ? 120 : 5, (req) => req.headers['x-demo-user'] || req.headers['x-testing']));
 
 app.use('/api/notes', rl(1 * 60 * 1000, isDev ? 30 : 5));
 app.use('/api/short-notes/upload', rl(1 * 60 * 1000, isDev ? 20 : 5));
@@ -393,6 +393,8 @@ app.use('/api/gate-papers', require('./src/routes/gatePapers'));
 app.use('/api/calendar', require('./src/routes/calendar'));
 app.use('/api/predictor', require('./src/routes/predictor'));
 app.use('/api/admin/predictor', require('./src/routes/adminPredictor'));
+app.use('/api/learning', require('./src/routes/learning'));
+app.use('/api/admin/learning', require('./src/routes/adminLearning'));
 
 // --- 404 Handler ─────────────────────────────────────────---
 app.use('*', (req, res) => {

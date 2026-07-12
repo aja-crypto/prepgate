@@ -84,13 +84,13 @@ const DEFAULT_SCHEDULE = [
 
 // Weekly subject rotation
 const WEEKLY_SUBJECTS = [
+  { day: 0, label: 'Full Mock + Revision', isMock: true },
   { day: 1, subjects: ['Operating Systems', 'DBMS'], label: 'OS + DBMS' },
   { day: 2, subjects: ['Computer Networks', 'Algorithms'], label: 'CN + Algorithms' },
   { day: 3, subjects: ['Theory of Computation', 'Compiler Design'], label: 'TOC + CD' },
   { day: 4, subjects: ['Programming & Data Structures', 'Computer Organization'], label: 'DS + CO' },
   { day: 5, subjects: ['Engineering Mathematics', 'Digital Logic'], label: 'Math + DL' },
   { day: 6, subjects: ['General Aptitude', 'All Subjects Revision'], label: 'Aptitude + Revision' },
-  { day: 0, label: 'Full Mock + Revision', isMock: true },
 ];
 
 const SUBJECT_COLORS = {

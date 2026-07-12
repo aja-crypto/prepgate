@@ -86,6 +86,7 @@ const AdminGateVaultPage = lazy(() => import('./pages/admin/AdminGateVaultPage')
 const AdminCmsPage = lazy(() => import('./pages/admin/AdminCmsPage'));
 const AdminQuestionBankPage = lazy(() => import('./pages/admin/AdminQuestionBankPage'));
 const AdminPredictorPage = lazy(() => import('./pages/admin/AdminPredictorPage'));
+const AdminLearningHubPage = lazy(() => import('./pages/admin/AdminLearningHubPage'));
 
 // New feature pages
 const FlashcardReviewPage = lazy(() => import('./pages/FlashcardReviewPage'));
@@ -96,6 +97,7 @@ const VideoLecturesPage = lazy(() => import('./pages/VideoLecturesPage'));
 const PersonalizedRoadmapPage = lazy(() => import('./pages/PersonalizedRoadmapPage'));
 const OpportunityPredictorPage = lazy(() => import('./pages/OpportunityPredictorPage'));
 const ReferralDashboardPage = lazy(() => import('./pages/ReferralDashboardPage'));
+const LearningHubPage = lazy(() => import('./pages/LearningHubPage'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage'));
@@ -354,6 +356,7 @@ export default function App() {
         <Route path="roadmap" element={<PersonalizedRoadmapPage />} />
         <Route path="opportunity-predictor" element={<OpportunityPredictorPage />} />
         <Route path="referral" element={<ReferralDashboardPage />} />
+        <Route path="learning-hub" element={<LearningHubPage />} />
       </Route>
 
       {/* Admin routes (own layout, separate auth) */}
@@ -374,6 +377,7 @@ export default function App() {
         <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="system-health" element={<AdminSystemHealthPage />} />
         <Route path="predictor" element={<AdminPredictorPage />} />
+        <Route path="learning-hub" element={<AdminLearningHubPage />} />
         <Route path="pyq-practice" element={<TopicPyqPractice />} />
         <Route index element={<Navigate to="dashboard" replace />} />
       </Route>

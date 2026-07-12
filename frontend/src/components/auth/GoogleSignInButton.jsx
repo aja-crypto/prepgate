@@ -1,4 +1,4 @@
-// Google Sign-In ΓÇö uses renderButton() with timeout + retry
+// Google Sign-In — uses renderButton() with timeout + retry
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -11,9 +11,11 @@ const IS_PLACEHOLDER = !CLIENT_ID ||
   CLIENT_ID === 'undefined' ||
   CLIENT_ID.includes('PLACEHOLDER');
 
-// Google OAuth only works on whitelisted origins.
 const LOADING_TIMEOUT = 15000;
 const RETRY_COOLDOWN = 5000;
+
+const isLocalhost = typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
 export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_with' }) {
   const { loginAsGuest } = useAuth();
@@ -39,6 +41,8 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
       await onSuccess(response.credential);
     } catch (err) {
       onError?.(err);
+      setPromptFailed(true);
+      setError(err?.message || 'Google sign-in failed');
     }
   }, [onSuccess, onError]);
 
@@ -70,10 +74,15 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
         auto_select: false,
         error_callback: (err) => {
           console.error('Google Sign-In error:', err);
+          if (err?.type === 'popup_closed_by_user') return;
           if (err?.type === 'popup_closed') return;
           const msg = err?.message || err?.type || '';
-          if (msg.includes('origin') || msg.includes('redirect_uri')) {
-            setError('Google Sign-In is not configured for localhost. Use email/password or Demo Mode.');
+          if (isLocalhost) {
+            setError('Google Sign-In is not available on localhost. Sign in with email/password or use Demo Mode.');
+          } else if (msg.includes('origin') || msg.includes('redirect_uri')) {
+            setError('Google Sign-In is not configured for this domain. Contact the site owner.');
+          } else if (msg.includes('network') || msg.includes('fetch')) {
+            setError('Network error. Check your connection and try again.');
           } else {
             setError('Google Sign-In failed: ' + (msg || 'Unknown error'));
           }
@@ -85,6 +94,9 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
       clearTimeout_();
     } catch (err) {
       console.error('Google Sign-In initialization failed:', err);
+      setPromptFailed(true);
+      setError('Failed to initialize Google Sign-In');
+      clearTimeout_();
     }
   };
 
@@ -102,12 +114,12 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      // wait a tick for google to be fully ready
       setTimeout(initGoogleSignIn, 100);
     };
     script.onerror = () => {
       console.error('Failed to load Google Sign-In script');
       setPromptFailed(true);
+      setError(isLocalhost ? 'Cannot load Google Sign-In on localhost. Use email/password.' : 'Failed to load Google Sign-In. Check your connection.');
       clearTimeout_();
     };
     document.body.appendChild(script);
@@ -115,9 +127,14 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
 
   useEffect(() => {
     if (IS_PLACEHOLDER) {
-      // Client ID not configured ΓÇö show demo fallback
       setPromptFailed(true);
       setError('Google Sign-In is not configured. Set VITE_GOOGLE_CLIENT_ID in .env or use Demo Mode.');
+      return;
+    }
+
+    if (isLocalhost) {
+      setPromptFailed(true);
+      setError('Google Sign-In requires a production domain. Use email/password or Demo Mode.');
       return;
     }
 
@@ -134,14 +151,12 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
     setRetrying(true);
     scriptLoaded.current = false;
     initializedRef.current = false;
-    // remove existing Google script tag if any
     const old = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
     if (old) old.remove();
     delete window.google?.accounts;
     setTimeout(loadScript, RETRY_COOLDOWN);
   };
 
-  // Render the native Google button inside our container
   useEffect(() => {
     if (!scriptReady || !btnRef.current || !window.google?.accounts?.id) return;
     try {
@@ -163,13 +178,13 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
     return (
       <button
         onClick={handleDemoMode}
-        aria-label="Google Sign-In disabled ΓÇö enter demo mode"
+        aria-label="Google Sign-In disabled — enter demo mode"
         className="w-full group text-[11px] text-text3 text-center py-4 px-4 border border-dashed border-border rounded-xl bg-bg-3/30 hover:border-primary/50 hover:bg-primary/5 transition-all"
       >
         <p className="font-bold text-text mb-1 group-hover:text-primary transition-colors italic">Google Sign-In Disabled</p>
         <p className="mb-2 opacity-70">Set VITE_GOOGLE_CLIENT_ID in .env</p>
         <div className="text-primary font-bold uppercase tracking-widest text-[10px] bg-primary/10 py-1.5 rounded-xl border border-primary/20">
-          Enter Demo Mode instead ΓåÆ
+          Enter Demo Mode instead →
         </div>
       </button>
     );
@@ -179,26 +194,28 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
     return (
       <div className="w-full flex flex-col items-center gap-3 py-4 px-4 rounded-xl border border-dashed border-border bg-bg-3/30">
         <p className="text-xs text-text3 text-center font-medium">{error || 'Google Sign-In temporarily unavailable'}</p>
-        <button
-          onClick={handleRetry}
-          aria-label="Retry loading Google Sign-In"
-          className="text-xs text-primary font-semibold hover:text-primary-light transition-colors px-4 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20"
-        >
-          Retry
-        </button>
+        {isLocalhost ? (
+          <p className="text-[10px] text-text3 text-center opacity-60">Google requires a whitelisted domain. Use the form above to create an account.</p>
+        ) : (
+          <button
+            onClick={handleRetry}
+            aria-label="Retry loading Google Sign-In"
+            className="text-xs text-primary font-semibold hover:text-primary-light transition-colors px-4 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20"
+          >
+            Retry
+          </button>
+        )}
       </div>
     );
   }
 
   return (
     <div className="w-full relative" style={{ minHeight: '48px' }}>
-      {/* Native Google button rendered here */}
       <div
         ref={btnRef}
         className={`w-full [&>div]:w-full [&>div>div]:w-full ${!scriptReady ? 'invisible' : ''}`}
         aria-label="Google Sign-In button"
       />
-      {/* Loading / timed out overlay */}
       {!scriptReady && !timedOut && (
         <div className="absolute inset-0 flex items-center justify-center py-3.5 px-4 rounded-xl border border-border bg-surface/60 backdrop-blur-md" role="status" aria-label="Loading Google Sign-In">
           <div className="w-5 h-5 border-2 border-white/20 border-t-primary rounded-full animate-spin mr-3" />
