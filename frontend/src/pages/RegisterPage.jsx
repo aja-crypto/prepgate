@@ -127,7 +127,7 @@ export default function RegisterPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
-          className="w-full rounded-2xl p-6 md:p-8"
+          className="w-full rounded-2xl p-4 sm:p-6 md:p-8"
           style={{
             background: 'rgba(10, 15, 30, 0.18)',
             backdropFilter: 'blur(28px) saturate(1.5)',

@@ -172,7 +172,7 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
               `,
             }}
           >
-            <div className="relative z-10 px-8 md:px-12 pt-10 md:pt-14 pb-8 md:pb-12">
+            <div className="relative z-10 px-4 sm:px-8 md:px-12 pt-5 sm:pt-10 md:pt-14 pb-5 sm:pb-8 md:pb-12">
               {/* Logo mark */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.5 }}
@@ -231,7 +231,7 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
               </AnimatePresence>
 
               {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                 <GlowInput
                   icon={Mail}
                   type="email"
@@ -312,7 +312,7 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                 variants={INPUT_VARIANTS}
                 initial="hidden"
                 animate="visible"
-                className="flex items-center gap-3 my-6"
+                className="flex items-center gap-2 sm:gap-3 my-4 sm:my-6"
               >
                 <div className="flex-1 h-px bg-white/5" />
                 <span className="text-[11px] text-white/15 font-light uppercase tracking-wider">or</span>
@@ -343,7 +343,7 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                 variants={INPUT_VARIANTS}
                 initial="hidden"
                 animate="visible"
-                className="mt-6 flex flex-col items-center gap-3.5"
+                className="mt-4 sm:mt-6 flex flex-col items-center gap-2.5 sm:gap-3.5"
               >
                 <button
                   type="button"
@@ -370,7 +370,7 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8, duration: 0.5 }}
-        className="flex items-center justify-center gap-8 mt-8"
+        className="flex items-center justify-center gap-5 sm:gap-8 mt-5 sm:mt-8"
       >
         {[
           { icon: Shield, label: 'Secure', sub: '256-bit encryption' },
