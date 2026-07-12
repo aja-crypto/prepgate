@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProgress } from '../context/ProgressContext';
 import { useTheme } from '../context/ThemeContext';
@@ -91,6 +91,7 @@ export default function SettingsPage() {
   const [pwdForm, setPwdForm] = useState({ current: '', newPwd: '', confirm: '' });
 
   // Profile form state
+  const [collapsedSections, setCollapsedSections] = useState({});
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(user?.name || '');
   const [showChangeEmail, setShowChangeEmail] = useState(false);
@@ -726,14 +727,26 @@ export default function SettingsPage() {
         <p className="text-xs sm:text-sm text-text3/70 mt-0.5">Manage your profile, preferences, and account</p>
       </div>
       <div className="grid sm:grid-cols-2 gap-3">
-        {sections.map((s) => (
+        {sections.map((s) => {
+          const isCollapsed = collapsedSections[s.title];
+          return (
           <div key={s.title}
             className="bg-surface border border-white/5 rounded-[24px] p-4 flex flex-col">
-            <div className={sectionTitle}>{s.title}</div>
-            <p className={sectionDesc}>{s.desc}</p>
-            <div className="flex-1">{s.content}</div>
+            <button onClick={() => setCollapsedSections(prev => ({ ...prev, [s.title]: !prev[s.title] }))}
+              className="flex items-center justify-between w-full text-left sm:cursor-default">
+              <div className="flex-1">
+                <div className={sectionTitle}>{s.title}</div>
+                <p className={sectionDesc}>{s.desc}</p>
+              </div>
+              <svg viewBox="0 0 20 20" fill="currentColor"
+                className={`w-4 h-4 text-text3 sm:hidden transition-transform ${isCollapsed ? '' : 'rotate-180'}`}>
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+            {!isCollapsed && <div className="flex-1 mt-3">{s.content}</div>}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <Modal open={showResetModal} onClose={() => { setShowResetModal(false); setResetConfirmText(''); }} title="Reset All Progress?">
