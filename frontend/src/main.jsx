@@ -106,7 +106,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <AdminAuthProvider>
             <ProgressProviderWrapper />
             <Toaster position="top-right" />
-            <Analytics />
+            {import.meta.env.PROD && <Analytics />}
           </AdminAuthProvider>
         </BrowserRouter>
       </AuthProvider>

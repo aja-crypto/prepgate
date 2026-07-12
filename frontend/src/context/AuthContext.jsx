@@ -10,6 +10,7 @@ const progressKey = (userId) => `gatenexa_progress_${userId}`;
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const initRanRef = useRef(false);
   const prevUserRef = useRef(null);
   const prevLoadingRef = useRef(true);
   const [isPremium, setIsPremium] = useState(false);
@@ -60,6 +61,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    if (initRanRef.current) { console.log('[Trace] AuthContext — init already ran, skipping'); return; }
+    initRanRef.current = true;
+
     const token = safeGet('accessToken');
     const isGuest = safeGet('isGuest') === 'true';
 
