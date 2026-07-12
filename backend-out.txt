@@ -738,3 +738,4 @@ Data source: Local (in-memory)
 [0mGET /api/gate-vault/monthly-set [36m304[0m 0.250 ms - -[0m
 [0mGET /api/cms/announcements [36m304[0m 0.276 ms - -[0m
 [0mGET /api/live/dashboard [32m200[0m 1.189 ms - -[0m
+[0mPUT /api/progress/sync [32m200[0m 0.239 ms - -[0m

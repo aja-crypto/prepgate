@@ -245,27 +245,27 @@
     aside > div:first-child [class*="text-sm"] { font-size: 0.85rem !important; font-weight: 600 !important; letter-spacing: 0.02em !important; }
     aside > div:first-child [class*="text-"]:last-child { font-size: 0.6rem !important; letter-spacing: 0.15em !important; opacity: 0.6 !important; }
 
-    /* Menu items - glass hover effect */
+    /* Menu items - clean & minimal (inactive) */
     aside nav a, aside nav button {
-      border-radius: 12px !important;
-      padding: 0.55rem 0.75rem !important;
-      margin: 0.15rem 0 !important;
+      border-radius: 10px !important;
+      padding: 0.5rem 0.75rem !important;
+      margin: 0.1rem 0 !important;
       font-size: 0.8rem !important;
+      background: transparent !important;
       transition: all 180ms ease-out !important;
     }
     aside nav a:hover, aside nav button:hover {
-      background: rgba(139,92,246,0.1) !important;
-      backdrop-filter: blur(8px) !important;
-      transform: translateX(2px) !important;
+      background: rgba(255,255,255,0.03) !important;
     }
     aside nav a:active, aside nav button:active {
-      transform: scale(0.97) !important;
+      background: rgba(255,255,255,0.05) !important;
     }
+
+    /* Active item - soft glass highlight only */
     aside nav a.nav-item-active {
-      background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05)) !important;
+      background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(139,92,246,0.04)) !important;
       border-left: none !important;
-      box-shadow: 0 0 20px -8px rgba(139,92,246,0.2) !important;
-      backdrop-filter: blur(8px) !important;
+      backdrop-filter: blur(4px) !important;
     }
     aside nav a.nav-item-active::after { display: none !important; }
 
