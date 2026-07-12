@@ -369,8 +369,13 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     const onEsc = (e) => {
       if (e.key === 'Escape' && open) setOpen(false);
     };
+    const onCloseAI = () => setOpen(false);
     document.addEventListener('keydown', onEsc);
-    return () => document.removeEventListener('keydown', onEsc);
+    window.addEventListener('close-ai', onCloseAI);
+    return () => {
+      document.removeEventListener('keydown', onEsc);
+      window.removeEventListener('close-ai', onCloseAI);
+    };
   }, [open, setOpen]);
 
   useEffect(() => {
