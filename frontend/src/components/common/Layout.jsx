@@ -257,6 +257,19 @@ const Layout = memo(function Layout() {
   const handleNavClick = useCallback(() => setSidebarOpen(false), []);
   const handleCalcOpen = useCallback(() => { setCalcOpen(true); setSidebarOpen(false); }, []);
 
+  // Swipe to close sidebar on mobile
+  const sidebarTouchStart = useRef(null);
+  const handleSidebarTouchStart = useCallback((e) => {
+    sidebarTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, []);
+  const handleSidebarTouchEnd = useCallback((e) => {
+    if (!sidebarTouchStart.current) return;
+    const dx = e.changedTouches[0].clientX - sidebarTouchStart.current.x;
+    const dy = e.changedTouches[0].clientY - sidebarTouchStart.current.y;
+    sidebarTouchStart.current = null;
+    if (Math.abs(dx) > 50 && Math.abs(dy) < 100 && dx < 0) setSidebarOpen(false);
+  }, []);
+
   return (
     <div className="flex h-screen bg-bg overflow-hidden relative">
       {!onboardingDone && <OnboardingFlow />}
@@ -264,7 +277,8 @@ const Layout = memo(function Layout() {
       <VirtualCalculator isOpen={calcOpen} onClose={() => setCalcOpen(false)} />
 
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)}
+          onTouchStart={handleSidebarTouchStart} onTouchEnd={handleSidebarTouchEnd} />
       )}
 
       <style>{`
@@ -279,7 +293,7 @@ const Layout = memo(function Layout() {
         fixed md:relative z-50 md:z-40 h-full w-[220px] max-w-[85vw] glass-sidebar flex flex-col
         transition-transform duration-300 ease-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-      `}>
+      `} onTouchStart={handleSidebarTouchStart} onTouchEnd={handleSidebarTouchEnd}>
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-2.5">
             <Icon name="logo" className="w-9 h-9" />

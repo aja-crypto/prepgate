@@ -513,3 +513,124 @@ Data source: Local (in-memory)
 [0mGET /api/gate-vault/stats [36m304[0m 0.719 ms - -[0m
 [0mGET /api/gate-vault/monthly-set [36m304[0m 0.336 ms - -[0m
 [0mPUT /api/progress/sync [32m200[0m 0.390 ms - -[0m
+[0mGET /api/cms/challenges [36m304[0m 4.190 ms - -[0m
+[0mGET /api/gate-vault/progress [36m304[0m 0.569 ms - -[0m
+[0mGET /api/gate-vault/stats [36m304[0m 0.268 ms - -[0m
+[0mGET /api/gate-vault/monthly-set [36m304[0m 0.290 ms - -[0m
+[0mPUT /api/progress/sync [32m200[0m 2.919 ms - -[0m
+[0mGET /api/live/dashboard [32m200[0m 8.677 ms - -[0m
+[0mGET /api/ai/doubt-subjects [36m304[0m 0.264 ms - -[0m
+[0mGET /api/ai/doubt-subjects [36m304[0m 0.236 ms - -[0m
+[0mGET /api/ai/doubt-subjects [36m304[0m 0.368 ms - -[0m
+[0mGET /api/ai/doubt-subjects [36m304[0m 0.299 ms - -[0m
+[0mGET /api/topics?withProgress=true [36m304[0m 11.488 ms - -[0m
+[0mGET /api/subjects [36m304[0m 0.773 ms - -[0m
+[0mGET /api/topics?withProgress=true [36m304[0m 12.418 ms - -[0m
+[0mGET /api/subjects [36m304[0m 0.431 ms - -[0m
+[0mGET /api/topics?withProgress=true [36m304[0m 9.712 ms - -[0m
+[0mGET /api/subjects [36m304[0m 0.407 ms - -[0m
+[0mGET /api/topics?withProgress=true [36m304[0m 6.608 ms - -[0m
+[0mGET /api/subjects [36m304[0m 0.648 ms - -[0m
+[0mGET /api/subjects?hierarchy=true [36m304[0m 0.766 ms - -[0m
+[0mGET /api/subjects/analytics/overview [36m304[0m 1.163 ms - -[0m
+[0mGET /api/subjects?hierarchy=true [36m304[0m 0.447 ms - -[0m
+[0mGET /api/subjects/analytics/overview [36m304[0m 0.426 ms - -[0m
+[0mGET /api/subjects?hierarchy=true [36m304[0m 0.534 ms - -[0m
+[0mGET /api/subjects/analytics/overview [36m304[0m 0.526 ms - -[0m
+[0mGET /api/subjects?hierarchy=true [36m304[0m 0.740 ms - -[0m
+[0mGET /api/subjects/analytics/overview [36m304[0m 0.411 ms - -[0m
+[0mGET /api/cms/insights [36m304[0m 0.256 ms - -[0m
+[0mGET /api/cms/motivation [36m304[0m 0.176 ms - -[0m
+[0mGET /api/cms/featured-resources?limit=6 [36m304[0m 0.366 ms - -[0m
+[0mGET /api/cms/featured-content [36m304[0m 0.546 ms - -[0m
+[0mGET /api/cms/challenges [36m304[0m 0.267 ms - -[0m
+[0mGET /api/gate-vault/progress [36m304[0m 0.695 ms - -[0m
+[0mGET /api/gate-vault/stats [36m304[0m 0.278 ms - -[0m
+[0mGET /api/gate-vault/monthly-set [36m304[0m 0.217 ms - -[0m
+[0mGET /api/notes?pinned=true [36m304[0m 0.339 ms - -[0m
+[0mGET /api/cms/announcements [36m304[0m 0.209 ms - -[0m
+[0mGET /api/cms/motivation [36m304[0m 0.162 ms - -[0m
+[0mGET /api/live/dashboard [32m200[0m 0.712 ms - -[0m
+[0mGET /api/cms/insights [36m304[0m 0.531 ms - -[0m
+[0mGET /api/cms/featured-resources?limit=6 [36m304[0m 0.438 ms - -[0m
+[0mGET /api/cms/featured-content [36m304[0m 1.064 ms - -[0m
+[0mGET /api/cms/challenges [36m304[0m 0.317 ms - -[0m
+[0mGET /api/gate-vault/progress [36m304[0m 0.407 ms - -[0m
+[0mGET /api/gate-vault/stats [36m304[0m 0.199 ms - -[0m
+[0mGET /api/gate-vault/monthly-set [36m304[0m 0.175 ms - -[0m
+[0mGET /api/cms/announcements [36m304[0m 0.150 ms - -[0m
+[0mGET /api/live/dashboard [32m200[0m 0.658 ms - -[0m
+[0mGET /api/cms/motivation [36m304[0m 0.179 ms - -[0m
+[0mGET /api/cms/insights [36m304[0m 0.304 ms - -[0m
+[0mGET /api/cms/featured-content [36m304[0m 0.388 ms - -[0m
+[0mGET /api/cms/challenges [36m304[0m 0.154 ms - -[0m
+[0mGET /api/cms/featured-resources?limit=6 [36m304[0m 0.224 ms - -[0m
+[0mGET /api/gate-vault/progress [36m304[0m 0.270 ms - -[0m
+[0mGET /api/gate-vault/stats [36m304[0m 0.223 ms - -[0m
+[0mGET /api/gate-vault/monthly-set [36m304[0m 0.126 ms - -[0m
+[0mGET /api/cms/announcements [36m304[0m 0.206 ms - -[0m
+[0mGET /api/cms/motivation [36m304[0m 0.253 ms - -[0m
+[0mGET /api/cms/insights [36m304[0m 0.175 ms - -[0m
+[0mGET /api/live/dashboard [32m200[0m 0.922 ms - -[0m
+[0mGET /api/cms/featured-content [36m304[0m 0.770 ms - -[0m
+[0mGET /api/cms/challenges [36m304[0m 0.236 ms - -[0m
+[0mGET /api/cms/featured-resources?limit=6 [36m304[0m 0.179 ms - -[0m
+[0mGET /api/gate-vault/progress [36m304[0m 0.173 ms - -[0m
+[0mGET /api/gate-vault/stats [36m304[0m 0.234 ms - -[0m
+[0mGET /api/gate-vault/monthly-set [36m304[0m 0.306 ms - -[0m
+[0mGET /api/cms/announcements [36m304[0m 0.187 ms - -[0m
+[0mGET /api/live/dashboard [32m200[0m 0.803 ms - -[0m
+[0mGET /api/gate-papers [36m304[0m 6.752 ms - -[0m
+[0mGET /api/gate-papers [36m304[0m 1.309 ms - -[0m
+[0mGET /api/gate-papers [36m304[0m 1.549 ms - -[0m
+[0mGET /api/gate-papers [36m304[0m 1.544 ms - -[0m
+[0mPUT /api/progress/sync [32m200[0m 0.791 ms - -[0m
+[0mGET /health [32m200[0m 0.257 ms - 222[0m
+[0mGET /api/progress/sync [32m200[0m 0.309 ms - 84[0m
+[0mGET /api/gate-papers [36m304[0m 2.419 ms - -[0m
+[0mGET /api/gate-papers [36m304[0m 1.141 ms - -[0m
+[0mPUT /api/progress/sync [32m200[0m 0.190 ms - -[0m
+[AI Coach] Starting getAiCoachResponse
+[AI Coach] User message: Revision strategy
+[AI Coach] Context: {
+  "weakSubjects": [],
+  "strongSubjects": [],
+  "weakTopics": [
+    "Linear Algebra",
+    "Calculus & Differential Equations",
+    "Boolean Algebra",
+    "Pipelining & Hazards",
+    "Dynamic Programming"
+  ],
+  "overallProgress": 0,
+  "mockAvg": 55,
+  "streak": 21,
+  "overdueTopics": 5,
+  "recentAccuracy": 55,
+  "history": []
+}
+[AI Coach] OPENROUTER_API_KEY present: true
+[AI Coach] DASHSCOPE_API_KEY present: false
+[AI Coach] OPENAI_API_KEY present: false
+[AI Coach] API key found, calling callAiApi...
+[callAiApi] Calling openai/gpt-4o-mini via OpenRouter
+[callAiApi] Success: 1043 chars
+[AI Coach] callAiApi returned: To effectively tackle your **overdue revisions** (5 topics), here's a structured revision strategy:
+
+[AI Coach] Returning real AI response
+[0mPOST /api/ai/chat [32m200[0m 5151.058 ms - -[0m
+[0mGET /api/referral/status [36m304[0m 0.186 ms - -[0m
+[0mPUT /api/progress/sync [32m200[0m 0.184 ms - -[0m
+[0mPUT /api/progress/sync [32m200[0m 0.238 ms - -[0m
+[0mPUT /api/progress/sync [32m200[0m 0.324 ms - -[0m
+[0mGET /health [32m200[0m 0.184 ms - 222[0m
+[0mGET /api/gate-papers [36m304[0m 1.627 ms - -[0m
+[0mGET /api/progress/sync [32m200[0m 0.222 ms - 84[0m
+[0mGET /api/gate-papers [36m304[0m 0.959 ms - -[0m
+[0mGET /health [32m200[0m 0.278 ms - 222[0m
+[0mGET /api/gate-papers [36m304[0m 1.238 ms - -[0m
+[0mGET /api/gate-papers [36m304[0m 1.472 ms - -[0m
+[0mGET /health [32m200[0m 0.179 ms - 222[0m
+[0mGET /api/gate-papers [36m304[0m 1.132 ms - -[0m
+[0mGET /api/gate-papers [36m304[0m 1.660 ms - -[0m
+[0mPUT /api/progress/sync [32m200[0m 0.301 ms - -[0m
