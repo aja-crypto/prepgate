@@ -589,12 +589,13 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
             dragElastic={0}
             onDragEnd={handleDragEnd}
             dragHandle=".ai-drag-handle"
-            className={`fixed z-[9999] rounded-2xl overflow-hidden shadow-2xl flex flex-col ${
-              isMobile ? 'inset-0 rounded-none' : ''
+            className={`fixed z-[9999] overflow-hidden shadow-2xl flex flex-col ${
+              isMobile ? 'bottom-0 left-0 right-0 rounded-t-2xl rounded-b-none max-h-[80vh]' : 'rounded-2xl'
             }`}
             style={isMobile ? {
               background: 'rgba(5,8,22,0.98)',
               border: 'none',
+              top: 'auto',
             } : {
               ...style,
               background: 'rgba(5,8,22,0.97)',
