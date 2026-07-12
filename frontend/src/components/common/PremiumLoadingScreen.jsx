@@ -52,7 +52,7 @@ export default function PremiumLoadingScreen({ onComplete }) {
   // Smooth progress — runs once on mount, immune to parent re-renders
   useEffect(() => {
     mountedRef.current = true;
-    const duration = 3000;
+    const duration = 1800;
     let start;
 
     const tick = (ts) => {

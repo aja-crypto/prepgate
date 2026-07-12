@@ -219,7 +219,13 @@ function RoutePrefetcher() {
         import('./pages/PYQPage');
         import('./pages/NotesPage');
         import('./pages/SettingsPage');
-      }, { timeout: 2000 });
+        import('./pages/MocksPage');
+        import('./pages/AnalyticsPage');
+        import('./pages/AirPredictorPage');
+        import('./pages/LearningHubPage');
+        import('./pages/OpportunityPredictorPage');
+        import('./pages/StudyPlannerPage');
+      }, { timeout: 3000 });
     }
   }, []);
   return null;
