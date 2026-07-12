@@ -237,10 +237,10 @@ const Layout = memo(function Layout() {
 
   useGlobalSearchShortcut(setSearchOpen);
 
-  /* Only close sidebar if it's actually open — avoids wasteful re-render */
+  /* Close sidebar on navigation */
   useEffect(() => {
-    if (sidebarOpen) setSidebarOpen(false);
-  }, [location.pathname, sidebarOpen]);
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   /* Click-outside handler — uses ref to avoid re-subscribing on every toggle */
   useEffect(() => {
