@@ -399,10 +399,44 @@
     [class*="predictor"] [class*="result"], [class*="Predictor"] [class*="result"] {
       padding: 0.75rem !important;
     }
-    [class*="predictor"] [class*="college-card"], [class*="predictor"] [class*="opportunity"] {
+    [class*="predictor"] [class*="college-card"], [class*="predictor"] [class*="opportunity"],
+    [class*="EnhancedCollegeCard"] {
       padding: 0.6rem !important;
-      margin-bottom: 0.4rem !important;
+      margin-bottom: 0.35rem !important;
+      border-radius: 14px !important;
     }
+    /* Compact college card content */
+    [class*="EnhancedCollegeCard"] [class*="text-"] { line-height: 1.2 !important; }
+    [class*="EnhancedCollegeCard"] [class*="gap-"] { gap: 0.3rem !important; }
+    [class*="EnhancedCollegeCard"] [class*="p-"] { padding: 0.35rem !important; }
+    [class*="EnhancedCollegeCard"] [class*="rounded"] { border-radius: 8px !important; }
+    /* Chips compact */
+    [class*="predictor"] [class*="chip"], [class*="predictor"] [class*="pill"] {
+      padding: 0.15rem 0.4rem !important;
+      font-size: 0.6rem !important;
+    }
+    /* Probability badge larger for thumb tap */
+    [class*="predictor"] [class*="probability"], [class*="predictor"] [class*="match"] {
+      font-size: 0.9rem !important;
+      min-width: 44px !important;
+      min-height: 36px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    /* Choice filling assistant */
+    [class*="ChoiceFilling"] { padding: 0.5rem !important; }
+    [class*="ChoiceFilling"] [class*="card"], [class*="ChoiceFilling"] [class*="option"] {
+      padding: 0.5rem !important;
+      border-radius: 12px !important;
+      margin-bottom: 0.3rem !important;
+    }
+    /* Remove desktop tables - convert to cards on mobile */
+    table { display: block !important; }
+    thead { display: none !important; }
+    tbody, tr { display: block !important; }
+    td { display: flex !important; justify-content: space-between !important; padding: 0.4rem 0 !important; border-bottom: 1px solid rgba(255,255,255,0.03) !important; font-size: 0.75rem !important; }
+    td:before { content: attr(data-label); font-weight: 600; color: var(--color-text3); font-size: 0.65rem !important; }
 
     /* ─── Subjects mobile ─── */
     [class*="subject"] [class*="card"], [class*="Subject"] [class*="card"] {
