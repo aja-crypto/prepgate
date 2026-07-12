@@ -280,6 +280,20 @@ export default function LandingPage() {
         <style>{`
           .nav-link:hover { background: rgba(139,92,246,0.18) !important; border-color: rgba(139,92,246,0.4) !important; box-shadow: 0 0 20px rgba(139,92,246,0.12), 0 0 40px rgba(139,92,246,0.04); }
         `}</style>
+        <script dangerouslySetInnerHTML={{ __html: `
+        (function(){
+          var q = [{a:'AIR 27', t:'Consistency beats intensity. Even 3 focused hours daily for 8 months is enough.'},{a:'AIR 12', t:'Solve PYQs multiple times. Patterns become obvious after the third revision.'},{a:'AIR 5', t:'I revised every subject at least 4 times. Revision > learning new topics.'},{a:'AIR 8', t:'Your mock analysis defines your rank, not your mock score.'},{a:'AIR 4', t:'I made a mistake notebook and reviewed it every Sunday.'},{a:'AIR 3', t:'Understanding why behind each concept matters more than memorization.'}];
+          var i = 0;
+          setInterval(function(){
+            i = (i + 1) % q.length;
+            var e = document.querySelector('#mobile-motivation [class*=\"px-2\"]');
+            var t = document.getElementById('motivation-text');
+            if(e && t){ e.style.opacity = '0'; t.style.opacity = '0';
+              setTimeout(function(){ e.textContent = q[i].a; t.textContent = '\u201C' + q[i].t + '\u201D'; e.style.opacity = '1'; t.style.opacity = '1'; }, 250);
+            }
+          }, 17000);
+        })();
+      `}} />
       </nav>
 
       {/* Mobile Quick Actions (hidden on desktop) */}
@@ -302,6 +316,66 @@ export default function LandingPage() {
 
       {/* Cinematic Hero Section */}
       <FuturisticHero />
+
+      {/* Mobile: Animated Motivation + Carousels (hidden on desktop) */}
+      <div className="sm:hidden relative z-10 px-4 py-4 space-y-4">
+        {/* Animated Motivation Card */}
+        <div className="mobile-motivation text-center" id="mobile-motivation">
+          <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-primary/60 mb-1">Topper Wisdom</div>
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#8B5CF615', border: '1px solid #8B5CF630', color: '#C4B5FD' }}>
+              AIR 27
+            </span>
+          </div>
+          <p className="text-xs text-text2/70 italic leading-relaxed px-2 transition-opacity duration-500" id="motivation-text">
+            "Consistency beats intensity. Even 3 focused hours daily for 8 months is enough."
+          </p>
+        </div>
+
+        {/* Success Stories Carousel */}
+        <div>
+          <div className="text-[10px] font-semibold text-text3 uppercase tracking-[0.15em] mb-2 px-1">🏆 Success Stories</div>
+          <div className="mobile-carousel">
+            {[
+              { name: 'Rahul S.', air: 'AIR 12', college: 'IIT Bombay', badge: '🎯' },
+              { name: 'Priya M.', air: 'AIR 27', college: 'IIT Delhi', badge: '⭐' },
+              { name: 'Arun K.', air: 'AIR 58', college: 'IIT Madras', badge: '🚀' },
+              { name: 'Sneha R.', air: 'AIR 104', college: 'IIT Kharagpur', badge: '💪' },
+            ].map((s, i) => (
+              <div key={i} className="mobile-carousel-card">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500/30 to-cyan-500/20 flex items-center justify-center text-sm">{s.badge}</div>
+                  <div>
+                    <div className="text-xs font-semibold text-text">{s.name}</div>
+                    <div className="text-[9px] text-text3">{s.college}</div>
+                  </div>
+                </div>
+                <div className="text-[11px] font-bold text-primary">{s.air}</div>
+                <div className="text-[9px] text-text3 mt-0.5">GATE 2026 Topper</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Latest Resources */}
+        <div>
+          <div className="text-[10px] font-semibold text-text3 uppercase tracking-[0.15em] mb-2 px-1">📖 Latest Resources</div>
+          <div className="mobile-carousel">
+            {[
+              { title: '3-Month Roadmap', tag: 'Guide', color: '#8B5CF6' },
+              { title: 'Top 100 PYQs', tag: 'Practice', color: '#22D3EE' },
+              { title: 'Best YouTube Lectures', tag: 'Video', color: '#F59E0B' },
+              { title: 'Interview Experience', tag: 'Tips', color: '#22C55E' },
+            ].map((r, i) => (
+              <div key={i} className="mobile-carousel-card">
+                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: `${r.color}15`, color: r.color }}>{r.tag}</span>
+                <div className="text-xs font-semibold text-text mt-1.5">{r.title}</div>
+                <div className="text-[9px] text-text3 mt-1">Start learning →</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Animated Stats */}
       <section className="relative z-10 px-6 py-16 max-w-4xl mx-auto">
