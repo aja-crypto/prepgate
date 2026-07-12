@@ -51,6 +51,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { DashboardProvider } from './context/DashboardContext';
 import { ProgressProvider, useProgress } from './context/ProgressContext';
 import { FocusProvider } from './context/FocusContext';
+import { Analytics } from '@vercel/analytics/react';
 import { checkReminders } from './utils/reminderUtils';
 import { initFirebasePush, isFirebaseConfigured } from './utils/firebase';
 import { silentCatch } from './utils/errorHandler';
@@ -105,6 +106,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <AdminAuthProvider>
             <ProgressProviderWrapper />
             <Toaster position="top-right" />
+            <Analytics />
           </AdminAuthProvider>
         </BrowserRouter>
       </AuthProvider>
