@@ -14,9 +14,6 @@ const IS_PLACEHOLDER = !CLIENT_ID ||
 const LOADING_TIMEOUT = 15000;
 const RETRY_COOLDOWN = 5000;
 
-const isLocalhost = typeof window !== 'undefined' &&
-  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
 export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_with' }) {
   const { loginAsGuest } = useAuth();
   const navigate = useNavigate();
@@ -77,9 +74,7 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
           if (err?.type === 'popup_closed_by_user') return;
           if (err?.type === 'popup_closed') return;
           const msg = err?.message || err?.type || '';
-          if (isLocalhost) {
-            setError('Google Sign-In is not available on localhost. Sign in with email/password or use Demo Mode.');
-          } else if (msg.includes('origin') || msg.includes('redirect_uri')) {
+          if (msg.includes('origin') || msg.includes('redirect_uri')) {
             setError('Google Sign-In is not configured for this domain. Contact the site owner.');
           } else if (msg.includes('network') || msg.includes('fetch')) {
             setError('Network error. Check your connection and try again.');
@@ -119,7 +114,7 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
     script.onerror = () => {
       console.error('Failed to load Google Sign-In script');
       setPromptFailed(true);
-      setError(isLocalhost ? 'Cannot load Google Sign-In on localhost. Use email/password.' : 'Failed to load Google Sign-In. Check your connection.');
+      setError('Failed to load Google Sign-In. Check your connection.');
       clearTimeout_();
     };
     document.body.appendChild(script);
@@ -129,12 +124,6 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
     if (IS_PLACEHOLDER) {
       setPromptFailed(true);
       setError('Google Sign-In is not configured. Set VITE_GOOGLE_CLIENT_ID in .env or use Demo Mode.');
-      return;
-    }
-
-    if (isLocalhost) {
-      setPromptFailed(true);
-      setError('Google Sign-In requires a production domain. Use email/password or Demo Mode.');
       return;
     }
 
@@ -194,17 +183,13 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
     return (
       <div className="w-full flex flex-col items-center gap-3 py-4 px-4 rounded-xl border border-dashed border-border bg-bg-3/30">
         <p className="text-xs text-text3 text-center font-medium">{error || 'Google Sign-In temporarily unavailable'}</p>
-        {isLocalhost ? (
-          <p className="text-[10px] text-text3 text-center opacity-60">Google requires a whitelisted domain. Use the form above to create an account.</p>
-        ) : (
-          <button
-            onClick={handleRetry}
-            aria-label="Retry loading Google Sign-In"
-            className="text-xs text-primary font-semibold hover:text-primary-light transition-colors px-4 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20"
-          >
-            Retry
-          </button>
-        )}
+        <button
+          onClick={handleRetry}
+          aria-label="Retry loading Google Sign-In"
+          className="text-xs text-primary font-semibold hover:text-primary-light transition-colors px-4 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20"
+        >
+          Retry
+        </button>
       </div>
     );
   }
