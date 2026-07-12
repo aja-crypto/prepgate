@@ -217,8 +217,37 @@
       display: none !important;
     }
 
-    /* ─── Hamburger above AI overlay ─── */
-    #mobile-hamburger { position: fixed !important; top: 12px !important; left: 8px !important; z-index: 10000 !important; }
+    /* ─── Mobile Foundation ─── */
+    /* Status bar + safe area */
+    body { padding-top: env(safe-area-inset-top, 0px) !important; padding-bottom: env(safe-area-inset-bottom, 0px) !important; }
+    header { padding-top: max(0.4rem, env(safe-area-inset-top, 0.4rem)) !important; min-height: 52px !important; }
+
+    /* Hamburger - fixed above all overlays */
+    #mobile-hamburger { position: fixed !important; top: max(12px, env(safe-area-inset-top, 12px)) !important; left: 8px !important; z-index: 10000 !important; width: 40px !important; height: 40px !important; }
+
+    /* Header compact */
+    header [class*="gap-2"] { gap: 0.35rem !important; }
+    header [class*="rounded-xl"][class*="border"] { padding: 0.35rem 0.6rem !important; border-radius: 10px !important; }
+    header [class*="w-5"][class*="h-5"] { width: 1rem !important; height: 1rem !important; }
+
+    /* Search bar compact */
+    header button[aria-label="Open search"] { font-size: 0.75rem !important; padding: 0.35rem 0.6rem !important; min-height: 36px !important; }
+    header button[aria-label="Open search"] span { font-size: 0.7rem !important; }
+
+    /* Notification bell compact */
+    [class*="NotificationBell"] button, [class*="notification"] button { width: 36px !important; height: 36px !important; }
+
+    /* Profile avatar compact */
+    .profile-dropdown > button { padding: 0.25rem !important; }
+    .profile-dropdown [class*="w-10"] { width: 32px !important; height: 32px !important; }
+
+    /* Bottom safe area for all pages */
+    main { padding-bottom: env(safe-area-inset-bottom, 1rem) !important; }
+
+    /* Keyboard overlap: hide FAB when keyboard is visible (viewport shrinks) */
+    @media (max-height: 500px) {
+      [class*="ai-assistant"], [class*="FloatingAI"], [class*="floating-ai"] { display: none !important; }
+    }
 
     /* ─── Premium Glass Profile Dropdown (mobile) ─── */
     .profile-dropdown > div:not(:first-child) {
