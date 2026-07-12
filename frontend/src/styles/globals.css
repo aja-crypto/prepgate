@@ -423,6 +423,73 @@
     /* ─── Modal mobile ─── */
     [role="dialog"] { padding: 1rem !important; max-width: calc(100vw - 1rem) !important; }
 
+    /* ─── Mobile Quick Action Dock ─── */
+    .mobile-quick-actions {
+      display: flex !important;
+      gap: 0.4rem !important;
+      padding: 0.4rem 0.5rem !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      scrollbar-width: none !important;
+    }
+    .mobile-quick-action {
+      flex-shrink: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      gap: 0.25rem !important;
+      padding: 0.5rem 0.75rem !important;
+      border-radius: 16px !important;
+      background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(139,92,246,0.02)) !important;
+      border: 1px solid rgba(139,92,246,0.08) !important;
+      min-width: 80px !important;
+      transition: all 180ms ease-out !important;
+    }
+    .mobile-quick-action:active { transform: scale(0.95) !important; background: rgba(139,92,246,0.12) !important; }
+
+    /* ─── Horizontal Card Carousel ─── */
+    .mobile-carousel {
+      display: flex !important;
+      gap: 0.6rem !important;
+      overflow-x: auto !important;
+      scroll-snap-type: x mandatory !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding: 0.25rem 0.5rem !important;
+      scrollbar-width: none !important;
+    }
+    .mobile-carousel-card {
+      scroll-snap-align: start !important;
+      flex-shrink: 0 !important;
+      width: 200px !important;
+      padding: 0.75rem !important;
+      border-radius: 20px !important;
+      background: linear-gradient(135deg, rgba(12,15,35,0.5), rgba(8,11,28,0.6)) !important;
+      backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(255,255,255,0.04) !important;
+      transition: transform 180ms ease-out !important;
+    }
+    .mobile-carousel-card:active { transform: scale(0.97) !important; }
+
+    /* ─── Animated Motivation ─── */
+    @keyframes mobileFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .mobile-motivation {
+      animation: mobileFadeIn 400ms ease-out !important;
+      border-radius: 16px !important;
+      padding: 0.75rem !important;
+      background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(34,211,238,0.03)) !important;
+      border: 1px solid rgba(139,92,246,0.08) !important;
+    }
+
+    /* ─── Live Countdown ─── */
+    .mobile-countdown-tile {
+      min-width: 52px !important;
+      padding: 0.35rem 0.4rem !important;
+      border-radius: 10px !important;
+      text-align: center !important;
+      background: rgba(139,92,246,0.08) !important;
+      border: 1px solid rgba(139,92,246,0.1) !important;
+    }
+
     /* ─── Landing Page mobile ─── */
     nav { padding-top: 0.4rem !important; padding-bottom: 0.4rem !important; }
     nav [class*="gap-4"] { gap: 0.5rem !important; }

@@ -282,6 +282,24 @@ export default function LandingPage() {
         `}</style>
       </nav>
 
+      {/* Mobile Quick Actions (hidden on desktop) */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe" style={{ background: 'linear-gradient(0deg, rgba(5,8,22,0.95) 60%, transparent)', backdropFilter: 'blur(16px)' }}>
+        <div className="mobile-quick-actions justify-center">
+          {[
+            { icon: '🎯', label: 'Predict', action: '/opportunity-predictor' },
+            { icon: '📚', label: 'Study', action: '/study-hub' },
+            { icon: '📝', label: 'Mock', action: '/mocks' },
+            { icon: '🤖', label: 'AI', action: '/GateNexa-ai' },
+          ].map((item) => (
+            <button key={item.label} onClick={() => navigate(item.action)}
+              className="mobile-quick-action">
+              <span className="text-lg">{item.icon}</span>
+              <span className="text-[9px] font-semibold text-text2">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Cinematic Hero Section */}
       <FuturisticHero />
 
