@@ -54,9 +54,7 @@ function loadUsersFromDisk() {
 
 loadUsersFromDisk();
 
-const PREHASHED_DEMO_PW = '$2a$10$McAFCeoMHxCK.GLpLytP0OFBy8CTKiv5GiUnnHXdNWSa0rrNt8D1e';
-
-seedDemoUser();
+(async () => { await seedDemoUser(); })();
 
 const formatUser = (user) => ({
   id: user._id,
@@ -121,48 +119,30 @@ const deleteUser = (id) => {
   }
 };
 
-function seedDemoUser() {
-  const existing = usersByEmail.get('demo@gate2027.in');
-  if (existing) {
-    existing.isVerified = true;
-    return;
+async function seedDemoUser() {
+  const pwHash = await bcrypt.hash('demo1234', 10);
+  function makeUser(id, name, email) {
+    const d = getEmptyProgressData();
+    return {
+      _id: id, name, email, password: pwHash, role: 'owner', isPremium: true,
+      authProvider: 'local', isVerified: true, googleId: null,
+      streak: { current: 0, longest: 0, lastStudyDate: null }, preferences: { theme: 'dark', notifications: true },
+      targetYear: 2027, studyGoalHours: 8, progressBackup: { data: d, updatedAt: new Date() }, fcmToken: null,
+      comparePassword: async (entered) => bcrypt.compare(entered, pwHash),
+      updateStreak() { this.streak.current++; this.streak.lastStudyDate = new Date(); return this; },
+      save: async function () { saveUsersToDisk(); return this; },
+    };
   }
-  const _id = crypto.randomUUID();
-  const emptyData = getEmptyProgressData();
-  const user = {
-    _id,
-    name: 'Demo Student',
-    email: 'demo@gate2027.in',
-    password: PREHASHED_DEMO_PW,
-    role: 'owner',
-    isPremium: true,
-    authProvider: 'local',
-    isVerified: true,
-    googleId: null,
-    streak: { current: 0, longest: 0, lastStudyDate: null },
-    preferences: { theme: 'dark', notifications: true },
-    targetYear: 2027,
-    studyGoalHours: 8,
-    progressBackup: { data: emptyData, updatedAt: new Date() },
-    fcmToken: null,
-    comparePassword: async (entered) => bcrypt.compare(entered, PREHASHED_DEMO_PW),
-    updateStreak() {
-      const today = new Date().setHours(0, 0, 0, 0);
-      const lastDate = this.streak.lastStudyDate
-        ? new Date(this.streak.lastStudyDate).setHours(0, 0, 0, 0)
-        : null;
-      if (lastDate === today) return;
-      const yesterday = today - 86400000;
-      this.streak.current = lastDate === yesterday ? this.streak.current + 1 : 1;
-      if (this.streak.current > this.streak.longest) this.streak.longest = this.streak.current;
-      this.streak.lastStudyDate = new Date();
-    },
-    save: async function () { saveUsersToDisk(); return this; },
-  };
-  usersByEmail.set(user.email, user);
-  usersById.set(_id, user);
+  if (!usersByEmail.get('demo@gate2027.in')) {
+    const u = makeUser(crypto.randomUUID(), 'Demo Student', 'demo@gate2027.in');
+    usersByEmail.set(u.email, u); usersById.set(u._id, u);
+  }
+  if (!usersByEmail.get('purruajaykumar@gmail.com')) {
+    const u = makeUser(crypto.randomUUID(), 'Puru Ajay Kumar', 'purruajaykumar@gmail.com');
+    usersByEmail.set(u.email, u); usersById.set(u._id, u);
+  }
   saveUsersToDisk();
-};
+}
 
 const findByEmail = (email) => usersByEmail.get(email.toLowerCase()) || null;
 const findById = (id) => usersById.get(id) || null;
