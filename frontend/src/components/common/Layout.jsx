@@ -344,7 +344,8 @@ const Layout = memo(function Layout() {
         <header className="sticky top-0 z-30 flex items-center gap-2 md:gap-3 px-2 md:px-4 py-2 md:py-3 glass-header">
           {/* Mobile sidebar toggle */}
           <button
-            onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(true), 100); }}
+            id="mobile-hamburger"
+            onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(true), 150); }}
             aria-label="Open navigation menu"
             className="md:hidden flex items-center justify-center w-11 h-11 rounded-xl text-text2 hover:text-text hover:bg-white/5 transition-all"
           >
