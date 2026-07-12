@@ -634,3 +634,6 @@ Data source: Local (in-memory)
 [0mGET /api/gate-papers [36m304[0m 1.132 ms - -[0m
 [0mGET /api/gate-papers [36m304[0m 1.660 ms - -[0m
 [0mPUT /api/progress/sync [32m200[0m 0.301 ms - -[0m
+[0mGET /api/gate-papers [36m304[0m 2.196 ms - -[0m
+[0mGET /api/gate-papers [36m304[0m 1.126 ms - -[0m
+[0mPUT /api/progress/sync [32m200[0m 2.463 ms - -[0m

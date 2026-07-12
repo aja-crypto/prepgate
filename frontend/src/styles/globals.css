@@ -217,6 +217,43 @@
       display: none !important;
     }
 
+    /* ─── Dashboard mobile ─── */
+    [class*="dashboard"] [class*="grid"] { grid-template-columns: 1fr !important; gap: 0.5rem !important; }
+    [class*="dashboard"] [class*="stat"] { padding: 0.75rem !important; }
+    [class*="dashboard"] [class*="widget"] { padding: 0.75rem !important; }
+    [class*="dashboard"] [class*="chart"] { height: 160px !important; }
+
+    /* ─── Predictor mobile ─── */
+    [class*="predictor"] [class*="result"], [class*="Predictor"] [class*="result"] {
+      padding: 0.75rem !important;
+    }
+    [class*="predictor"] [class*="college-card"], [class*="predictor"] [class*="opportunity"] {
+      padding: 0.6rem !important;
+      margin-bottom: 0.4rem !important;
+    }
+
+    /* ─── Subjects mobile ─── */
+    [class*="subject"] [class*="card"], [class*="Subject"] [class*="card"] {
+      padding: 0.75rem !important;
+    }
+
+    /* ─── Header mobile ─── */
+    header { padding-top: 0.4rem !important; padding-bottom: 0.4rem !important; }
+    header [class*="search"], header [class*="Search"] { padding: 0.4rem 0.75rem !important; }
+
+    /* ─── Common page mobile ─── */
+    main > div > div { margin-bottom: 0.5rem !important; }
+    [class*="page-enter"] { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+
+    /* ─── Tighter form inputs ─── */
+    input, select, textarea { padding: 0.5rem 0.75rem !important; font-size: 0.85rem !important; }
+
+    /* ─── Modal mobile ─── */
+    [role="dialog"] { padding: 1rem !important; max-width: calc(100vw - 1rem) !important; }
+
+    /* ─── Skeleton loading mobile ─── */
+    [class*="skeleton"] { height: 0.75rem !important; border-radius: 0.375rem !important; }
+
     /* Hide desktop-only elements */
     .desktop-only { display: none !important; }
   }
