@@ -542,7 +542,7 @@ export default function DashboardPage() {
           <Link to="/focus" className="mobile-card-glass flex items-center gap-2 p-3">
             <span className="text-xl">⏱️</span>
             <div>
-              <div className="text-sm font-bold text-text">{weekHours}h</div>
+              <div className="text-sm font-bold text-text">{(safeSS.weeklyHours || []).reduce((a,b)=>a+b, 0)}h</div>
               <div className="text-[9px] text-text3">This week</div>
             </div>
           </Link>

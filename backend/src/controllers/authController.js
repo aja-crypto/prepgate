@@ -81,6 +81,9 @@ exports.register = async (req, res, next) => {
     const { name, email, password, refCode } = req.body;
 
     if (isMockAuthEnabled()) {
+      if (mockStore.emailExists(email)) {
+        return res.status(400).json({ success: false, message: 'An account with this email already exists.' });
+      }
       const user = await mockStore.createMockUser({ name, email, password });
       const { accessToken, refreshToken } = generateTokens(user._id);
       if (refCode) {
