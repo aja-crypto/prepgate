@@ -127,7 +127,7 @@ export default function FuturisticHero() {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
+      className="relative min-h-0 sm:min-h-screen flex flex-col items-center justify-center overflow-hidden"
       style={{ opacity: heroOpacity, background: 'transparent' }}
     >
       {/* ΓòÉΓòÉΓòÉ FULL-SCREEN NEURAL BRAIN BACKGROUND (dimmed) ΓòÉΓòÉΓòÉ */}
@@ -143,7 +143,7 @@ export default function FuturisticHero() {
       }} />
 
       {/* ΓòÉΓòÉΓòÉ CONTENT OVERLAY (above brain) ΓòÉΓòÉΓòÉ */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen py-16 px-4">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-0 sm:min-h-screen py-6 sm:py-16 px-4">
 
         {/* Top badge */}
         <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-medium mb-6 transition-all duration-200 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`} style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)', color: '#C4B5FD', backdropFilter: 'blur(16px)', boxShadow: '0 0 30px rgba(139,92,246,0.06)' }}>
@@ -164,7 +164,7 @@ export default function FuturisticHero() {
                 className="text-center animate-float"
                 style={{ animationDelay: `${i * 0.3}s`, animationDuration: '4s' }}
               >
-                <div className="text-xl sm:text-2xl md:text-3xl font-black font-mono tracking-tight transition-all duration-300 hover:scale-110"
+                <div className="text-base sm:text-2xl md:text-3xl font-black font-mono tracking-tight transition-all duration-300 hover:scale-110"
                   style={{
                     color: item.color,
                     textShadow: `0 0 30px ${item.glow}, 0 0 60px ${item.glow}`,
@@ -184,16 +184,16 @@ export default function FuturisticHero() {
 
         {/* Headline */}
         <div className={`text-center mb-6 transition-all duration-250 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-6'}`}>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-tight" style={{ textShadow: '0 0 40px rgba(139,92,246,0.15), 0 0 80px rgba(139,92,246,0.06), 0 0 120px rgba(34,211,238,0.03)' }}>
+          <h1 className="text-2xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-tight" style={{ textShadow: '0 0 40px rgba(139,92,246,0.15), 0 0 80px rgba(139,92,246,0.06), 0 0 120px rgba(34,211,238,0.03)' }}>
             <span className="text-[#F8FAFC]">Build Your </span>
             <GradientText gradient="linear-gradient(135deg, #F0E8FF, #C4B5FD, #8B5CF6, #22D3EE)">
               AIR
             </GradientText>
           </h1>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-tight mt-1" style={{ color: '#F8FAFC', textShadow: '0 0 40px rgba(139,92,246,0.15), 0 0 80px rgba(139,92,246,0.06), 0 0 120px rgba(34,211,238,0.03)' }}>
+          <h1 className="text-2xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-tight mt-1" style={{ color: '#F8FAFC', textShadow: '0 0 40px rgba(139,92,246,0.15), 0 0 80px rgba(139,92,246,0.06), 0 0 120px rgba(34,211,238,0.03)' }}>
             with an Adaptive
           </h1>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-tight mt-1">
+          <h1 className="text-2xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-tight mt-1">
             <GradientText gradient="linear-gradient(135deg, #A78BFA, #8B5CF6, #6D28D9, #22D3EE)">
               AI Mentor
             </GradientText>
@@ -209,7 +209,7 @@ export default function FuturisticHero() {
             <>
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 hover:-translate-y-1"
+                className="inline-flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-xl text-xs sm:text-sm font-semibold text-white transition-all duration-300 hover:-translate-y-1"
                 style={{ background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)', boxShadow: '0 4px 30px rgba(139,92,246,0.3), 0 8px 60px rgba(139,92,246,0.12), 0 0 80px rgba(139,92,246,0.06)' }}
               >
                 Start Preparing
@@ -217,7 +217,7 @@ export default function FuturisticHero() {
               </Link>
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-medium transition-all duration-300 hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 hover:-translate-y-0.5"
                 style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.3)', color: '#C4B5FD', boxShadow: '0 0 25px rgba(139,92,246,0.12), 0 0 50px rgba(139,92,246,0.04)', backdropFilter: 'blur(12px)' }}
               >
                 Sign In

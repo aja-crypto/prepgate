@@ -1,8 +1,8 @@
 ﻿# GateNexa — Resume After Break
 
-**Generated:** June 19, 2026
+**Generated:** July 11, 2026
 **Last Commit:** `bf026e9` — "GateNexa backup before break" (130 files, 10,939 insertions)
-**Branch:** main
+**Branch:** release/beta-v0.11
 **GitHub Status:** âš ï¸ **NOT PUSHED** — No remote configured. Run: `git remote add origin <your-github-url> && git push origin main`
 
 ---
@@ -85,6 +85,10 @@ The project is in a mature, production-ready state with all major features imple
 - Doubt Solver: step-by-step explanations
 - AI Recommendations, AI Daily Planner
 - OpenRouter API key configured (`openai/gpt-4o-mini`)
+
+### Brand Intro Video Fix
+- BrandIntroModal: fixed stuttering/restart loop — root cause was missing `muted` attribute (browser autoplay policy), plus `onCanPlay` single-shot play, `useRef` container style (no resize re-renders), GPU acceleration hints
+- AiIntroModal: same `muted` + GPU acceleration fixes applied
 
 ### CMS & Content
 - CMS routes: motivation quotes, announcements, challenges, flashcard sets, study tips, gate news, psu recruitment
@@ -213,6 +217,7 @@ The project is in a mature, production-ready state with all major features imple
 | 16 | Admin panel auth routes need verification | P1 | âš ï¸ Needs real admin login test |
 | 17 | GitHub remote not configured | — | 🔴 Needs `git remote add origin` |
 | 18 | OpenRouter key is exposed in code | P1 | âš ï¸ Rotate when returning |
+| 19 | Brand intro video stutters/stalls (muted missing) | P2 Fixed | ✅ Fixed in Jul 11 session |
 
 ---
 
@@ -316,9 +321,9 @@ Then verify scores persist across page refresh
 | MongoDB | Atlas Cluster0, database: gate2027 |
 | OpenRouter Model | openai/gpt-4o-mini (no vision) |
 | Cloudinary | cloud name: dpp9estoy |
-| Last Build | ✅ 0 errors, 2720 modules, 12.69s |
-| Last Commit | bf026e9 "GateNexa backup before break" |
-| GitHub | âš ï¸ Not connected — must run `git remote add origin` |
+| Last Build | ✅ 0 errors, 3944 modules, 29.64s |
+| Last Commit | bf026e9 "GateNexa backup before break" (uncommitted: video intro fixes) |
+| GitHub | ⚠️ Not connected — must run `git remote add origin` |
 
 ---
 
@@ -334,4 +339,4 @@ Then verify scores persist across page refresh
 
 ---
 
-*Last updated: June 19, 2026*
+*Last updated: July 11, 2026*
