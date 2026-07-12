@@ -514,7 +514,104 @@ export default function DashboardPage() {
         }}
       />
 
-      <div className="relative">
+      {/* ═══ MOBILE DASHBOARD ═══ */}
+      <div className="sm:hidden space-y-3 px-3 pb-24">
+        <div className="flex items-center justify-between pt-2">
+          <div>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-primary">
+              {isPremium ? '⭐ PREMIUM' : 'BASIC'}
+            </p>
+            <h1 className="text-lg font-bold text-text">Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name?.split(' ')[0]}</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link to="/settings" className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-text2"><circle cx="10" cy="10" r="5" /><path d="M10 1v2M10 17v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 10h2M17 10h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" strokeLinecap="round" /></svg>
+            </Link>
+          </div>
+        </div>
+
+        {/* Streak + Study Hours + Next Test */}
+        <div className="grid grid-cols-2 gap-2">
+          <Link to="/analytics" className="mobile-card-glass flex items-center gap-2 p-3">
+            <span className="text-xl">{streakCurrent > 0 ? '🔥' : '✨'}</span>
+            <div>
+              <div className="text-sm font-bold text-text">{streakCurrent > 0 ? `Day ${streakCurrent}` : 'Start Today'}</div>
+              <div className="text-[9px] text-text3">{streakCurrent > 0 ? `${streakCurrent}d streak` : 'Begin your streak'}</div>
+            </div>
+          </Link>
+          <Link to="/focus" className="mobile-card-glass flex items-center gap-2 p-3">
+            <span className="text-xl">⏱️</span>
+            <div>
+              <div className="text-sm font-bold text-text">{weekHours}h</div>
+              <div className="text-[9px] text-text3">This week</div>
+            </div>
+          </Link>
+        </div>
+
+        {/* Weak Subjects */}
+        <div>
+          <div className="text-[10px] font-semibold text-text3 uppercase tracking-[0.12em] mb-1.5 px-0.5">📚 Weak Subjects</div>
+          <div className="mobile-carousel">
+            {subjects.filter(s => s.progress < 60).slice(0, 5).map(s => (
+              <Link key={s.id || s.name} to="/subjects" className="mobile-carousel-card" style={{ width: 140 }}>
+                <div className="text-[11px] font-semibold text-text">{s.name}</div>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                    <div className="h-full rounded-full bg-gradient-to-r from-red-400 to-orange-400" style={{ width: `${s.progress || 0}%` }} />
+                  </div>
+                  <span className="text-[9px] text-text3">{Math.round(s.progress || 0)}%</span>
+                </div>
+              </Link>
+            ))}
+            {subjects.filter(s => s.progress < 60).length === 0 && (
+              <div className="mobile-carousel-card" style={{ width: 140 }}>
+                <div className="text-[11px] text-text3">All subjects on track! 🎉</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div>
+          <div className="text-[10px] font-semibold text-text3 uppercase tracking-[0.12em] mb-1.5 px-0.5">⚡ Quick Actions</div>
+          <div className="mobile-quick-actions">
+            {[
+              { icon: '📝', label: 'PYQs', to: '/pyq' },
+              { icon: '📚', label: 'Study', to: '/study-hub' },
+              { icon: '🤖', label: 'AI Mentor', to: '/mentor' },
+              { icon: '📊', label: 'Analytics', to: '/analytics' },
+            ].map(a => (
+              <Link key={a.label} to={a.to} className="mobile-quick-action">
+                <span className="text-lg">{a.icon}</span>
+                <span className="text-[8px] font-semibold text-text2">{a.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Activity / Continue */}
+        <div className="mobile-card-glass p-3">
+          <div className="text-[10px] font-semibold text-text3 uppercase tracking-[0.12em] mb-2">📈 Continue Studying</div>
+          <div className="space-y-1.5">
+            {safePyqs.filter(p => !p.solved).slice(0, 3).map(p => (
+              <Link key={p._id} to="/pyq" className="flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 transition-all">
+                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-[10px]">📝</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] text-text truncate">{p.title || p.question?.substring(0, 40)}</div>
+                  <div className="text-[8px] text-text3">{p.subject} · {p.year || 'PYQ'}</div>
+                </div>
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-text3"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
+              </Link>
+            ))}
+            {(!safePyqs || safePyqs.length === 0) && (
+              <div className="text-[11px] text-text3 text-center py-3">No pending PYQs. Great job! 🎉</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ DESKTOP DASHBOARD (unchanged) ═══ */}
+      <div className="hidden sm:block relative">
         {/* ── Header ── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
