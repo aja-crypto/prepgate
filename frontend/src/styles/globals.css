@@ -181,16 +181,32 @@
     /* Settings grouping */
     [class*="settings-section"] { margin-bottom: 0.5rem !important; }
 
-    /* Floating AI - smaller on mobile */
-    [class*="ai-assistant"], [class*="FloatingAI"] {
-      transform: scale(0.85) !important;
-      bottom: 0.5rem !important;
-      right: 0.5rem !important;
+    /* Floating AI - mobile optimized */
+    [class*="ai-assistant"], [class*="FloatingAI"], [class*="floating-ai"] {
+      transform: scale(0.8) !important;
+      transform-origin: bottom right !important;
+      bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
+      right: 10px !important;
+    }
+    [class*="popup"][class*="ai"], [id*="ai-panel"] {
+      width: calc(100vw - 24px) !important;
+      max-width: 380px !important;
+      right: 12px !important;
+      left: 12px !important;
+      bottom: max(70px, env(safe-area-inset-bottom, 0px) + 50px) !important;
+      max-height: 60vh !important;
     }
 
     /* Safe area for bottom navigation */
     .pb-safe { padding-bottom: env(safe-area-inset-bottom, 1rem) !important; }
     .pt-safe { padding-top: env(safe-area-inset-top, 0.5rem) !important; }
+
+    /* Hide AI FAB when keyboard is open (input focused) */
+    input:focus ~ [class*="ai-assistant"],
+    textarea:focus ~ [class*="ai-assistant"],
+    [contenteditable]:focus ~ [class*="ai-assistant"] {
+      display: none !important;
+    }
 
     /* Hide desktop-only elements */
     .desktop-only { display: none !important; }
