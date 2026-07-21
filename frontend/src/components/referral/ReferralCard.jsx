@@ -37,8 +37,8 @@ export default function ReferralCard() {
           <span>Progress</span>
           <span>{referralCount} / {TARGET}</span>
         </div>
-        <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
-          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, referralProgress)}%`, background: 'linear-gradient(90deg, #8B5CF6, #3B82F6)' }} />
+        <div className="w-full h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
+          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, referralProgress)}%`, background: 'linear-gradient(90deg, #8B5CF6, #6D28D9)', boxShadow: '0 0 8px rgba(139,92,246,0.3)' }} />
         </div>
       </div>
       <div className="flex gap-2">

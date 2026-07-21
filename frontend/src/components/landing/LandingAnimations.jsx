@@ -49,13 +49,13 @@ export function AnimatedProgressBar({ value, max = 100, color = '#a855f7', label
           {showPercent && <span className="text-text3">{Math.round(value)}%</span>}
         </div>
       )}
-      <div className="h-2 bg-bg-2 rounded-full overflow-hidden">
+      <div className="h-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
         <motion.div
           initial={{ width: 0 }}
           animate={isInView ? { width: `${(value / max) * 100}%` } : { width: 0 }}
           transition={{ duration: 1.5, ease: 'easeOut' }}
           className="h-full rounded-full"
-          style={{ background: `linear-gradient(90deg, ${color}, ${color}88)` }}
+          style={{ background: `linear-gradient(90deg, ${color}, ${color}dd)`, boxShadow: '0 0 8px rgba(139,92,246,0.3)' }}
         />
       </div>
     </div>

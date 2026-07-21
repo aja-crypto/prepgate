@@ -556,8 +556,8 @@ export default function DashboardPage() {
               <Link key={s.id || s.name} to="/subjects" className="mobile-carousel-card" style={{ width: 140 }}>
                 <div className="text-[11px] font-semibold text-text">{s.name}</div>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
-                    <div className="h-full rounded-full bg-gradient-to-r from-red-400 to-orange-400" style={{ width: `${s.progress || 0}%` }} />
+                  <div className="flex-1 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                    <div className="h-full rounded-full" style={{ width: `${s.progress || 0}%`, background: 'linear-gradient(90deg, #ef4444, #f97316)' }} />
                   </div>
                   <span className="text-[9px] text-text3">{Math.round(s.progress || 0)}%</span>
                 </div>

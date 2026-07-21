@@ -236,11 +236,8 @@ export default function TopicDetailPage() {
                 <div className="text-[10px] font-bold uppercase tracking-wider text-text3">8 Tasks</div>
                 <div className="text-xs font-mono text-primary">{progress.completionPercentage || 0}%</div>
               </div>
-              <div className="w-full bg-bg-2 rounded-full h-2 mb-4">
-                <div 
-                  className="bg-gradient-to-r from-primary to-secondary h-full rounded-full transition-all duration-500" 
-                  style={{ width: `${progress.completionPercentage || 0}%` }}
-                />
+              <div className="w-full rounded-full h-2 mb-4" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress.completionPercentage || 0}%`, background: 'linear-gradient(90deg, #8b5cf6, #7c3aed, #6d28d9)', boxShadow: '0 0 10px rgba(139,92,246,0.35)' }} />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {COMPLETION_TASKS.map((t) => {

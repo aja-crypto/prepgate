@@ -402,11 +402,12 @@ export default function SettingsPage() {
               <span className="text-xs text-text2 font-medium">{referralCount} / {TARGET} Completed</span>
               <span className="text-xs text-text3">{Math.min(100, Math.round((referralCount / TARGET) * 100))}%</span>
             </div>
-            <div className="w-full h-2.5 rounded-full bg-bg-2 border border-border overflow-hidden">
+            <div className="w-full h-2.5 rounded-full border border-border overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
               <div className="h-full rounded-full transition-all duration-700 ease-out"
                 style={{
                   width: `${Math.min(100, (referralCount / TARGET) * 100)}%`,
-                  background: 'linear-gradient(90deg, #8B5CF6, #A855F7)',
+                  background: 'linear-gradient(90deg, #8B5CF6, #6D28D9)',
+                  boxShadow: '0 0 8px rgba(139,92,246,0.3)',
                 }} />
             </div>
           </div>

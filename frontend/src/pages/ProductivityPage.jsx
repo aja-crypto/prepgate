@@ -1034,12 +1034,12 @@ export default function ProductivityPage() {
                           <span className="text-[11px] text-text2 truncate">{s.name.length > 16 ? s.name.slice(0, 16) + '...' : s.name}</span>
                           <span className="text-[10px] text-text3">{s.progress}%</span>
                         </div>
-                        <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                        <div className="h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
                           <div className="h-full rounded-full transition-all duration-500" style={{
                             width: `${s.progress}%`,
-                            background: s.progress >= 70 ? 'linear-gradient(90deg, #22C55E, #10B981)' :
-                              s.progress >= 40 ? 'linear-gradient(90deg, #F59E0B, #EAB308)' :
-                                'linear-gradient(90deg, #8B5CF6, #6366F1)'
+                            background: s.progress >= 70 ? 'linear-gradient(90deg, #22C55E, #16A34A)' :
+                              s.progress >= 40 ? 'linear-gradient(90deg, #F59E0B, #D97706)' :
+                                'linear-gradient(90deg, #8B5CF6, #6D28D9)'
                           }} />
                         </div>
                       </div>

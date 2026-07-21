@@ -1,0 +1,10 @@
+export { CoverPage } from './CoverPage';
+export type { CoverPageProps } from './CoverPage';
+export { ExecutiveSummaryPage } from './ExecutiveSummaryPage';
+export type { ExecutiveSummaryPageProps } from './ExecutiveSummaryPage';
+export { IITTablePage } from './IITTablePage';
+export type { IITTablePageProps } from './IITTablePage';
+export { NitIiitTablePage } from './NitIiitTablePage';
+export type { NitIiitTablePageProps } from './NitIiitTablePage';
+export { CounsellingStrategyPage } from './CounsellingStrategyPage';
+export type { CounsellingStrategyPageProps } from './CounsellingStrategyPage';

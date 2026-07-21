@@ -651,13 +651,13 @@ export function PremiumProgressBar({ progress, total, score }) {
         <span>Question {progress + 1} of {total}</span>
         <span>{score}%</span>
       </div>
-      <div className="h-2.5 bg-bg-2 rounded-full overflow-hidden relative">
+      <div className="h-2.5 rounded-full relative" style={{ background: 'rgba(255,255,255,0.08)' }}>
         {/* Background glow */}
         <motion.div
           className="absolute inset-0 rounded-full"
           style={{
-            background: 'linear-gradient(90deg, #a855f7, #6366f1)',
-            boxShadow: '0 0 20px rgba(168,85,247,0.5)',
+            background: 'linear-gradient(90deg, #8b5cf6, #7c3aed, #6d28d9)',
+            boxShadow: '0 0 12px rgba(139,92,246,0.4)',
           }}
           animate={{ width: `${percentage}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}

@@ -271,10 +271,9 @@ export default function TopicsPage() {
             <div className="text-lg">{s.icon || '📘'}</div>
             <div className="text-[10px] font-semibold text-text mt-1 truncate">{s.name}</div>
             <div className="flex items-center gap-1 justify-center mt-1">
-              <div className="w-full h-1.5 bg-bg-3 rounded-full overflow-hidden max-w-[60px]">
-                <div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all"
-                  style={{ width: `${s.total > 0 ? Math.round((s.done / s.total) * 100) : 0}%` }}
-                />
+              <div className="w-full h-1.5 rounded-full max-w-[60px]" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                <div className="h-full rounded-full transition-all"
+                  style={{ width: `${s.total > 0 ? Math.round((s.done / s.total) * 100) : 0}%`, background: 'linear-gradient(90deg, #8b5cf6, #7c3aed)' }}
               </div>
               <span className="text-[10px] sm:text-[11px] font-mono text-text2">{Math.round((s.done / s.total) * 100)}%</span>
             </div>
@@ -315,8 +314,8 @@ export default function TopicsPage() {
           </span>
           <span className="text-primary font-mono">{filtered.length > 0 ? `${pct}%` : '—'}</span>
         </div>
-        <div className="h-2 bg-bg-3 rounded-full overflow-hidden">
-          <div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all" style={{ width: `${pct}%` }} />
+        <div className="h-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
+          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #8b5cf6, #7c3aed, #6d28d9)', boxShadow: '0 0 10px rgba(139,92,246,0.35)' }} />
         </div>
       </div>
 

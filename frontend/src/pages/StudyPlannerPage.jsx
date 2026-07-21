@@ -404,8 +404,8 @@ export default function StudyPlannerPage() {
                 <span className="text-[10px] text-text3">Progress</span>
                 <span className="text-[10px] font-mono text-text3">{todayPlans.length > 0 ? Math.round((completedCount / todayPlans.length) * 100) : 0}%</span>
               </div>
-              <div className="h-2 rounded-full bg-white/5 overflow-hidden mb-3">
-                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${todayPlans.length > 0 ? (completedCount / todayPlans.length) * 100 : 0}%`, background: 'linear-gradient(90deg, var(--color-primary), #22D3EE)' }} />
+              <div className="h-2.5 rounded-full mb-3" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${todayPlans.length > 0 ? (completedCount / todayPlans.length) * 100 : 0}%`, background: 'linear-gradient(90deg, #8b5cf6, #7c3aed, #6d28d9)', boxShadow: '0 0 10px rgba(139,92,246,0.35)' }} />
               </div>
               <div className="text-[10px] text-text3 mb-1.5">Current</div>
               <div className="text-xs font-medium text-text truncate">{todayPlans[0]?.topic || ''}</div>
@@ -634,8 +634,8 @@ export default function StudyPlannerPage() {
                               <div className="flex items-center gap-3 mt-1.5 pl-[22px]">
                                 {!plan.done && (
                                   <div className="flex-1 min-w-0">
-                                    <div className="h-2 rounded-full bg-white/5 overflow-hidden shadow-inner">
-                                      <div className="h-full rounded-full transition-all duration-700 ease-out" style={{ width: `${Math.min(100, plan.progress || 0)}%`, background: `linear-gradient(90deg, ${meta.color}, ${meta.color}88)`, boxShadow: plan.progress > 50 ? `0 0 8px ${meta.color}44` : 'none' }} />
+                                  <div className="h-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                                      <div className="h-full rounded-full transition-all duration-700 ease-out" style={{ width: `${Math.min(100, plan.progress || 0)}%`, background: `linear-gradient(90deg, ${meta.color}, ${meta.color}dd)`, boxShadow: '0 0 8px rgba(139,92,246,0.3)' }} />
                                     </div>
                                   </div>
                                 )}

@@ -448,6 +448,8 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 let server = null;
 
+// Only auto-start when run directly (not when imported by tests)
+if (require.main === module) {
 connectDB().then(async () => {
   // Seed dev admin in MongoDB if connected
   if (isMongoConnected()) {
@@ -569,5 +571,6 @@ connectDB().then(async () => {
   console.error('FATAL: Database connection failed:', err.message);
   process.exit(1);
 });
+}
 
 module.exports = app;

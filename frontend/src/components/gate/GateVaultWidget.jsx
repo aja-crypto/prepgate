@@ -70,10 +70,11 @@ export default function GateVaultWidget() {
             {prog ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2 rounded-full" style={{ background: 'rgba(167,139,250,0.1)' }}>
+                  <div className="flex-1 h-2.5 rounded-full" style={{ background: 'rgba(139,92,246,0.1)' }}>
                     <div className="h-full rounded-full transition-all duration-500" style={{
                       width: `${prog.score || 0}%`,
-                      background: 'linear-gradient(90deg, #A78BFA, #22D3EE)',
+                      background: 'linear-gradient(90deg, #8B5CF6, #6D28D9)',
+                      boxShadow: '0 0 6px rgba(139,92,246,0.3)',
                     }} />
                   </div>
                   <span className="text-xs font-mono font-bold" style={{ color: '#22D3EE' }}>{prog.score || 0}%</span>
@@ -97,10 +98,10 @@ export default function GateVaultWidget() {
           <div className="space-y-3">
             <p className="text-sm font-semibold text-white">100 PYQ Challenge</p>
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-2 rounded-full" style={{ background: 'rgba(52,211,153,0.1)' }}>
+              <div className="flex-1 h-2.5 rounded-full" style={{ background: 'rgba(52,211,153,0.1)' }}>
                 <div className="h-full rounded-full transition-all duration-500" style={{
                   width: `${progress}%`,
-                  background: 'linear-gradient(90deg, #34D399, #22D3EE)',
+                  background: 'linear-gradient(90deg, #34D399, #059669)',
                 }} />
               </div>
               <span className="text-xs font-mono font-bold" style={{ color: '#34D399' }}>{solvedPyqs}/100</span>

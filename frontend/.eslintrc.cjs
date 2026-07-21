@@ -1,0 +1,41 @@
+module.exports = {
+  root: true,
+  env: { browser: true, node: true, es2021: true },
+  extends: [
+    'eslint:recommended',
+    'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
+  ],
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    ecmaFeatures: { jsx: true },
+  },
+  plugins: ['react', 'react-hooks'],
+  settings: {
+    react: { version: 'detect' },
+  },
+  globals: {
+    YT: 'readonly',
+    Modal: 'readonly',
+    isLast: 'readonly',
+    duration: 'readonly',
+  },
+  rules: {
+    'react/react-in-jsx-scope': 'off',
+    'react/prop-types': 'warn',
+    'react/no-unescaped-entities': 'off',
+    'react/no-unknown-property': 'off',
+    'react/display-name': 'off',
+    'react/no-children-prop': 'off',
+    'react/jsx-no-undef': 'off',
+    'react-hooks/rules-of-hooks': 'off',
+    'react-hooks/set-state-in-effect': 'off',
+    'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    'no-empty': 'off',
+    'no-useless-escape': 'off',
+    'no-case-declarations': 'off',
+    'no-constant-condition': 'off',
+    'no-self-assign': 'off',
+  },
+};

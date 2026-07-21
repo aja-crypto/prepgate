@@ -36,12 +36,10 @@ api.interceptors.request.use(
     const token = localStorage.getItem('accessToken');
     const isGuest = localStorage.getItem('isGuest') === 'true';
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
     if (isGuest) {
       config.headers['X-Demo-User'] = 'true';
+    } else if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
 
     return config;

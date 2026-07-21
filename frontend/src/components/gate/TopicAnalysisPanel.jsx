@@ -21,8 +21,8 @@ export default function TopicAnalysisPanel({ analyses = {} }) {
             {marksDist.map((m) => (
               <div key={m.subject} className="flex items-center gap-2">
                 <span className="text-[10px] text-text3 w-36 truncate">{m.subject}</span>
-                <div className="flex-1 h-2 bg-bg-2 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-primary to-secondary rounded-full" style={{ width: `${(m.marks / maxMarks) * 100}%` }} />
+                <div className="flex-1 h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                  <div className="h-full rounded-full" style={{ width: `${(m.marks / maxMarks) * 100}%`, background: 'linear-gradient(90deg, #8B5CF6, #6D28D9)' }} />
                 </div>
                 <span className="text-[10px] font-mono text-text2 w-12 text-right">{m.marks}m</span>
               </div>

@@ -31,7 +31,7 @@ function StatCard({ icon, label, value, sub, color = 'text-primary' }) {
 function ProgressBar({ value, max = 100, color = 'bg-primary' }) {
   const pct = Math.min(100, (value / max) * 100);
   return (
-    <div className="h-1.5 bg-bg-3 rounded-full overflow-hidden w-20">
+    <div className="h-1.5 rounded-full w-20" style={{ background: 'rgba(255,255,255,0.08)' }}>
       <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
     </div>
   );

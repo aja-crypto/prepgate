@@ -202,7 +202,7 @@ export default function SubjectsPage() {
               <div className="text-[10px] font-semibold text-text truncate">{row.subject}</div>
               <div className="text-[10px] sm:text-[11px] text-text3 mt-0.5">{row.marks} marks</div>
               <div className="flex items-center gap-1 justify-center mt-2">
-                <div className="w-full h-1.5 bg-bg-3 rounded-full overflow-hidden max-w-[50px]">
+                <div className="w-full h-1.5 rounded-full max-w-[50px]" style={{ background: 'rgba(255,255,255,0.08)' }}>
                   <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
                 </div>
                 <span className={`text-[10px] sm:text-[11px] font-mono ${pct >= 70 ? 'text-green-400' : pct >= 40 ? 'text-orange-400' : 'text-text3'}`}>{pct}%</span>
@@ -237,7 +237,7 @@ export default function SubjectsPage() {
                   <div className="text-[11px] text-text3 mt-0.5">
                     {s.completedTopics || 0}/{s.topicCount || 0} topics · {s.marksRange || `~${s.weightage} marks`}
                   </div>
-                  <div className="h-1.5 bg-bg-3 rounded-full overflow-hidden mt-2">
+                  <div className="h-1.5 rounded-full mt-2" style={{ background: 'rgba(255,255,255,0.08)' }}>
                     <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: s.color }} />
                   </div>
                 </div>

@@ -91,12 +91,12 @@ export default function PredictorGate({ children, isUnlocked, referralCode }) {
                   <span>Invited</span>
                   <span className="text-purple-400 font-medium">{progress.invited} / {progress.target}</span>
                 </div>
-                <div className="w-full h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <div className="w-full h-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${(progress.invited / progress.target) * 100}%` }}
                     className="h-full rounded-full transition-all"
-                    style={{ background: 'linear-gradient(90deg, #8B5CF6, #3B82F6)' }}
+                    style={{ background: 'linear-gradient(90deg, #8B5CF6, #6D28D9)', boxShadow: '0 0 8px rgba(139,92,246,0.3)' }}
                   />
                 </div>
               </div>

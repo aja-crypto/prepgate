@@ -153,8 +153,8 @@ export default function ReferralDashboardPage() {
               )}
             </p>
           </div>
-          <div className="w-full h-2 rounded-full bg-slate-700/50 overflow-hidden mb-2">
-            <motion.div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, #8B5CF6, #A855F7)' }}
+          <div className="w-full h-2.5 rounded-full mb-2" style={{ background: 'rgba(255,255,255,0.08)' }}>
+            <motion.div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, #8B5CF6, #6D28D9)', boxShadow: '0 0 8px rgba(139,92,246,0.3)' }}
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(100, (referralCount / TARGET) * 100)}%` }}
               transition={{ duration: 0.8, ease: 'easeOut' }} />
