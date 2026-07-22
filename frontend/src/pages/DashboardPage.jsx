@@ -1,5 +1,6 @@
 import { memo, useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
 import ProgressRing from '../components/ui/ProgressRing';
@@ -452,13 +453,12 @@ export default function DashboardPage() {
       if (sectionWidgetIds.length === 0) return null;
 
       return (
-        <section
+        <motion.section
           key={section.id}
-          className="opacity-0 animate-fade-in"
-          style={{
-            animationDelay: `${sIdx * 100}ms`,
-            animationFillMode: 'forwards',
-          }}
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.5, delay: sIdx * 0.08, ease: [0.16, 1, 0.3, 1] }}
         >
           {section.label && (
             <div className="flex items-center gap-3 mb-3 group">
@@ -481,19 +481,22 @@ export default function DashboardPage() {
               </DashboardWidget>
             ))}
           </div>
-        </section>
+        </motion.section>
       );
     }).filter(Boolean);
 
     if (hasWelcome) {
       sections.unshift(
-        <section key="welcome-section" className="opacity-0 animate-fade-in" style={{ animationDelay: '0ms', animationFillMode: 'forwards' }}>
+        <motion.section key="welcome-section"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
           <div className="grid grid-cols-1 gap-4">
             <DashboardWidget id="welcome" span="col-span-full">
               {widgetContent.welcome}
             </DashboardWidget>
           </div>
-        </section>
+        </motion.section>
       );
     }
 
