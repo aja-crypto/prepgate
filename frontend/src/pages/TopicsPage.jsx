@@ -273,7 +273,7 @@ export default function TopicsPage() {
             <div className="flex items-center gap-1 justify-center mt-1">
               <div className="w-full h-1.5 rounded-full max-w-[60px]" style={{ background: 'rgba(255,255,255,0.08)' }}>
                 <div className="h-full rounded-full transition-all"
-                  style={{ width: `${s.total > 0 ? Math.round((s.done / s.total) * 100) : 0}%`, background: 'linear-gradient(90deg, #8b5cf6, #7c3aed)' }}
+                  style={{ width: `${s.total > 0 ? Math.round((s.done / s.total) * 100) : 0}%`, background: 'linear-gradient(90deg, #8b5cf6, #7c3aed)' }} />
               </div>
               <span className="text-[10px] sm:text-[11px] font-mono text-text2">{Math.round((s.done / s.total) * 100)}%</span>
             </div>
