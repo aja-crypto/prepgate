@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import EmbeddedYouTubePlayer from '../components/learning/EmbeddedYouTubePlayer';
 import { SUBJECT_RESOURCES } from '../data/subjectResources';
 import { INSIGHT_CARDS } from '../data/insightCards';
@@ -272,23 +272,24 @@ function SubjectResourcesTable() {
 
 function InsightCard({ card, index }) {
   return (
-    <motion.a
-      href={card.link}
-      variants={{
-        hidden: { opacity: 0, y: 12 },
-        show: { opacity: 1, y: 0 }
-      }}
-      className="rounded-2xl p-5 block group relative overflow-hidden"
-      style={{ background: 'rgba(18,24,40,0.6)', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)' }}
-      whileHover={{ y: -3, transition: { type: 'spring', stiffness: 300 } }}
-    >
-      <div className="text-3xl mb-3">{card.icon}</div>
-      <div className="text-sm font-bold text-white mb-1.5 group-hover:text-purple-300 transition-colors">{card.title}</div>
-      <p className="text-[11px] text-text3/70 leading-relaxed">{card.desc}</p>
-      <div className="mt-3 text-[10px] text-primary/60 group-hover:text-primary transition-colors flex items-center gap-1">
-        Explore <span className="text-xs">→</span>
-      </div>
-    </motion.a>
+    <Link to={card.link} className="block">
+      <motion.div
+        variants={{
+          hidden: { opacity: 0, y: 12 },
+          show: { opacity: 1, y: 0 }
+        }}
+        className="rounded-2xl p-5 group relative overflow-hidden"
+        style={{ background: 'rgba(18,24,40,0.6)', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)' }}
+        whileHover={{ y: -3, transition: { type: 'spring', stiffness: 300 } }}
+      >
+        <div className="text-3xl mb-3">{card.icon}</div>
+        <div className="text-sm font-bold text-white mb-1.5 group-hover:text-purple-300 transition-colors">{card.title}</div>
+        <p className="text-[11px] text-text3/70 leading-relaxed">{card.desc}</p>
+        <div className="mt-3 text-[10px] text-primary/60 group-hover:text-primary transition-colors flex items-center gap-1">
+          Explore <span className="text-xs">→</span>
+        </div>
+      </motion.div>
+    </Link>
   );
 }
 

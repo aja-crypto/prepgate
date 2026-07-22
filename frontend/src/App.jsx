@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import LandingPage from './pages/LandingPage';
 import DiagnosticsModal from './components/common/DiagnosticsModal';
+import { useDiagnostics } from './context/DiagnosticsContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import PremiumLoadingScreen from './components/common/PremiumLoadingScreen';
 import FloatingAIAssistant from './components/common/FloatingAIAssistant';
@@ -276,6 +277,12 @@ if (typeof window !== 'undefined') {
 export default function App() {
   const [initialLoad, setInitialLoad] = useState(true);
   const location = useLocation();
+  const { openDiagnostics } = useDiagnostics();
+
+  useEffect(() => {
+    window.__openDiagnostics = openDiagnostics;
+    return () => { delete window.__openDiagnostics; };
+  }, [openDiagnostics]);
   const handleLoadComplete = useCallback(() => {
     console.log('[Trace] App — PremiumLoadingScreen complete, initialLoad=false');
     setInitialLoad(false);
