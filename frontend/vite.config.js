@@ -5,8 +5,17 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    global: 'globalThis',
+    'process.env': {},
+  },
   resolve: {
-    alias: { '@': path.resolve(__dirname, './src') },
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      buffer: 'buffer/',
+      stream: 'stream-browserify',
+      process: 'process/browser',
+    },
   },
   server: {
     host: '127.0.0.1',
@@ -68,7 +77,7 @@ export default defineConfig({
     target: 'es2020',
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', 'axios', 'lucide-react'],
+    include: ['react', 'react-dom', 'react-router-dom', 'axios', 'lucide-react', 'buffer', 'process'],
     exclude: ['three'],
   },
 });

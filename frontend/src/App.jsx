@@ -97,6 +97,7 @@ const VideoLecturesPage = lazy(() => import('./pages/VideoLecturesPage'));
 const PersonalizedRoadmapPage = lazy(() => import('./pages/PersonalizedRoadmapPage'));
 const OpportunityPredictorPage = lazy(() => import('./pages/OpportunityPredictorPage'));
 const ReportPage = lazy(() => import('./pages/ReportPage'));
+const PremiumPage = lazy(() => import('./pages/PremiumPage'));
 const ReferralDashboardPage = lazy(() => import('./pages/ReferralDashboardPage'));
 const LearningHubPage = lazy(() => import('./pages/LearningHubPage'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
@@ -363,6 +364,7 @@ export default function App() {
         <Route path="roadmap" element={<PersonalizedRoadmapPage />} />
         <Route path="opportunity-predictor" element={<OpportunityPredictorPage />} />
         <Route path="report" element={<ReportPage />} />
+        <Route path="premium" element={<PremiumPage />} />
         <Route path="referral" element={<ReferralDashboardPage />} />
         <Route path="learning-hub" element={<LearningHubPage />} />
       </Route>
