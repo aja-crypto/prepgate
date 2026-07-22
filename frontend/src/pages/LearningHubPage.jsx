@@ -5,79 +5,10 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import EmbeddedYouTubePlayer from '../components/learning/EmbeddedYouTubePlayer';
-
-// ─── Recovered from dist build ───────────────────────────────
-
-const SUBJECT_RESOURCES = [
-  { subject: 'C Programming', faculty: 'Pankaj Sharma', platform: 'Reader', icon: '⚡', playlistUrl: 'https://www.youtube.com/results?search_query=Pankaj+Sharma+C+Programming+Gate', language: 'Hindi', duration: '18-22 Hours', difficulty: 'Beginner', book: 'C Programming Language (K&R)', updated: '2025' },
-  { subject: 'Data Structures', faculty: 'Pankaj Sharma', platform: 'Reader', icon: '🗃️', playlistUrl: 'https://www.youtube.com/results?search_query=Pankaj+Sharma+Data+Structures+Gate', language: 'Hindi', duration: '35-45 Hours', difficulty: 'Beginner', book: 'Data Structures (Seymour Lipschutz)', updated: '2025' },
-  { subject: 'Algorithms', faculty: 'Reddy Sir', platform: 'EPT', icon: '⚙️', playlistUrl: 'https://www.youtube.com/results?search_query=EPT+Algorithms+Gate+Reddy', language: 'Hindi', duration: '~40 Hours', difficulty: 'Intermediate', book: 'Introduction to Algorithms (CLRS)', updated: '2025' },
-  { subject: 'Theory of Computation', faculty: 'Deva Sir', platform: 'GO Classes', icon: '🔤', playlistUrl: 'https://www.youtube.com/results?search_query=GO+Classes+TOC+Deva', language: 'Hindi', duration: '~28 Hours', difficulty: 'Intermediate', book: 'Introduction to Automata Theory (Hopcroft)', updated: '2025' },
-  { subject: 'Compiler Design', faculty: 'Reddy Sir', platform: 'EPT', icon: '🔌', playlistUrl: 'https://www.youtube.com/results?search_query=EPT+Compiler+Design+Gate+Reddy', language: 'Hindi', duration: '~24 Hours', difficulty: 'Intermediate', book: 'Compilers (Aho, Lam, Sethi, Ullman)', updated: '2025' },
-  { subject: 'DBMS', faculty: 'Vijay Sir', platform: 'GeeksforGeeks', icon: '🗄️', playlistUrl: 'https://www.youtube.com/results?search_query=Vijay+DBMS+GeeksforGeeks', language: 'Hindi', duration: '~35 Hours', difficulty: 'Beginner', book: 'Database System Concepts (Silberschatz)', updated: '2025' },
-  { subject: 'Operating Systems', faculty: 'Bala Sir', platform: 'Independent', icon: '🖥️', playlistUrl: 'https://www.youtube.com/results?search_query=Bala+Operating+Systems+Gate', language: 'Hindi', duration: '~38 Hours', difficulty: 'Intermediate', book: 'Operating System Concepts (Silberschatz)', updated: 'Latest Available' },
-  { subject: 'COA', faculty: 'Vishvadeep Gothi (VD)', platform: 'Unacademy', icon: '🏗️', playlistUrl: 'https://www.youtube.com/results?search_query=Vishvadeep+Gothi+COA', language: 'Hindi', duration: '~42 Hours', difficulty: 'Intermediate', book: 'Computer Organization and Design (Patterson & Hennessy)', updated: 'Latest Available' },
-  { subject: 'Digital Logic', faculty: 'Chandan Gupta', platform: 'Unacademy', icon: '🔌', playlistUrl: 'https://www.youtube.com/results?search_query=Chandan+Gupta+Digital+Logic', language: 'Hindi', duration: '~30 Hours', difficulty: 'Beginner', book: 'Digital Logic and Computer Design (Morris Mano)', updated: '2025' },
-  { subject: 'Sequential Circuits', faculty: 'Amit Sir', platform: 'Independent', icon: '⚡', playlistUrl: 'https://www.youtube.com/results?search_query=Amit+Sequential+Circuits+Gate', language: 'Hindi', duration: '~8 Hours', difficulty: 'Intermediate', book: 'Digital Design (Morris Mano)', updated: 'Latest Available' },
-  { subject: 'Computer Networks', faculty: 'Doyla Sir', platform: 'Independent', icon: '🌐', playlistUrl: 'https://www.youtube.com/results?search_query=Doyla+Computer+Networks+Gate', language: 'Hindi', duration: '~30 Hours', difficulty: 'Intermediate', book: 'Computer Networking (Kurose & Ross)', updated: 'Latest Available' },
-  { subject: 'Engineering Mathematics', faculty: 'NPTEL IIT Faculty', platform: 'NPTEL', icon: '📐', playlistUrl: 'https://www.youtube.com/results?search_query=Engineering+Mathematics+NPTEL+Gate', language: 'English', duration: '~55 Hours', difficulty: 'Beginner', book: 'Advanced Engineering Mathematics (Kreyszig)', updated: 'Latest Available' },
-  { subject: 'General Aptitude', faculty: 'Shrenik Jain', platform: 'Unacademy', icon: '🧠', playlistUrl: 'https://www.youtube.com/results?search_query=Shrenik+Jain+General+Aptitude', language: 'Hindi', duration: '~20 Hours', difficulty: 'Beginner', book: 'Quantitative Aptitude (R.S. Aggarwal)', updated: 'Latest Available' },
-];
-
-const INSIGHT_CARDS = [
-  { title: 'Highest Closing Scores', desc: 'View the highest GATE scores accepted at top IITs, NITs, and IISc across programmes.', icon: '📈', link: '/insights' },
-  { title: 'Safest IIT Programmes', desc: 'Discover programmes with the lowest closing ranks — your best shot at an IIT.', icon: '🎯', link: '/insights' },
-  { title: 'Top NIT Placements', desc: 'Compare placement packages across NITs to find the best return on investment.', icon: '🏆', link: '/insights' },
-  { title: 'Best ROI Colleges', desc: 'Which colleges offer the best combination of low fees and high placements?', icon: '💰', link: '/insights' },
-  { title: 'Category Trends', desc: 'Analyze opening and closing rank trends across categories for past 3 years.', icon: '📊', link: '/insights' },
-  { title: 'AI & Data Science Demand', desc: 'See which specializations in AI/DS are seeing the highest demand and lowest ranks.', icon: '🤖', link: '/insights' },
-  { title: 'Most Competitive Specializations', desc: 'Identify specializations with the toughest competition based on closing ranks.', icon: '📚', link: '/insights' },
-  { title: 'Counselling Timeline', desc: 'Complete timeline of CCMT, COAP, and institute-specific counselling processes.', icon: '📅', link: '/insights' },
-];
-
-const EDITOR_PICKS = [
-  { id: 'ep1', type: 'roadmap', title: 'Best Roadmap', label: 'Complete Roadmap for GATE CSE', color: '#8b5cf6', icon: '🗺️' },
-  { id: 'ep2', type: 'roadmap', title: 'Best Strategy', label: '6-Month Action Plan by GO Classes', color: '#06b6d4', icon: '📋' },
-  { id: 'ep3', type: 'academy', title: 'Best Motivation', label: 'How I Stayed Consistent for One Year', color: '#f59e0b', icon: '🔥' },
-  { id: 'ep4', type: 'success_story', title: 'Best Success Story', label: 'Self Study: YouTube + PYQs Only', color: '#22c55e', icon: '🚀' },
-  { id: 'ep5', type: 'resource', title: 'Best Resource', label: 'GateOverflow — PYQ Community', color: '#ec4899', icon: '📄' },
-  { id: 'ep6', type: 'insight', title: 'Insight of the Week', label: 'Highest Closing Scores Analysis', color: '#6366f1', icon: '💡' },
-];
-
-const TABS = [
-  { id: 'roadmap', label: 'Roadmaps', icon: '🗺️', desc: 'Curated roadmaps for every phase of preparation' },
-  { id: 'subjects', label: 'Subject Resources', icon: '📚', desc: 'Recommended educators per subject' },
-  { id: 'success_story', label: 'Success Stories', icon: '🚀', desc: 'Real journeys of GATE toppers' },
-  { id: 'academy', label: 'Motivation', icon: '🔥', desc: 'Preparation-focused content that keeps you going' },
-  { id: 'resource', label: 'Resources', icon: '📄', desc: 'Official links, practice tools, and notes' },
-  { id: 'insights', label: 'Insights', icon: '💡', desc: 'Data-driven analysis of GATE admissions' },
-];
-
-const ROADMAP_FILTERS = [
-  { id: 'all', label: 'All', icon: '📋' },
-  { id: 'beginner', label: 'Beginner', icon: '🌱' },
-  { id: '6-month', label: '6-Month', icon: '📅' },
-  { id: 'last-60-days', label: 'Last 60 Days', icon: '⏰' },
-  { id: 'working-professional', label: 'Working Pro', icon: '💼' },
-];
-
-const STORY_FILTERS = [
-  { id: 'all', label: 'All', icon: '📋' },
-  { id: 'air-top-10', label: 'AIR Top 10', icon: '🏆' },
-  { id: 'self-study', label: 'Self Study', icon: '📖' },
-  { id: 'working-professional', label: 'Working Pro', icon: '💼' },
-  { id: 'second-attempt', label: '2nd Attempt', icon: '🔄' },
-  { id: 'average-cgpa', label: 'Avg CGPA', icon: '📊' },
-];
-
-const RESOURCE_FILTERS = [
-  { id: 'all', label: 'All', icon: '📋' },
-  { id: 'official', label: 'Official', icon: '✅' },
-  { id: 'practice', label: 'Practice', icon: '✏️' },
-  { id: 'notes', label: 'Notes', icon: '📝' },
-];
-
-const SORT_OPTIONS = ['All', 'Recommended', 'Recently Added', 'Trending', 'Most Viewed', 'Bookmarks', 'Completed'];
+import { SUBJECT_RESOURCES } from '../data/subjectResources';
+import { INSIGHT_CARDS } from '../data/insightCards';
+import { EDITOR_PICKS } from '../data/editorsPicks';
+import { TABS, ROADMAP_FILTERS, STORY_FILTERS, RESOURCE_FILTERS, SORT_OPTIONS } from '../data/filters';
 
 function VideoSkeleton() {
   return (
