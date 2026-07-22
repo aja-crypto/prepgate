@@ -62,6 +62,7 @@ const AICoachPage = lazy(() => import('./pages/AICoachPage'));
 const DailyCoachPage = lazy(() => import('./pages/DailyCoachPage'));
 const WeakTopicsPage = lazy(() => import('./pages/WeakTopicsPage'));
 const InsightsPage = lazy(() => import('./pages/InsightsPage'));
+const InsightDetailPage = lazy(() => import('./pages/InsightDetailPage'));
 const InsightReportPage = lazy(() => import('./pages/InsightReportPage'));
 const SuccessHubPage = lazy(() => import('./pages/SuccessHubPage'));
 const FeedbackPage = lazy(() => import('./pages/FeedbackPage'));
@@ -349,6 +350,7 @@ export default function App() {
         <Route path="weak-topics" element={<WeakTopicsPage />} />
         <Route path="success-hub" element={<SuccessHubPage />} />
         <Route path="insights" element={<InsightsPage />} />
+        <Route path="insights/topic/:slug" element={<InsightDetailPage />} />
         <Route path="insights/:slug" element={<InsightReportPage />} />
         <Route path="mistakes" element={<MistakeNotebookPage />} />
         <Route path="weekly-tests" element={<WeeklyTestsPage />} />

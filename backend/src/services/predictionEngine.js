@@ -232,7 +232,9 @@ async function predict(input) {
     }
   }
   if (!normalizedScore) {
-    normalizedScore = Math.round(marks * 9.5 * 10) / 10;
+    // Non-linear fallback: realistic GATE score curve
+    // 0 marks → 0 score, 50 marks → ~330, 75 → ~610, 90 → ~830, 100 → 1000
+    normalizedScore = Math.round(Math.pow(marks / 100, 1.6) * 1000 * 10) / 10;
   }
 
   // Step 2: Marks → Estimated AIR (direct marks→rank with calibration)
