@@ -1085,7 +1085,7 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
       </div>
 
       <CollegeComparisonModal isOpen={showCompare} onClose={() => setShowCompare(false)} colleges={compareList} />
-      <PredictionReportModal isOpen={showReport} onClose={() => setShowReport(false)} result={result} compareList={compareList} choiceOrder={choiceOrderResult} />
+      {null}
     </motion.div>
   );
 }
