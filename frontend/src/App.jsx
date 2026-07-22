@@ -8,6 +8,7 @@ import Layout from './components/common/Layout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import LandingPage from './pages/LandingPage';
+import DiagnosticsModal from './components/common/DiagnosticsModal';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import PremiumLoadingScreen from './components/common/PremiumLoadingScreen';
 import FloatingAIAssistant from './components/common/FloatingAIAssistant';
@@ -60,6 +61,7 @@ const AICoachPage = lazy(() => import('./pages/AICoachPage'));
 const DailyCoachPage = lazy(() => import('./pages/DailyCoachPage'));
 const WeakTopicsPage = lazy(() => import('./pages/WeakTopicsPage'));
 const InsightsPage = lazy(() => import('./pages/InsightsPage'));
+const InsightReportPage = lazy(() => import('./pages/InsightReportPage'));
 const SuccessHubPage = lazy(() => import('./pages/SuccessHubPage'));
 const FeedbackPage = lazy(() => import('./pages/FeedbackPage'));
 const MistakeNotebookPage = lazy(() => import('./pages/MistakeNotebookPage'));
@@ -340,6 +342,7 @@ export default function App() {
         <Route path="weak-topics" element={<WeakTopicsPage />} />
         <Route path="success-hub" element={<SuccessHubPage />} />
         <Route path="insights" element={<InsightsPage />} />
+        <Route path="insights/:slug" element={<InsightReportPage />} />
         <Route path="mistakes" element={<MistakeNotebookPage />} />
         <Route path="weekly-tests" element={<WeeklyTestsPage />} />
         <Route path="weekly-tests/:subjectCode" element={<WeeklyTestDetailPage />} />
@@ -410,6 +413,7 @@ export default function App() {
     </Routes>
     </Profiler>
     </Suspense>
+    <DiagnosticsModal />
     </ErrorBoundary>
   );
 }

@@ -49,6 +49,7 @@ import { AuthProvider } from './context/AuthContext';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { DashboardProvider } from './context/DashboardContext';
+import { DiagnosticsProvider } from './context/DiagnosticsContext';
 import { ProgressProvider, useProgress } from './context/ProgressContext';
 import { FocusProvider } from './context/FocusContext';
 import { Analytics } from '@vercel/analytics/react';
@@ -104,7 +105,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <AuthProvider>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AdminAuthProvider>
-            <ProgressProviderWrapper />
+            <DiagnosticsProvider>
+              <ProgressProviderWrapper />
+            </DiagnosticsProvider>
             <Toaster position="top-right" />
             {import.meta.env.PROD && <Analytics />}
           </AdminAuthProvider>
