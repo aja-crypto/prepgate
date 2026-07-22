@@ -1,4 +1,5 @@
 import { memo, useMemo } from 'react';
+import { motion } from 'framer-motion';
 
 const TINT_OVERLAY = {
   purple: 'rgba(139, 92, 246, 0.04)',
@@ -56,14 +57,16 @@ const GlassCard = memo(function GlassCard({
     return customStyle;
   }, [tint, intensity, style]);
 
+  const cls = `glass-enter ${buildClassName({ hover, glow, padding, tint, intensity, className })}${tint ? ` glass-tinted-${tint}` : ''}`;
+
   return (
-    <div
-      className={`glass-enter ${buildClassName({ hover, glow, padding, tint, intensity, className })}${tint ? ` glass-tinted-${tint}` : ''}`}
+    <motion.div
+      whileHover={hover ? { y: -2, transition: { type: 'spring', stiffness: 300, damping: 20 } } : undefined}
+      className={cls}
       style={Object.keys(computed).length > 0 ? computed : undefined}
-      {...props}
     >
       {children}
-    </div>
+    </motion.div>
   );
 });
 
