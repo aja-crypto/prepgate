@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { predictorService, referralService } from '../services/api';
@@ -348,7 +349,7 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
   const [compareList, setCompareList] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
   const [showChoiceOrder, setShowChoiceOrder] = useState(false);
-  const [showReport, setShowReport] = useState(false);
+  const navigate = useNavigate();
   const [choiceOrderResult, setChoiceOrderResult] = useState(null);
 
   const tabs = [
@@ -919,7 +920,7 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
           <span>✓ {result.year || '—'} data</span>
           <span>✓ Multi-year trends</span>
         </div>
-        <button onClick={() => setShowReport(true)} className="flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-medium bg-purple-500/10 text-purple-300 border border-purple-500/20 hover:bg-purple-500/20 transition-all ml-2">
+        <button onClick={() => navigate('/report', { state: { result } })} className="flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-medium bg-purple-500/10 text-purple-300 border border-purple-500/20 hover:bg-purple-500/20 transition-all ml-2">
           <FileText size={12} /> Download Report
         </button>
       </div>
@@ -1237,6 +1238,7 @@ function FloatingParticles() {
 
 export default function OpportunityPredictorPage() {
   const { user, isPremium, referralCode, referralProgress, referralCount } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
