@@ -2,6 +2,8 @@ const router = require('express').Router();
 const { protect } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
 const LearningContent = require('../models/LearningContent');
+const path = require('path');
+const fs = require('fs');
 
 // In-memory fallback store
 const localStore = [];
@@ -52,6 +54,36 @@ function seedContent() {
   add({ type: 'resource', title: 'Subject-wise Formula Sheets', description: 'Quick revision formula sheets for all GATE subjects.', category: 'notes', resourceType: 'link', tags: ['formula', 'revision', 'sheets'], order: 10 });
   add({ type: 'resource', title: 'GATE Cheat Sheets', description: 'Compact cheat sheets covering key concepts and shortcuts for last-minute revision.', category: 'notes', resourceType: 'link', tags: ['cheat-sheet', 'revision', 'quick'], order: 11 });
   add({ type: 'resource', title: 'Revision PDFs', description: 'Downloadable PDF compilations of important topics and formulae.', category: 'notes', resourceType: 'pdf', tags: ['pdf', 'revision', 'download'], order: 12 });
+
+  // ── Curated Learning Resources (loaded from canonical dataset) ──
+  try {
+    const vidsPath = path.join(__dirname, '../../../data/mock_videos.json');
+    if (fs.existsSync(vidsPath)) {
+      const vids = JSON.parse(fs.readFileSync(vidsPath, 'utf8'));
+      vids.forEach((v, i) => {
+        add({
+          type: 'resource',
+          resourceType: 'study_material',
+          title: v.title,
+          description: v.description || ('Comprehensive coverage of ' + (v.topic || 'GATE') + ' for GATE CSE.'),
+          subject: v.subject || null,
+          topic: v.topic || null,
+          source: v.source || null,
+          language: v.language || null,
+          duration: v.duration ? (v.duration.minutes + ':' + String(v.duration.seconds).padStart(2, '0')) : null,
+          gateRelevance: v.gateRelevance || 'MEDIUM',
+          viewCount: v.viewCount || 0,
+          category: v.subject || 'General',
+          tags: v.gateRelevance === 'HIGH' ? ['gate', 'important', 'core'] : ['gate', 'supplementary'],
+          order: 13 + i,
+          difficulty: v.gateRelevance === 'HIGH' ? 'intermediate' : 'beginner',
+          isFeatured: v.gateRelevance === 'HIGH',
+        });
+      });
+    }
+  } catch (e) {
+    console.warn('[Learning] Could not load mock videos:', e.message);
+  }
 
   localStore.push(...items);
 }

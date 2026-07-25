@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { useNavigate, Link } from 'react-router-dom';
-import EmbeddedYouTubePlayer from '../components/learning/EmbeddedYouTubePlayer';
+import LazyYouTubePlayer from '../components/learning/LazyYouTubePlayer';
 import { SUBJECT_RESOURCES } from '../data/subjectResources';
 import { INSIGHT_CARDS } from '../data/insightCards';
 import { EDITOR_PICKS } from '../data/editorsPicks';
@@ -32,7 +32,8 @@ function ResourceCard({ item, onClick, index }) {
   const videoId = item.youtubeId || item.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1];
   const thumbnail = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : item.thumbnail;
 
-  if (!videoId && !item.thumbnail) return null;
+  const isVideo = !!videoId;
+  const hasActionUrl = !!(item.youtubeId || item.youtubeUrl || item.url);
 
   return (
     <motion.div
@@ -116,8 +117,14 @@ function ResourceCard({ item, onClick, index }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         </div>
       ) : (
-        <div className="aspect-video flex items-center justify-center bg-gradient-to-br from-purple-900/10 to-gray-900/30">
-          <span className="text-5xl opacity-20">{item.icon || '📹'}</span>
+        <div className="aspect-video flex flex-col items-center justify-center bg-gradient-to-br from-purple-900/20 to-gray-900/40 gap-2 relative">
+          <span className="text-5xl opacity-30">{item.resourceType === 'study_material' ? '📚' : hasActionUrl ? (item.resourceType === 'pdf' ? '📄' : '🔗') : '📋'}</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/20">
+            {item.resourceType === 'study_material' ? 'Study Material' : hasActionUrl ? (item.resourceType === 'pdf' ? 'PDF' : item.resourceType === 'link' ? 'Link' : item.resourceType || 'Resource') : 'Reference'}
+          </span>
+          {item.isFeatured && (
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/70 text-white backdrop-blur-sm absolute top-2 left-2">⭐ Featured</span>
+          )}
         </div>
       )}
 
@@ -128,6 +135,16 @@ function ResourceCard({ item, onClick, index }) {
         {item.description && (
           <p className="text-[11px] text-text3/70 mb-3 line-clamp-2 leading-relaxed break-word">{item.description}</p>
         )}
+        {!isVideo && !hasActionUrl && item.resourceType === 'study_material' && (
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mb-3 text-[10px] text-text3/60">
+            {item.subject && <span>📖 {item.subject}</span>}
+            {item.topic && <span>📌 {item.topic}</span>}
+            {item.source && <span>🏫 {item.source}</span>}
+            {item.language && <span>🌐 {item.language}</span>}
+            {item.duration && <span>⏱ {item.duration}</span>}
+            {item.gateRelevance && <span className={item.gateRelevance === 'HIGH' ? 'text-green-400' : item.gateRelevance === 'MEDIUM' ? 'text-yellow-400' : 'text-text3/40'}>{item.gateRelevance === 'HIGH' ? '🔥 High Relevance' : item.gateRelevance === 'MEDIUM' ? '📊 Medium' : '📋 Low'}</span>}
+          </div>
+        )}
         <div className="flex items-center gap-2 flex-wrap">
           {item.channel && (
             <span className="text-[9px] text-text3/50 flex items-center gap-1">
@@ -135,12 +152,24 @@ function ResourceCard({ item, onClick, index }) {
               {item.channel}
             </span>
           )}
-          {item.resourceType && (
-            <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 font-medium">{item.resourceType}</span>
-          )}
-          {videoId && (
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 font-medium">
+            {item.resourceType === 'study_material' ? 'Study Material' : item.resourceType === 'link' ? 'Link' : item.resourceType === 'pdf' ? 'PDF' : item.resourceType || 'Resource'}
+          </span>
+          {isVideo ? (
             <span className="text-[9px] text-text3/40 ml-auto flex items-center gap-1">
               📹 {isHovered ? 'Watch' : 'Video'}
+            </span>
+          ) : hasActionUrl ? (
+            <span className="text-[9px] text-text3/40 ml-auto flex items-center gap-1">
+              {item.resourceType === 'pdf' ? '📄' : '🔗'} {isHovered ? (item.resourceType === 'pdf' ? 'Download' : 'Open') : item.resourceType === 'link' ? 'Link' : 'Resource'}
+            </span>
+          ) : item.resourceType === 'study_material' ? (
+            <span className="text-[9px] text-text3/30 ml-auto flex items-center gap-1">
+              📚 Study Material
+            </span>
+          ) : (
+            <span className="text-[9px] text-text3/30 ml-auto flex items-center gap-1">
+              📋 Reference
             </span>
           )}
         </div>
@@ -449,7 +478,7 @@ function ResourceModal({ selected, setSelected, canAccessPremium }) {
         <div className="flex-1 overflow-y-auto scroll-container">
           {videoId && (
             <div className="aspect-video bg-black anim-gpu">
-              <EmbeddedYouTubePlayer videoId={videoId} title={selected.title} autoPlay />
+              <LazyYouTubePlayer videoId={videoId} title={selected.title} />
             </div>
           )}
 
