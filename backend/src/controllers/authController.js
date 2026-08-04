@@ -573,7 +573,7 @@ exports.refreshToken = async (req, res, next) => {
     }
 
     // Check blacklist — reject revoked tokens
-    if (isTokenBlacklisted(refreshToken)) {
+    if (await isTokenBlacklisted(refreshToken)) {
       return res.status(401).json({ success: false, message: 'Token revoked. Please login again.', code: 'TOKEN_REVOKED' });
     }
 
