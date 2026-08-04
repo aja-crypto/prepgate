@@ -1,8 +1,8 @@
 import { Component } from 'react';
-import toast from 'react-hot-toast';
 
 export class ErrorBoundary extends Component {
-  state = { hasError: false, error: null, errorInfo: null };
+  state = { hasError: false, error: null, errorInfo: null, retried: 0 };
+  retryTimer = null;
 
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
@@ -21,17 +21,30 @@ export class ErrorBoundary extends Component {
     console.error('Has user token:', !!localStorage.getItem('accessToken'));
     console.error('Context:', this.props.name || '(unnamed boundary)');
     console.error('==================================================');
-    if (process.env.NODE_ENV === 'production') {
-      toast.error('Something went wrong. Please refresh the page.');
+
+    // Auto-recover from transient errors (races, momentary API failures).
+    // If the same boundary errors repeatedly, stop auto-retrying and let the user click Try Again.
+    const attempts = (this.state?.retried || 0);
+    if (attempts < 1 && this.retryTimer === null) {
+      this.retryTimer = setTimeout(() => {
+        this.retryTimer = null;
+        this.setState(prev => ({ hasError: false, error: null, errorInfo: null, retried: (prev.retried || 0) + 1 }));
+      }, 2000);
     }
   }
 
+  componentWillUnmount() {
+    if (this.retryTimer) { clearTimeout(this.retryTimer); this.retryTimer = null; }
+  }
+
   handleRetry = () => {
+    if (this.retryTimer) { clearTimeout(this.retryTimer); this.retryTimer = null; }
     this.setState({ hasError: false, error: null, errorInfo: null });
   };
 
   render() {
     if (this.state.hasError) {
+      const errMsg = this.state.error?.message || this.state.error?.toString?.() || '';
       return (
         <div className="flex items-center justify-center min-h-[60vh] px-4">
           <div className="glass-card p-8 max-w-md w-full text-center">
@@ -46,14 +59,10 @@ export class ErrorBoundary extends Component {
             <p className="text-sm text-text3 mb-5 max-w-xs mx-auto leading-relaxed">
               An unexpected error occurred. This is usually temporary.
             </p>
-            {process.env.NODE_ENV !== 'production' && this.state.error && (
-              <details className="text-left mb-4 p-3 rounded-lg text-[11px] text-text2 border" style={{ background: 'var(--color-bg-2)', borderColor: 'var(--color-border)' }}>
-                <summary className="cursor-pointer font-medium text-text3">Error Details</summary>
-                <pre className="mt-2 whitespace-pre-wrap break-all">{this.state.error.toString()}</pre>
-                {this.state.errorInfo && (
-                  <pre className="mt-2 whitespace-pre-wrap break-all">{this.state.errorInfo.componentStack}</pre>
-                )}
-              </details>
+            {errMsg && (
+              <p className="text-[11px] text-text3/70 mb-4 break-words bg-bg-2/50 border border-border/50 rounded-lg p-2">
+                {errMsg}
+              </p>
             )}
             <button
               onClick={this.handleRetry}
