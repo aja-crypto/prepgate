@@ -1,0 +1,17 @@
+# Keep only production predictor datasets in the repo.
+# Everything else here (mock users, test output, local storage) stays local-only.
+*
+!.gitignore
+!score_constants.json
+!gate_marks_score_mapping.json
+!gate_score_air_mapping.json
+!gate_qualifying_marks.json
+!gate_mt_estimates.json
+!cse-cutoffs.json
+!dataset_catalogue.json
+!2024/
+!2025/
+!2026/
+!2024/**
+!2025/**
+!2026/**

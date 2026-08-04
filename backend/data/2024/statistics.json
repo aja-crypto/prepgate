@@ -1,0 +1,17 @@
+{
+  "_note": "GATE 2024 CS candidate statistics. Sources: GATE 2024 official reports.",
+  "papers": {
+    "CS": {
+      "registered": 155000,
+      "appeared": 132000,
+      "qualified": 39500,
+      "max_marks": 100
+    },
+    "DA": {
+      "registered": 52000,
+      "appeared": 48000,
+      "qualified": 12500,
+      "max_marks": 100
+    }
+  }
+}

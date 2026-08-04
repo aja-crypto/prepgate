@@ -1,0 +1,3137 @@
+{
+  "_meta": {
+    "description": "Historical GATE marks to score mapping. Generated using the official GATE score formula with per-year qualifying marks and estimated Mt.",
+    "formula": "S = Sq + ((St - Sq) / (Mt - Mq)) x (M - Mq)",
+    "last_updated": "2026-07-25"
+  },
+  "papers": {
+    "CS": {
+      "years": {
+        "2024": {
+          "categories": {
+            "GEN": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 358.2
+              },
+              {
+                "marks": 35,
+                "score": 416.6
+              },
+              {
+                "marks": 40,
+                "score": 474.9
+              },
+              {
+                "marks": 45,
+                "score": 533.3
+              },
+              {
+                "marks": 50,
+                "score": 591.7
+              },
+              {
+                "marks": 55,
+                "score": 650.1
+              },
+              {
+                "marks": 60,
+                "score": 708.5
+              },
+              {
+                "marks": 65,
+                "score": 766.9
+              },
+              {
+                "marks": 70,
+                "score": 825.3
+              },
+              {
+                "marks": 75,
+                "score": 883.7
+              },
+              {
+                "marks": 80,
+                "score": 942.0
+              },
+              {
+                "marks": 85,
+                "score": 1000
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "OBC-NCL": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 389.6
+              },
+              {
+                "marks": 35,
+                "score": 444.6
+              },
+              {
+                "marks": 40,
+                "score": 499.6
+              },
+              {
+                "marks": 45,
+                "score": 554.6
+              },
+              {
+                "marks": 50,
+                "score": 609.6
+              },
+              {
+                "marks": 55,
+                "score": 664.6
+              },
+              {
+                "marks": 60,
+                "score": 719.6
+              },
+              {
+                "marks": 65,
+                "score": 774.6
+              },
+              {
+                "marks": 70,
+                "score": 829.6
+              },
+              {
+                "marks": 75,
+                "score": 884.6
+              },
+              {
+                "marks": 80,
+                "score": 939.6
+              },
+              {
+                "marks": 85,
+                "score": 994.6
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "EWS": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 402.5
+              },
+              {
+                "marks": 35,
+                "score": 456.1
+              },
+              {
+                "marks": 40,
+                "score": 509.7
+              },
+              {
+                "marks": 45,
+                "score": 563.4
+              },
+              {
+                "marks": 50,
+                "score": 617.0
+              },
+              {
+                "marks": 55,
+                "score": 670.6
+              },
+              {
+                "marks": 60,
+                "score": 724.2
+              },
+              {
+                "marks": 65,
+                "score": 777.8
+              },
+              {
+                "marks": 70,
+                "score": 831.4
+              },
+              {
+                "marks": 75,
+                "score": 885.0
+              },
+              {
+                "marks": 80,
+                "score": 938.6
+              },
+              {
+                "marks": 85,
+                "score": 992.2
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "SC": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 391.5
+              },
+              {
+                "marks": 30,
+                "score": 441.0
+              },
+              {
+                "marks": 35,
+                "score": 490.5
+              },
+              {
+                "marks": 40,
+                "score": 539.9
+              },
+              {
+                "marks": 45,
+                "score": 589.4
+              },
+              {
+                "marks": 50,
+                "score": 638.8
+              },
+              {
+                "marks": 55,
+                "score": 688.3
+              },
+              {
+                "marks": 60,
+                "score": 737.8
+              },
+              {
+                "marks": 65,
+                "score": 787.2
+              },
+              {
+                "marks": 70,
+                "score": 836.7
+              },
+              {
+                "marks": 75,
+                "score": 886.2
+              },
+              {
+                "marks": 80,
+                "score": 935.6
+              },
+              {
+                "marks": 85,
+                "score": 985.1
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "ST": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 373.3
+              },
+              {
+                "marks": 25,
+                "score": 420.0
+              },
+              {
+                "marks": 30,
+                "score": 466.7
+              },
+              {
+                "marks": 35,
+                "score": 513.4
+              },
+              {
+                "marks": 40,
+                "score": 560.1
+              },
+              {
+                "marks": 45,
+                "score": 606.8
+              },
+              {
+                "marks": 50,
+                "score": 653.5
+              },
+              {
+                "marks": 55,
+                "score": 700.2
+              },
+              {
+                "marks": 60,
+                "score": 746.9
+              },
+              {
+                "marks": 65,
+                "score": 793.5
+              },
+              {
+                "marks": 70,
+                "score": 840.2
+              },
+              {
+                "marks": 75,
+                "score": 886.9
+              },
+              {
+                "marks": 80,
+                "score": 933.6
+              },
+              {
+                "marks": 85,
+                "score": 980.3
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "PwD": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 373.3
+              },
+              {
+                "marks": 25,
+                "score": 420.0
+              },
+              {
+                "marks": 30,
+                "score": 466.7
+              },
+              {
+                "marks": 35,
+                "score": 513.4
+              },
+              {
+                "marks": 40,
+                "score": 560.1
+              },
+              {
+                "marks": 45,
+                "score": 606.8
+              },
+              {
+                "marks": 50,
+                "score": 653.5
+              },
+              {
+                "marks": 55,
+                "score": 700.2
+              },
+              {
+                "marks": 60,
+                "score": 746.9
+              },
+              {
+                "marks": 65,
+                "score": 793.5
+              },
+              {
+                "marks": 70,
+                "score": 840.2
+              },
+              {
+                "marks": 75,
+                "score": 886.9
+              },
+              {
+                "marks": 80,
+                "score": 933.6
+              },
+              {
+                "marks": 85,
+                "score": 980.3
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ]
+          }
+        },
+        "2025": {
+          "categories": {
+            "GEN": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 364.4
+              },
+              {
+                "marks": 35,
+                "score": 420.0
+              },
+              {
+                "marks": 40,
+                "score": 475.6
+              },
+              {
+                "marks": 45,
+                "score": 531.1
+              },
+              {
+                "marks": 50,
+                "score": 586.7
+              },
+              {
+                "marks": 55,
+                "score": 642.2
+              },
+              {
+                "marks": 60,
+                "score": 697.8
+              },
+              {
+                "marks": 65,
+                "score": 753.3
+              },
+              {
+                "marks": 70,
+                "score": 808.9
+              },
+              {
+                "marks": 75,
+                "score": 864.4
+              },
+              {
+                "marks": 80,
+                "score": 920.0
+              },
+              {
+                "marks": 85,
+                "score": 975.6
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "OBC-NCL": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 394.1
+              },
+              {
+                "marks": 35,
+                "score": 446.6
+              },
+              {
+                "marks": 40,
+                "score": 499.0
+              },
+              {
+                "marks": 45,
+                "score": 551.5
+              },
+              {
+                "marks": 50,
+                "score": 604.0
+              },
+              {
+                "marks": 55,
+                "score": 656.5
+              },
+              {
+                "marks": 60,
+                "score": 709.0
+              },
+              {
+                "marks": 65,
+                "score": 761.5
+              },
+              {
+                "marks": 70,
+                "score": 813.9
+              },
+              {
+                "marks": 75,
+                "score": 866.4
+              },
+              {
+                "marks": 80,
+                "score": 918.9
+              },
+              {
+                "marks": 85,
+                "score": 971.4
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "EWS": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 354.1
+              },
+              {
+                "marks": 30,
+                "score": 405.4
+              },
+              {
+                "marks": 35,
+                "score": 456.7
+              },
+              {
+                "marks": 40,
+                "score": 508.0
+              },
+              {
+                "marks": 45,
+                "score": 559.3
+              },
+              {
+                "marks": 50,
+                "score": 610.6
+              },
+              {
+                "marks": 55,
+                "score": 661.9
+              },
+              {
+                "marks": 60,
+                "score": 713.2
+              },
+              {
+                "marks": 65,
+                "score": 764.6
+              },
+              {
+                "marks": 70,
+                "score": 815.9
+              },
+              {
+                "marks": 75,
+                "score": 867.2
+              },
+              {
+                "marks": 80,
+                "score": 918.5
+              },
+              {
+                "marks": 85,
+                "score": 969.8
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "SC": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 395.5
+              },
+              {
+                "marks": 30,
+                "score": 442.9
+              },
+              {
+                "marks": 35,
+                "score": 490.3
+              },
+              {
+                "marks": 40,
+                "score": 537.8
+              },
+              {
+                "marks": 45,
+                "score": 585.2
+              },
+              {
+                "marks": 50,
+                "score": 632.6
+              },
+              {
+                "marks": 55,
+                "score": 680.0
+              },
+              {
+                "marks": 60,
+                "score": 727.4
+              },
+              {
+                "marks": 65,
+                "score": 774.8
+              },
+              {
+                "marks": 70,
+                "score": 822.2
+              },
+              {
+                "marks": 75,
+                "score": 869.7
+              },
+              {
+                "marks": 80,
+                "score": 917.1
+              },
+              {
+                "marks": 85,
+                "score": 964.5
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "ST": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 377.0
+              },
+              {
+                "marks": 25,
+                "score": 421.9
+              },
+              {
+                "marks": 30,
+                "score": 466.8
+              },
+              {
+                "marks": 35,
+                "score": 511.8
+              },
+              {
+                "marks": 40,
+                "score": 556.7
+              },
+              {
+                "marks": 45,
+                "score": 601.6
+              },
+              {
+                "marks": 50,
+                "score": 646.6
+              },
+              {
+                "marks": 55,
+                "score": 691.5
+              },
+              {
+                "marks": 60,
+                "score": 736.4
+              },
+              {
+                "marks": 65,
+                "score": 781.4
+              },
+              {
+                "marks": 70,
+                "score": 826.3
+              },
+              {
+                "marks": 75,
+                "score": 871.2
+              },
+              {
+                "marks": 80,
+                "score": 916.2
+              },
+              {
+                "marks": 85,
+                "score": 961.1
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "PwD": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 377.0
+              },
+              {
+                "marks": 25,
+                "score": 421.9
+              },
+              {
+                "marks": 30,
+                "score": 466.8
+              },
+              {
+                "marks": 35,
+                "score": 511.8
+              },
+              {
+                "marks": 40,
+                "score": 556.7
+              },
+              {
+                "marks": 45,
+                "score": 601.6
+              },
+              {
+                "marks": 50,
+                "score": 646.6
+              },
+              {
+                "marks": 55,
+                "score": 691.5
+              },
+              {
+                "marks": 60,
+                "score": 736.4
+              },
+              {
+                "marks": 65,
+                "score": 781.4
+              },
+              {
+                "marks": 70,
+                "score": 826.3
+              },
+              {
+                "marks": 75,
+                "score": 871.2
+              },
+              {
+                "marks": 80,
+                "score": 916.2
+              },
+              {
+                "marks": 85,
+                "score": 961.1
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ]
+          }
+        },
+        "2026": {
+          "categories": {
+            "GEN": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 372.4
+              },
+              {
+                "marks": 35,
+                "score": 428.6
+              },
+              {
+                "marks": 40,
+                "score": 484.7
+              },
+              {
+                "marks": 45,
+                "score": 540.8
+              },
+              {
+                "marks": 50,
+                "score": 596.9
+              },
+              {
+                "marks": 55,
+                "score": 653.1
+              },
+              {
+                "marks": 60,
+                "score": 709.2
+              },
+              {
+                "marks": 65,
+                "score": 765.3
+              },
+              {
+                "marks": 70,
+                "score": 821.4
+              },
+              {
+                "marks": 75,
+                "score": 877.6
+              },
+              {
+                "marks": 80,
+                "score": 933.7
+              },
+              {
+                "marks": 85,
+                "score": 989.8
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "OBC-NCL": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 402.9
+              },
+              {
+                "marks": 35,
+                "score": 455.8
+              },
+              {
+                "marks": 40,
+                "score": 508.7
+              },
+              {
+                "marks": 45,
+                "score": 561.5
+              },
+              {
+                "marks": 50,
+                "score": 614.4
+              },
+              {
+                "marks": 55,
+                "score": 667.3
+              },
+              {
+                "marks": 60,
+                "score": 720.2
+              },
+              {
+                "marks": 65,
+                "score": 773.1
+              },
+              {
+                "marks": 70,
+                "score": 826.0
+              },
+              {
+                "marks": 75,
+                "score": 878.8
+              },
+              {
+                "marks": 80,
+                "score": 931.7
+              },
+              {
+                "marks": 85,
+                "score": 984.6
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "EWS": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 360.4
+              },
+              {
+                "marks": 30,
+                "score": 412.3
+              },
+              {
+                "marks": 35,
+                "score": 464.2
+              },
+              {
+                "marks": 40,
+                "score": 516.0
+              },
+              {
+                "marks": 45,
+                "score": 567.9
+              },
+              {
+                "marks": 50,
+                "score": 619.8
+              },
+              {
+                "marks": 55,
+                "score": 671.7
+              },
+              {
+                "marks": 60,
+                "score": 723.6
+              },
+              {
+                "marks": 65,
+                "score": 775.5
+              },
+              {
+                "marks": 70,
+                "score": 827.4
+              },
+              {
+                "marks": 75,
+                "score": 879.2
+              },
+              {
+                "marks": 80,
+                "score": 931.1
+              },
+              {
+                "marks": 85,
+                "score": 983.0
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "SC": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 354.8
+              },
+              {
+                "marks": 25,
+                "score": 402.6
+              },
+              {
+                "marks": 30,
+                "score": 450.4
+              },
+              {
+                "marks": 35,
+                "score": 498.3
+              },
+              {
+                "marks": 40,
+                "score": 546.1
+              },
+              {
+                "marks": 45,
+                "score": 593.9
+              },
+              {
+                "marks": 50,
+                "score": 641.7
+              },
+              {
+                "marks": 55,
+                "score": 689.6
+              },
+              {
+                "marks": 60,
+                "score": 737.4
+              },
+              {
+                "marks": 65,
+                "score": 785.2
+              },
+              {
+                "marks": 70,
+                "score": 833.0
+              },
+              {
+                "marks": 75,
+                "score": 880.9
+              },
+              {
+                "marks": 80,
+                "score": 928.7
+              },
+              {
+                "marks": 85,
+                "score": 976.5
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "ST": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 381.8
+              },
+              {
+                "marks": 25,
+                "score": 427.3
+              },
+              {
+                "marks": 30,
+                "score": 472.7
+              },
+              {
+                "marks": 35,
+                "score": 518.2
+              },
+              {
+                "marks": 40,
+                "score": 563.6
+              },
+              {
+                "marks": 45,
+                "score": 609.1
+              },
+              {
+                "marks": 50,
+                "score": 654.5
+              },
+              {
+                "marks": 55,
+                "score": 700.0
+              },
+              {
+                "marks": 60,
+                "score": 745.5
+              },
+              {
+                "marks": 65,
+                "score": 790.9
+              },
+              {
+                "marks": 70,
+                "score": 836.4
+              },
+              {
+                "marks": 75,
+                "score": 881.8
+              },
+              {
+                "marks": 80,
+                "score": 927.3
+              },
+              {
+                "marks": 85,
+                "score": 972.7
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "PwD": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 381.8
+              },
+              {
+                "marks": 25,
+                "score": 427.3
+              },
+              {
+                "marks": 30,
+                "score": 472.7
+              },
+              {
+                "marks": 35,
+                "score": 518.2
+              },
+              {
+                "marks": 40,
+                "score": 563.6
+              },
+              {
+                "marks": 45,
+                "score": 609.1
+              },
+              {
+                "marks": 50,
+                "score": 654.5
+              },
+              {
+                "marks": 55,
+                "score": 700.0
+              },
+              {
+                "marks": 60,
+                "score": 745.5
+              },
+              {
+                "marks": 65,
+                "score": 790.9
+              },
+              {
+                "marks": 70,
+                "score": 836.4
+              },
+              {
+                "marks": 75,
+                "score": 881.8
+              },
+              {
+                "marks": 80,
+                "score": 927.3
+              },
+              {
+                "marks": 85,
+                "score": 972.7
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ]
+          }
+        }
+      }
+    },
+    "DA": {
+      "years": {
+        "2024": {
+          "categories": {
+            "GEN": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 350
+              },
+              {
+                "marks": 35,
+                "score": 410.3
+              },
+              {
+                "marks": 40,
+                "score": 471.8
+              },
+              {
+                "marks": 45,
+                "score": 533.3
+              },
+              {
+                "marks": 50,
+                "score": 594.9
+              },
+              {
+                "marks": 55,
+                "score": 656.4
+              },
+              {
+                "marks": 60,
+                "score": 717.9
+              },
+              {
+                "marks": 65,
+                "score": 779.4
+              },
+              {
+                "marks": 70,
+                "score": 840.9
+              },
+              {
+                "marks": 75,
+                "score": 902.5
+              },
+              {
+                "marks": 80,
+                "score": 964.0
+              },
+              {
+                "marks": 85,
+                "score": 1000
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "OBC-NCL": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 382.4
+              },
+              {
+                "marks": 35,
+                "score": 440.1
+              },
+              {
+                "marks": 40,
+                "score": 497.9
+              },
+              {
+                "marks": 45,
+                "score": 555.7
+              },
+              {
+                "marks": 50,
+                "score": 613.4
+              },
+              {
+                "marks": 55,
+                "score": 671.2
+              },
+              {
+                "marks": 60,
+                "score": 729.0
+              },
+              {
+                "marks": 65,
+                "score": 786.8
+              },
+              {
+                "marks": 70,
+                "score": 844.5
+              },
+              {
+                "marks": 75,
+                "score": 902.3
+              },
+              {
+                "marks": 80,
+                "score": 960.1
+              },
+              {
+                "marks": 85,
+                "score": 1000
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "EWS": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 395.1
+              },
+              {
+                "marks": 35,
+                "score": 451.4
+              },
+              {
+                "marks": 40,
+                "score": 507.8
+              },
+              {
+                "marks": 45,
+                "score": 564.1
+              },
+              {
+                "marks": 50,
+                "score": 620.5
+              },
+              {
+                "marks": 55,
+                "score": 676.8
+              },
+              {
+                "marks": 60,
+                "score": 733.2
+              },
+              {
+                "marks": 65,
+                "score": 789.5
+              },
+              {
+                "marks": 70,
+                "score": 845.9
+              },
+              {
+                "marks": 75,
+                "score": 902.3
+              },
+              {
+                "marks": 80,
+                "score": 958.6
+              },
+              {
+                "marks": 85,
+                "score": 1000
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "SC": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 386.1
+              },
+              {
+                "marks": 30,
+                "score": 437.7
+              },
+              {
+                "marks": 35,
+                "score": 489.3
+              },
+              {
+                "marks": 40,
+                "score": 540.9
+              },
+              {
+                "marks": 45,
+                "score": 592.5
+              },
+              {
+                "marks": 50,
+                "score": 644.1
+              },
+              {
+                "marks": 55,
+                "score": 695.7
+              },
+              {
+                "marks": 60,
+                "score": 747.3
+              },
+              {
+                "marks": 65,
+                "score": 798.9
+              },
+              {
+                "marks": 70,
+                "score": 850.5
+              },
+              {
+                "marks": 75,
+                "score": 902.1
+              },
+              {
+                "marks": 80,
+                "score": 953.7
+              },
+              {
+                "marks": 85,
+                "score": 1000
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "ST": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 367.5
+              },
+              {
+                "marks": 25,
+                "score": 416.1
+              },
+              {
+                "marks": 30,
+                "score": 464.7
+              },
+              {
+                "marks": 35,
+                "score": 513.3
+              },
+              {
+                "marks": 40,
+                "score": 561.8
+              },
+              {
+                "marks": 45,
+                "score": 610.4
+              },
+              {
+                "marks": 50,
+                "score": 659.0
+              },
+              {
+                "marks": 55,
+                "score": 707.6
+              },
+              {
+                "marks": 60,
+                "score": 756.2
+              },
+              {
+                "marks": 65,
+                "score": 804.8
+              },
+              {
+                "marks": 70,
+                "score": 853.4
+              },
+              {
+                "marks": 75,
+                "score": 901.9
+              },
+              {
+                "marks": 80,
+                "score": 950.5
+              },
+              {
+                "marks": 85,
+                "score": 999.1
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "PwD": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 367.5
+              },
+              {
+                "marks": 25,
+                "score": 416.1
+              },
+              {
+                "marks": 30,
+                "score": 464.7
+              },
+              {
+                "marks": 35,
+                "score": 513.3
+              },
+              {
+                "marks": 40,
+                "score": 561.8
+              },
+              {
+                "marks": 45,
+                "score": 610.4
+              },
+              {
+                "marks": 50,
+                "score": 659.0
+              },
+              {
+                "marks": 55,
+                "score": 707.6
+              },
+              {
+                "marks": 60,
+                "score": 756.2
+              },
+              {
+                "marks": 65,
+                "score": 804.8
+              },
+              {
+                "marks": 70,
+                "score": 853.4
+              },
+              {
+                "marks": 75,
+                "score": 901.9
+              },
+              {
+                "marks": 80,
+                "score": 950.5
+              },
+              {
+                "marks": 85,
+                "score": 999.1
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ]
+          }
+        },
+        "2025": {
+          "categories": {
+            "GEN": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 355.9
+              },
+              {
+                "marks": 35,
+                "score": 415.1
+              },
+              {
+                "marks": 40,
+                "score": 474.2
+              },
+              {
+                "marks": 45,
+                "score": 533.3
+              },
+              {
+                "marks": 50,
+                "score": 592.5
+              },
+              {
+                "marks": 55,
+                "score": 651.6
+              },
+              {
+                "marks": 60,
+                "score": 710.8
+              },
+              {
+                "marks": 65,
+                "score": 769.9
+              },
+              {
+                "marks": 70,
+                "score": 829.0
+              },
+              {
+                "marks": 75,
+                "score": 888.2
+              },
+              {
+                "marks": 80,
+                "score": 947.3
+              },
+              {
+                "marks": 85,
+                "score": 1000
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "OBC-NCL": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 387.9
+              },
+              {
+                "marks": 35,
+                "score": 443.5
+              },
+              {
+                "marks": 40,
+                "score": 499.2
+              },
+              {
+                "marks": 45,
+                "score": 554.9
+              },
+              {
+                "marks": 50,
+                "score": 610.5
+              },
+              {
+                "marks": 55,
+                "score": 666.2
+              },
+              {
+                "marks": 60,
+                "score": 721.9
+              },
+              {
+                "marks": 65,
+                "score": 777.5
+              },
+              {
+                "marks": 70,
+                "score": 833.2
+              },
+              {
+                "marks": 75,
+                "score": 888.9
+              },
+              {
+                "marks": 80,
+                "score": 944.5
+              },
+              {
+                "marks": 85,
+                "score": 1000
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "EWS": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 400.0
+              },
+              {
+                "marks": 35,
+                "score": 454.3
+              },
+              {
+                "marks": 40,
+                "score": 508.7
+              },
+              {
+                "marks": 45,
+                "score": 563.0
+              },
+              {
+                "marks": 50,
+                "score": 617.4
+              },
+              {
+                "marks": 55,
+                "score": 671.7
+              },
+              {
+                "marks": 60,
+                "score": 726.1
+              },
+              {
+                "marks": 65,
+                "score": 780.4
+              },
+              {
+                "marks": 70,
+                "score": 834.8
+              },
+              {
+                "marks": 75,
+                "score": 889.1
+              },
+              {
+                "marks": 80,
+                "score": 943.5
+              },
+              {
+                "marks": 85,
+                "score": 997.8
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "SC": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 390.9
+              },
+              {
+                "marks": 30,
+                "score": 440.8
+              },
+              {
+                "marks": 35,
+                "score": 490.7
+              },
+              {
+                "marks": 40,
+                "score": 540.7
+              },
+              {
+                "marks": 45,
+                "score": 590.6
+              },
+              {
+                "marks": 50,
+                "score": 640.5
+              },
+              {
+                "marks": 55,
+                "score": 690.4
+              },
+              {
+                "marks": 60,
+                "score": 740.3
+              },
+              {
+                "marks": 65,
+                "score": 790.2
+              },
+              {
+                "marks": 70,
+                "score": 840.1
+              },
+              {
+                "marks": 75,
+                "score": 890.0
+              },
+              {
+                "marks": 80,
+                "score": 939.9
+              },
+              {
+                "marks": 85,
+                "score": 989.8
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "ST": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 371.7
+              },
+              {
+                "marks": 25,
+                "score": 418.9
+              },
+              {
+                "marks": 30,
+                "score": 466.0
+              },
+              {
+                "marks": 35,
+                "score": 513.2
+              },
+              {
+                "marks": 40,
+                "score": 560.4
+              },
+              {
+                "marks": 45,
+                "score": 607.5
+              },
+              {
+                "marks": 50,
+                "score": 654.7
+              },
+              {
+                "marks": 55,
+                "score": 701.9
+              },
+              {
+                "marks": 60,
+                "score": 749.1
+              },
+              {
+                "marks": 65,
+                "score": 796.2
+              },
+              {
+                "marks": 70,
+                "score": 843.4
+              },
+              {
+                "marks": 75,
+                "score": 890.6
+              },
+              {
+                "marks": 80,
+                "score": 937.7
+              },
+              {
+                "marks": 85,
+                "score": 984.9
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "PwD": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 371.7
+              },
+              {
+                "marks": 25,
+                "score": 418.9
+              },
+              {
+                "marks": 30,
+                "score": 466.0
+              },
+              {
+                "marks": 35,
+                "score": 513.2
+              },
+              {
+                "marks": 40,
+                "score": 560.4
+              },
+              {
+                "marks": 45,
+                "score": 607.5
+              },
+              {
+                "marks": 50,
+                "score": 654.7
+              },
+              {
+                "marks": 55,
+                "score": 701.9
+              },
+              {
+                "marks": 60,
+                "score": 749.1
+              },
+              {
+                "marks": 65,
+                "score": 796.2
+              },
+              {
+                "marks": 70,
+                "score": 843.4
+              },
+              {
+                "marks": 75,
+                "score": 890.6
+              },
+              {
+                "marks": 80,
+                "score": 937.7
+              },
+              {
+                "marks": 85,
+                "score": 984.9
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ]
+          }
+        },
+        "2026": {
+          "categories": {
+            "GEN": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 362.0
+              },
+              {
+                "marks": 35,
+                "score": 421.7
+              },
+              {
+                "marks": 40,
+                "score": 481.5
+              },
+              {
+                "marks": 45,
+                "score": 541.3
+              },
+              {
+                "marks": 50,
+                "score": 601.1
+              },
+              {
+                "marks": 55,
+                "score": 660.9
+              },
+              {
+                "marks": 60,
+                "score": 720.7
+              },
+              {
+                "marks": 65,
+                "score": 780.4
+              },
+              {
+                "marks": 70,
+                "score": 840.2
+              },
+              {
+                "marks": 75,
+                "score": 900.0
+              },
+              {
+                "marks": 80,
+                "score": 959.8
+              },
+              {
+                "marks": 85,
+                "score": 1000
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "OBC-NCL": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 394.9
+              },
+              {
+                "marks": 35,
+                "score": 451.0
+              },
+              {
+                "marks": 40,
+                "score": 507.1
+              },
+              {
+                "marks": 45,
+                "score": 563.3
+              },
+              {
+                "marks": 50,
+                "score": 619.4
+              },
+              {
+                "marks": 55,
+                "score": 675.5
+              },
+              {
+                "marks": 60,
+                "score": 731.6
+              },
+              {
+                "marks": 65,
+                "score": 787.8
+              },
+              {
+                "marks": 70,
+                "score": 843.9
+              },
+              {
+                "marks": 75,
+                "score": 900.0
+              },
+              {
+                "marks": 80,
+                "score": 956.1
+              },
+              {
+                "marks": 85,
+                "score": 1000
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "EWS": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 350
+              },
+              {
+                "marks": 30,
+                "score": 405.0
+              },
+              {
+                "marks": 35,
+                "score": 460.0
+              },
+              {
+                "marks": 40,
+                "score": 515.0
+              },
+              {
+                "marks": 45,
+                "score": 570.0
+              },
+              {
+                "marks": 50,
+                "score": 625.0
+              },
+              {
+                "marks": 55,
+                "score": 680.0
+              },
+              {
+                "marks": 60,
+                "score": 735.0
+              },
+              {
+                "marks": 65,
+                "score": 790.0
+              },
+              {
+                "marks": 70,
+                "score": 845.0
+              },
+              {
+                "marks": 75,
+                "score": 900.0
+              },
+              {
+                "marks": 80,
+                "score": 955.0
+              },
+              {
+                "marks": 85,
+                "score": 1000
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "SC": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 350
+              },
+              {
+                "marks": 25,
+                "score": 400.0
+              },
+              {
+                "marks": 30,
+                "score": 450.0
+              },
+              {
+                "marks": 35,
+                "score": 500.0
+              },
+              {
+                "marks": 40,
+                "score": 550.0
+              },
+              {
+                "marks": 45,
+                "score": 600.0
+              },
+              {
+                "marks": 50,
+                "score": 650.0
+              },
+              {
+                "marks": 55,
+                "score": 700.0
+              },
+              {
+                "marks": 60,
+                "score": 750.0
+              },
+              {
+                "marks": 65,
+                "score": 800.0
+              },
+              {
+                "marks": 70,
+                "score": 850.0
+              },
+              {
+                "marks": 75,
+                "score": 900.0
+              },
+              {
+                "marks": 80,
+                "score": 950.0
+              },
+              {
+                "marks": 85,
+                "score": 1000
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "ST": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 378.4
+              },
+              {
+                "marks": 25,
+                "score": 425.9
+              },
+              {
+                "marks": 30,
+                "score": 473.3
+              },
+              {
+                "marks": 35,
+                "score": 520.7
+              },
+              {
+                "marks": 40,
+                "score": 568.1
+              },
+              {
+                "marks": 45,
+                "score": 615.5
+              },
+              {
+                "marks": 50,
+                "score": 662.9
+              },
+              {
+                "marks": 55,
+                "score": 710.3
+              },
+              {
+                "marks": 60,
+                "score": 757.8
+              },
+              {
+                "marks": 65,
+                "score": 805.2
+              },
+              {
+                "marks": 70,
+                "score": 852.6
+              },
+              {
+                "marks": 75,
+                "score": 900.0
+              },
+              {
+                "marks": 80,
+                "score": 947.4
+              },
+              {
+                "marks": 85,
+                "score": 994.8
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ],
+            "PwD": [
+              {
+                "marks": 0,
+                "score": 350
+              },
+              {
+                "marks": 5,
+                "score": 350
+              },
+              {
+                "marks": 10,
+                "score": 350
+              },
+              {
+                "marks": 15,
+                "score": 350
+              },
+              {
+                "marks": 20,
+                "score": 378.4
+              },
+              {
+                "marks": 25,
+                "score": 425.9
+              },
+              {
+                "marks": 30,
+                "score": 473.3
+              },
+              {
+                "marks": 35,
+                "score": 520.7
+              },
+              {
+                "marks": 40,
+                "score": 568.1
+              },
+              {
+                "marks": 45,
+                "score": 615.5
+              },
+              {
+                "marks": 50,
+                "score": 662.9
+              },
+              {
+                "marks": 55,
+                "score": 710.3
+              },
+              {
+                "marks": 60,
+                "score": 757.8
+              },
+              {
+                "marks": 65,
+                "score": 805.2
+              },
+              {
+                "marks": 70,
+                "score": 852.6
+              },
+              {
+                "marks": 75,
+                "score": 900.0
+              },
+              {
+                "marks": 80,
+                "score": 947.4
+              },
+              {
+                "marks": 85,
+                "score": 994.8
+              },
+              {
+                "marks": 90,
+                "score": 1000
+              },
+              {
+                "marks": 95,
+                "score": 1000
+              },
+              {
+                "marks": 100,
+                "score": 1000
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

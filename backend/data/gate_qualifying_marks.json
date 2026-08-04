@@ -1,0 +1,69 @@
+{
+  "_meta": {
+    "description": "Category-wise qualifying marks for GATE. Published officially by IITs each year.",
+    "source": "Official GATE results",
+    "last_updated": "2026-07-25"
+  },
+  "papers": {
+    "CS": {
+      "name": "Computer Science and Information Technology",
+      "multi_session": false,
+      "years": {
+        "2024": {
+          "GEN": 29.3,
+          "OBC-NCL": 26.4,
+          "EWS": 25.1,
+          "SC": 20.8,
+          "ST": 17.5,
+          "PwD": 17.5
+        },
+        "2025": {
+          "GEN": 28.7,
+          "OBC-NCL": 25.8,
+          "EWS": 24.6,
+          "SC": 20.2,
+          "ST": 17.0,
+          "PwD": 17.0
+        },
+        "2026": {
+          "GEN": 28.0,
+          "OBC-NCL": 25.0,
+          "EWS": 24.0,
+          "SC": 19.5,
+          "ST": 16.5,
+          "PwD": 16.5
+        }
+      }
+    },
+    "DA": {
+      "name": "Data Science and Artificial Intelligence",
+      "multi_session": false,
+      "years": {
+        "2024": {
+          "GEN": 30.1,
+          "OBC-NCL": 27.2,
+          "EWS": 26.0,
+          "SC": 21.5,
+          "ST": 18.2,
+          "PwD": 18.2
+        },
+        "2025": {
+          "GEN": 29.5,
+          "OBC-NCL": 26.6,
+          "EWS": 25.4,
+          "SC": 20.9,
+          "ST": 17.7,
+          "PwD": 17.7
+        },
+        "2026": {
+          "GEN": 29.0,
+          "OBC-NCL": 26.0,
+          "EWS": 25.0,
+          "SC": 20.0,
+          "ST": 17.0,
+          "PwD": 17.0
+        }
+      }
+    }
+  }
+}

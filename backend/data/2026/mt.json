@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "description": "Estimated Mt (average marks of top 0.1% candidates) for GATE 2026. NOT officially published by IITs."
+  },
+  "papers": {
+    "CS": {
+      "Mt": 77.0,
+      "confidence": "Low",
+      "source": "Projected based on 2024-2025 trend"
+    },
+    "DA": {
+      "Mt": 75.0,
+      "confidence": "Low",
+      "source": "Projected estimate"
+    }
+  }
+}

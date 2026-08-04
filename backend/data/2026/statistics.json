@@ -1,0 +1,17 @@
+{
+  "_note": "GATE 2026 CS candidate statistics. Projected estimates based on historical trends.",
+  "papers": {
+    "CS": {
+      "registered": 160000,
+      "appeared": 138000,
+      "qualified": 43000,
+      "max_marks": 100
+    },
+    "DA": {
+      "registered": 62000,
+      "appeared": 57000,
+      "qualified": 15500,
+      "max_marks": 100
+    }
+  }
+}

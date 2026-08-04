@@ -1,0 +1,198 @@
+{
+  "_meta": {
+    "description": "Historical GATE score to AIR (All India Rank) mapping. Estimated from published rank lists, cutoff data, and score distributions.",
+    "disclaimer": "AIR values are estimates based on historical data. Actual ranks vary by year, paper difficulty, and candidate pool size.",
+    "last_updated": "2026-07-25"
+  },
+  "papers": {
+    "CS": {
+      "years": {
+        "2024": [
+          {
+            "score": 1000,
+            "air": 1,
+            "confidence": "Medium"
+          },
+          {
+            "score": 950,
+            "air": 5,
+            "confidence": "Medium"
+          },
+          {
+            "score": 900,
+            "air": 15,
+            "confidence": "Medium"
+          },
+          {
+            "score": 850,
+            "air": 50,
+            "confidence": "Medium"
+          },
+          {
+            "score": 800,
+            "air": 150,
+            "confidence": "Medium"
+          },
+          {
+            "score": 750,
+            "air": 500,
+            "confidence": "Medium"
+          },
+          {
+            "score": 700,
+            "air": 1200,
+            "confidence": "Medium"
+          },
+          {
+            "score": 650,
+            "air": 3000,
+            "confidence": "Medium"
+          },
+          {
+            "score": 600,
+            "air": 6000,
+            "confidence": "Low"
+          },
+          {
+            "score": 550,
+            "air": 12000,
+            "confidence": "Low"
+          },
+          {
+            "score": 500,
+            "air": 22000,
+            "confidence": "Low"
+          },
+          {
+            "score": 450,
+            "air": 38000,
+            "confidence": "Low"
+          },
+          {
+            "score": 400,
+            "air": 55000,
+            "confidence": "Low"
+          },
+          {
+            "score": 350,
+            "air": 75000,
+            "confidence": "Low"
+          }
+        ],
+        "2025": [
+          {
+            "score": 1000,
+            "air": 1,
+            "confidence": "Medium"
+          },
+          {
+            "score": 950,
+            "air": 6,
+            "confidence": "Medium"
+          },
+          {
+            "score": 900,
+            "air": 18,
+            "confidence": "Medium"
+          },
+          {
+            "score": 850,
+            "air": 60,
+            "confidence": "Medium"
+          },
+          {
+            "score": 800,
+            "air": 180,
+            "confidence": "Medium"
+          },
+          {
+            "score": 750,
+            "air": 550,
+            "confidence": "Medium"
+          },
+          {
+            "score": 700,
+            "air": 1300,
+            "confidence": "Medium"
+          },
+          {
+            "score": 650,
+            "air": 3200,
+            "confidence": "Low"
+          },
+          {
+            "score": 600,
+            "air": 6500,
+            "confidence": "Low"
+          },
+          {
+            "score": 550,
+            "air": 13000,
+            "confidence": "Low"
+          },
+          {
+            "score": 500,
+            "air": 24000,
+            "confidence": "Low"
+          },
+          {
+            "score": 450,
+            "air": 40000,
+            "confidence": "Low"
+          },
+          {
+            "score": 400,
+            "air": 58000,
+            "confidence": "Low"
+          },
+          {
+            "score": 350,
+            "air": 80000,
+            "confidence": "Low"
+          }
+        ]
+      }
+    },
+    "DA": {
+      "years": {
+        "2024": [
+          {
+            "score": 1000,
+            "air": 1,
+            "confidence": "Low"
+          },
+          {
+            "score": 900,
+            "air": 10,
+            "confidence": "Low"
+          },
+          {
+            "score": 800,
+            "air": 80,
+            "confidence": "Low"
+          },
+          {
+            "score": 700,
+            "air": 500,
+            "confidence": "Low"
+          },
+          {
+            "score": 600,
+            "air": 2500,
+            "confidence": "Low"
+          },
+          {
+            "score": 500,
+            "air": 8000,
+            "confidence": "Low"
+          },
+          {
+            "score": 400,
+            "air": 20000,
+            "confidence": "Low"
+          }
+        ]
+      }
+    }
+  }
+}

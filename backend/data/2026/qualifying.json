@@ -1,0 +1,28 @@
+{
+  "papers": {
+    "CS": {
+      "name": "Computer Science and Information Technology",
+      "multi_session": false,
+      "qualifying_marks": {
+        "GEN": 28.0,
+        "OBC-NCL": 25.0,
+        "EWS": 24.0,
+        "SC": 19.5,
+        "ST": 16.5,
+        "PwD": 16.5
+      }
+    },
+    "DA": {
+      "name": "Data Science and Artificial Intelligence",
+      "multi_session": false,
+      "qualifying_marks": {
+        "GEN": 29.0,
+        "OBC-NCL": 26.0,
+        "EWS": 25.0,
+        "SC": 20.0,
+        "ST": 17.0,
+        "PwD": 17.0
+      }
+    }
+  }
+}

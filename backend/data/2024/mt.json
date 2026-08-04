@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "description": "Estimated Mt (average marks of top 0.1% candidates) for GATE 2024. NOT officially published by IITs."
+  },
+  "papers": {
+    "CS": {
+      "Mt": 76.4,
+      "confidence": "Medium",
+      "source": "Estimated from GATE 2024 scorecard data, topper interviews, and rank distributions"
+    },
+    "DA": {
+      "Mt": 74.8,
+      "confidence": "Low",
+      "source": "Estimated from limited DA paper data"
+    }
+  }
+}

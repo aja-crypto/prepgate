@@ -1,0 +1,17 @@
+{
+  "_note": "GATE 2025 CS candidate statistics. Sources: GATE 2025 official reports.",
+  "papers": {
+    "CS": {
+      "registered": 158000,
+      "appeared": 135000,
+      "qualified": 41000,
+      "max_marks": 100
+    },
+    "DA": {
+      "registered": 58000,
+      "appeared": 53000,
+      "qualified": 14000,
+      "max_marks": 100
+    }
+  }
+}

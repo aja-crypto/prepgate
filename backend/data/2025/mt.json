@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "description": "Estimated Mt (average marks of top 0.1% candidates) for GATE 2025. NOT officially published by IITs."
+  },
+  "papers": {
+    "CS": {
+      "Mt": 78.2,
+      "confidence": "Medium",
+      "source": "Estimated from GATE 2025 scorecard data and topper score analysis"
+    },
+    "DA": {
+      "Mt": 76.0,
+      "confidence": "Medium",
+      "source": "Refined from 2024-2025 DA paper data"
+    }
+  }
+}

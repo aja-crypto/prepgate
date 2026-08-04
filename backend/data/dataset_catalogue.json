@@ -1,0 +1,23 @@
+{
+  "datasets": [
+    {
+      "name": "CCMT 2025",
+      "version": "2025.1",
+      "type": "CCMT",
+      "year": 2025,
+      "imported": "2026-07-26",
+      "records": 417,
+      "institutes": 86,
+      "programmes": 160,
+      "papers": ["CS"],
+      "categories": ["General", "EWS", "OBC-NCL", "SC", "ST", "PwD"],
+      "status": "Verified",
+      "source": "CCMT 2025 official counselling data",
+      "notes": "Institutes normalized (comma variants cleaned). One bad entry removed."
+    }
+  ],
+  "lastUpdated": "2026-07-26",
+  "totalRecords": 417,
+  "totalInstitutes": 86,
+  "totalProgrammes": 160
+}

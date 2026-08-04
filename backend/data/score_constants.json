@@ -1,0 +1,8 @@
+{
+  "Sq": 350,
+  "St": 900,
+  "S_min": 0,
+  "S_max": 1000,
+  "formula": "S = Sq + ((St - Sq) / (Mt - Mq)) x (M - Mq)",
+  "source": "Official GATE website, published by IITs"
+}

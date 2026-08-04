@@ -1,0 +1,95 @@
+{
+  "_meta": {
+    "description": "Historical GATE score to AIR mapping for 2026"
+  },
+  "papers": {
+    "CS": [
+      {
+        "score": 1000,
+        "air": 1
+      },
+      {
+        "score": 950,
+        "air": 11
+      },
+      {
+        "score": 900,
+        "air": 55
+      },
+      {
+        "score": 850,
+        "air": 165
+      },
+      {
+        "score": 800,
+        "air": 550
+      },
+      {
+        "score": 750,
+        "air": 1400
+      },
+      {
+        "score": 700,
+        "air": 3250
+      },
+      {
+        "score": 650,
+        "air": 6800
+      },
+      {
+        "score": 600,
+        "air": 13750
+      },
+      {
+        "score": 550,
+        "air": 26000
+      },
+      {
+        "score": 500,
+        "air": 46500
+      },
+      {
+        "score": 450,
+        "air": 77500
+      },
+      {
+        "score": 400,
+        "air": 117500
+      },
+      {
+        "score": 350,
+        "air": 167500
+      }
+    ],
+    "DA": [
+      {
+        "score": 1000,
+        "air": 1
+      },
+      {
+        "score": 900,
+        "air": 32
+      },
+      {
+        "score": 800,
+        "air": 225
+      },
+      {
+        "score": 700,
+        "air": 1300
+      },
+      {
+        "score": 600,
+        "air": 6500
+      },
+      {
+        "score": 500,
+        "air": 23500
+      },
+      {
+        "score": 400,
+        "air": 57500
+      }
+    ]
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "_meta": {
+    "description": "Estimated Mt values (average marks of top 0.1% candidates). NOT officially published by IITs. These are estimated from historical score distributions and topper scorecards.",
+    "disclaimer": "IITs do not publish Mt values. These are estimates derived from available scorecard data and should be treated as approximations.",
+    "last_updated": "2026-07-25"
+  },
+  "papers": {
+    "CS": {
+      "years": {
+        "2024": {
+          "Mt": 76.4,
+          "confidence": "Medium",
+          "source": "Estimated from GATE 2024 scorecard data, topper interviews, and rank distributions"
+        },
+        "2025": {
+          "Mt": 78.2,
+          "confidence": "Medium",
+          "source": "Estimated from GATE 2025 scorecard data and topper score analysis"
+        },
+        "2026": {
+          "Mt": 77.0,
+          "confidence": "Low",
+          "source": "Projected based on 2024-2025 trend. Will be refined when 2026 data is available"
+        }
+      }
+    },
+    "DA": {
+      "years": {
+        "2024": {
+          "Mt": 74.8,
+          "confidence": "Low",
+          "source": "Estimated from limited DA paper data. First year of DA paper."
+        },
+        "2025": {
+          "Mt": 76.0,
+          "confidence": "Medium",
+          "source": "Refined from 2024-2025 DA paper score data."
+        },
+        "2026": {
+          "Mt": 75.0,
+          "confidence": "Low",
+          "source": "Projected estimate."
+        }
+      }
+    }
+  }
+}
