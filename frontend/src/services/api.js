@@ -19,7 +19,7 @@ export function clearApiCache() {
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
-  timeout: 15000,
+  timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -78,8 +78,8 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     if (!originalRequest) return Promise.reject(error);
 
-    // Auto-retry on network errors (backend down, DB disconnect) — up to 2 tries
-    const isNetworkError = !error.response && error.message === 'Network Error';
+    // Auto-retry on network/timeout errors (backend cold start, DB reconnect, down) — up to 2 tries
+    const isNetworkError = (!error.response && error.message === 'Network Error') || error.code === 'ECONNABORTED';
     const isServerUnavailable = error.response?.status === 503 || error.response?.status === 502 || error.response?.status === 504 || error.response?.status === 500;
     if ((isNetworkError || isServerUnavailable) && !originalRequest._retryCount) {
       originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
