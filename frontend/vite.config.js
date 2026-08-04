@@ -56,30 +56,31 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     cssCodeSplit: true,
+    cssMinify: 'esbuild',
+    assetsInlineLimit: 4096,
+    reportCompressedSize: false,
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) return 'vendor';
+          if (id.includes('node_modules/react-dom')) return 'react-dom';
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-router-dom') || id.includes('node_modules/react-hot-toast') || id.includes('node_modules/axios')) return 'react-core';
           if (id.includes('node_modules/chart.js') || id.includes('node_modules/react-chartjs-2')) return 'charts';
           if (id.includes('node_modules/three') || id.includes('node_modules/@react-three')) return 'three';
           if (id.includes('node_modules/jspdf') || id.includes('node_modules/xlsx') || id.includes('node_modules/html2canvas')) return 'export';
           if (id.includes('node_modules/framer-motion')) return 'animation';
           if (id.includes('node_modules/lucide-react')) return 'icons';
           if (id.includes('node_modules/date-fns')) return 'dates';
-          // firebase not installed — chunk removed
           if (id.includes('node_modules/react-pdf') || id.includes('node_modules/pdfjs-dist')) return 'pdf';
           if (id.includes('node_modules/@react-pdf/renderer')) return 'react-pdf-renderer';
-          if (id.includes('node_modules/firebase')) return 'firebase';
           if (id.includes('node_modules/react-markdown') || id.includes('node_modules/rehype-highlight')) return 'markdown';
           if (id.includes('node_modules/@sentry')) return 'sentry';
-
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1600,
     minify: 'esbuild',
     esbuild: {
       drop: ['console', 'debugger'],

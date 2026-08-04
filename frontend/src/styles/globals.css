@@ -1853,3 +1853,10 @@
   box-shadow: 0 -16px 50px rgba(0, 0, 0, 0.55), 0 0 40px rgba(139, 92, 246, 0.05);
   border-radius: 24px 24px 0 0;
 }
+
+/* ── Preserved utility classes (previously in split CSS files) ── */
+.button-n-doubletap { touch-action: manipulation; -webkit-touch-callout: none; user-select: none; }
+.table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; max-width: 100%; }
+.table-responsive table { min-width: max-content; }
+.anim-gpu { transform: translateZ(0); will-change: transform; }
+.touch-target { min-width: 44px; min-height: 44px; }
