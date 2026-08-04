@@ -106,6 +106,27 @@ On Render (no `.env` deployed, `NODE_ENV=production`, these vars absent), the sy
 
 ---
 
+## ✅ RESOLVED — Render MongoDB now connected (full stack LIVE)
+
+After updating `MONGO_URI` on Render to the verified Atlas string, the backend connected successfully. Render deploy logs confirm:
+
+```
+✅ MongoDB Connected: ac-pmpdzxm-shard-00-00.sa6kujd.mongodb.net (DB: gate2027) (pool: 10)
+GATE 2027 API running on port 10000 [production]
+Data source: MongoDB
+Your service is live 🎉  →  https://gatenexa-tycc.onrender.com
+```
+
+**Live end-to-end verification (Playwright against `https://gatenexa-two.vercel.app`, via the Vercel → Render `/api` proxy):**
+- ✅ Health: `server=ok database=connected`
+- ✅ Register (201) → Login (success) → Dashboard (loads)
+- ✅ 12 authenticated pages load (Learning Hub, AI Mentor, GateVault, Planner, AIR Predictor, NEXA Predictor, Notifications, Subjects, PYQ, Mocks, Analytics, Settings)
+- ✅ Notifications API 200 (onboarding notifications seeded)
+- ✅ Subjects API 200
+- ✅ GateVault 403 responses are premium-gating (correct for a basic user)
+
+---
+
 ## ⚠️ Blocking Issue — Render MongoDB Disconnected (requires user action)
 
 The Render backend (`https://gatenexa-tycc.onrender.com`) reports `db=disconnected`. Login returns **HTTP 500**:
@@ -127,7 +148,8 @@ After this, authenticated pages (Dashboard, Learning Hub, AI Mentor, GateVault, 
 
 ## Remaining Minor Issues
 
-- Render `MONGO_URI` env var update (blocking, user action).
+- None blocking. The production stack is fully live: frontend on Vercel, backend on Render with MongoDB connected.
+- Optional: set `OWNER_PASSWORD` / `ADMIN_PASSWORD` in Render env to auto-manage those accounts (the app now starts fine without them).
 - Google OAuth origin must include the production domain in Google Cloud Console authorized origins.
 - 2982 ESLint warnings remain (all `no-unused-vars` / cosmetic; no errors).
 
