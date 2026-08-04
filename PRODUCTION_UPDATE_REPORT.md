@@ -82,6 +82,30 @@ Production deployment update for the existing GateNexa stack (Vercel frontend + 
 
 ---
 
+## Follow-Up Fix — Render "Application exited early" (startup crash)
+
+**Reported:** Deploy for `a62d3da` failed with *"Application exited early while running your code."*
+
+**Root cause:** `backend/server.js` hard-threw at startup in production when `OWNER_PASSWORD`/`ADMIN_PASSWORD` were not set:
+```js
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.OWNER_PASSWORD) throw new Error('OWNER_PASSWORD env var is required in production');
+  if (!process.env.ADMIN_PASSWORD) throw new Error('ADMIN_PASSWORD env var is required in production');
+}
+```
+On Render (no `.env` deployed, `NODE_ENV=production`, these vars absent), the synchronous throw halted module evaluation — routes/DB/server-listen never ran → process exited → Render reported the deploy as exited early.
+
+**Fix (commit `f4d270d`):**
+- Replaced the hard throw with startup warnings.
+- `OWNER_PASSWORD`/`ADMIN_PASSWORD` now default to `null`.
+- Seeding only creates admin/owner if missing (secure random fallback password), and only updates passwords **when the env var is set** — existing production accounts are never overwritten with a blank.
+
+**Verified (Render live):**
+- ✅ Backend now starts and **stays running** (`server=ok`, uptime 88s→113s+, no early exit).
+- ⚠️ `db=disconnected` remains — Render's `MONGO_URI` env var is stale. Required user action: Render dashboard → backend service → Environment → set `MONGO_URI` to the current Atlas URI → Save/Restart.
+
+---
+
 ## ⚠️ Blocking Issue — Render MongoDB Disconnected (requires user action)
 
 The Render backend (`https://gatenexa-tycc.onrender.com`) reports `db=disconnected`. Login returns **HTTP 500**:
