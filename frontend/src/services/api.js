@@ -38,6 +38,7 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
     const isGuest = localStorage.getItem('isGuest') === 'true';
+    const hasDefaultAuth = !!api.defaults.headers.common['Authorization'];
 
     if (isGuest) {
       config.headers['X-Demo-User'] = 'true';
@@ -45,6 +46,7 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    console.log(`[AUTH-DEBUG] REQUEST ${config.method?.toUpperCase()} ${config.url} | token=${token ? 'EXISTS(' + token.length + ')' : 'NULL'} | isGuest=${isGuest} | defaultAuth=${hasDefaultAuth} | headerAttached=${!!config.headers.Authorization}`);
     return config;
   },
   (error) => Promise.reject(error)
@@ -73,10 +75,22 @@ const refreshAccessToken = async () => {
 };
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.config?.url?.includes('/auth/')) {
+      console.log(`[AUTH-DEBUG] RESPONSE OK ${response.status} ${response.config.url}`);
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
     if (!originalRequest) return Promise.reject(error);
+
+    if (error.response?.status === 401) {
+      const token = localStorage.getItem('accessToken');
+      const defaultAuth = api.defaults.headers.common['Authorization'];
+      console.error(`[AUTH-DEBUG] 401 ON ${originalRequest.method?.toUpperCase()} ${originalRequest.url} | sent_header=${originalRequest.headers?.Authorization ? 'YES' : 'NO'} | token_in_storage=${token ? 'YES(' + token.length + ')' : 'NO'} | default_auth=${defaultAuth ? 'YES' : 'NO'} | response_msg=${error.response?.data?.message} | response_code=${error.response?.data?.code}`);
+      console.error(`[AUTH-DEBUG] 401 FULL RESPONSE:`, JSON.stringify(error.response?.data));
+    }
 
     // Auto-retry on network/timeout errors (backend cold start, DB reconnect, down) — up to 2 tries
     const isNetworkError = (!error.response && error.message === 'Network Error') || error.code === 'ECONNABORTED';
@@ -102,6 +116,7 @@ api.interceptors.response.use(
         error.response?.data?.message?.toLowerCase().includes('invalid token') &&
         !error.config.url?.includes('/auth/refresh') &&
         !error.config.url?.includes('/auth/login')) {
+      console.error('[AUTH-DEBUG] CLEARING TOKENS: force logout on invalid token');
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       delete api.defaults.headers.common['Authorization'];
@@ -113,8 +128,10 @@ api.interceptors.response.use(
 
     if (isInvalidToken && !originalRequest._retry) {
       originalRequest._retry = true;
+      console.error('[AUTH-DEBUG] IS_INVALID_TOKEN: attempting refresh for', originalRequest.url);
 
       if (originalRequest.method?.toUpperCase() === 'POST') {
+        console.error('[AUTH-DEBUG] CLEARING TOKENS: POST request with invalid token');
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         delete api.defaults.headers.common['Authorization'];
@@ -140,10 +157,12 @@ api.interceptors.response.use(
 
       try {
         const accessToken = await refreshAccessToken();
+        console.error('[AUTH-DEBUG] REFRESH SUCCESS: new token length', accessToken.length);
         processQueue(null, accessToken);
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
+        console.error('[AUTH-DEBUG] REFRESH FAILED:', refreshError.message, '- CLEARING ALL TOKENS');
         processQueue(refreshError, null);
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');

@@ -81,6 +81,7 @@ export const AuthProvider = ({ children }) => {
     const token = safeGet('accessToken');
     const isGuest = safeGet('isGuest') === 'true';
     const genAtInit = authGenRef.current;
+    console.log('[AUTH-DEBUG] INIT: token=', token ? 'EXISTS(' + token.length + ')' : 'NULL', 'isGuest=', isGuest);
 
     const timeoutId = setTimeout(() => {
       setLoading(false);
@@ -139,10 +140,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const storeSession = useCallback((userData, accessToken, refreshToken) => {
+    console.log('[AUTH-DEBUG] STORE_SESSION: storing token length', accessToken?.length, 'user:', userData?.name);
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
     localStorage.removeItem('isGuest');
     api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+    console.log('[AUTH-DEBUG] STORE_SESSION: default auth header set:', !!api.defaults.headers.common['Authorization']);
     setUser(userData);
   }, []);
 
