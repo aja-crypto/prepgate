@@ -50,7 +50,7 @@ const STEPS = [
     title: 'Ask GateNexa AI',
     subtitle: 'Whenever confused, ask AI. Generate plans, understand concepts, predict AIR.',
     cta: 'Open GateNexa AI \u2192',
-    to: '/GateNexa-ai',
+    to: '/mentor',
   },
   {
     icon: '\uD83C\uDFC6',
@@ -63,7 +63,7 @@ const QUICK_ACTIONS = [
   { icon: '\uD83C\uDFAF', label: "I Don't Know What To Study", desc: 'Opens AI Study Planner', to: '/planner' },
   { icon: '\uD83D\uDCC5', label: 'Create My Study Plan', desc: 'Generate Personalized Roadmap', to: '/roadmap' },
   { icon: '\uD83D\uDCDA', label: 'Start My First Subject', desc: 'Open Recommended Subject', to: '/subjects' },
-  { icon: '\uD83E\uDD16', label: 'Ask GateNexa AI', desc: 'Open AI Assistant', to: '/GateNexa-ai' },
+  { icon: '\uD83E\uDD16', label: 'Ask GateNexa AI', desc: 'Open AI Assistant', to: '/mentor' },
 ];
 
 const StepCard = memo(function StepCard({ step, idx }) {

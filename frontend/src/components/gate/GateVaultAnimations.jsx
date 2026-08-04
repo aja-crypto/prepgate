@@ -252,18 +252,19 @@ export function CardShake({ children, trigger }) {
 export function FloatingOrb({ color = '#a855f7', size = 300, blur = 100, x = 0, y = 0, duration = 20 }) {
   return (
     <motion.div
-      className="absolute pointer-events-none rounded-full blur-3xl"
+      className="absolute pointer-events-none rounded-full"
       style={{
         width: size,
         height: size,
-        background: `radial-gradient(circle, ${color}40, transparent 70%)`,
+        background: `radial-gradient(circle, ${color}35, ${color}12 55%, transparent 72%)`,
         left: x,
         top: y,
+        willChange: 'transform',
       }}
       animate={{
         x: [0, 30, -20, 40, 0],
         y: [0, -20, 30, -10, 0],
-        scale: [1, 1.1, 0.95, 1.05, 1],
+        scale: [1, 1.08, 0.96, 1.05, 1],
       }}
       transition={{
         duration,
@@ -458,26 +459,25 @@ export function RankReveal({ rank, visible }) {
 // ============================================
 export function NeuralBackground() {
   const nodes = useRef(
-    Array.from({ length: 20 }, (_, i) => ({
+    Array.from({ length: 8 }, (_, i) => ({
       id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
+      x: 10 + Math.random() * 80,
+      y: 15 + Math.random() * 70,
       size: 2 + Math.random() * 3,
-      duration: 3 + Math.random() * 4,
+      duration: 4 + Math.random() * 5,
     }))
   );
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-      {/* Gradient orbs */}
-      <FloatingOrb color="#a855f7" size={400} blur={150} x="10%" y="20%" duration={25} />
-      <FloatingOrb color="#6366f1" size={350} blur={120} x="60%" y="60%" duration={30} />
-      <FloatingOrb color="#10b981" size={250} blur={100} x="80%" y="10%" duration={20} />
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0" style={{ contain: 'layout paint' }}>
+      {/* Gradient orbs (soft radial gradients — no expensive blur filter) */}
+      <FloatingOrb color="#a855f7" size={360} x="8%" y="18%" duration={28} />
+      <FloatingOrb color="#6366f1" size={300} x="62%" y="58%" duration={34} />
 
-      {/* Neural network lines */}
+      {/* Neural network lines — slow, low-count */}
       <svg className="absolute inset-0 w-full h-full opacity-10">
-        {nodes.current.slice(0, 10).map((n1, i) =>
-          nodes.current.slice(i + 1, i + 4).map((n2, j) => (
+        {nodes.current.slice(0, 6).map((n1, i) =>
+          nodes.current.slice(i + 1, i + 3).map((n2, j) => (
             <motion.line
               key={`${n1.id}-${n2.id}`}
               x1={`${n1.x}%`}
@@ -486,13 +486,9 @@ export function NeuralBackground() {
               y2={`${n2.y}%`}
               stroke="url(#neuralGradient)"
               strokeWidth="0.5"
-              initial={{ opacity: 0.2 }}
-              animate={{ opacity: [0.2, 0.5, 0.2] }}
-              transition={{
-                duration: n1.duration,
-                repeat: Infinity,
-                delay: j * 0.5,
-              }}
+              initial={{ opacity: 0.25 }}
+              animate={{ opacity: [0.25, 0.45, 0.25] }}
+              transition={{ duration: 6 + i, repeat: Infinity, delay: i * 0.6 }}
             />
           ))
         )}
@@ -504,7 +500,7 @@ export function NeuralBackground() {
         </defs>
       </svg>
 
-      {/* Nodes */}
+      {/* Nodes — few, slow pulse */}
       {nodes.current.map((n) => (
         <motion.div
           key={n.id}
@@ -514,16 +510,10 @@ export function NeuralBackground() {
             height: n.size,
             left: `${n.x}%`,
             top: `${n.y}%`,
+            willChange: 'transform',
           }}
-          animate={{
-            opacity: [0.3, 0.8, 0.3],
-            scale: [1, 1.3, 1],
-          }}
-          transition={{
-            duration: n.duration,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
+          animate={{ opacity: [0.35, 0.75, 0.35], scale: [1, 1.25, 1] }}
+          transition={{ duration: n.duration, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}
     </div>

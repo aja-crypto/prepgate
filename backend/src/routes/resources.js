@@ -9,7 +9,7 @@ const { searchResources, getSubjects, getBySubject, getIndex } = require('../ser
 const RESOURCES_DIR = path.join(__dirname, '../..', 'resources');
 
 // Serve PDF files from /resources folder
-router.get('/file/:path(*)', (req, res) => {
+router.get('/file/:path(*)', protect, (req, res) => {
   const filePath = path.join(RESOURCES_DIR, req.params.path);
   if (!filePath.startsWith(RESOURCES_DIR)) {
     return res.status(403).json({ success: false, message: 'Access denied' });

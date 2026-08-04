@@ -4,6 +4,19 @@ const { protect } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
 const { isMockAuthEnabled } = require('../config/devMode');
 const VideoLecture = require('../models/VideoLecture');
+const path = require('path');
+const fs = require('fs');
+
+// Load mock video library
+let mockVideos = [];
+try {
+  const mockDataPath = path.join(__dirname, '../../data/mock_videos.json');
+  if (fs.existsSync(mockDataPath)) {
+    mockVideos = JSON.parse(fs.readFileSync(mockDataPath, 'utf8'));
+  }
+} catch (e) {
+  console.warn('[VideoLectures] Could not load mock videos:', e.message);
+}
 
 // Get video lectures with filters
 router.get('/', protect, async (req, res, next) => {
@@ -21,60 +34,20 @@ router.get('/', protect, async (req, res, next) => {
     if (req.query.language) filter.language = req.query.language;
 
     if (!isMongoConnected() || isMockAuthEnabled()) {
+      // Filter mock videos by query params
+      let filtered = [...mockVideos];
+      if (req.query.subject) filtered = filtered.filter(v => v.subject === req.query.subject);
+      if (req.query.topic) filtered = filtered.filter(v => v.topic === req.query.topic);
+      if (req.query.source) filtered = filtered.filter(v => v.source === req.query.source);
+      if (req.query.gateRelevance) filtered = filtered.filter(v => v.gateRelevance === req.query.gateRelevance);
+      if (req.query.language) filtered = filtered.filter(v => v.language === req.query.language);
+      const total = filtered.length;
+      const paged = filtered.slice(skip, skip + limit);
       return res.json({
         success: true,
-        count: 5,
-        data: [
-          {
-            _id: 'mock-v1',
-            title: 'Introduction to Sorting Algorithms',
-            subject: 'Algorithms',
-            topic: 'Sorting',
-            source: 'NPTEL',
-            duration: { minutes: 45, seconds: 30 },
-            gateRelevance: 'HIGH',
-            youtubeThumbnail: 'https://img.youtube.com/vi/kWiCukW_DyY/hqdefault.jpg',
-          },
-          {
-            _id: 'mock-v2',
-            title: 'Database Normalization Fundamentals',
-            subject: 'DBMS',
-            topic: 'Normalization',
-            source: 'YouTube',
-            duration: { minutes: 32, seconds: 15 },
-            gateRelevance: 'HIGH',
-            youtubeThumbnail: 'https://img.youtube.com/vi/4Z9lFNN6Q_w/hqdefault.jpg',
-          },
-          {
-            _id: 'mock-v3',
-            title: 'TCP/IP Protocol Suite',
-            subject: 'Computer Networks',
-            topic: 'TCP/IP',
-            source: 'NPTEL',
-            duration: { minutes: 58, seconds: 0 },
-            gateRelevance: 'MEDIUM',
-          },
-          {
-            _id: 'mock-v4',
-            title: 'Process Management in OS',
-            subject: 'Operating Systems',
-            topic: 'Process Management',
-            source: 'YouTube',
-            duration: { minutes: 41, seconds: 20 },
-            gateRelevance: 'HIGH',
-            youtubeThumbnail: 'https://img.youtube.com/vi/OrM4rPx6V1A/hqdefault.jpg',
-          },
-          {
-            _id: 'mock-v5',
-            title: 'Graph Theory Complete Course',
-            subject: 'Engineering Mathematics',
-            topic: 'Graph Theory',
-            source: 'Gate Wallah',
-            duration: { minutes: 120, seconds: 0 },
-            gateRelevance: 'HIGH',
-          },
-        ],
-        pagination: { page: 1, limit: 20, total: 5, pages: 1 },
+        count: paged.length,
+        data: paged,
+        pagination: { page, limit, total, pages: Math.ceil(total / limit) },
       });
     }
 

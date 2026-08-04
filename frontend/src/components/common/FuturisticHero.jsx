@@ -127,9 +127,26 @@ export default function FuturisticHero() {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-0 sm:min-h-screen flex flex-col items-center justify-center overflow-hidden"
+      className="relative min-h-0 sm:min-h-screen flex flex-col items-center overflow-hidden"
       style={{ opacity: heroOpacity, background: 'transparent' }}
     >
+      <style>{`
+        @keyframes badgeFloat {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-3px); }
+        }
+        @keyframes statusPulse {
+          0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
+          50% { opacity: 0.7; transform: scale(1.3); box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+        }
+        @keyframes badgeGlowPulse {
+          0%, 100% { box-shadow: 0 0 24px rgba(139,92,246,0.08), 0 0 48px rgba(139,92,246,0.04); }
+          50% { box-shadow: 0 0 32px rgba(139,92,246,0.16), 0 0 64px rgba(139,92,246,0.08); }
+        }
+        .badge-float { animation: badgeFloat 7s ease-in-out infinite; }
+        .badge-glow { animation: badgeGlowPulse 4s ease-in-out infinite; }
+        .status-dot { animation: statusPulse 2.5s ease-in-out infinite; }
+      `}</style>
       {/* ΓòÉΓòÉΓòÉ FULL-SCREEN NEURAL BRAIN BACKGROUND (dimmed) ΓòÉΓòÉΓòÉ */}
       <div className={`absolute inset-0 z-0 transition-opacity duration-300 ${visible ? 'opacity-25' : 'opacity-0'}`}>
         <Suspense fallback={null}>
@@ -142,13 +159,52 @@ export default function FuturisticHero() {
         background: 'radial-gradient(circle at center, rgba(168,85,247,0.06) 0%, rgba(124,58,237,0.03) 30%, transparent 70%)',
       }} />
 
-      {/* ΓòÉΓòÉΓòÉ CONTENT OVERLAY (above brain) ΓòÉΓòÉΓòÉ */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-0 sm:min-h-screen py-6 sm:py-16 px-4">
+      {/* ΓòÉΓòÉΓòÉ CONTENT OVERLAY (above brain) — starts below navbar via global --navbar-offset ΓòÉΓòÉΓòÉ */}
+      <div className="relative z-10 flex flex-col items-center w-full px-4 pb-6 sm:pb-16"
+        style={{ paddingTop: 'var(--navbar-offset, 130px)' }}>
 
-        {/* Top badge */}
-        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-medium mb-6 transition-all duration-200 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`} style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)', color: '#C4B5FD', backdropFilter: 'blur(16px)', boxShadow: '0 0 30px rgba(139,92,246,0.06)' }}>
-          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-          AI-Powered GATE 2027 Preparation Platform
+        {/* Premium glass badge */}
+        <div className="badge-float badge-glow">
+          <div
+            className={`inline-flex items-center gap-2.5 px-5 py-2 rounded-full transition-all duration-500 cursor-default ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
+            style={{
+              background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(109,40,217,0.06), rgba(34,211,238,0.02))',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(139,92,246,0.18)',
+              boxShadow: '0 0 24px rgba(139,92,246,0.08), 0 0 48px rgba(139,92,246,0.04), inset 0 1px 0 rgba(139,92,246,0.12)',
+              marginBottom: '24px',
+              transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'scale(1.02) translateY(-1px)';
+              e.currentTarget.style.borderColor = 'rgba(139,92,246,0.4)';
+              e.currentTarget.style.boxShadow = '0 0 40px rgba(139,92,246,0.18), 0 0 80px rgba(139,92,246,0.08), inset 0 1px 0 rgba(139,92,246,0.16)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = '';
+              e.currentTarget.style.borderColor = 'rgba(139,92,246,0.18)';
+              e.currentTarget.style.boxShadow = '0 0 24px rgba(139,92,246,0.08), 0 0 48px rgba(139,92,246,0.04), inset 0 1px 0 rgba(139,92,246,0.12)';
+            }}
+          >
+            {/* Animated green status dot */}
+            <span
+              className="status-dot block w-2 h-2 rounded-full shrink-0"
+              style={{ background: '#10B981', boxShadow: '0 0 6px rgba(16,185,129,0.5)' }}
+            />
+            <span
+              className="text-[11px] sm:text-xs font-semibold tracking-[0.05em]"
+              style={{
+                background: 'linear-gradient(135deg, #E9D5FF, #C4B5FD, #A78BFA)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                color: 'transparent',
+              }}
+            >
+              AI-Powered GATE 2027 Preparation Platform
+            </span>
+          </div>
         </div>
 
         {/* Animated AIR numbers carousel — emotional hook */}

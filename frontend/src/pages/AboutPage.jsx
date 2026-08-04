@@ -44,7 +44,6 @@ function ScrollReveal({ children, section, observe, entries, className = '' }) {
 }
 
 export default function AboutPage() {
-  useEffect(() => { const t = Date.now(); console.log('[Trace] AboutPage MOUNTED at', t); return () => console.log('[Trace] AboutPage UNMOUNTED after', Date.now() - t, 'ms'); }, []);
   const [readingProgress, setReadingProgress] = useState(0);
   const { entries, observe } = useIntersection();
 

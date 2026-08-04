@@ -60,6 +60,7 @@ import { useProgress } from '../context/ProgressContext';
 import { useDashboard } from '../context/DashboardContext';
 import { useLiveData } from '../hooks/useLiveData';
 import StartGuide from '../components/dashboard/StartGuide';
+import AIDashboardHero from '../components/dashboard/AIDashboardHero';
 import { computeSubjectCompletion, getDailyTargetProgress, computeReadinessScore, predictRankRange } from '../utils/gateUtils';
 import DashboardWidget from '../components/dashboard/DashboardWidget';
 import DashboardCustomizer from '../components/dashboard/DashboardCustomizer';
@@ -542,7 +543,7 @@ export default function DashboardPage() {
               <div className="text-[9px] text-text3">{streakCurrent > 0 ? `${streakCurrent}d streak` : 'Begin your streak'}</div>
             </div>
           </Link>
-          <Link to="/focus" className="mobile-card-glass flex items-center gap-2 p-3">
+          <Link to="/focus-session" className="mobile-card-glass flex items-center gap-2 p-3">
             <span className="text-xl">⏱️</span>
             <div>
               <div className="text-sm font-bold text-text">{(safeSS.weeklyHours || []).reduce((a,b)=>a+b, 0)}h</div>
@@ -597,7 +598,7 @@ export default function DashboardPage() {
           <div className="text-[10px] font-semibold text-text3 uppercase tracking-[0.12em] mb-2">📈 Continue Studying</div>
           <div className="space-y-1.5">
             {safePyqs.filter(p => !p.solved).slice(0, 3).map(p => (
-              <Link key={p._id} to="/pyq" className="flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 transition-all">
+              <Link key={p._id || p.id || p.mongoId} to="/pyq" className="flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 transition-all">
                 <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-[10px]">📝</div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[11px] text-text truncate">{p.title || p.question?.substring(0, 40)}</div>
@@ -613,9 +614,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ═══ DESKTOP DASHBOARD (unchanged) ═══ */}
-      <div className="hidden sm:block relative">
-        {/* ── Header ── */}
+      {/* ═══ DESKTOP DASHBOARD ═══ */}
+      <div className="hidden sm:block relative" style={{ transform: 'scale(0.93)', transformOrigin: 'top center' }}>
+        <div className="max-w-7xl mx-auto px-8 py-4">
+          {/* ── Header ── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
             <div className="flex items-center gap-3 mb-1">
@@ -640,10 +642,8 @@ export default function DashboardPage() {
                 </span>
               )}
             </div>
-            <h1 className="text-2xl font-bold text-text tracking-tight">
-              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name?.split(' ')[0]}
-            </h1>
-            <p className="text-sm text-text3/70 mt-1">Your preparation command center</p>
+            <h1 className="text-2xl font-bold text-text tracking-tight">Your GATE Command Center</h1>
+            <p className="text-sm text-text3/70 mt-1">Guided by Nexa AI · live progress · smart recommendations</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button onClick={refreshLive} className="btn-ghost text-xs">↻ Refresh</button>
@@ -657,6 +657,10 @@ export default function DashboardPage() {
             <Link to="/planner" className="btn-primary text-xs">Planner</Link>
           </div>
         </div>
+
+        {/* ── Unified AI Hero: greeting + daily brief + key stats ── */}
+        <AIDashboardHero userName={user?.name?.split(' ')[0] || 'aspirant'} isPremium={isPremium} />
+        <div className="h-5" />
 
         {/* ── Start Guide — for first-time / confused aspirants ── */}
         <StartGuide isEmptyProgress={isEmptyProgress} />
@@ -887,6 +891,7 @@ export default function DashboardPage() {
 
         <DashboardCustomizer open={customizerOpen} onClose={() => setCustomizerOpen(false)} />
       </div>
+    </div>
     </div>
   );
 }

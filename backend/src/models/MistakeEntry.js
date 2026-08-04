@@ -17,12 +17,15 @@ const mistakeEntrySchema = new mongoose.Schema({
   mistakeType: {
     type: String,
     enum: [
+      // Legacy values (backward compat)
       'concept_error', 'calculation_mistake', 'silly_mistake', 'formula_forgotten',
       'time_management', 'question_misread', 'guessing_error', 'logic_error',
       'memory_error', 'panic_during_exam', 'wrong_option_elimination',
-      'didnt_revise', 'careless_reading'
+      'didnt_revise', 'careless_reading',
+      // New simplified types
+      'concept_mistake', 'guess_mistake', 'revision_mistake', 'careless_mistake',
     ],
-    default: 'concept_error',
+    default: 'concept_mistake',
   },
   reason: { type: String, default: '' },
   learning: { type: String, default: '' },

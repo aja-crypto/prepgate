@@ -5,6 +5,7 @@ const User = require('../models/User');
 const ProgressSnapshot = require('../models/ProgressSnapshot');
 const { MockTest, Note } = require('../models');
 const { generateTokens } = require('../middleware/auth');
+const { add: blacklistToken, has: isTokenBlacklisted, blacklistAllForUser } = require('../middleware/tokenBlacklist');
 const { sendEmail, isSmtpConfigured } = require('../utils/email');
 const { isMockAuthEnabled } = require('../config/devMode');
 const { getEmptyProgressData } = require('../utils/emptyProgress');
@@ -85,7 +86,7 @@ exports.register = async (req, res, next) => {
         return res.status(400).json({ success: false, message: 'An account with this email already exists.' });
       }
       const user = await mockStore.createMockUser({ name, email, password });
-      const { accessToken, refreshToken } = generateTokens(user._id);
+      const { accessToken, refreshToken } = generateTokens(user._id, user.tokenVersion || 0);
       if (refCode) {
         try {
           const localReferralStore = require('../store/localReferralStore');
@@ -161,7 +162,7 @@ exports.register = async (req, res, next) => {
     }
 
     // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const { accessToken, refreshToken } = generateTokens(user._id, user.tokenVersion || 0);
 
     res.status(201).json({
       success: true,
@@ -193,7 +194,7 @@ exports.demoLogin = async (req, res, next) => {
       user.updateStreak();
       user.lastLogin = new Date();
       await user.save();
-      const { accessToken, refreshToken } = generateTokens(user._id);
+      const { accessToken, refreshToken } = generateTokens(user._id, user.tokenVersion || 0);
       return res.status(200).json({
         success: true, message: 'Demo login successful!',
         data: { user: mockUserResponse(user), accessToken, refreshToken },
@@ -206,7 +207,7 @@ exports.demoLogin = async (req, res, next) => {
     user.updateStreak();
     user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const { accessToken, refreshToken } = generateTokens(user._id, user.tokenVersion || 0);
     res.status(200).json({
       success: true, message: 'Demo login successful!',
       data: { user: mockUserResponse(user), accessToken, refreshToken },
@@ -221,36 +222,39 @@ exports.googleAuth = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Google ID token required.' });
     }
 
-    const payload = await verifyGoogleToken(idToken);
-    const { email, name, sub: googleId, picture } = payload;
-
+    // In mock mode, skip Google token verification — use idToken as email
     if (isMockAuthEnabled()) {
+      let email = idToken;
+      // If idToken looks like a real JWT, extract email from it
+      if (idToken.includes('.') && idToken.length > 100) {
+        try {
+          const payload = JSON.parse(Buffer.from(idToken.split('.')[1], 'base64url').toString());
+          email = payload.email || email;
+        } catch {}
+      }
+      const name = email.split('@')[0];
       let user = mockStore.findByEmail(email);
       let isNewUser = false;
       if (!user) {
         isNewUser = true;
         user = await mockStore.createMockUser({
-          name: name || email.split('@')[0],
-          email,
+          name, email,
           password: crypto.randomBytes(16).toString('hex'),
         });
       }
-      // Always sync Google profile fields (covers both new and existing users)
-      user.googleId = googleId;
-      user.isPremium = true; // Dev: Google sign-in users get premium in mock mode
-      user.role = 'owner'; // Dev: Google users get owner role
       user.authProvider = 'google';
       user.isVerified = true;
-      if (picture) user.avatar = picture;
       user.lastLogin = new Date();
       await user.save();
-      const { accessToken, refreshToken } = generateTokens(user._id);
+      const { accessToken, refreshToken } = generateTokens(user._id, user.tokenVersion || 0);
       return res.json({
-        success: true,
-        message: 'Google sign-in successful!',
+        success: true, message: 'Google sign-in successful!',
         data: { user: mockUserResponse(user), accessToken, refreshToken, isNewUser },
       });
     }
+
+    const payload = await verifyGoogleToken(idToken);
+    const { email, name, sub: googleId, picture } = payload;
 
     let user = await User.findOne({ $or: [{ email }, { googleId }] });
     let isNewUser = false;
@@ -279,7 +283,7 @@ exports.googleAuth = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Account is scheduled for deletion. Contact support to restore.' });
     }
 
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const { accessToken, refreshToken } = generateTokens(user._id, user.tokenVersion || 0);
     res.json({
       success: true,
       message: isNewUser ? 'Account created with Google!' : 'Google sign-in successful!',
@@ -322,6 +326,12 @@ exports.verifyEmail = async (req, res, next) => {
     user.isVerified = true;
     user.verifyEmailToken = undefined;
     user.verifyEmailExpire = undefined;
+
+    if (user.pendingNewEmail) {
+      user.email = user.pendingNewEmail;
+      user.pendingNewEmail = undefined;
+    }
+
     await user.save({ validateBeforeSave: false });
 
     res.json({ success: true, message: 'Email verified successfully!' });
@@ -391,6 +401,7 @@ exports.changePassword = async (req, res, next) => {
       }
       const salt = await bcrypt.genSalt(12);
       user.password = await bcrypt.hash(newPassword, salt);
+      user.tokenVersion = (user.tokenVersion || 0) + 1;
       await user.save();
       return res.json({ success: true, message: 'Password changed successfully.' });
     }
@@ -405,7 +416,11 @@ exports.changePassword = async (req, res, next) => {
 
     user.password = newPassword;
     await user.save();
-    res.json({ success: true, message: 'Password changed successfully.' });
+
+    // Invalidate all existing tokens (global session invalidation)
+    await blacklistAllForUser(req.user._id, { reason: 'password_reset' });
+
+    res.json({ success: true, message: 'Password changed successfully. Please login again with your new password.' });
   } catch (error) {
     next(error);
   }
@@ -427,7 +442,10 @@ exports.deleteAccount = async (req, res, next) => {
     }
 
     const user = await User.findById(userId).select('+password');
-    if (user.authProvider === 'local' && password) {
+    if (user.authProvider === 'local') {
+      if (!password) {
+        return res.status(400).json({ success: false, message: 'Password is required to delete account.' });
+      }
       if (!(await user.comparePassword(password))) {
         return res.status(401).json({ success: false, message: 'Incorrect password.' });
       }
@@ -484,7 +502,7 @@ exports.login = async (req, res, next) => {
       user.updateStreak();
       user.lastLogin = new Date();
       await user.save();
-      const { accessToken, refreshToken } = generateTokens(user._id);
+      const { accessToken, refreshToken } = generateTokens(user._id, user.tokenVersion || 0);
       return res.status(200).json({
         success: true,
         message: 'Login successful!',
@@ -505,9 +523,10 @@ exports.login = async (req, res, next) => {
     // Update streak
     user.updateStreak();
     user.lastLogin = new Date();
+    if (!user.firstLoginAt) user.firstLoginAt = new Date();
     await user.save({ validateBeforeSave: false });
 
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    const { accessToken, refreshToken } = generateTokens(user._id, user.tokenVersion || 0);
 
     res.status(200).json({
       success: true,
@@ -518,6 +537,23 @@ exports.login = async (req, res, next) => {
         refreshToken,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route  POST /api/auth/logout
+ * @desc   Logout — blacklists the refresh token so it can't be used again
+ * @access Public (requires refreshToken in body)
+ */
+exports.logout = async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+    if (refreshToken) {
+      blacklistToken(refreshToken);
+    }
+    res.json({ success: true, message: 'Logged out successfully.' });
   } catch (error) {
     next(error);
   }
@@ -536,6 +572,11 @@ exports.refreshToken = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'No refresh token provided.' });
     }
 
+    // Check blacklist — reject revoked tokens
+    if (isTokenBlacklisted(refreshToken)) {
+      return res.status(401).json({ success: false, message: 'Token revoked. Please login again.', code: 'TOKEN_REVOKED' });
+    }
+
     const jwt = require('jsonwebtoken');
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, { algorithms: ['HS256'] });
 
@@ -544,17 +585,22 @@ exports.refreshToken = async (req, res, next) => {
       if (!user) {
         return res.status(401).json({ success: false, message: 'Invalid refresh token.' });
       }
-      const tokens = generateTokens(user._id);
+      // Blacklist the old refresh token before issuing new one (rotation)
+      blacklistToken(refreshToken, { reason: 'refresh_rotate', userId: user._id });
+      const tokens = generateTokens(user._id, user.tokenVersion || 0);
       return res.json({ success: true, data: tokens });
     }
 
     const user = await User.findById(decoded.id);
 
-    if (!user) {
+    if (!user || user.deletedAt) {
       return res.status(401).json({ success: false, message: 'Invalid refresh token.' });
     }
 
-    const { accessToken, refreshToken: newRefreshToken } = generateTokens(user._id);
+    // Blacklist the old refresh token before issuing new one (rotation)
+    blacklistToken(refreshToken, { reason: 'refresh_rotate', userId: user._id });
+
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(user._id, user.tokenVersion || 0);
 
     res.json({
       success: true,
@@ -657,7 +703,10 @@ exports.changeEmail = async (req, res, next) => {
     const user = await User.findById(req.user._id).select('+password');
     if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
 
-    if (user.authProvider === 'local' && password) {
+    if (user.authProvider === 'local') {
+      if (!password) {
+        return res.status(400).json({ success: false, message: 'Password is required to change email.' });
+      }
       if (!(await user.comparePassword(password))) {
         return res.status(401).json({ success: false, message: 'Incorrect password.' });
       }
@@ -669,7 +718,7 @@ exports.changeEmail = async (req, res, next) => {
     const verifyToken = user.generateVerifyToken();
     user.verifyEmailToken = crypto.createHash('sha256').update(verifyToken).digest('hex');
     user.verifyEmailExpire = Date.now() + 24 * 60 * 60 * 1000;
-    user._pendingNewEmail = newEmail;
+    user.pendingNewEmail = newEmail;
     await user.save({ validateBeforeSave: false });
 
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-new-email/${verifyToken}`;
@@ -848,7 +897,12 @@ exports.resetPassword = async (req, res, next) => {
     user.resetPasswordExpire = undefined;
     await user.save();
 
-    const { accessToken, refreshToken } = generateTokens(user._id);
+    // Invalidate ALL existing tokens for this user (global session invalidation)
+    await blacklistAllForUser(user._id, { reason: 'password_reset' });
+
+    // Fetch fresh user to get updated tokenVersion
+    const refreshedUser = await User.findById(user._id);
+    const { accessToken, refreshToken } = generateTokens(user._id, refreshedUser.tokenVersion || 0);
 
     res.json({
       success: true,
@@ -858,5 +912,98 @@ exports.resetPassword = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+exports.completeOnboarding = async (req, res, next) => {
+  try {
+    if (isMockAuthEnabled()) {
+      const mockStore = require('../store/mockStore');
+      const user = mockStore.findById(req.user._id);
+      if (user) {
+        user.hasCompletedOnboarding = true;
+        user.onboardingSkipped = req.body.skipped || false;
+        if (!user.firstLoginAt) user.firstLoginAt = new Date();
+        await user.save();
+      }
+      return res.json({ success: true, message: 'Onboarding completed.' });
+    }
+    const user = req.user;
+    user.hasCompletedOnboarding = true;
+    user.onboardingSkipped = req.body.skipped || false;
+    if (!user.firstLoginAt) user.firstLoginAt = new Date();
+    await user.save({ validateBeforeSave: false });
+    res.json({ success: true, message: 'Onboarding completed.' });
+  } catch (e) { next(e); }
+};
+
+exports.getDailyWelcome = async (req, res, next) => {
+  try {
+    let userData;
+    if (isMockAuthEnabled()) {
+      const mockStore = require('../store/mockStore');
+      const user = mockStore.findById(req.user._id);
+      if (!user) return res.json({ success: true, data: null });
+      userData = user;
+    } else {
+      userData = req.user;
+    }
+
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const firstLogin = userData.firstLoginAt || userData.createdAt || now;
+    const daysSinceFirstLogin = Math.floor((now - firstLogin) / (1000 * 60 * 60 * 24)) + 1;
+
+    const dayLabel = daysSinceFirstLogin === 1 ? 'first' :
+      daysSinceFirstLogin === 2 ? 'second' :
+      daysSinceFirstLogin === 3 ? 'third' :
+      daysSinceFirstLogin === 4 ? 'fourth' :
+      daysSinceFirstLogin === 7 ? 'week' : 'returning';
+
+    res.json({
+      success: true,
+      data: {
+        showOnboarding: !userData.hasCompletedOnboarding,
+        day: daysSinceFirstLogin,
+        dayLabel,
+        streak: userData.streak?.current || 0,
+        studyGoalHours: userData.studyGoalHours || 4,
+        completedMilestones: userData.completedMilestones || [],
+        lastDailyWelcome: userData.lastDailyWelcome || '',
+        isNewDay: (userData.lastDailyWelcome || '') !== today,
+      },
+    });
+  } catch (e) { next(e); }
+};
+
+exports.checkMilestones = async (req, res, next) => {
+  try {
+    let userData;
+    if (isMockAuthEnabled()) {
+      const mockStore = require('../store/mockStore');
+      const user = mockStore.findById(req.user._id);
+      if (!user) return res.json({ success: true, data: { milestones: [] } });
+      userData = user;
+    } else {
+      userData = req.user;
+    }
+
+    const completed = userData.completedMilestones || [];
+    const newMilestones = [];
+
+    const streak = userData.streak?.current || 0;
+    if (streak >= 7 && !completed.includes('streak_7')) newMilestones.push('streak_7');
+    if (streak >= 30 && !completed.includes('streak_30')) newMilestones.push('streak_30');
+
+    if (newMilestones.length > 0) {
+      userData.completedMilestones = [...completed, ...newMilestones];
+      if (isMockAuthEnabled()) {
+        await userData.save();
+      } else {
+        await userData.save({ validateBeforeSave: false });
+      }
+    }
+
+    res.json({ success: true, data: { milestones: newMilestones } });
+  } catch (e) { next(e); }
 };
 

@@ -414,6 +414,14 @@ export default function StudySchedulePage() {
 
   const handleGenerate = useCallback(async () => {
     setGenerating(true);
+
+    // Demo mode — skip API call
+    if (localStorage.getItem('isGuest') === 'true' && !localStorage.getItem('accessToken')) {
+      toast('Demo mode — study plan will be available with a full account', { icon: '📋' });
+      setGenerating(false);
+      return;
+    }
+
     try {
       const subjects = (studyStats?.subjects || []).map(s => ({ name: s.name, progress: s.progress || 0 }));
       const weakNames = weakTopics.slice(0, 5).map(w => ({ name: w.name, subject: w.subject || w.name, done: false }));

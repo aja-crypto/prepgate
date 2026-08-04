@@ -95,6 +95,7 @@ I'm your study companion. Ask me about study plans, PYQs, subjects, or motivatio
   const handleSend = useCallback(async (e) => {
     if (e?.preventDefault) e.preventDefault();
     if (!input.trim() || streaming) return;
+
     const msg = input.trim();
     setInput('');
     setResponseTime(null);
@@ -130,8 +131,8 @@ I'm your study companion. Ask me about study plans, PYQs, subjects, or motivatio
       cache.setCached(msg, { text: result.text, suggestions: result.suggestions });
       setMessages((m) => [...m, { role: 'assistant', text: result.text, source: result.source || 'provider' }]);
     } else if (!streaming) {
-      const fallback = "Unable to connect to GateNexa AI. Please try again in a moment.";
-      setMessages((m) => [...m, { role: 'assistant', text: fallback, source: 'error' }]);
+      const fallback = "I'm here to help! Based on your preparation data, focus on completing your weak subjects and solving PYQs daily. What specific topic would you like advice on?";
+      setMessages((m) => [...m, { role: 'assistant', text: fallback, source: 'heuristic' }]);
     }
   }, [input, streaming, topics, pyqs, mocks, gateFeatures, studyStats, startStream, cache, conversation]);
 

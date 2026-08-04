@@ -17,7 +17,7 @@ export default function FloatingAIOrb() {
       )}
 
       <button
-        onClick={() => navigate('/GateNexa-ai')}
+        onClick={() => navigate('/mentor')}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         className="relative w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110"

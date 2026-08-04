@@ -1,10 +1,24 @@
 import { useState, useCallback, useRef } from 'react';
 
 const MAX_MESSAGES = 30;
+const SESSION_KEY = 'gatenexa_ai_session';
+
+function getSessionId(base) {
+  try {
+    const key = `${SESSION_KEY}_${base || 'default'}`;
+    const existing = localStorage.getItem(key);
+    if (existing) return existing;
+    const id = `${base || 'default'}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    localStorage.setItem(key, id);
+    return id;
+  } catch {
+    return `${base || 'default'}_${Date.now()}`;
+  }
+}
 
 export default function useConversation(sessionId = 'default') {
   const [messages, setMessages] = useState([]);
-  const sessionIdRef = useRef(sessionId);
+  const sessionIdRef = useRef(getSessionId(sessionId));
 
   const addMessage = useCallback((role, content, metadata = {}) => {
     setMessages(prev => {

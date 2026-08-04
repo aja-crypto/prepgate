@@ -9,7 +9,8 @@ export class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    this.setState({ errorInfo });
+    if (this.errorCount > 2) return;
+    this.errorCount = (this.errorCount || 0) + 1;
     console.error('========== [ErrorBoundary] Caught Error ==========');
     console.error('Timestamp:', new Date().toISOString());
     console.error('Current route:', window.location.href);

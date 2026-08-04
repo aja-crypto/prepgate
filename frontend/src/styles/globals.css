@@ -5,6 +5,8 @@
 
 @layer base {
   :root {
+    --navbar-height: 90px;
+    --navbar-offset: calc(var(--navbar-height) + 40px);
     --color-primary: #8B5CF6;
     --color-secondary: #22D3EE;
     --color-accent: #F59E0B;
@@ -73,6 +75,7 @@
   html {
     overscroll-behavior: contain;
     -webkit-text-size-adjust: 100%;
+    scroll-padding-top: var(--navbar-offset, 130px);
   }
 
   body {
@@ -230,8 +233,8 @@
     header [class*="rounded-xl"][class*="border"] { padding: 0.35rem 0.6rem !important; border-radius: 10px !important; }
     header [class*="w-5"][class*="h-5"] { width: 1rem !important; height: 1rem !important; }
 
-    /* Search bar compact */
-    header button[aria-label="Open search"] { font-size: 0.75rem !important; padding: 0.35rem 0.6rem !important; min-height: 36px !important; }
+    /* Search bar — 44px touch target */
+    header button[aria-label="Open search"] { font-size: 0.75rem !important; padding: 0.35rem 0.6rem !important; min-height: 44px !important; }
     header button[aria-label="Open search"] span { font-size: 0.7rem !important; }
 
     /* Notification bell compact */
@@ -380,7 +383,7 @@
       padding: 0.6rem 0.75rem !important;
     }
     aside > div:last-child [class*="text-xs"] { font-size: 0.75rem !important; font-weight: 600 !important; }
-    aside > div:last-child button { min-width: 36px !important; min-height: 36px !important; border-radius: 10px !important; }
+    aside > div:last-child button { min-width: 44px !important; min-height: 44px !important; border-radius: 10px !important; }
 
     /* Open/close animation */
     aside { transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), opacity 220ms ease-out !important; opacity: 1 !important; }
@@ -1498,4 +1501,355 @@
 .gpu-layer {
   transform: translateZ(0);
   will-change: transform;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NOTIFICATION SYSTEM — Premium Glassmorphism Utilities
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Gradient border — purple to blue */
+.notif-gradient-border {
+  position: relative;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+.notif-gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(59, 130, 246, 0.4));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Soft glow effect */
+.notif-glow {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), 0 0 40px rgba(139, 92, 246, 0.05);
+}
+.notif-glow-strong {
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.25), 0 0 60px rgba(139, 92, 246, 0.1);
+}
+
+/* Floating icon animation */
+@keyframes notif-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+.notif-float {
+  animation: notif-float 3s ease-in-out infinite;
+}
+
+/* Pulse glow for unread badge */
+@keyframes notif-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(139, 92, 246, 0); }
+}
+.notif-pulse {
+  animation: notif-pulse 2s ease-in-out infinite;
+}
+
+/* Shimmer loading effect */
+@keyframes notif-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.notif-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: notif-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Slide in from right */
+@keyframes notif-slide-in {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.notif-slide-in {
+  animation: notif-slide-in 0.3s ease-out;
+}
+
+/* Scale on hover for notification cards */
+.notif-card-hover {
+  transition: all 0.2s ease;
+}
+.notif-card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1);
+}
+
+/* Glass panel with gradient */
+.notif-glass {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Category pill active state */
+.notif-pill-active {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+/* ───────────────────────────────────────────────
+   NOTIFICATION BELL — Premium Effects
+   ─────────────────────────────────────────────── */
+
+/* Bell shake on new notification (plays once, never loops) */
+@keyframes notif-shake {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(13deg); }
+  30% { transform: rotate(-13deg); }
+  45% { transform: rotate(9deg); }
+  60% { transform: rotate(-9deg); }
+  75% { transform: rotate(5deg); }
+  90% { transform: rotate(-5deg); }
+}
+.notif-shake {
+  animation: notif-shake 0.7s ease-in-out;
+  transform-origin: 50% 0%;
+  will-change: transform;
+}
+
+/* New-notification red dot pulse ring (plays twice, then stops) */
+@keyframes notif-dot-ring {
+  0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.55); }
+  100% { box-shadow: 0 0 0 10px rgba(244, 63, 94, 0); }
+}
+.notif-dot-ring {
+  animation: notif-dot-ring 0.8s ease-out 2;
+}
+
+/* Empty-state icon float */
+@keyframes notif-empty-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+.notif-empty-float {
+  animation: notif-empty-float 3.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ───────────────────────────────────────────────
+   SIDEBAR — Premium Collapsible Navigation
+   ─────────────────────────────────────────────── */
+
+.glass-sidebar {
+  background: linear-gradient(180deg, rgba(13, 16, 34, 0.86), rgba(10, 12, 28, 0.92));
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.02), 0 0 60px rgba(99, 102, 241, 0.04);
+}
+
+.sidebar-item {
+  position: relative;
+}
+
+.sidebar-item .sidebar-item-icon {
+  color: rgba(148, 163, 184, 0.75);
+  transition: color 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+}
+
+.sidebar-item:hover .sidebar-item-icon {
+  color: rgba(167, 139, 250, 0.95);
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.45));
+}
+
+.sidebar-item-active {
+  position: relative;
+}
+
+.sidebar-item-active .sidebar-item-icon {
+  color: #c4b5fd;
+}
+
+/* Left glow accent on active item */
+.sidebar-item-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #a855f7, #22d3ee);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.6);
+}
+
+/* AI sidebar item glow */
+.sidebar-item-ai .sidebar-item-icon {
+  color: #67e8f9;
+  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.5));
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+}
+
+/* Group button hover glow */
+.sidebar-group-btn:hover .sidebar-item-icon {
+  color: #c4b5fd;
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.4));
+}
+
+.sidebar-group-btn .sidebar-item-icon {
+  transition: color 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+}
+
+/* Sidebar scrollbar — slim, glass */
+.glass-sidebar nav::-webkit-scrollbar { width: 5px; }
+.glass-sidebar nav::-webkit-scrollbar-track { background: transparent; }
+.glass-sidebar nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+.glass-sidebar nav::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.3); }
+
+/* ───────────────────────────────────────────────
+   TOP NAVIGATION — Premium
+   ─────────────────────────────────────────────── */
+
+.topnav-link {
+  position: relative;
+  transition: transform 0.22s ease, background-color 0.22s ease, box-shadow 0.22s ease, color 0.22s ease;
+  will-change: transform;
+}
+.topnav-link svg {
+  transition: transform 0.22s ease, filter 0.22s ease, color 0.22s ease;
+  will-change: transform;
+}
+.topnav-link:hover {
+  transform: translateY(-1px);
+  background: rgba(139, 92, 246, 0.07);
+}
+.topnav-link:hover svg {
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.5));
+}
+.topnav-link-active {
+  position: relative;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.16), rgba(59, 130, 246, 0.08)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 24px -6px rgba(139, 92, 246, 0.2);
+}
+.topnav-link-active svg {
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.55));
+}
+.topnav-link-active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 2px;
+  width: 60%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-primary), #22d3ee);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.55);
+}
+
+/* Premium search bar */
+.search-bar-glass {
+  position: relative;
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+.search-bar-glass:hover {
+  border-color: rgba(139, 92, 246, 0.35);
+  background: rgba(139, 92, 246, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 18px -4px rgba(139, 92, 246, 0.25);
+  transform: translateY(-1px);
+}
+.search-bar-glass .search-icon {
+  transition: color 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+}
+.search-bar-glass:hover .search-icon {
+  color: #c4b5fd;
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.5));
+}
+
+/* Header gradient hairline */
+.header-hairline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.35), rgba(34, 211, 238, 0.2), transparent);
+  pointer-events: none;
+}
+
+/* Profile avatar button */
+.profile-avatar-btn {
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.profile-avatar-btn:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.35), 0 0 18px -4px rgba(139, 92, 246, 0.3);
+}
+.profile-avatar-btn:active {
+  transform: scale(0.97);
+}
+
+/* ───────────────────────────────────────────────
+   MOBILE NAVIGATION — Bottom bar
+   ─────────────────────────────────────────────── */
+
+/* Reposition floating AI FAB above the bottom nav on mobile */
+@media (max-width: 639px) {
+  .ai-fab-btn[style*="bottom: max(18px"] {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 78px) !important;
+  }
+}
+
+.mobile-nav-item {
+  position: relative;
+  min-width: 44px;
+  min-height: 44px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+.mobile-nav-item:active {
+  transform: scale(0.94);
+}
+.mobile-nav-item .mnav-ico {
+  transition: transform 0.2s ease, filter 0.2s ease, color 0.2s ease;
+}
+.mobile-nav-item-active .mnav-ico {
+  transform: translateY(-1px) scale(1.08);
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.55));
+}
+
+/* Mobile bottom sheet */
+.mobile-sheet-backdrop {
+  background: rgba(2, 6, 23, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: mobileFadeIn 0.2s ease-out;
+}
+.mobile-sheet {
+  background: linear-gradient(180deg, rgba(15, 18, 38, 0.98), rgba(8, 10, 24, 0.99));
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -16px 50px rgba(0, 0, 0, 0.55), 0 0 40px rgba(139, 92, 246, 0.05);
+  border-radius: 24px 24px 0 0;
 }

@@ -1,6 +1,7 @@
 // src/routes/flashcards.js
 const router = require('express').Router();
 const { protect } = require('../middleware/auth');
+const { requirePremium } = require('../middleware/requirePremium');
 const { isMongoConnected } = require('../config/db');
 const { isMockAuthEnabled } = require('../config/devMode');
 const { Flashcard, UserFlashcard } = require('../models');
@@ -70,7 +71,7 @@ router.get('/', protect, async (req, res, next) => {
 });
 
 // Get all available flashcards (questions) - for adding to user deck
-router.get('/bank', protect, async (req, res, next) => {
+router.get('/bank', protect, requirePremium, async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
@@ -116,7 +117,7 @@ router.get('/bank', protect, async (req, res, next) => {
 });
 
 // Get user's review queue - flashcards due for review
-router.get('/review/queue', protect, async (req, res, next) => {
+router.get('/review/queue', protect, requirePremium, async (req, res, next) => {
   try {
     const userId = req.user._id;
     const limit = parseInt(req.query.limit) || 10;

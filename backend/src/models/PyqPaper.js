@@ -9,4 +9,6 @@ const pyqPaperSchema = new mongoose.Schema({
   fileName: { type: String },
 }, { timestamps: true });
 
+pyqPaperSchema.index({ year: -1, set: 1 });
+
 module.exports = mongoose.model('PyqPaper', pyqPaperSchema);

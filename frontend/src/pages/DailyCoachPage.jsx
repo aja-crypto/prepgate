@@ -42,7 +42,7 @@ export default function DailyCoachPage() {
       const result = await aiService.askCoach("hello", ctx).catch(() => null);
       const text = result?.data?.data?.text || `Good ${new Date().getHours() < 12 ? 'morning' : 'afternoon'}, ${user?.name?.split(' ')[0] || 'there'}! 👋\n\nI'm your Daily Coach. Ask me anything about your GATE preparation — study plans, weak topics, PYQs, or revision.`;
       setMessages([{ role: 'coach', text }]);
-    }, 500);
+    }, 3000);
     return () => clearTimeout(timer);
   }, [user, topics, pyqs, mocks, gateFeatures]);
 

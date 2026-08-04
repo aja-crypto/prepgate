@@ -1,61 +1,59 @@
 const router = require('express').Router();
-const { isMongoConnected } = require('../config/db');
-const Insight = require('../models/Insight');
+const fs = require('fs');
+const path = require('path');
 
-// GET /api/insights — list all insights with optional filters
-router.get('/', async (req, res) => {
+const INSIGHTS_FILE = path.join(__dirname, '..', '..', '..', 'resources', 'learning hud insight.txt');
+
+const EMOJI_HEADINGS = ['📈', '🎯', '🏆', '💰', '📊', '🤖', '📚', '📅'];
+const EMOJI_MAP = { '📈': 'Highest Closing Scores', '🎯': 'Safest IIT Programmes', '🏆': 'Top NIT Placements', '💰': 'Best ROI Colleges', '📊': 'Category Trends', '🤖': 'AI & Data Science Demand', '📚': 'Most Competitive Specializations', '📅': 'Counselling Timeline' };
+
+function parseInsights() {
   try {
-    const { type, category, featured, search, limit = 50 } = req.query;
-    const filter = { isActive: true };
-    if (type) filter.type = type;
-    if (category) filter.category = category;
-    if (featured === 'true') filter.isFeatured = true;
-    if (search) {
-      filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { summary: { $regex: search, $options: 'i' } },
-        { tags: { $regex: search, $options: 'i' } },
-      ];
+    if (!fs.existsSync(INSIGHTS_FILE)) return [];
+    const text = fs.readFileSync(INSIGHTS_FILE, 'utf-8');
+    const lines = text.split('\n');
+    const topics = [];
+    let current = null;
+    let content = [];
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      const emoji = EMOJI_HEADINGS.find(e => trimmed.startsWith(e));
+      if (emoji) {
+        if (current) {
+          current.content = content.join('\n').trim().replace(/\n{3,}/g, '\n\n');
+          topics.push(current);
+        }
+        const title = trimmed.substring(emoji.length).trim();
+        current = { icon: emoji, title: title || EMOJI_MAP[emoji] || 'Untitled', content: '' };
+        content = [];
+      } else if (current && trimmed && !trimmed.startsWith('|') && !trimmed.startsWith('**') && !trimmed.match(/^[A-Z][a-z]+ [A-Z]/) && !trimmed.includes('→ ') && trimmed.length > 5) {
+        content.push(trimmed);
+      }
+    }
+    if (current) {
+      current.content = content.join('\n').trim().replace(/\n{3,}/g, '\n\n');
+      topics.push(current);
     }
 
-    if (!isMongoConnected()) {
-      return res.json({ success: true, count: 0, data: [] });
-    }
+    return topics.filter(t => t.content.length > 20).map(t => ({
+      ...t,
+      summary: t.content.split('\n')[0]?.substring(0, 200) || '',
+    }));
+  } catch { return []; }
+}
 
-    const insights = await Insight.find(filter)
-      .select('title slug type category icon color hero summary kpis tags isFeatured views createdAt updatedAt')
-      .sort({ isFeatured: -1, views: -1, createdAt: -1 })
-      .limit(parseInt(limit));
-
-    res.json({ success: true, count: insights.length, data: insights });
-  } catch (err) {
-    console.error('[Insights] List error:', err);
-    res.status(500).json({ success: false, message: 'Failed to fetch insights' });
-  }
+router.get('/topics', (req, res) => {
+  const topics = parseInsights();
+  res.json({ success: true, count: topics.length, data: topics });
 });
 
-// GET /api/insights/:slug — single insight with full data
-router.get('/:slug', async (req, res) => {
-  try {
-    if (!isMongoConnected()) {
-      return res.status(404).json({ success: false, message: 'Insight not found' });
-    }
-
-    const insight = await Insight.findOne({ slug: req.params.slug, isActive: true })
-      .populate('relatedInsights', 'title slug type icon color hero');
-
-    if (!insight) {
-      return res.status(404).json({ success: false, message: 'Insight not found' });
-    }
-
-    // Increment views
-    Insight.updateOne({ _id: insight._id }, { $inc: { views: 1 } }).catch(() => {});
-
-    res.json({ success: true, data: insight });
-  } catch (err) {
-    console.error('[Insights] Get error:', err);
-    res.status(500).json({ success: false, message: 'Failed to fetch insight' });
-  }
+router.get('/topics/:slug', (req, res) => {
+  const topics = parseInsights();
+  const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const topic = topics.find(t => slugify(t.title) === req.params.slug);
+  if (!topic) return res.status(404).json({ success: false, message: 'Insight topic not found' });
+  res.json({ success: true, data: topic });
 });
 
 module.exports = router;

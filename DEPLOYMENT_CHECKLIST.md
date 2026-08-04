@@ -10,6 +10,15 @@
 - [ ] Update `backend/.env` with all new values
 - [ ] Verify `.env` is NOT committed to git
 
+### Disaster Recovery (DR)
+- [ ] MongoDB Atlas automated backups enabled (daily snapshots, 7-day retention)
+- [ ] Test restore from latest backup in staging environment
+- [ ] Point-in-time recovery: upgrade to M10+ cluster if needed (< 1h RPO)
+- [ ] Document restore procedure: Atlas UI → Clusters → Restore → Select snapshot
+- [ ] Verify ProgressSnapshot model retains 30-day user-level backups
+- [ ] Store backup verification log in `/admin/health` endpoint
+- [ ] Runbook: `docs/runbooks/restore-from-backup.md` created
+
 ### Build
 - [ ] `npm run build` passes (0 errors)
 - [ ] `node --check backend/server.js` passes

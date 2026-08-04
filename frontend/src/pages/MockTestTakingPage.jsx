@@ -283,7 +283,7 @@ export default function MockTestTakingPage() {
       });
 
       const timeTaken = totalTimeRef.current - timeLeft;
-      await mockTestService.submit(id, { answers: answersPayload, timeTaken });
+      const res = await mockTestService.submit(id, { answers: answersPayload, timeTaken });
       const answeredCount = answersPayload.filter(a => a.selectedAnswer !== null).length;
       const totalMarks = currentQuestions.reduce((sum, q) => sum + (q.marks || 1), 0);
       const correctMarks = answersPayload.reduce((sum, a, idx) => {
@@ -293,13 +293,14 @@ export default function MockTestTakingPage() {
         }
         return sum;
       }, 0);
+      const serverData = res?.data?.data;
       updateMocks(ts => [...ts, {
-        id: Date.now(),
+        id: serverData?._id || Date.now(),
         name: currentTest?.title || 'Mock Test',
         date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-        score: totalMarks ? Math.round((correctMarks / totalMarks) * 100) : 0,
-        rank: null,
-        notes: `${answeredCount}/${currentQuestions.length} answered`,
+        score: serverData?.score ?? (totalMarks ? Math.round((correctMarks / totalMarks) * 100) : 0),
+        rank: serverData?.rank ?? null,
+        notes: serverData?.summary || `${answeredCount}/${currentQuestions.length} answered`,
       }]);
       clearSavedState(id);
       toast.success('Test submitted successfully!');

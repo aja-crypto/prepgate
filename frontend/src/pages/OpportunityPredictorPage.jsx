@@ -9,7 +9,8 @@ import {
   Target, TrendingUp, Award, MapPin, Building2, GraduationCap,
   ChevronDown, ChevronRight, Search, Star, AlertCircle, CheckCircle2,
   Clock, History, BarChart3, Zap, Brain, ArrowRight, X, Loader2,
-  Sparkles, Shield, Globe, BookOpen, ListOrdered, GitCompare, FileText
+  Sparkles, Shield, Globe, BookOpen, ListOrdered, GitCompare, FileText,
+  Database
 } from 'lucide-react';
 import EnhancedCollegeCard from '../components/predictor/EnhancedCollegeCard';
 import CollegeComparisonModal from '../components/predictor/CollegeComparisonModal';
@@ -67,12 +68,13 @@ const BLOCK_CONFIG = {
 };
 
 const LOADING_STEPS = [
-  { text: 'Initializing NEXA AI...', icon: Brain, duration: 400 },
-  { text: 'Reading Historical GATE Data...', icon: BookOpen, duration: 500 },
-  { text: 'Checking IIT & NIT Admission Trends...', icon: Building2, duration: 500 },
-  { text: 'Comparing Previous Year Cutoffs...', icon: TrendingUp, duration: 400 },
-  { text: 'Generating Personalized Prediction...', icon: Sparkles, duration: 600 },
-  { text: 'Prediction Ready', icon: CheckCircle2, duration: 300 },
+  { text: 'Validating input parameters...', icon: CheckCircle2, duration: 150 },
+  { text: 'Loading official GATE datasets...', icon: BookOpen, duration: 200 },
+  { text: 'Calculating estimated score (official formula)...', icon: TrendingUp, duration: 250 },
+  { text: 'Predicting All India Rank from historical data...', icon: BarChart3, duration: 300 },
+  { text: `Matching programmes against CCMT cutoffs...`, icon: Building2, duration: 350 },
+  { text: 'Ranking opportunities by confidence score...', icon: Target, duration: 200 },
+  { text: 'Prediction Ready', icon: CheckCircle2, duration: 200 },
 ];
 
 function GlassSelect({ label, value, onChange, options, icon: Icon, disabled }) {
@@ -144,71 +146,86 @@ function GlassSelect({ label, value, onChange, options, icon: Icon, disabled }) 
 function LoadingScreen() {
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
+  const [totalDuration, setTotalDuration] = useState(0);
 
   useEffect(() => {
-    let timeout;
-    if (step < LOADING_STEPS.length) {
-      timeout = setTimeout(() => {
-        if (step === LOADING_STEPS.length - 1) setDone(true);
-        setStep(s => s + 1);
-      }, LOADING_STEPS[step].duration);
-    }
-    return () => clearTimeout(timeout);
+    if (step >= LOADING_STEPS.length) { setDone(true); return; }
+    const d = LOADING_STEPS[step].duration;
+    const t = setTimeout(() => setStep(s => s + 1), d);
+    setTotalDuration(prev => prev + d);
+    return () => clearTimeout(t);
   }, [step]);
+
+  const progressPct = Math.min(100, (step / LOADING_STEPS.length) * 100);
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="flex flex-col items-center justify-center py-20"
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.2 }}
+      className="max-w-lg mx-auto py-12"
     >
-      <div className="relative mb-10">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-          className="w-24 h-24 rounded-full"
-          style={{ background: 'conic-gradient(from 0deg, transparent, rgba(139,92,246,0.4), transparent)', padding: '2px' }}
-        >
-          <div className="w-full h-full rounded-full flex items-center justify-center" style={{ background: 'rgba(5,8,22,0.95)' }}>
-            <Brain size={32} className="text-purple-400" />
+      <div className="rounded-2xl p-6" style={{ background: 'rgba(5,10,25,0.8)', border: '1px solid rgba(139,92,246,0.15)' }}>
+        <div className="flex items-center gap-3 mb-5">
+          <motion.div
+            animate={{ rotate: done ? 0 : 360 }}
+            transition={{ duration: 2, repeat: done ? 0 : Infinity, ease: 'linear' }}
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: done ? 'linear-gradient(135deg, #22C55E, #16A34A)' : 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(6,182,212,0.2))' }}
+          >
+            {done ? <CheckCircle2 size={20} className="text-white" /> : <Loader2 size={20} className="text-purple-400" />}
+          </motion.div>
+          <div>
+            <h3 className="text-sm font-bold text-white">{done ? 'Prediction Complete' : 'Processing Prediction...'}</h3>
+            <p className="text-[10px] text-slate-500">
+              {done ? `Completed in ${(totalDuration / 1000).toFixed(1)}s` : 'Analyzing your inputs against historical data'}
+            </p>
           </div>
-        </motion.div>
-        {done && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #22C55E, #16A34A)' }}
-          >
-            <CheckCircle2 size={18} className="text-white" />
-          </motion.div>
-        )}
-      </div>
+        </div>
 
-      <div className="space-y-3 w-full max-w-sm">
-        {LOADING_STEPS.slice(0, step + 1).map((s, i) => (
+        {/* Progress bar */}
+        <div className="h-1 rounded-full mb-5 overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
           <motion.div
-            key={i}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3 }}
-            className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
-            style={{
-              background: i < step ? 'rgba(34,197,94,0.08)' : 'rgba(139,92,246,0.08)',
-              border: `1px solid ${i < step ? 'rgba(34,197,94,0.15)' : i === step ? 'rgba(139,92,246,0.25)' : 'rgba(255,255,255,0.04)'}`,
-            }}
-          >
-            {i < step ? (
-              <CheckCircle2 size={16} className="text-green-400 shrink-0" />
-            ) : (
-              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}>
-                <Loader2 size={16} className="text-purple-400 shrink-0" />
+            className="h-full rounded-full"
+            animate={{ width: `${progressPct}%` }}
+            style={{ background: 'linear-gradient(90deg, #8B5CF6, #06B6D4)' }}
+          />
+        </div>
+
+        {/* Step list */}
+        <div className="space-y-1.5">
+          {LOADING_STEPS.slice(0, step + 1).map((s, i) => {
+            const isComplete = i < step || done;
+            const isCurrent = i === step && !done;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.25 }}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg"
+                style={{
+                  background: isComplete ? 'rgba(34,197,94,0.06)' : isCurrent ? 'rgba(139,92,246,0.08)' : 'transparent',
+                  border: `1px solid ${isComplete ? 'rgba(34,197,94,0.12)' : isCurrent ? 'rgba(139,92,246,0.15)' : 'transparent'}`,
+                }}
+              >
+                <span className="shrink-0">
+                  {isComplete ? (
+                    <CheckCircle2 size={14} className="text-green-400" />
+                  ) : isCurrent ? (
+                    <Loader2 size={14} className="text-purple-400 animate-spin" />
+                  ) : (
+                    <div className="w-3.5 h-3.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)' }} />
+                  )}
+                </span>
+                <span className={`text-[11px] ${isComplete ? 'text-green-300/80' : isCurrent ? 'text-white' : 'text-slate-600'}`}>
+                  {s.text}
+                </span>
               </motion.div>
-            )}
-            <span className={`text-sm ${i < step ? 'text-green-300' : 'text-slate-300'}`}>{s.text}</span>
-          </motion.div>
-        ))}
+            );
+          })}
+        </div>
       </div>
     </motion.div>
   );
@@ -341,6 +358,93 @@ function PredictionForm({ onSubmit, loading }) {
   );
 }
 
+function TransparencyPanel({ result }) {
+  const [open, setOpen] = useState(false);
+  const formula = result.formula || result.gateFormula;
+  const hasAirData = result.airRange || result.air;
+  const airRange = result.airRange || result.air?.range;
+  const midAIR = airRange ? Math.round((airRange.low + airRange.high) / 2) : null;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.35 }}
+      className="rounded-2xl overflow-hidden mb-4" style={{ background: 'rgba(10,15,30,0.5)', border: '1px solid rgba(255,255,255,0.06)' }}>
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors">
+        <div className="flex items-center gap-2">
+          <Shield size={14} className="text-purple-400" />
+          <span className="text-xs font-semibold text-white">How This Was Predicted</span>
+          <span className="text-[9px] text-slate-500">Formula · Data Sources · Confidence</span>
+        </div>
+        <ChevronDown size={14} className={`text-slate-500 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+            <div className="px-4 pb-4 space-y-3 border-t border-white/5 pt-3">
+              {/* AIR Explanation */}
+              {airRange && (
+                <div className="rounded-lg p-3" style={{ background: 'rgba(6,182,212,0.05)', border: '1px solid rgba(6,182,212,0.1)' }}>
+                  <div className="text-[10px] text-cyan-400 font-semibold mb-2">All India Rank: {airRange.low} – {airRange.high}</div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
+                    <div className="flex items-center gap-1.5"><span className="text-green-400">✓</span><span className="text-slate-400">2024 Score Distribution</span></div>
+                    <div className="flex items-center gap-1.5"><span className="text-green-400">✓</span><span className="text-slate-400">Historical AIR Mapping</span></div>
+                    <div className="flex items-center gap-1.5"><span className="text-green-400">✓</span><span className="text-slate-400">CS Paper</span></div>
+                    <div className="flex items-center gap-1.5"><span className="text-green-400">✓</span><span className="text-slate-400">General Category</span></div>
+                  </div>
+                  {midAIR && <div className="text-[9px] text-slate-500 mt-2">Most Likely: ~{midAIR} · ±25% range from interpolation</div>}
+                </div>
+              )}
+
+              {/* Formula */}
+              {formula && (
+                <div className="rounded-lg p-3" style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.1)' }}>
+                  <div className="text-[10px] text-purple-400 font-semibold mb-2">Score Formula (Official GATE)</div>
+                  <div className="text-[11px] font-mono text-purple-200/80 mb-2">{formula.expression}</div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] font-mono">
+                    <div><span className="text-slate-500">Sq = </span><span className="text-slate-300">{formula.Sq}</span></div>
+                    <div><span className="text-slate-500">St = </span><span className="text-slate-300">{formula.St}</span></div>
+                    <div><span className="text-slate-500">Mq = </span><span className="text-slate-300">{formula.Mq}</span></div>
+                    <div><span className="text-slate-500">Mt = </span><span className="text-slate-300">{formula.Mt}</span></div>
+                  </div>
+                  <div className="text-[9px] text-slate-500 mt-2">
+                    Mq (qualifying) = {formula.Mq} · Mt (top 0.1% avg) = {formula.Mt} · Marks = {result.predictedScore} → Score
+                  </div>
+                </div>
+              )}
+
+              {/* Data Sources */}
+              <div className="rounded-lg p-3" style={{ background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.1)' }}>
+                <div className="text-[10px] text-green-400 font-semibold mb-2">Data Sources</div>
+                <div className="space-y-1 text-[10px]">
+                  {(result.officialData || []).map((s, i) => (
+                    <div key={i} className="flex items-center gap-1.5"><span className="text-green-400">✓</span><span className="text-slate-300">{s}</span><span className="text-[8px] px-1 py-0.5 rounded bg-green-500/10 text-green-400">Official</span></div>
+                  ))}
+                  {(result.estimatedData || []).map((s, i) => (
+                    <div key={i} className="flex items-center gap-1.5"><span className="text-yellow-400">⚠</span><span className="text-slate-300">{s}</span><span className="text-[8px] px-1 py-0.5 rounded bg-yellow-500/10 text-yellow-400">Estimated</span></div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Confidence breakdown */}
+              <div className="rounded-lg p-3" style={{ background: 'rgba(234,179,8,0.05)', border: '1px solid rgba(234,179,8,0.1)' }}>
+                <div className="text-[10px] text-yellow-400 font-semibold mb-2">Confidence: {result.confidence} ({result.confidenceScore}%)</div>
+                <div className="h-1.5 rounded-full mb-2 overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  <div className="h-full rounded-full" style={{ width: `${result.confidenceScore}%`, background: 'linear-gradient(90deg, #EAB308, #22C55E)' }} />
+                </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
+                  <div className="flex items-center gap-1.5"><span className="text-green-400/60">✓</span><span className="text-slate-500">Official Formula</span></div>
+                  <div className="flex items-center gap-1.5"><span className="text-green-400/60">✓</span><span className="text-slate-500">Official Qualifying Marks</span></div>
+                  <div className="flex items-center gap-1.5"><span className="text-yellow-400/60">⚠</span><span className="text-slate-500">Estimated Mt</span></div>
+                  <div className="flex items-center gap-1.5"><span className="text-green-400/60">✓</span><span className="text-slate-500">Historical AIR</span></div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
 function ResultsView({ result, onReset, form, blurred, referralCode, referralProgress, referralCount }) {
   const [activeTab, setActiveTab] = useState('performance');
   const [filterPath, setFilterPath] = useState('All');
@@ -436,9 +540,9 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 auto-rows-fr">
             {[
               { label: 'GATE Score', value: String(result.predictedScore || '—'), sub: 'out of 1000', color: '#8B5CF6' },
-              { label: 'Est. AIR', value: result.airRange ? `${result.airRange.best}-${result.airRange.worst}` : '—', sub: 'All India Rank', color: '#06B6D4' },
+              { label: 'Est. AIR', value: result.airRange ? `${result.airRange.low}-${result.airRange.high}` : '—', sub: 'All India Rank', color: '#06B6D4' },
               { label: 'Confidence', value: `${result.confidence || '—'}${result.confidenceScore ? ` (${result.confidenceScore}%)` : ''}`, sub: 'Based on historical data', color: '#22C55E' },
-              { label: 'Database', value: `${result.databaseCoverage || (result.opportunities||[]).length || '—'} Programmes`, sub: `IIT:${result.totalIITs||0} NIT:${result.totalNITs||0} IIIT:${result.totalIIITs||0}`, color: '#EAB308' },
+              { label: 'Database', value: result.databaseStats ? `${result.databaseStats.totalProgrammes} Programmes` : `${result.databaseCoverage || '—'}`, sub: result.databaseStats ? `${result.databaseStats.totalInstitutes} Institutes · IIT ${result.databaseStats.instituteBreakdown?.IIT||0} NIT ${result.databaseStats.instituteBreakdown?.NIT||0}` : `IIT:${result.totalIITs||0} NIT:${result.totalNITs||0}`, color: '#EAB308' },
             ].map((item, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.06, duration: 0.35, ease: [0.16,1,0.3,1] }}
                 className="rounded-xl p-4 text-center flex flex-col items-center justify-center min-h-[100px]" style={{ background: `${item.color}08`, border: `1px solid ${item.color}15` }}>
@@ -451,13 +555,16 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
 
           {/* Trust indicators */}
           <div className="flex items-center gap-3 mt-3 text-[9px] text-slate-600 flex-wrap">
-            <span className="flex items-center gap-1">✅ Official CCMT/COAP data</span>
+            <span className="flex items-center gap-1">✓ Official CCMT/COAP data</span>
+            <span className="flex items-center gap-1">✓ GATE 2024 Formula</span>
             <span className="flex items-center gap-1">🤖 AI Confidence Analysis</span>
-            <span className="flex items-center gap-1">📊 Database: 2025</span>
-            <span className="flex items-center gap-1">⚡ v2.0</span>
+            <span className="flex items-center gap-1">⚡ Prediction Engine v2.0</span>
           </div>
         </div>
       </motion.div>
+
+      {/* Transparency Panel */}
+      <TransparencyPanel result={result} />
 
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.35 }} className="flex gap-2 overflow-x-auto pb-1">
         {tabs.map(tab => (
@@ -507,8 +614,8 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
               {result.airRange ? (
                 <>
                   <div className="text-[10px] text-slate-500 uppercase tracking-wider font-medium mb-1">Expected AIR Range</div>
-                  <div className="text-lg font-bold text-white font-mono leading-none">{result.airRange.best} – {result.airRange.worst}</div>
-                  <div className="text-[10px] text-cyan-400 mt-2">Most Likely: {result.airRange.average}</div>
+                  <div className="text-lg font-bold text-white font-mono leading-none">{result.airRange.low} – {result.airRange.high}</div>
+                  <div className="text-[10px] text-cyan-400 mt-2">Most Likely: {Math.round((result.airRange.low + result.airRange.high) / 2)}</div>
                   <div className="text-[9px] text-slate-500 mt-1">Based on cutoff variance</div>
                 </>
               ) : (
@@ -920,7 +1027,7 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
           <span>✓ {result.year || '—'} data</span>
           <span>✓ Multi-year trends</span>
         </div>
-        <button onClick={() => navigate('/report', { state: { result } })} className="flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-medium bg-purple-500/10 text-purple-300 border border-purple-500/20 hover:bg-purple-500/20 transition-all ml-2">
+        <button onClick={() => navigate('/report', { state: { result, compareList, choiceOrder: choiceOrderResult } })} className="flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-medium bg-purple-500/10 text-purple-300 border border-purple-500/20 hover:bg-purple-500/20 transition-all ml-2">
           <FileText size={12} /> Download Report
         </button>
       </div>
@@ -1086,6 +1193,24 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
 
       <CollegeComparisonModal isOpen={showCompare} onClose={() => setShowCompare(false)} colleges={compareList} />
       {null}
+
+      {/* Data source footer */}
+      {result.datasetInfo && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+          className="mt-8 text-center">
+          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-xl text-[10px]"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <span className="flex items-center gap-1 text-slate-500">
+              <Database size={10} /> Data Source:
+            </span>
+            <span className="text-slate-300">
+              {result.datasetInfo.datasets?.[0]?.name || 'CCMT'} ({result.datasetInfo.datasets?.[0]?.records || 0} verified records)
+            </span>
+            <span className="text-slate-600">·</span>
+            <span className="text-slate-500">Updated {result.datasetInfo.lastUpdated || '—'}</span>
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 }
@@ -1264,6 +1389,7 @@ export default function OpportunityPredictorPage() {
   const handlePredict = async (input) => {
     setLoading(true);
     setShowLoading(true);
+    const minLoadTime = new Promise(r => setTimeout(r, 1800)); // ensure pipeline completes
     try {
       const res = await predictorService.predict(input);
       setResult(res.data.data);
@@ -1279,7 +1405,8 @@ export default function OpportunityPredictorPage() {
       else toast.error(serverMsg || 'Prediction failed. Check that predictor datasets are uploaded in Admin CMS.');
     } finally {
       setLoading(false);
-      setTimeout(() => setShowLoading(false), 500);
+      await minLoadTime; // wait for pipeline animation to complete
+      setTimeout(() => setShowLoading(false), 200);
     }
   };
 

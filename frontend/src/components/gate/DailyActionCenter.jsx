@@ -69,6 +69,13 @@ export default function DailyActionCenter() {
 
   const generatePlan = async () => {
     setLoading(true);
+    // Demo mode — skip API call, use local plan
+    if (localStorage.getItem('isGuest') === 'true' && !localStorage.getItem('accessToken')) {
+      setDailyPlan([fallback.revision, fallback.pyq, fallback.task, fallback.mock]);
+      setSource('local');
+      setLoading(false);
+      return;
+    }
     try {
       const res = await aiService.generatePlan({
         subjects: studyStats.subjects || [],

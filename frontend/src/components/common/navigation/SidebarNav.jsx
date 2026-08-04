@@ -1,133 +1,261 @@
-import React, { useRef, useCallback } from 'react';
-import { NavLink } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
+// Premium collapsible sidebar navigation with accordion groups
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '../../ui/Icon';
+import { useAuth } from '../../../context/AuthContext';
 
-const NAV = [
+const NAV_TOP = [
   { label: 'Dashboard', icon: 'dashboard', to: '/dashboard' },
-  { label: 'GateNexa AI', icon: 'zap', to: '/GateNexa-ai', premium: true },
-  { section: 'Study' },
-  { label: 'Subjects', icon: 'subjects', to: '/subjects' },
-  { label: 'Topics', icon: 'topics', to: '/topics' },
-  { label: 'Notes', icon: 'notes', to: '/notes' },
-  { label: 'Focus', icon: 'productivity', to: '/productivity' },
-  { section: 'Practice' },
-  { label: 'PYQ', icon: 'pyq', to: '/pyq' },
-  { label: 'Mock Tests', icon: 'mocks', to: '/mocks' },
-  { label: 'Planner', icon: 'planner', to: '/planner' },
-  { section: 'Insights' },
-  { label: 'Analytics', icon: 'analytics', to: '/analytics' },
-  { label: 'AIR Predictor', icon: 'analytics', to: '/air-predictor' },
-  { section: 'More' },
-  { label: 'Gate Vault', icon: 'folder', to: '/gate-vault' },
-  { label: 'NEXA Predictor', icon: 'analytics', to: '/opportunity-predictor' },
-  { label: 'Learning Hub', icon: 'zap', to: '/learning-hub' },
-  { label: 'Mistakes', icon: 'target', to: '/mistakes' },
-  { label: 'GATE Papers', icon: 'pyq', to: '/gate-papers' },
-  { label: 'Calculator', icon: 'calculator', onClick: 'toggleCalc' },
-  { section: 'Account' },
+  { label: 'GateNexa AI', icon: 'zap', to: '/mentor', glow: true },
+  { label: 'Learning Hub', icon: 'book', to: '/learning-hub' },
+  { label: 'NEXA Predictor', icon: 'cpu', to: '/opportunity-predictor' },
+];
+
+const NAV_GROUPS = [
+  {
+    key: 'study',
+    label: 'Study',
+    icon: 'subjects',
+    items: [
+      { label: 'Subjects', icon: 'subjects', to: '/subjects' },
+      { label: 'Topics', icon: 'topics', to: '/topics' },
+      { label: 'Notes', icon: 'notes', to: '/notes' },
+      { label: 'Focus', icon: 'productivity', to: '/productivity' },
+    ],
+  },
+  {
+    key: 'practice',
+    label: 'Practice',
+    icon: 'pyq',
+    items: [
+      { label: 'PYQ', icon: 'pyq', to: '/pyq' },
+      { label: 'Mock Tests', icon: 'mocks', to: '/mocks' },
+      { label: 'Planner', icon: 'planner', to: '/planner' },
+    ],
+  },
+  {
+    key: 'insights',
+    label: 'Insights',
+    icon: 'analytics',
+    items: [
+      { label: 'Analytics', icon: 'analytics', to: '/analytics' },
+      { label: 'AIR Predictor', icon: 'bar-chart', to: '/air-predictor' },
+      { label: 'Mistakes', icon: 'target', to: '/mistakes' },
+    ],
+  },
+  {
+    key: 'tools',
+    label: 'Tools',
+    icon: 'calculator',
+    items: [
+      { label: 'Calculator', icon: 'calculator', onClick: 'toggleCalc' },
+      { label: 'GATE Papers', icon: 'file-text', to: '/gate-papers' },
+      { label: 'Gate Vault', icon: 'vault', to: '/gate-vault' },
+    ],
+  },
+];
+
+const NAV_BOTTOM = [
   { label: 'Settings', icon: 'settings', to: '/settings' },
   { label: 'Feedback', icon: 'feedback', to: '/feedback' },
 ];
 
-const pageLoaderMap = {
-  '/dashboard': () => import('../../../pages/DashboardPage'),
-  '/subjects': () => import('../../../pages/SubjectsPage'),
-  '/topics': () => import('../../../pages/TopicsPage'),
-  '/GateNexa-ai': () => import('../../../pages/GateNexaAIPage'),
-  '/notes': () => import('../../../pages/NotesPage'),
-  '/pyq': () => import('../../../pages/PYQPage'),
-  '/mocks': () => import('../../../pages/MocksPage'),
-  '/planner': () => import('../../../pages/StudyPlannerPage'),
-  '/analytics': () => import('../../../pages/AnalyticsPage'),
-  '/settings': () => import('../../../pages/SettingsPage'),
-  '/productivity': () => import('../../../pages/ProductivityPage'),
-  '/air-predictor': () => import('../../../pages/AirPredictorPage'),
-  '/gate-vault': () => import('../../../pages/GateVaultPage'),
-  '/opportunity-predictor': () => import('../../../pages/OpportunityPredictorPage'),
-  '/mistakes': () => import('../../../pages/MistakeNotebookPage'),
-  '/gate-papers': () => import('../../../pages/GatePapersPage'),
-  '/feedback': () => import('../../../pages/FeedbackPage'),
-};
+function isPathActive(pathname, to) {
+  if (!to) return false;
+  if (to === '/dashboard') return pathname === '/dashboard';
+  return pathname === to || pathname.startsWith(to + '/');
+}
 
+/* Prefetch NavLink — loads JS chunk on hover/touch for instant navigation */
 const PrefetchLink = React.memo(({ to, children, className, onClick }) => {
   const prefetched = useRef(false);
   const handlePrefetch = useCallback(() => {
     if (prefetched.current) return;
     prefetched.current = true;
-    const loader = pageLoaderMap[to];
+    const pageMap = {
+      '/dashboard': () => import('../../../pages/DashboardPage'),
+      '/subjects': () => import('../../../pages/SubjectsPage'),
+      '/topics': () => import('../../../pages/TopicsPage'),
+      '/mentor': () => import('../../../pages/GateNexaAIPage'),
+      '/notes': () => import('../../../pages/NotesPage'),
+      '/pyq': () => import('../../../pages/PYQPage'),
+      '/mocks': () => import('../../../pages/MocksPage'),
+      '/planner': () => import('../../../pages/StudyPlannerPage'),
+      '/analytics': () => import('../../../pages/AnalyticsPage'),
+      '/settings': () => import('../../../pages/SettingsPage'),
+      '/productivity': () => import('../../../pages/ProductivityPage'),
+      '/air-predictor': () => import('../../../pages/AirPredictorPage'),
+      '/gate-vault': () => import('../../../pages/GateVaultPage'),
+      '/opportunity-predictor': () => import('../../../pages/OpportunityPredictorPage'),
+      '/mistakes': () => import('../../../pages/MistakeNotebookPage'),
+      '/gate-papers': () => import('../../../pages/GatePapersPage'),
+      '/learning-hub': () => import('../../../pages/LearningHubPage'),
+      '/feedback': () => import('../../../pages/FeedbackPage'),
+    };
+    const loader = pageMap[to];
     if (loader) loader().catch(() => {});
   }, [to]);
-  return React.createElement(NavLink, { to, className, onClick, onMouseEnter: handlePrefetch, onTouchStart: handlePrefetch, children });
+  return React.createElement(NavLink, {
+    to,
+    className,
+    onClick,
+    onMouseEnter: handlePrefetch,
+    onTouchStart: handlePrefetch,
+    children,
+  });
 });
 
-const SidebarNav = React.memo(({ onNavClick, onCalcClick }) => {
-  const { user } = useAuth();
+const itemClass = ({ isActive }) =>
+  `sidebar-item group relative flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12.5px] font-medium transition-all duration-200 my-[2px] cursor-pointer ${
+    isActive
+      ? 'sidebar-item-active text-white bg-gradient-to-r from-purple-500/[0.14] via-indigo-500/[0.08] to-transparent shadow-[inset_0_0_20px_rgba(139,92,246,0.06)]'
+      : 'text-text2 hover:text-white hover:bg-white/[0.045] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
+  }`;
+
+function NavLinkRow({ item, onNavClick, onCalcClick }) {
+  if (item.onClick === 'toggleCalc') {
+    return (
+      <button
+        onClick={onCalcClick}
+        className="sidebar-item group relative flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12.5px] font-medium transition-all duration-200 my-[2px] cursor-pointer text-text2 hover:text-white hover:bg-white/[0.045] w-full"
+      >
+        <span className="sidebar-item-icon flex items-center justify-center">
+          <Icon name={item.icon} />
+        </span>
+        <span>{item.label}</span>
+      </button>
+    );
+  }
   return (
-    <>
-      {NAV.map((item, i) => {
-        if (item.section) {
-          return (
-            <div key={i} className="flex items-center gap-3 px-3 pt-6 pb-2">
-              <div className="h-px flex-1 glass-divider" />
-              <span className="text-[9px] uppercase tracking-[0.18em] font-semibold shrink-0 section-heading">{item.section}</span>
-              <div className="h-px flex-1 glass-divider" />
-            </div>
-          );
-        }
-        if (item.onClick === 'toggleCalc') {
-          return (
-            <button key={item.label} onClick={onCalcClick} className="sidebar-item w-full flex items-center gap-3 px-3 py-3.5 rounded-xl text-[13px] transition-all duration-200 my-0.5 text-text2 hover:bg-hover hover:text-text">
-              <Icon name={item.icon} className="shrink-0 w-4.5 h-4.5" />
-              <span className="font-medium">{item.label}</span>
-            </button>
-          );
-        }
-        if (item.label === 'Gate Vault') {
-          return (
-            <PrefetchLink key={item.to} to={item.to} onClick={onNavClick} className={({ isActive }) =>
-              `sidebar-item flex items-center gap-3 px-3 py-3.5 rounded-xl text-[12px] transition-all duration-200 my-0.5 ${isActive ? 'sidebar-item-active' : 'text-text2 hover:bg-hover hover:text-text'}`
-            }>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 w-3.5 h-3.5 gate-vault-icon" style={{ filter: 'drop-shadow(0 0 6px rgba(168,85,247,0.4))' }}>
-                <rect x="3" y="8" width="18" height="12" rx="2" className="gv-rect" />
-                <path d="M7 8V6a5 5 0 0 1 10 0v2" className="gv-path" />
-                <line x1="12" y1="12" x2="12" y2="16" className="gv-line" />
-                <path d="M9 12v2a5 5 0 0 0 6 0v-2" className="gv-path2" />
-                <circle cx="12" cy="14" r="1" fill="currentColor" stroke="none" />
-              </svg>
-              <span className="font-medium">{item.label}</span>
-            </PrefetchLink>
-          );
-        }
+    <PrefetchLink
+      to={item.to}
+      onClick={onNavClick}
+      className={({ isActive }) => `${itemClass({ isActive })} ${item.to === '/mentor' ? 'sidebar-item-ai' : ''}`}
+    >
+      <span className={`sidebar-item-icon flex items-center justify-center transition-transform duration-200 ${item.to === '/mentor' ? 'text-cyan-300' : ''}`}>
+        <Icon name={item.icon} />
+      </span>
+      <span className="truncate">{item.label}</span>
+      {item.to === '/mentor' && (
+        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-gradient-to-r from-purple-400 to-cyan-400 opacity-80 shadow-[0_0_6px_rgba(34,211,238,0.8)]" />
+      )}
+    </PrefetchLink>
+  );
+}
+
+function SidebarNav({ onNavClick, onCalcClick }) {
+  const { user } = useAuth();
+  const location = useLocation();
+
+  const defaultOpen = NAV_GROUPS.find(g =>
+    g.items.some(i => i.to && isPathActive(location.pathname, i.to))
+  )?.key;
+
+  const [openGroup, setOpenGroup] = useState(defaultOpen || null);
+
+  // If route changes to a different group, expand that group (one at a time)
+  useEffect(() => {
+    const active = NAV_GROUPS.find(g =>
+      g.items.some(i => i.to && isPathActive(location.pathname, i.to))
+    )?.key;
+    if (active && active !== openGroup) setOpenGroup(active);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      {/* Top-level — always visible */}
+      {NAV_TOP.map(item => (
+        <NavLinkRow key={item.to} item={item} onNavClick={onNavClick} onCalcClick={onCalcClick} />
+      ))}
+
+      {/* Divider */}
+      <div className="sidebar-divider my-2.5" />
+
+      {/* Collapsible groups */}
+      {NAV_GROUPS.map(group => {
+        const isOpen = openGroup === group.key;
+        const groupHasActive = group.items.some(i => i.to && isPathActive(location.pathname, i.to));
         return (
-          <PrefetchLink key={item.to} to={item.to} onClick={onNavClick} className={({ isActive }) =>
-            `sidebar-item flex items-center gap-3 px-3 py-3.5 rounded-xl text-[12px] transition-all duration-200 my-0.5 ${isActive ? 'sidebar-item-active' : 'text-text2 hover:bg-hover hover:text-text'}`
-          }>
-              <Icon name={item.icon} className="shrink-0 w-4.5 h-4.5 text-current" />
-            <span className="font-medium">{item.label}</span>
-            {item.premium && (
-              <span className="ml-auto text-[8px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500/20 to-cyan-500/20 text-purple-300 border border-purple-500/20">AI</span>
-            )}
-          </PrefetchLink>
+          <div key={group.key} className="sidebar-group">
+            <button
+              onClick={() => setOpenGroup(isOpen ? null : group.key)}
+              aria-expanded={isOpen}
+              className={`sidebar-group-btn group flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-[12.5px] font-semibold transition-all duration-200 cursor-pointer ${
+                isOpen || groupHasActive
+                  ? 'text-white/90'
+                  : 'text-text2 hover:text-white/90 hover:bg-white/[0.03]'
+              }`}
+            >
+              <span className={`flex items-center justify-center transition-colors duration-200 ${groupHasActive ? 'text-purple-300' : 'text-text3 group-hover:text-purple-300'}`}>
+                <Icon name={group.icon} />
+              </span>
+              <span className="flex-1 text-left truncate">{group.label}</span>
+              <motion.span
+                animate={{ rotate: isOpen ? 180 : 0 }}
+                transition={{ duration: 0.22, ease: 'easeInOut' }}
+                className="flex items-center justify-center text-text3"
+              >
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </motion.span>
+            </button>
+
+            <AnimatePresence initial={false}>
+              {isOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  className="overflow-hidden"
+                >
+                  <div className="relative pl-[13px] ml-[15px] border-l border-white/[0.07] mb-1 mt-0.5 space-y-[1px]">
+                    {group.items.map(item => (
+                      <div key={item.label} className="relative">
+                        <span className="absolute -left-[3px] top-1/2 -translate-y-1/2 w-[5px] h-[5px] rounded-full bg-white/[0.10] border border-white/20" />
+                        <NavLinkRow item={item} onNavClick={onNavClick} onCalcClick={onCalcClick} />
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         );
       })}
-      {(user?.role === 'owner' || user?.role === 'admin') && (
-        <>
-          <div className="flex items-center gap-3 px-3 pt-5 pb-1.5">
-            <div className="h-px flex-1 glass-divider" />
-            <span className="text-[10px] uppercase tracking-[0.15em] text-text3/60 font-semibold shrink-0">Admin</span>
-            <div className="h-px flex-1 glass-divider" />
-          </div>
-          <NavLink to="/admin" className={({ isActive }) =>
-            `sidebar-item flex items-center gap-3 px-3 py-3.5 rounded-xl text-[13px] transition-all my-0.5 ${isActive ? 'sidebar-item-active' : 'text-text2 hover:bg-hover hover:text-text'}`
-          }>
-            <Icon name="admin" className="shrink-0 w-4.5 h-4.5 text-current" />
-            <span className="font-medium">Admin Panel</span>
-          </NavLink>
-        </>
-      )}
-    </>
-  );
-});
 
-export { SidebarNav, NAV, PrefetchLink };
+      {/* Divider */}
+      <div className="sidebar-divider my-2.5" />
+
+      {/* Bottom links */}
+      {NAV_BOTTOM.map(item => (
+        <NavLinkRow key={item.to} item={item} onNavClick={onNavClick} onCalcClick={onCalcClick} />
+      ))}
+
+      {/* Admin */}
+      {(user?.role === 'owner' || user?.role === 'admin') && (
+        <NavLink
+          to="/admin"
+          onClick={onNavClick}
+          className={({ isActive }) =>
+            `sidebar-item group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12.5px] font-medium transition-all duration-200 my-[2px] cursor-pointer ${
+              isActive
+                ? 'text-white bg-gradient-to-r from-purple-500/[0.14] to-transparent'
+                : 'text-text2 hover:text-white hover:bg-white/[0.045]'
+            }`
+          }
+        >
+          <span className="sidebar-item-icon flex items-center justify-center text-yellow-400/80">
+            <Icon name="admin" />
+          </span>
+          <span>Admin Panel</span>
+        </NavLink>
+      )}
+    </div>
+  );
+}
+
+export default React.memo(SidebarNav);

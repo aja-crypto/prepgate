@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useFocus } from '../context/FocusContext';
+import { useFocus, useFocusTimer } from '../context/FocusContext';
 import { useProgress } from '../context/ProgressContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -690,6 +690,7 @@ export default function DeepFocusPage() {
   const { user } = useAuth();
   const { data, updateProductivity, updateStudyStats, syncToCloud } = useProgress();
   const focus = useFocus();
+  const timer = useFocusTimer();
 
   const [bgMode, setBgMode] = useState('deepfocus');
   const [selectedSubject, setSelectedSubject] = useState('');
@@ -791,8 +792,8 @@ export default function DeepFocusPage() {
   // Watch for session completion
   useEffect(() => {
     if (!sessionActive || focus.isActive) return;
-    if (focus.timeRemaining === 0) onSessionComplete(selectedDuration);
-  }, [focus.isActive, focus.timeRemaining]);
+    if (timer.timeRemaining === 0) onSessionComplete(selectedDuration);
+  }, [focus.isActive, timer.timeRemaining]);
 
   const handleCloseResult = () => {
     setShowCompletion(false);
@@ -899,7 +900,7 @@ export default function DeepFocusPage() {
         {/* Timer ring */}
         <div className="transition-all duration-700" style={{ transform: sessionActive ? 'scale(1)' : 'scale(0.95)', opacity: sessionActive ? 1 : 0.8 }}>
           <TimerRing
-            timeRemaining={focus.timeRemaining}
+            timeRemaining={timer.timeRemaining}
             sessionDuration={sessionActive ? selectedDuration : selectedDuration}
             mode={focus.mode}
             isActive={sessionActive}

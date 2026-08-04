@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useProgress } from '../../context/ProgressContext';
@@ -40,7 +40,7 @@ export default function GateVaultWidget() {
       if (p.value?.data?.data) setFlashcardProgress(p.value.data.data);
       if (s.value?.data?.data) setStats(s.value.data.data);
       if (m.value?.data?.data?.questions) setTotalQuestions(m.value.data.data.questions.length);
-    }).catch(e => console.warn('[GateVaultWidget] refreshAll failed', e?.message)).finally(() => setRefreshing(false));
+    }).catch(e => console.error('[GateVaultWidget] refreshAll failed', e?.message)).finally(() => setRefreshing(false));
   }, []);
 
   useEffect(() => { refreshAll(); }, [refreshAll]);

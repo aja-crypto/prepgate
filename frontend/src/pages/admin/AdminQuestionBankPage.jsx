@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import { useState, useEffect, useCallback, useMemo } from 'react';
 import { questionBankService } from '../../services/adminApi';
 import BulkImporter from '../../components/admin/BulkImporter';
 import toast from 'react-hot-toast';
@@ -94,7 +94,7 @@ export default function AdminQuestionBankPage() {
   useEffect(() => { if (view === 'grouped') loadGrouped(); else loadList(); }, [view, loadGrouped, loadList]);
 
   useEffect(() => {
-    questionBankService.stats().then(r => setStats(r.data.data)).catch(e => console.warn('AdminQuestionBank stats failed', e?.message));
+    questionBankService.stats().then(r => setStats(r.data.data)).catch(e => console.error('AdminQuestionBank stats failed', e?.message));
   }, []);
 
   const totalByType = useMemo(() => {

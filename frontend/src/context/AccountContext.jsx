@@ -124,10 +124,10 @@ export function AccountProvider({ children }) {
               referralCount: d.referralCount || 0,
               referralProgress: d.progress || 0,
           referralPendingCount: d.pendingCount || 0,
-              isPremium: derivePremium(prev) || d.isPremium || false,
+              isPremium: d.isPremium || false,
               premiumUnlockedViaReferral: d.premiumUnlockedViaReferral || false,
-              aiQuestionsRemaining: (derivePremium(prev) || d.isPremium) ? 100 : 5,
-              predictionCredits: (derivePremium(prev) || d.isPremium) ? 999 : 5,
+              aiQuestionsRemaining: d.isPremium ? 100 : 5,
+              predictionCredits: d.isPremium ? 999 : 5,
               popups: d.isPremium && d.premiumUnlockedViaReferral ? {
                 ...prev.popups,
                 celebration: { shownAt: Date.now(), dismissed: false, version: 1 },
@@ -260,10 +260,10 @@ export function AccountProvider({ children }) {
         referralCount: d.referralCount || 0,
         referralProgress: d.progress || 0,
           referralPendingCount: d.pendingCount || 0,
-        isPremium: derivePremium(prev) || d.isPremium || false,
+        isPremium: d.isPremium || false,
         premiumUnlockedViaReferral: d.premiumUnlockedViaReferral || false,
-        aiQuestionsRemaining: (derivePremium(prev) || d.isPremium) ? 100 : 5,
-        predictionCredits: (derivePremium(prev) || d.isPremium) ? 999 : 5,
+        aiQuestionsRemaining: d.isPremium ? 100 : 5,
+        predictionCredits: d.isPremium ? 999 : 5,
         popups: d.isPremium && d.premiumUnlockedViaReferral && !prev.popups.celebration.dismissed
           ? { ...prev.popups, celebration: { shownAt: Date.now(), dismissed: false, version: 1 } }
           : prev.popups,

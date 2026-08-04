@@ -1,12 +1,13 @@
 ﻿const router = require('express').Router();
 const mongoose = require('mongoose');
 const multer = require('multer');
+const { createFileFilter } = require('../utils/uploadValidator');
 const { adminProtect, requirePermission } = require('../middleware/adminAuth');
 const { extractTextFromPdf } = require('../services/ocrService');
 const { parseQuestions } = require('../services/questionParser');
 const { isCloudinaryConfigured, uploadPdf: cloudinaryUpload } = require('../config/cloudinary');
 
-const pdfUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
+const pdfUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 }, fileFilter: createFileFilter('pdf') });
 
 function isMongoConnected() {
   return mongoose.connection.readyState === 1;

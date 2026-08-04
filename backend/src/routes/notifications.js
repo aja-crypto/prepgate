@@ -1,219 +1,184 @@
 const router = require('express').Router();
 const { protect } = require('../middleware/auth');
+const Notification = require('../models/Notification');
+const NotificationPrefs = require('../models/NotificationPrefs');
+const User = require('../models/User');
+const { generateAndDeliver, ensurePrefs, generateDailyNotifications, generateOnboardingNotifications } = require('../services/notificationEngine');
+const { isMongoConnected } = require('../config/db');
 
-// In-memory notification store
-const notifications = {};
-
-const RANKER_QUOTES = [
-  { rank: 'AIR 1', name: 'GATE CSE', text: 'Consistency beats motivation. Even 3 focused hours daily for 8 months can outperform random 10-hour study days.', year: 2023 },
-  { rank: 'AIR 5', name: 'GATE CSE', text: 'I revised every subject at least 4 times. Revision was more important than learning new topics.', year: 2024 },
-  { rank: 'AIR 12', name: 'GATE CSE', text: 'PYQs are the closest thing to the actual exam. Never skip them.', year: 2023 },
-  { rank: 'AIR 3', name: 'GATE DA', text: 'Understanding the why behind each concept matters more than memorizing solutions.', year: 2024 },
-  { rank: 'AIR 8', name: 'GATE CSE', text: 'Your mock test scores don\'t define you — your analysis after each mock does.', year: 2024 },
-  { rank: 'AIR 2', name: 'GATE CSE', text: 'Solve every PYQ from the last 10 years at least twice. Patterns repeat.', year: 2023 },
-  { rank: 'AIR 15', name: 'GATE CSE', text: 'Don\'t collect resources. Master one book per subject completely.', year: 2024 },
-  { rank: 'AIR 7', name: 'GATE CSE', text: 'The last 30 days are not for learning new topics. They are for revision and confidence.', year: 2023 },
-  { rank: 'AIR 20', name: 'GATE CSE', text: 'Sleep is not a waste of time. A fresh brain solves problems faster.', year: 2024 },
-  { rank: 'AIR 4', name: 'GATE CSE', text: 'I made a mistake notebook and reviewed it every Sunday. That alone improved my score by 15 marks.', year: 2023 },
-  { rank: 'AIR 10', name: 'GATE DA', text: 'Mathematics is not a subject to memorize — it is a subject to practice every single day.', year: 2024 },
-  { rank: 'AIR 6', name: 'GATE CSE', text: 'Your competition is not other students. Your competition is your own procrastination.', year: 2023 },
-];
-
-const DAILY_MOTIVATIONS = [
-  'Every hour you study today is an investment in your future rank.',
-  'The rank you want is hidden in today\'s study session. Start now.',
-  'Small daily wins compound into extraordinary results.',
-  'Your focus today determines your rank tomorrow.',
-  'One more topic. One more PYQ. One step closer to your dream IIT.',
-  'The pain of discipline is nothing compared to the pain of regret.',
-  'You don\'t have to be extreme, just consistent.',
-  'Success is the sum of small efforts repeated day in and day out.',
-  'While others sleep, champions prepare.',
-  'Every question you solve today is a mark you won\'t lose tomorrow.',
-];
-
-const REALITY_CHECKS = [
-  'Your competitors are studying right now. Will you be ahead or behind on exam day?',
-  'Every hour of procrastination is a gift to your competition.',
-  'The gap between where you are and where you want to be is filled with daily action.',
-  'Comfort zones are where dreams go to die. Step out and study.',
-];
-
-function todayIndex(arr) {
-  const day = new Date().getDate();
-  return day % arr.length;
+function requireMongo(res) {
+  if (!isMongoConnected()) {
+    return res.status(503).json({ success: false, message: 'MongoDB required for notifications.' });
+  }
+  return null;
 }
 
-const GATE_DATE = new Date('2027-02-07T00:00:00+05:30');
-
-function daysUntilGate() {
-  const now = new Date();
-  const diff = GATE_DATE.getTime() - now.getTime();
-  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+// Resolve a user _id to a valid MongoDB ObjectId.
+// Mock users have UUID IDs — find or create a MongoDB User by email.
+async function resolveMongoUserId(user) {
+  if (!user) return null;
+  // Already a valid ObjectId
+  if (/^[0-9a-f]{24}$/i.test(String(user._id))) return user._id;
+  // UUID or other non-ObjectId — find or create by email
+  if (user.email) {
+    let mongoUser = await User.findOne({ email: user.email }).select('_id').lean();
+    if (!mongoUser) {
+      try {
+        mongoUser = await User.create({
+          name: user.name || 'GateNexa User',
+          email: user.email,
+          password: '!placeholder_' + Date.now(),
+          role: user.role || 'user',
+          isVerified: true,
+          authProvider: 'local',
+          referralCode: 'NX-' + Date.now().toString(36).toUpperCase(),
+        });
+      } catch (e) {
+        // Race condition — try finding again
+        mongoUser = await User.findOne({ email: user.email }).select('_id').lean();
+      }
+    }
+    return mongoUser?._id;
+  }
+  return null;
 }
 
-function generateNotifications(req) {
-  const userId = req.user?.id || req.user?._id;
-  if (!userId) return [];
-  const now = new Date();
-  const existing = notifications[userId] || [];
-  const recentTypes = new Set(existing.slice(-5).map(n => n.type));
-  const generated = [];
-  const daysLeft = daysUntilGate();
+router.get('/', protect, async (req, res, next) => {
+  try {
+    if (requireMongo(res)) return;
+    const mongoUserId = await resolveMongoUserId(req.user);
+    if (!mongoUserId) return res.json({ success: true, data: { notifications: [], total: 0, unreadCount: 0, page: 1, pages: 0 } });
 
-  // 1. Daily Motivation (once per day)
-  if (!recentTypes.has('motivation')) {
-    generated.push({
-      id: `mot-${now.toDateString()}`,
-      type: 'motivation',
-      icon: '🎯',
-      title: `${daysLeft} Days to GATE 2027`,
-      message: DAILY_MOTIVATIONS[todayIndex(DAILY_MOTIVATIONS)],
-      read: false,
-      createdAt: now.toISOString(),
-      actionUrl: null,
-    });
-  }
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
+    const { unreadOnly, type } = req.query;
+    const filter = { user: mongoUserId };
+    if (unreadOnly === 'true') filter.isRead = false;
+    if (type) filter.type = type;
+    const [notifications, total, unreadCount] = await Promise.all([
+      Notification.find(filter).sort({ scheduledAt: -1 }).skip(skip).limit(limit).lean(),
+      Notification.countDocuments(filter),
+      Notification.countDocuments({ user: mongoUserId, isRead: false }),
+    ]);
 
-  // 2. Ranker Quote (once per day)
-  if (!recentTypes.has('ranker_quote')) {
-    const quote = RANKER_QUOTES[todayIndex(RANKER_QUOTES)];
-    generated.push({
-      id: `rq-${now.toDateString()}`,
-      type: 'ranker_quote',
-      icon: '🏆',
-      title: `${quote.rank} ${quote.name} Tip`,
-      message: quote.text,
-      read: false,
-      createdAt: now.toISOString(),
-      actionUrl: '/success-hub',
-    });
-  }
+    // If a user has no notifications at all AND has never been seeded, create default onboarding notifications
+    if (total === 0) {
+      const prefs = await ensurePrefs(mongoUserId);
+      if (!prefs.onboardingSeeded) {
+        try {
+          await generateOnboardingNotifications(mongoUserId);
+          const [fresh, freshTotal, freshUnread] = await Promise.all([
+            Notification.find(filter).sort({ scheduledAt: -1 }).skip(skip).limit(limit).lean(),
+            Notification.countDocuments(filter),
+            Notification.countDocuments({ user: mongoUserId, isRead: false }),
+          ]);
+          return res.json({ success: true, data: { notifications: fresh, total: freshTotal, unreadCount: freshUnread, page, pages: Math.ceil(freshTotal / limit) } });
+        } catch (e) {
+          // If seeding fails, fall back to the empty result
+        }
+      }
+    }
 
-  // 3. Countdown (every 50 days)
-  if (daysLeft > 0 && (daysLeft % 50 === 0 || daysLeft === 200 || daysLeft === 100 || daysLeft === 30 || daysLeft === 7)) {
-    generated.push({
-      id: `cd-${daysLeft}`,
-      type: 'countdown',
-      icon: '⏳',
-      title: `${daysLeft} Days Left`,
-      message: daysLeft > 30 ? 'Every day skipped now becomes pressure later.' : 'Final stretch! Every hour counts now.',
-      read: false,
-      createdAt: now.toISOString(),
-      actionUrl: '/dashboard',
-    });
-  }
-
-  // 4. Reality Check (random 30% chance)
-  if (Math.random() < 0.3 && !recentTypes.has('reality_check')) {
-    generated.push({
-      id: `rc-${Date.now()}`,
-      type: 'reality_check',
-      icon: '⚡',
-      title: 'Reality Check',
-      message: REALITY_CHECKS[todayIndex(REALITY_CHECKS)],
-      read: false,
-      createdAt: now.toISOString(),
-      actionUrl: '/analytics',
-    });
-  }
-
-  // 5. AI Coach (weak area tip — mock data)
-  if (!recentTypes.has('ai_coach')) {
-    const weakAreas = ['CN Routing', 'Normalization', 'Process Synchronization', 'Turing Machines', 'Pipeline Hazards'];
-    const topic = weakAreas[todayIndex(weakAreas)];
-    generated.push({
-      id: `ai-${now.toDateString()}`,
-      type: 'ai_coach',
-      icon: '🤖',
-      title: 'AI Coach Recommendation',
-      message: `Your weakest topic is ${topic}. Spend 25 minutes on it today.`,
-      read: false,
-      createdAt: now.toISOString(),
-      actionUrl: '/weak-topics',
-    });
-  }
-
-  // 6. Streak reminder (if no streak data, generic)
-  if (!recentTypes.has('streak')) {
-    generated.push({
-      id: `str-${now.toDateString()}`,
-      type: 'streak',
-      icon: '🔥',
-      title: 'Keep Your Streak Alive',
-      message: 'Study at least 30 minutes today to keep your streak going.',
-      read: false,
-      createdAt: now.toISOString(),
-      actionUrl: '/daily-coach',
-    });
-  }
-
-  // Merge with existing (deduplicate by id)
-  const existingIds = new Set(existing.map(n => n.id));
-  const newOnes = generated.filter(n => !existingIds.has(n.id));
-  notifications[userId] = [...newOnes, ...existing].slice(0, 50); // keep latest 50
-
-  return newOnes;
-}
-
-// GET /api/notifications — list all for user
-router.get('/', protect, (req, res) => {
-  const userId = req.user?.id || req.user?._id;
-  const userNotes = notifications[userId] || [];
-  // Auto-generate if empty
-  if (userNotes.length === 0) {
-    generateNotifications(req);
-  }
-  res.json({ success: true, data: notifications[userId] || [] });
+    res.json({ success: true, data: { notifications, total, unreadCount, page, pages: Math.ceil(total / limit) } });
+  } catch (e) { next(e); }
 });
 
-// GET /api/notifications/unread-count
-router.get('/unread-count', protect, (req, res) => {
-  const userId = req.user?.id || req.user?._id;
-  const userNotes = notifications[userId] || [];
-  const count = userNotes.filter(n => !n.read).length;
-  res.json({ success: true, count });
+router.post('/generate', protect, async (req, res, next) => {
+  try {
+    if (requireMongo(res)) return;
+    const mongoUserId = await resolveMongoUserId(req.user);
+    if (!mongoUserId) return res.status(400).json({ success: false, message: 'Cannot resolve user.' });
+    const { type, context } = req.body;
+    let notifications = [];
+    if (type === 'daily') {
+      notifications = await generateDailyNotifications(mongoUserId, context || {});
+    } else if (type && type !== 'all') {
+      const n = await generateAndDeliver(mongoUserId, type, context || {});
+      if (n) notifications.push(n);
+    }
+    const prefs = await ensurePrefs(mongoUserId);
+    res.json({ success: true, data: { notifications, todayCount: prefs.todayCount, maxPerDay: prefs.maxPerDay } });
+  } catch (e) { next(e); }
 });
 
-// PUT /api/notifications/:id/read
-router.put('/:id/read', protect, (req, res) => {
-  const userId = req.user?.id || req.user?._id;
-  const userNotes = notifications[userId] || [];
-  const note = userNotes.find(n => n.id === req.params.id);
-  if (note) {
-    note.read = true;
-    res.json({ success: true, data: note });
-  } else {
-    res.status(404).json({ success: false, message: 'Notification not found' });
-  }
+router.put('/read-all', protect, async (req, res, next) => {
+  try {
+    if (requireMongo(res)) return;
+    const mongoUserId = await resolveMongoUserId(req.user);
+    if (!mongoUserId) return res.json({ success: true, message: 'All marked as read.' });
+    await Notification.updateMany({ user: mongoUserId, isRead: false }, { isRead: true });
+    res.json({ success: true, message: 'All marked as read.' });
+  } catch (e) { next(e); }
 });
 
-// PUT /api/notifications/read-all
-router.put('/read-all', protect, (req, res) => {
-  const userId = req.user?.id || req.user?._id;
-  const userNotes = notifications[userId] || [];
-  userNotes.forEach(n => n.read = true);
-  res.json({ success: true });
+router.put('/:id/read', protect, async (req, res, next) => {
+  try {
+    if (requireMongo(res)) return;
+    const mongoUserId = await resolveMongoUserId(req.user);
+    if (!mongoUserId) return res.status(404).json({ success: false, message: 'Not found.' });
+    const n = await Notification.findOneAndUpdate({ _id: req.params.id, user: mongoUserId }, { isRead: true }, { new: true });
+    if (!n) return res.status(404).json({ success: false, message: 'Not found.' });
+    res.json({ success: true, data: n });
+  } catch (e) { next(e); }
 });
 
-// DELETE /api/notifications/:id
-router.delete('/:id', protect, (req, res) => {
-  const userId = req.user?.id || req.user?._id;
-  const userNotes = notifications[userId] || [];
-  notifications[userId] = userNotes.filter(n => n.id !== req.params.id);
-  res.json({ success: true });
+router.put('/:id/bookmark', protect, async (req, res, next) => {
+  try {
+    if (requireMongo(res)) return;
+    const mongoUserId = await resolveMongoUserId(req.user);
+    if (!mongoUserId) return res.status(404).json({ success: false, message: 'Not found.' });
+    const n = await Notification.findOne({ _id: req.params.id, user: mongoUserId });
+    if (!n) return res.status(404).json({ success: false, message: 'Not found.' });
+    n.isBookmarked = !n.isBookmarked;
+    await n.save();
+    res.json({ success: true, data: n });
+  } catch (e) { next(e); }
 });
 
-// POST /api/notifications/generate — manually trigger generation
-router.post('/generate', protect, (req, res) => {
-  const newNotes = generateNotifications(req);
-  res.json({ success: true, count: newNotes.length, data: newNotes });
+router.delete('/:id', protect, async (req, res, next) => {
+  try {
+    if (requireMongo(res)) return;
+    const mongoUserId = await resolveMongoUserId(req.user);
+    if (!mongoUserId) return res.status(404).json({ success: false, message: 'Not found.' });
+    const r = await Notification.deleteOne({ _id: req.params.id, user: mongoUserId });
+    if (r.deletedCount === 0) return res.status(404).json({ success: false, message: 'Not found.' });
+    res.json({ success: true, message: 'Deleted.' });
+  } catch (e) { next(e); }
 });
 
-// GET /api/notifications/ranker-quote — daily ranker wisdom
-router.get('/ranker-quote', protect, (req, res) => {
-  const quote = RANKER_QUOTES[todayIndex(RANKER_QUOTES)];
-  res.json({ success: true, data: quote });
+router.get('/unread-count', protect, async (req, res, next) => {
+  try {
+    if (requireMongo(res)) return;
+    const mongoUserId = await resolveMongoUserId(req.user);
+    if (!mongoUserId) return res.json({ success: true, count: 0 });
+    const count = await Notification.countDocuments({ user: mongoUserId, isRead: false });
+    res.json({ success: true, count });
+  } catch (e) { next(e); }
+});
+
+router.get('/prefs', protect, async (req, res, next) => {
+  try {
+    if (requireMongo(res)) return;
+    const mongoUserId = await resolveMongoUserId(req.user);
+    if (!mongoUserId) return res.json({ success: true, data: { enabled: true, maxPerDay: 5, categories: {}, todayCount: 0, todayDate: '' } });
+    const prefs = await ensurePrefs(mongoUserId);
+    res.json({ success: true, data: prefs });
+  } catch (e) { next(e); }
+});
+
+router.put('/prefs', protect, async (req, res, next) => {
+  try {
+    if (requireMongo(res)) return;
+    const mongoUserId = await resolveMongoUserId(req.user);
+    if (!mongoUserId) return res.json({ success: true, data: { enabled: true, maxPerDay: 5 } });
+    const prefs = await ensurePrefs(mongoUserId);
+    for (const key of ['enabled', 'maxPerDay', 'quietHoursStart', 'quietHoursEnd', 'categories']) {
+      if (req.body[key] !== undefined) prefs[key] = req.body[key];
+    }
+    await prefs.save();
+    res.json({ success: true, data: prefs });
+  } catch (e) { next(e); }
 });
 
 module.exports = router;

@@ -140,14 +140,14 @@ async function generatePredictionReport({ result, compareList, choiceOrder, pred
   y = 85;
   doc.setDrawColor(...COLORS.primary); doc.setLineWidth(0.5); doc.line(45, y, 165, y); y += 9;
 
-  const airStr = result.airRange ? `${result.airRange.best}'-'${result.airRange.worst}` : 'N/A';
+  const airStr = result.airRange ? `${result.airRange.low}'-'${result.airRange.high}` : 'N/A';
   doc.setFillColor(20,13,50); doc.setDrawColor(90,70,190);
   doc.roundedRect(30, y, 150, 38, 4, 4, 'FD');
   let iy = y + 9;
   doc.setFontSize(11); doc.setTextColor(225,225,240);
   doc.text(`Candidate: ${candName}`, 48, iy);
   doc.setFontSize(10); doc.setTextColor(200,200,230);
-  doc.text(`Score: ${result.predictedScore||'N/A'}   AIR: ${airStr}   Confidence: ${result.confidenceScore||'N/A'}%`, 48, iy+8);
+  doc.text(`Score: ${result.predictedScore||'N/A'}   AIR: ${airStr}   Confidence: ${result.confidence||result.confidenceScore||'N/A'}%`, 48, iy+8);
   doc.setFontSize(7); doc.setTextColor(160,140,210);
   doc.text(`Qualified: ${result.isQualified?'YES':'NO'}  |  ${result.databaseCoverage||opps.length||'N/A'} Programmes  |  Category: General`, 48, iy+17);
   y += 46;
@@ -165,8 +165,8 @@ async function generatePredictionReport({ result, compareList, choiceOrder, pred
 
   // ──── EXECUTIVE SUMMARY ────
   secHdr('Executive Summary');
-  const air = result.airRange ? `${result.airRange.best}'-'${result.airRange.worst}` : 'N/A';
-  let aP = ''; if (result.airRange?.average) { const p = Math.max(0,Math.min(99.99,100-(result.airRange.average/150000)*100)); aP = ` (Top ${p.toFixed(1)}%)`; }
+  const air = result.airRange ? `${result.airRange.low}'-'${result.airRange.high}` : 'N/A';
+  let aP = ''; if (result.airRange?.low && result.airRange?.high) { const mid = Math.round((result.airRange.low + result.airRange.high) / 2); const p = Math.max(0,Math.min(99.99,100-(mid/150000)*100)); aP = ` (Top ${p.toFixed(1)}%)`; }
   txt(`Score ${result.predictedScore||'N/A'}  |  AIR ${air}${aP}  |  Qualified: ${result.isQualified?'YES':'NO'}  |  Confidence: ${result.confidenceScore||'N/A'}%`, MARGIN, FS.body, COLORS.text); y += LH.body + 1;
   const dI = opps.filter(o=>o.collegeType==='IIT').length, dN = opps.filter(o=>o.collegeType==='NIT').length, dS = opps.filter(o=>o.probability>=70).length;
   txt(`${dI} IIT  |  ${dN} NIT  |  ${dS} Safe (>=70%)  |  ${opps.length} Total`, MARGIN+2, FS.small, COLORS.textMuted); y += LH.small + 3;
@@ -177,7 +177,7 @@ async function generatePredictionReport({ result, compareList, choiceOrder, pred
     { l:'Score', v:String(result.predictedScore||'N/A') },
     { l:'AIR Range', v:air+(aP||'') },
     { l:'Qualified', v:result.isQualified?'YES':'NO' },
-    { l:'Confidence', v:String(result.confidenceScore||'N/A')+'%' },
+    { l:'Confidence', v:String(result.confidence||result.confidenceScore||'N/A')+'%' },
     { l:'Programmes', v:String(opps.length) },
   ];
   const kpiW = Math.floor(USABLE_W / kpi.length) - 2;

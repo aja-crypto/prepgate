@@ -14,7 +14,7 @@ const PAGES = {
       { h: 'Cookies', c: 'We use essential cookies for authentication and session management. Preference cookies store your theme selection and dashboard layout choices. Analytics cookies help us understand feature usage. See our Cookie Policy for details.' },
       { h: 'Data Retention', c: 'Your data is retained for as long as your account is active. You can request account deletion at any time from Settings. After deletion, data is permanently removed within 30 days.' },
       { h: 'Your Rights', c: 'You have the right to access, correct, or delete your personal data. You can export your data from Settings. For privacy-related requests, contact privacy@gatenexa.app.' },
-      { h: 'Third-Party Services', c: 'We use OpenRouter for AI model access, MongoDB for database storage, and Cloudinary for file storage. Each provider has its own privacy policy governing data handling.' },
+      { h: 'Third-Party Services', c: 'We use Nexa AI for AI model access, MongoDB for database storage, and Cloudinary for file storage. Each provider has its own privacy policy governing data handling.' },
     ],
   },
   'terms-of-service': {
@@ -66,7 +66,6 @@ const LEGAL_LINKS = [
 
 export default function LegalPage() {
   const { pageId } = useParams();
-  useEffect(() => { const t = Date.now(); console.log('[Trace] LegalPage MOUNTED — pageId:', pageId, 'at', t); return () => console.log('[Trace] LegalPage UNMOUNTED — pageId:', pageId, 'after', Date.now() - t, 'ms'); }, [pageId]);
   const page = PAGES[pageId];
   const currentIdx = LEGAL_LINKS.findIndex(l => l.to === `/legal/${pageId}`);
   if (!page) return <div className="min-h-screen flex items-center justify-center text-slate-400">Page not found.</div>;

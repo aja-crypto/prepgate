@@ -2,9 +2,15 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { visualizer } from 'rollup-plugin-visualizer';
+
+const plugins = [react()];
+if (process.env.ANALYZE) {
+  plugins.push(visualizer({ open: true, filename: 'dist/stats.html', gzipSize: true, brotliSize: true }));
+}
 
 export default defineConfig({
-  plugins: [react()],
+  plugins,
   define: {
     global: 'globalThis',
     'process.env': {},
@@ -60,9 +66,13 @@ export default defineConfig({
           if (id.includes('node_modules/framer-motion')) return 'animation';
           if (id.includes('node_modules/lucide-react')) return 'icons';
           if (id.includes('node_modules/date-fns')) return 'dates';
-          if (id.includes('node_modules/firebase')) return 'firebase';
+          // firebase not installed — chunk removed
           if (id.includes('node_modules/react-pdf') || id.includes('node_modules/pdfjs-dist')) return 'pdf';
-          // Misc deps stay in main bundle to avoid overhead
+          if (id.includes('node_modules/@react-pdf/renderer')) return 'react-pdf-renderer';
+          if (id.includes('node_modules/firebase')) return 'firebase';
+          if (id.includes('node_modules/react-markdown') || id.includes('node_modules/rehype-highlight')) return 'markdown';
+          if (id.includes('node_modules/@sentry')) return 'sentry';
+
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',

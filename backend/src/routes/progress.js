@@ -1,6 +1,7 @@
 // src/routes/progress.js
 const router = require('express').Router();
 const { protect } = require('../middleware/auth');
+const { validateFields } = require('../middleware/validateInput');
 const { Progress, StudyLog, MockTest, Note } = require('../models');
 const ProgressSnapshot = require('../models/ProgressSnapshot');
 const { getEmptyProgressData } = require('../utils/emptyProgress');
@@ -144,7 +145,10 @@ router.get('/', protect, async (req, res, next) => {
 });
 
 // PUT log study hours
-router.put('/study-hours', protect, async (req, res, next) => {
+router.put('/study-hours', protect, validateFields([
+  { name: 'hours', type: 'number', min: 0, max: 24 },
+  { name: 'date', type: 'string' },
+]), async (req, res, next) => {
   try {
     if (!isMongoConnected()) {
       req.user.updateStreak();
@@ -158,7 +162,7 @@ router.put('/study-hours', protect, async (req, res, next) => {
 
     const log = await StudyLog.findOneAndUpdate(
       { user: req.user._id, date: logDate },
-      { hours, subjects, user: req.user._id, date: logDate },
+      { $set: { hours, subjects, user: req.user._id, date: logDate } },
       { upsert: true, new: true }
     );
 
@@ -373,7 +377,7 @@ router.put('/sync', protect, async (req, res, next) => {
       logDate.setHours(0, 0, 0, 0);
       await StudyLog.findOneAndUpdate(
         { user: userId, date: logDate },
-        { hours: data.studyStats.todayHours, user: userId, date: logDate },
+        { $set: { hours: data.studyStats.todayHours, user: userId, date: logDate } },
         { upsert: true, new: true }
       );
       if (typeof req.user.updateStreak === 'function') {

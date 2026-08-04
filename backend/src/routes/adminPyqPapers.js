@@ -2,31 +2,32 @@ const router = require('express').Router();
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const { protect, adminOnly } = require('../middleware/auth');
+const { sanitizeFilename, createFileFilter } = require('../utils/uploadValidator');
+const { adminProtect } = require('../middleware/adminAuth');
 const { isMongoConnected } = require('../config/db');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const year = req.body.year || 'unknown';
-    const set = req.body.set || 'unknown';
-    const dir = path.join(__dirname, '../../uploads/gate-papers', String(year), String(set));
+    const year = String(req.body.year || 'unknown').replace(/[^\d]/g, '') || 'unknown';
+    const set = String(req.body.set || 'unknown').replace(/[^\d]/g, '') || 'unknown';
+    const dir = path.join(__dirname, '../../uploads/gate-papers', year, set);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const year = req.body.year || 'unknown';
-    const set = req.body.set || 'unknown';
+    const ext = path.extname(file.originalname).toLowerCase();
+    const year = String(req.body.year || 'unknown').replace(/[^\d]/g, '') || 'unknown';
+    const set = String(req.body.set || 'unknown').replace(/[^\d]/g, '') || 'unknown';
     cb(null, `${year}_set${set}${ext}`);
   }
 });
 
-const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
+const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 }, fileFilter: createFileFilter('pdf') });
 
 const PyqPaper = require('../models/PyqPaper');
 const localStore = require('../store/localDataStore');
 
-router.get('/', protect, adminOnly, async (req, res, next) => {
+router.get('/', adminProtect, async (req, res, next) => {
   try {
     let papers = [];
     if (isMongoConnected()) {
@@ -39,7 +40,7 @@ router.get('/', protect, adminOnly, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.post('/', protect, adminOnly, upload.single('pdf'), async (req, res, next) => {
+router.post('/', adminProtect, upload.single('pdf'), async (req, res, next) => {
   try {
     const { year, set, title, subject } = req.body;
     if (!req.file) return res.status(400).json({ success: false, message: 'PDF file required' });
@@ -59,7 +60,7 @@ router.post('/', protect, adminOnly, upload.single('pdf'), async (req, res, next
   } catch (e) { next(e); }
 });
 
-router.delete('/:id', protect, adminOnly, async (req, res, next) => {
+router.delete('/:id', adminProtect, async (req, res, next) => {
   try {
     if (isMongoConnected()) {
       const paper = await PyqPaper.findById(req.params.id);

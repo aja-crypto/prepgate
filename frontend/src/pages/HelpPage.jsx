@@ -11,7 +11,6 @@ const FAQ = [
 ];
 
 export default function HelpPage() {
-  useEffect(() => { const t = Date.now(); console.log('[Trace] HelpPage MOUNTED at', t); return () => console.log('[Trace] HelpPage UNMOUNTED after', Date.now() - t, 'ms'); }, []);
   return (
     <div className="min-h-screen" style={{ background: '#070B1A' }}>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-8">

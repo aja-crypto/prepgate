@@ -1,191 +1,15 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import toast from 'react-hot-toast';
+import { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
-import { useNavigate, Link } from 'react-router-dom';
 import LazyYouTubePlayer from '../components/learning/LazyYouTubePlayer';
 import { SUBJECT_RESOURCES } from '../data/subjectResources';
-import { INSIGHT_CARDS } from '../data/insightCards';
 import { EDITOR_PICKS } from '../data/editorsPicks';
-import { TABS, ROADMAP_FILTERS, STORY_FILTERS, RESOURCE_FILTERS, SORT_OPTIONS } from '../data/filters';
-
-function VideoSkeleton() {
-  return (
-    <div className="rounded-2xl overflow-hidden animate-pulse" style={{ background: 'rgba(18,24,40,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}>
-      <div className="aspect-video bg-white/[0.03]" />
-      <div className="p-4 space-y-2.5">
-        <div className="h-3 bg-white/[0.05] rounded w-3/4" />
-        <div className="h-2 bg-white/[0.03] rounded w-1/2" />
-        <div className="flex gap-2">
-          <div className="h-4 bg-white/[0.04] rounded-full w-16" />
-          <div className="h-4 bg-white/[0.04] rounded-full w-12" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ResourceCard({ item, onClick, index }) {
-  const [imgError, setImgError] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const videoId = item.youtubeId || item.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1];
-  const thumbnail = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : item.thumbnail;
-
-  const isVideo = !!videoId;
-  const hasActionUrl = !!(item.youtubeId || item.youtubeUrl || item.url);
-
-  return (
-    <motion.div
-      layout
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
-      className="rounded-2xl overflow-hidden cursor-pointer group relative content-visibility-auto anim-gpu"
-      style={{ background: 'rgba(18,24,40,0.6)', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)' }}
-      whileHover={{ y: -4, scale: 1.01, transition: { type: 'spring', stiffness: 300, damping: 20 } }}
-      whileTap={{ scale: 0.98 }}
-    >
-      {isHovered && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="absolute inset-0 rounded-2xl pointer-events-none z-10"
-          style={{ boxShadow: 'inset 0 0 0 1px rgba(139,92,246,0.25), 0 0 30px rgba(139,92,246,0.08)' }}
-        />
-      )}
-
-      {videoId ? (
-        <div className="relative aspect-video bg-black/40 overflow-hidden content-visibility-auto">
-          {imgError ? (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900/30 to-gray-900/60">
-              <span className="text-4xl opacity-30">{item.icon || item.type?.[0] || '📹'}</span>
-            </div>
-          ) : (
-            <motion.img
-              src={thumbnail}
-              alt={item.title || ''}
-              className="w-full h-full object-cover"
-              style={{ transform: isHovered ? 'scale(1.05)' : 'scale(1)' }}
-              transition={{ duration: 0.5 }}
-              onError={() => setImgError(true)}
-              loading="lazy"
-              decoding="async"
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center"
-            animate={{ background: isHovered ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0)' }}
-          >
-            <motion.div
-              className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
-              style={{ background: 'rgba(139,92,246,0.85)' }}
-              animate={{ scale: isHovered ? 1.1 : 1, boxShadow: isHovered ? '0 0 30px rgba(139,92,246,0.4)' : '0 0 0px rgba(139,92,246,0)' }}
-              transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-            >
-              <svg viewBox="0 0 24 24" fill="white" className="w-6 h-6 ml-0.5">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </motion.div>
-          </motion.div>
-
-          {item.difficulty && (
-            <div className="absolute top-2 left-2 flex gap-1.5 z-20">
-              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md backdrop-blur-sm ${item.difficulty === 'beginner' ? 'bg-green-500/60 text-white' : item.difficulty === 'intermediate' ? 'bg-yellow-500/60 text-white' : 'bg-red-500/60 text-white'}`}>
-                {item.difficulty}
-              </span>
-              {item.isFeatured && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/70 text-white backdrop-blur-sm">⭐ Featured</span>
-              )}
-            </div>
-          )}
-          {item.duration && (
-            <div className="absolute bottom-2 right-2 z-20">
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-black/60 text-white/90 backdrop-blur-sm">{item.duration}</span>
-            </div>
-          )}
-        </div>
-      ) : item.thumbnail ? (
-        <div className="relative aspect-video bg-black/40 content-visibility-auto">
-          <motion.img src={item.thumbnail} alt={item.title || ''} className="w-full h-full object-cover"
-            style={{ transform: isHovered ? 'scale(1.05)' : 'scale(1)' }}
-            transition={{ duration: 0.5 }}
-            onError={e => { e.target.style.display = 'none' }}
-            loading="lazy" decoding="async"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        </div>
-      ) : (
-        <div className="aspect-video flex flex-col items-center justify-center bg-gradient-to-br from-purple-900/20 to-gray-900/40 gap-2 relative">
-          <span className="text-5xl opacity-30">{item.resourceType === 'study_material' ? '📚' : hasActionUrl ? (item.resourceType === 'pdf' ? '📄' : '🔗') : '📋'}</span>
-          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/20">
-            {item.resourceType === 'study_material' ? 'Study Material' : hasActionUrl ? (item.resourceType === 'pdf' ? 'PDF' : item.resourceType === 'link' ? 'Link' : item.resourceType || 'Resource') : 'Reference'}
-          </span>
-          {item.isFeatured && (
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/70 text-white backdrop-blur-sm absolute top-2 left-2">⭐ Featured</span>
-          )}
-        </div>
-      )}
-
-      <div className="p-4">
-        <div className="text-sm font-bold text-white mb-1 leading-snug line-clamp-2 group-hover:text-purple-300 transition-colors break-word">
-          {item.title || 'Untitled'}
-        </div>
-        {item.description && (
-          <p className="text-[11px] text-text3/70 mb-3 line-clamp-2 leading-relaxed break-word">{item.description}</p>
-        )}
-        {!isVideo && !hasActionUrl && item.resourceType === 'study_material' && (
-          <div className="flex flex-wrap gap-x-3 gap-y-1 mb-3 text-[10px] text-text3/60">
-            {item.subject && <span>📖 {item.subject}</span>}
-            {item.topic && <span>📌 {item.topic}</span>}
-            {item.source && <span>🏫 {item.source}</span>}
-            {item.language && <span>🌐 {item.language}</span>}
-            {item.duration && <span>⏱ {item.duration}</span>}
-            {item.gateRelevance && <span className={item.gateRelevance === 'HIGH' ? 'text-green-400' : item.gateRelevance === 'MEDIUM' ? 'text-yellow-400' : 'text-text3/40'}>{item.gateRelevance === 'HIGH' ? '🔥 High Relevance' : item.gateRelevance === 'MEDIUM' ? '📊 Medium' : '📋 Low'}</span>}
-          </div>
-        )}
-        <div className="flex items-center gap-2 flex-wrap">
-          {item.channel && (
-            <span className="text-[9px] text-text3/50 flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-purple-500/30 inline-block" />
-              {item.channel}
-            </span>
-          )}
-          <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 font-medium">
-            {item.resourceType === 'study_material' ? 'Study Material' : item.resourceType === 'link' ? 'Link' : item.resourceType === 'pdf' ? 'PDF' : item.resourceType || 'Resource'}
-          </span>
-          {isVideo ? (
-            <span className="text-[9px] text-text3/40 ml-auto flex items-center gap-1">
-              📹 {isHovered ? 'Watch' : 'Video'}
-            </span>
-          ) : hasActionUrl ? (
-            <span className="text-[9px] text-text3/40 ml-auto flex items-center gap-1">
-              {item.resourceType === 'pdf' ? '📄' : '🔗'} {isHovered ? (item.resourceType === 'pdf' ? 'Download' : 'Open') : item.resourceType === 'link' ? 'Link' : 'Resource'}
-            </span>
-          ) : item.resourceType === 'study_material' ? (
-            <span className="text-[9px] text-text3/30 ml-auto flex items-center gap-1">
-              📚 Study Material
-            </span>
-          ) : (
-            <span className="text-[9px] text-text3/30 ml-auto flex items-center gap-1">
-              📋 Reference
-            </span>
-          )}
-        </div>
-      </div>
-
-      <motion.div
-        className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500/0 via-purple-500/0 to-purple-500/0"
-        animate={{
-          background: isHovered
-            ? 'linear-gradient(90deg, rgba(139,92,246,0), rgba(139,92,246,0.4), rgba(139,92,246,0))'
-            : 'linear-gradient(90deg, rgba(139,92,246,0), rgba(139,92,246,0), rgba(139,92,246,0))'
-        }}
-      />
-    </motion.div>
-  );
-}
+import { TABS, ROADMAP_FILTERS, SUBJECT_FILTERS, STORY_FILTERS, MOTIVATION_FILTERS, RESOURCE_FILTERS, VIDEO_FILTERS } from '../data/filters';
+import { learningHubVideoService, api } from '../services/api';
+import InsightsDashboard from '../components/gate/InsightsDashboard';
+import { useTrackLearningHub } from '../hooks/useAiMentorTracking';
+import { useYoutubeThumbnail } from '../hooks/useYoutubeThumbnail';
 
 function SubjectResourcesTable() {
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -299,28 +123,332 @@ function SubjectResourcesTable() {
   );
 }
 
-function InsightCard({ card, index }) {
+function useReducedMotion() {
+  const mq = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)');
+  return mq?.matches ?? false;
+}
+
+function VideoSkeleton() {
   return (
-    <Link to={card.link} className="block">
-      <motion.div
-        variants={{
-          hidden: { opacity: 0, y: 12 },
-          show: { opacity: 1, y: 0 }
-        }}
-        className="rounded-2xl p-5 group relative overflow-hidden"
-        style={{ background: 'rgba(18,24,40,0.6)', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)' }}
-        whileHover={{ y: -3, transition: { type: 'spring', stiffness: 300 } }}
-      >
-        <div className="text-3xl mb-3">{card.icon}</div>
-        <div className="text-sm font-bold text-white mb-1.5 group-hover:text-purple-300 transition-colors">{card.title}</div>
-        <p className="text-[11px] text-text3/70 leading-relaxed">{card.desc}</p>
-        <div className="mt-3 text-[10px] text-primary/60 group-hover:text-primary transition-colors flex items-center gap-1">
-          Explore <span className="text-xs">→</span>
+    <div className="rounded-2xl overflow-hidden animate-pulse" style={{ background: 'linear-gradient(180deg, rgba(23,29,48,0.72), rgba(15,17,25,0.94))', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(14px)', boxShadow: '0 6px 24px rgba(0,0,0,0.28)' }}>
+      <div className="aspect-video bg-white/[0.03]" />
+      <div className="p-4 space-y-2.5">
+        <div className="h-3 bg-white/[0.05] rounded w-3/4" />
+        <div className="h-2 bg-white/[0.03] rounded w-1/2" />
+        <div className="flex gap-2">
+          <div className="h-4 bg-white/[0.04] rounded-full w-16" />
+          <div className="h-4 bg-white/[0.04] rounded-full w-12" />
         </div>
-      </motion.div>
-    </Link>
+      </div>
+    </div>
   );
 }
+
+const CATEGORY_STYLES = {
+  'Success Stories': { accent: '#F59E0B', badge: '🏆 Topper', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.25)' },
+  'Roadmaps': { accent: '#3B82F6', badge: '🗺️ Roadmap', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.25)' },
+  'Subject Resources': { accent: '#10B981', badge: '📚 Lecture', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.25)' },
+  'Motivation': { accent: '#F97316', badge: '🔥 Motivation', bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.25)' },
+  'Resources': { accent: '#8B5CF6', badge: '📄 Resource', bg: 'rgba(139,92,246,0.12)', border: 'rgba(139,92,246,0.25)' },
+  'Insights': { accent: '#06B6D4', badge: '💡 Insight', bg: 'rgba(6,182,212,0.12)', border: 'rgba(6,182,212,0.25)' },
+};
+
+// Channels that are manually verified as legitimate GATE education creators.
+const VERIFIED_CHANNELS = new Set([
+  'Rahuram Chandrakumar',
+  'Curious Bytes',
+  'GO Classes for GATE CS, DA',
+  'GO Classes',
+  'Anjali Chauhan',
+  'GATE Wallah',
+  'PW GATE',
+  'Gate Smashers',
+  'Unacademy GATE',
+  'GeeksforGeeks',
+  'Physics Wallah - Alakh Pandey',
+  'Gate Lectures by Ravindrababu Ravula',
+]);
+
+const isVerifiedChannel = (name) => !!(name && name !== 'Unknown' && VERIFIED_CHANNELS.has(name.trim()));
+
+const ResourceCard = memo(function ResourceCard({ item, onClick, index }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const id = item._id || item.id;
+  const [isBookmarked, setIsBookmarked] = useState(() => (JSON.parse(localStorage.getItem('lh_bookmarks') || '[]')).includes(id));
+  const [isFavorited, setIsFavorited] = useState(() => (JSON.parse(localStorage.getItem('lh_favorites') || '[]')).includes(id));
+  const videoId = item.youtubeId || item.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1];
+  const { src: thumbnail, onError: onThumbError, exhausted: thumbExhausted } = useYoutubeThumbnail(videoId, item.thumbnail);
+  const cat = CATEGORY_STYLES[item.category] || CATEGORY_STYLES['Resources'];
+  const isVideo = !!videoId;
+  const timeAgo = item.createdAt ? Math.floor((Date.now() - new Date(item.createdAt).getTime()) / 86400000) : null;
+  const views = item.viewCount || item.views;
+
+  const toggleBookmark = (e) => {
+    e.stopPropagation();
+    const ids = JSON.parse(localStorage.getItem('lh_bookmarks') || '[]');
+    const idx = ids.indexOf(id);
+    if (idx === -1) ids.push(id); else ids.splice(idx, 1);
+    localStorage.setItem('lh_bookmarks', JSON.stringify(ids));
+    setIsBookmarked(idx === -1);
+  };
+
+  const toggleFavorite = (e) => {
+    e.stopPropagation();
+    const ids = JSON.parse(localStorage.getItem('lh_favorites') || '[]');
+    const idx = ids.indexOf(id);
+    if (idx === -1) ids.push(id); else ids.splice(idx, 1);
+    localStorage.setItem('lh_favorites', JSON.stringify(ids));
+    setIsFavorited(idx === -1);
+  };
+
+  return (
+    <motion.div
+      layout
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: (index || 0) * 0.03 }}
+      onClick={() => onClick(item)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(item); } }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Open ${item.title || 'resource'}`}
+      className="rounded-2xl overflow-hidden cursor-pointer group relative anim-gpu flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+      style={{
+        background: 'linear-gradient(180deg, rgba(23,29,48,0.72), rgba(15,17,25,0.94))',
+        border: '1px solid rgba(255,255,255,0.08)',
+        backdropFilter: 'blur(14px)',
+        boxShadow: '0 6px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.05)'
+      }}
+      whileHover={{
+        y: -4,
+        boxShadow: `0 16px 44px rgba(0,0,0,0.5), 0 0 26px ${cat.accent}22, inset 0 1px 0 rgba(255,255,255,0.08)`,
+        transition: { type: 'spring', stiffness: 300, damping: 20 }
+      }}
+      whileTap={{ scale: 0.98 }}
+    >
+      {isHovered && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.25 }}
+          className="absolute inset-0 rounded-2xl pointer-events-none z-10"
+          style={{ boxShadow: `inset 0 0 0 1px ${cat.border}, 0 0 36px ${cat.bg}` }}
+        />
+      )}
+
+      {/* Hover top light sheen */}
+      <motion.div
+        className="absolute inset-x-0 top-0 h-1/2 pointer-events-none z-[5]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isHovered ? 1 : 0 }}
+        transition={{ duration: 0.25 }}
+        style={{ background: `linear-gradient(180deg, ${cat.accent}14, transparent)` }}
+      />
+
+      {/* Thumbnail */}
+      {videoId ? (
+        <div className="relative aspect-[16/7] sm:aspect-video bg-black/40 overflow-hidden content-visibility-auto">
+          {thumbExhausted || !thumbnail ? (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2" style={{ background: `linear-gradient(135deg, ${cat.accent}18, #0F1119)` }}>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg" style={{ background: cat.accent + '25' }}>
+                <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" style={{ color: cat.accent }}><path d="M8 5v14l11-7z" fill="currentColor" /></svg>
+              </div>
+              <span className="text-[9px] font-medium opacity-50" style={{ color: cat.accent }}>Click to watch</span>
+            </div>
+          ) : (
+            <motion.img
+              src={thumbnail}
+              srcSet={videoId ? `${thumbnail} 1280w` : undefined}
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+              alt={item.title || ''}
+              className="w-full h-full object-cover"
+              style={{ transform: isHovered ? 'scale(1.025)' : 'scale(1)' }}
+              transition={{ duration: 0.25 }}
+              onError={onThumbError}
+              loading="lazy"
+              decoding="async"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+          <motion.div
+            className="absolute inset-0 flex items-center justify-center"
+            animate={{ background: isHovered ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0)' }}
+            transition={{ duration: 0.25 }}
+          >
+            <motion.div
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-lg"
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                boxShadow: '0 4px 18px rgba(0,0,0,0.35)'
+              }}
+              animate={{
+                scale: isHovered ? 1.12 : 1,
+                background: isHovered ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.1)',
+                boxShadow: isHovered
+                  ? `0 4px 22px rgba(0,0,0,0.4), 0 0 26px ${cat.accent}55`
+                  : '0 4px 18px rgba(0,0,0,0.35)'
+              }}
+              transition={{ type: 'spring', stiffness: 400, damping: 16 }}
+            >
+              <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5 ml-0.5">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </motion.div>
+          </motion.div>
+
+          {/* Top badges */}
+          <div className="absolute top-2 left-2 flex gap-1.5 z-20">
+            {item.featured && (
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md backdrop-blur-sm" style={{ background: cat.accent + '99', color: 'white' }}>⭐ Featured</span>
+            )}
+          </div>
+
+          {/* Duration overlay */}
+          {item.duration && (
+            <div className="absolute bottom-2 right-2 z-20">
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-black/70 text-white/90 backdrop-blur-sm">{item.duration}</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="relative aspect-video flex items-center justify-center content-visibility-auto" onClick={onClick}
+          style={{ background: `linear-gradient(135deg, ${cat.accent}15, #0F1119)` }}>
+          <span className="text-5xl opacity-30">{cat.badge[0]}</span>
+          {item.featured && (
+            <span className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded-md backdrop-blur-sm" style={{ background: cat.accent + '99', color: 'white' }}>⭐ Featured</span>
+          )}
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="p-2.5 sm:p-3.5 flex flex-col flex-1">
+        {/* Category badge */}
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ background: cat.bg, color: cat.accent }}>
+            {cat.badge}
+          </span>
+          {timeAgo !== null && timeAgo <= 30 && (
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-400">New</span>
+          )}
+        </div>
+
+        {/* Title */}
+        <div className="text-sm font-bold text-white mb-1 sm:mb-2 leading-snug line-clamp-2 group-hover:text-purple-300 transition-colors break-word">
+          {item.title || 'Untitled'}
+        </div>
+
+        {/* Channel - only show if channel name exists and is not "Unknown" */}
+        {item.channel && item.channel !== 'Unknown' && item.channel.trim() ? (
+          <div className="flex items-center gap-1.5 mb-2 text-[10px] text-text3/60">
+            <span className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0"
+              style={{ background: cat.accent + '30', color: cat.accent }}>
+              {item.channel[0]}
+            </span>
+            <span className="truncate min-w-0">{item.channel}</span>
+            {isVerifiedChannel(item.channel) && (
+              <span className="shrink-0 inline-flex items-center gap-0.5 px-1 py-px rounded text-[8px] font-bold text-cyan-300"
+                style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.25)' }}
+                title="Verified creator">
+                ✓ Verified
+              </span>
+            )}
+          </div>
+        ) : item.channel === 'Unknown' || (item.youtubeId && !item.channel) ? (
+          <div className="flex items-center gap-1.5 mb-2 text-[10px] text-text3/40">
+            <span className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0 bg-white/[0.05]">?</span>
+            Unknown Creator
+          </div>
+        ) : null}
+
+        {/* Meta row */}
+        <div className="flex items-center gap-2.5 text-[10px] text-text3/50 mb-2 sm:mb-3 flex-wrap">
+          {views > 0 && (
+            <span className="flex items-center gap-1">👁 {views >= 1000 ? `${(views / 1000).toFixed(1)}K` : views}</span>
+          )}
+          {timeAgo !== null && (
+            <span className="flex items-center gap-1">📅 {timeAgo === 0 ? 'Today' : timeAgo === 1 ? '1d ago' : timeAgo < 30 ? `${timeAgo}d ago` : timeAgo < 365 ? `${Math.floor(timeAgo / 30)}mo ago` : `${Math.floor(timeAgo / 365)}y ago`}</span>
+          )}
+          {item.difficulty && (
+            <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${item.difficulty === 'beginner' ? 'bg-green-500/15 text-green-400' : item.difficulty === 'intermediate' ? 'bg-yellow-500/15 text-yellow-400' : 'bg-red-500/15 text-red-400'}`}>{item.difficulty}</span>
+          )}
+        </div>
+
+        {/* Tags */}
+        {item.tags?.length > 0 && (
+          <div className="flex gap-1 flex-wrap mb-3">
+            {item.tags.slice(0, 2).map(tag => (
+              <span key={tag} className="text-[8px] px-1.5 py-0.5 rounded-full bg-white/[0.04] text-text3/50">#{tag}</span>
+            ))}
+          </div>
+        )}
+
+        {/* CTAs */}
+        <div className="flex items-center gap-2 mt-auto pt-2 border-t border-white/[0.06]">
+          <motion.button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (id) {
+                import('../services/api').then(m => m.api.patch(`/learning-hub/videos/${id}/view`).catch(() => {}));
+              }
+              onClick(item);
+            }}
+            className="flex-1 flex items-center justify-center gap-1.5 text-[10px] font-bold py-2 rounded-xl transition-all"
+            style={{ background: cat.accent + '18', color: cat.accent }}
+            whileHover={{ background: cat.accent + '30' }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path d="M8 5v14l11-7z" /></svg>
+            Watch Now
+          </motion.button>
+          <motion.button
+            onClick={toggleBookmark}
+            className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+            style={{ background: 'rgba(255,255,255,0.04)', color: isBookmarked ? '#F59E0B' : 'rgba(255,255,255,0.25)' }}
+            whileHover={{ background: 'rgba(255,255,255,0.08)' }}
+            whileTap={{ scale: 0.9 }}
+          >
+            {isBookmarked ? '🔖' : '🔖'}
+          </motion.button>
+          <motion.button
+            onClick={toggleFavorite}
+            className="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+            style={{ background: 'rgba(255,255,255,0.04)', color: isFavorited ? '#EF4444' : 'rgba(255,255,255,0.25)' }}
+            whileHover={{ background: 'rgba(255,255,255,0.08)' }}
+            whileTap={{ scale: 0.9 }}
+          >
+            {isFavorited ? '❤️' : '🤍'}
+          </motion.button>
+          <motion.button
+            onClick={e => { e.stopPropagation(); navigator.clipboard?.writeText(window.location.origin + '/learning-hub'); }}
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-text3/30 transition-all"
+            style={{ background: 'rgba(255,255,255,0.04)' }}
+            whileHover={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}
+            whileTap={{ scale: 0.9 }}
+          >
+            📤
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Bottom glow */}
+      <motion.div
+        className="absolute bottom-0 left-0 right-0 h-0.5"
+        animate={{
+          background: isHovered
+            ? `linear-gradient(90deg, transparent, ${cat.accent}66, transparent)`
+            : 'linear-gradient(90deg, transparent, transparent, transparent)'
+        }}
+      />
+    </motion.div>
+  );
+});
+
+
 
 function FilterBar({ categories, active, onChange }) {
   return (
@@ -367,7 +495,12 @@ function SearchBar({ onSearch, value, onChange }) {
       <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"
         style={{ boxShadow: '0 0 20px rgba(139,92,246,0.08)' }} />
       <div className="relative flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all"
-        style={{ background: 'rgba(18,24,40,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        style={{
+          background: 'linear-gradient(180deg, rgba(23,29,48,0.75), rgba(15,17,25,0.85))',
+          border: '1px solid rgba(255,255,255,0.08)',
+          backdropFilter: 'blur(16px)',
+          boxShadow: '0 8px 28px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05)'
+        }}>
         <span className="text-text3/50 text-sm">🔍</span>
         <input
           ref={inputRef}
@@ -394,6 +527,7 @@ function ResourceModal({ selected, setSelected, canAccessPremium }) {
   const [isAsking, setIsAsking] = useState(false);
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
+  const panelRef = useRef(null);
   const videoId = selected?.youtubeId || selected?.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1];
 
   useEffect(() => {
@@ -426,6 +560,34 @@ function ResourceModal({ selected, setSelected, canAccessPremium }) {
     }
   }, [handleAsk]);
 
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') setSelected(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [setSelected]);
+
+  // Focus the modal panel on open and trap Tab focus inside it.
+  useEffect(() => {
+    if (!selected) return;
+    const panel = panelRef.current;
+    if (panel) {
+      const focusable = panel.querySelectorAll('button:not([disabled]), [href], input, textarea, select, iframe, [tabindex]:not([tabindex="-1"])');
+      if (focusable.length) focusable[0].focus({ preventScroll: true });
+    }
+    const onTab = (e) => {
+      if (e.key !== 'Tab' || !panel) return;
+      const focusable = Array.from(panel.querySelectorAll('button:not([disabled]), [href], input, textarea, select, iframe, [tabindex]:not([tabindex="-1"])'))
+        .filter(el => !el.disabled && el.offsetParent !== null);
+      if (focusable.length === 0) { e.preventDefault(); return; }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus({ preventScroll: true }); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus({ preventScroll: true }); }
+    };
+    document.addEventListener('keydown', onTab);
+    return () => document.removeEventListener('keydown', onTab);
+  }, [selected]);
+
   if (!selected) return null;
 
   const panels = [
@@ -442,17 +604,26 @@ function ResourceModal({ selected, setSelected, canAccessPremium }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={() => setSelected(null)}
+      role="dialog"
+      aria-modal="true"
+      aria-label={selected.title || 'Resource'}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6"
-      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)' }}
+      style={{ background: 'rgba(5,8,18,0.72)', backdropFilter: 'blur(16px)' }}
     >
       <motion.div
+        ref={panelRef}
+        tabIndex={-1}
         initial={{ scale: 0.92, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.92, opacity: 0, y: 20 }}
         transition={{ type: 'spring', damping: 25 }}
         onClick={e => e.stopPropagation()}
         className="w-full max-w-4xl rounded-3xl overflow-hidden max-h-[90vh] flex flex-col"
-        style={{ background: '#0F1119', border: '1px solid rgba(139,92,246,0.15)', boxShadow: '0 0 60px rgba(139,92,246,0.08)' }}
+        style={{
+          background: 'linear-gradient(180deg, rgba(23,29,48,0.95), #0F1119)',
+          border: '1px solid rgba(139,92,246,0.2)',
+          boxShadow: '0 30px 80px rgba(0,0,0,0.6), 0 0 80px rgba(139,92,246,0.12), inset 0 1px 0 rgba(255,255,255,0.06)'
+        }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
@@ -468,7 +639,7 @@ function ResourceModal({ selected, setSelected, canAccessPremium }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button className="w-8 h-8 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all text-sm touch-target-sm button-n-doubletap" aria-label="Bookmark">🔖</button>
+            <button onClick={() => { const ids = JSON.parse(localStorage.getItem('lh_bookmarks') || '[]'); const id = selected?._id || selected?.id; const idx = ids.indexOf(id); if (idx === -1) ids.push(id); else ids.splice(idx, 1); localStorage.setItem('lh_bookmarks', JSON.stringify(ids)); }} className="w-8 h-8 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all text-sm touch-target-sm button-n-doubletap" aria-label="Bookmark">🔖</button>
             <button className="w-8 h-8 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all text-sm touch-target-sm button-n-doubletap" aria-label="Share">📤</button>
             <button onClick={() => setSelected(null)} className="w-8 h-8 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all text-lg touch-target-sm button-n-doubletap" aria-label="Close">✕</button>
           </div>
@@ -478,7 +649,7 @@ function ResourceModal({ selected, setSelected, canAccessPremium }) {
         <div className="flex-1 overflow-y-auto scroll-container">
           {videoId && (
             <div className="aspect-video bg-black anim-gpu">
-              <LazyYouTubePlayer videoId={videoId} title={selected.title} />
+              <LazyYouTubePlayer videoId={videoId} title={selected.title} autoPlay />
             </div>
           )}
 
@@ -581,7 +752,16 @@ function ResourceModal({ selected, setSelected, canAccessPremium }) {
   );
 }
 
-function Sidebar({ searchQuery, resources }) {
+function Sidebar({ searchQuery }) {
+  const recommended = [
+    { name: 'Rahuram Chandrakumar', desc: 'Most inspiring GATE success stories & motivation', icon: '🔥' },
+    { name: 'Curious Bytes', desc: 'Strategic roadmaps & exam planning', icon: '📐' },
+    { name: 'GO Classes for GATE CS, DA', desc: 'Top ranker preparation approaches', icon: '🏆' },
+    { name: 'Anjali Chauhan', desc: 'Personal guidance from a GATE topper', icon: '👩‍🎓' },
+    { name: 'Gate Smashers', desc: 'Topper interviews & interview prep', icon: '💬' },
+    { name: 'Ravindrababu Ravula', desc: 'Deep subject resources & concept clarity', icon: '📖' },
+  ];
+
   return (
     <div className="space-y-3 sticky top-4">
       <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(34,211,238,0.03))', border: '1px solid rgba(139,92,246,0.12)' }}>
@@ -600,7 +780,7 @@ function Sidebar({ searchQuery, resources }) {
         </div>
       </div>
 
-      <div className="rounded-2xl p-4" style={{ background: 'rgba(18,24,40,0.6)', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)' }}>
+      <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(180deg, rgba(23,29,48,0.72), rgba(15,17,25,0.94))', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(14px)', boxShadow: '0 8px 28px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
         <div className="flex items-center gap-2 mb-3">
           <span className="text-sm">🎯</span>
           <span className="text-[10px] font-bold uppercase tracking-widest text-text3">Today's Goal</span>
@@ -609,7 +789,7 @@ function Sidebar({ searchQuery, resources }) {
         <div className="text-sm font-bold text-white mt-0.5">Process Synchronization</div>
       </div>
 
-      <div className="rounded-2xl p-4" style={{ background: 'rgba(18,24,40,0.6)', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)' }}>
+      <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(180deg, rgba(23,29,48,0.72), rgba(15,17,25,0.94))', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(14px)', boxShadow: '0 8px 28px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
         <div className="flex items-center gap-2 mb-3">
           <span className="text-sm">🤖</span>
           <span className="text-[10px] font-bold uppercase tracking-widest text-text3">AI Suggestion</span>
@@ -619,110 +799,288 @@ function Sidebar({ searchQuery, resources }) {
         </p>
         <button className="mt-2.5 w-full py-1.5 rounded-xl bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold hover:bg-primary/20 transition-all">Continue →</button>
       </div>
+
+      <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(180deg, rgba(23,29,48,0.72), rgba(15,17,25,0.94))', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(14px)', boxShadow: '0 8px 28px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-sm">⭐</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-text3">Recommended Channels</span>
+        </div>
+        <div className="space-y-2">
+          {recommended.map(r => (
+            <div key={r.name} className="flex items-start gap-2 rounded-xl p-2 transition-colors hover:bg-white/[0.03]">
+              <span className="text-sm mt-0.5">{r.icon}</span>
+              <div className="min-w-0">
+                <div className="text-[10px] font-semibold text-white truncate">{r.name}</div>
+                <div className="text-[9px] text-text3/60 leading-snug">{r.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
 
 export default function LearningHubPage() {
   const { user, isPremium } = useAuth();
-  const [activeTab, setActiveTab] = useState('roadmap');
+  const prefersReducedMotion = useReducedMotion();
+  const [activeTab, setActiveTab] = useState('videos');
   const [roadmapFilter, setRoadmapFilter] = useState('all');
+  const [subjectFilter, setSubjectFilter] = useState('all');
   const [storyFilter, setStoryFilter] = useState('all');
+  const [motivationFilter, setMotivationFilter] = useState('all');
   const [resourceFilter, setResourceFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('All');
+  const [videoSort, setVideoSort] = useState('all');
+  const [channelFilter, setChannelFilter] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [roadmaps, setRoadmaps] = useState([]);
-  const [stories, setStories] = useState([]);
-  const [academy, setAcademy] = useState([]);
-  const [resources, setResources] = useState([]);
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [videos, setVideos] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const lhTracking = useTrackLearningHub();
+  const prevSelected = useRef(null);
+  useEffect(() => {
+    if (selectedItem && selectedItem !== prevSelected.current) {
+      prevSelected.current = selectedItem;
+      if (selectedItem.type === 'video' || selectedItem.youtubeId) {
+        lhTracking.trackVideoWatched(selectedItem);
+      }
+      if (selectedItem.resourceType === 'notes') lhTracking.trackNotesOpened(selectedItem.subject);
+      if (selectedItem.resourceType === 'pdf' || selectedItem.type === 'resource') lhTracking.trackPdfOpened(selectedItem.subject);
+    }
+  }, [selectedItem]);
+
+  // Preserve exact scroll position when opening/closing the video/resource modal.
+  // The app shell scrolls inside <main>, so target that container (with body as fallback).
+  const scrollPosRef = useRef(0);
+  const triggerRef = useRef(null);
+  const modalActiveRef = useRef(false);
+  const scrollContainerRef = useRef(null);
+  const getScrollContainer = useCallback(() => {
+    if (!scrollContainerRef.current) scrollContainerRef.current = document.querySelector('main');
+    return scrollContainerRef.current || document.documentElement;
+  }, []);
+
+  const openResource = useCallback((item) => {
+    const el = getScrollContainer();
+    // If a modal is already open, close it first (sync state clear)
+    // before opening the new one, so the old modal's cleanup effect
+    // runs BEFORE we set the new overflow:hidden below.
+    if (modalActiveRef.current) {
+      setSelectedItem(null);
+      el.style.overflow = '';
+    }
+    modalActiveRef.current = true;
+    scrollPosRef.current = el.scrollTop;
+    triggerRef.current = document.activeElement;
+    el.style.overflow = 'hidden';
+    setSelectedItem(item);
+  }, [getScrollContainer]);
+
+  const closeResource = useCallback(() => {
+    modalActiveRef.current = false;
+    setSelectedItem(null);
+    const el = getScrollContainer();
+    el.style.overflow = '';
+    requestAnimationFrame(() => {
+      // Guard: if a new modal was opened before this frame, don't overwrite.
+      if (modalActiveRef.current) return;
+      el.scrollTop = scrollPosRef.current;
+      if (triggerRef.current && document.contains(triggerRef.current)) {
+        triggerRef.current.focus({ preventScroll: true });
+      }
+    });
+  }, [getScrollContainer]);
+
+  useEffect(() => () => {
+    // Always restore scrolling when the page unmounts (e.g. navigating away while
+    // a modal is open). The old guard skipped this when a modal was "active",
+    // which permanently left <main> with overflow:hidden — locking the next page.
+    const el = getScrollContainer();
+    if (el) el.style.overflow = '';
+    document.body.style.overflow = '';
+  }, [getScrollContainer]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
-      const [roadmapData, storyData, academyData, resourceData] = await Promise.all([
-        api.get('/learning/roadmap').then(r => r.data?.data || []),
-        api.get('/learning/success_story').then(r => r.data?.data || []),
-        api.get('/learning/academy').then(r => r.data?.data || []),
-        api.get('/learning/resource').then(r => r.data?.data || []),
-      ]);
-      setRoadmaps(roadmapData);
-      setStories(storyData);
-      setAcademy(academyData);
-      setResources(resourceData);
-    } catch {
-      // Data will be empty if API fails
+      const videoData = await learningHubVideoService.list({ limit: 200 }).then(r => r.data?.data || []);
+      setVideos(videoData);
+    } catch (err) {
+      console.error('Failed to load learning hub videos:', err);
+      setLoadError('Unable to load learning hub videos. Please try again later.');
     }
     setLoading(false);
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const allItems = useMemo(() => [
-    ...roadmaps.map(item => ({ ...item, _type: 'roadmap' })),
-    ...stories.map(item => ({ ...item, _type: 'success_story' })),
-    ...academy.map(item => ({ ...item, _type: 'academy' })),
-    ...resources.map(item => ({ ...item, _type: 'resource' })),
-  ], [roadmaps, stories, academy, resources]);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(searchQuery), 250);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
-  const applySort = useCallback((items) => {
-    if (sortBy === 'All') return items;
-    if (sortBy === 'Recommended') return items.filter(item => item.isFeatured);
-    if (sortBy === 'Recently Added') return [...items].sort((a, b) => new Date(b.createdAt || b.uploadDate || 0) - new Date(a.createdAt || a.uploadDate || 0));
-    if (sortBy === 'Trending') return [...items].sort((a, b) => (b.views || 0) - (a.views || 0));
-    if (sortBy === 'Most Viewed') return [...items].sort((a, b) => (b.views || 0) - (a.views || 0));
-    if (sortBy === 'Bookmarks') return items.filter(item => item.isBookmarked);
-    if (sortBy === 'Completed') return items.filter(item => item.isCompleted);
+  const byCategory = useCallback((category) => {
+    if (!category) return videos;
+    return videos.filter(v => v.category === category);
+  }, [videos]);
+
+  const channelData = useMemo(() => {
+    const map = {};
+    videos.forEach(v => {
+      const ch = v.channel;
+      if (!ch || ch === 'Unknown') return;
+      if (!map[ch]) { map[ch] = { name: ch, count: 0, subjects: new Set(), categories: new Set(), totalViews: 0 }; }
+      map[ch].count++;
+      if (v.subject) map[ch].subjects.add(v.subject);
+      if (v.category) map[ch].categories.add(v.category);
+      map[ch].totalViews += v.viewCount || 0;
+    });
+    return Object.values(map).sort((a, b) => b.count - a.count);
+  }, [videos]);
+
+  const filteredVideos = useMemo(() => {
+    let items = videos;
+    if (debouncedQuery) {
+      const q = debouncedQuery.toLowerCase();
+      items = items.filter(item =>
+        (item.title || '').toLowerCase().includes(q) ||
+        (item.description || '').toLowerCase().includes(q) ||
+        (item.channel || '').toLowerCase().includes(q) ||
+        (item.tags || []).some(t => t.toLowerCase().includes(q))
+      );
+    }
+    if (channelFilter) {
+      items = items.filter(item => item.channel === channelFilter);
+    }
+    const bookmarkedIds = JSON.parse(localStorage.getItem('lh_bookmarks') || '[]');
+    const favoriteIds = JSON.parse(localStorage.getItem('lh_favorites') || '[]');
+    if (videoSort === 'Recently Added') items = [...items].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    else if (videoSort === 'Trending') items = [...items].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+    else if (videoSort === 'Recommended') items = items.filter(item => item.featured);
+    else if (videoSort === 'Bookmarked') items = items.filter(item => bookmarkedIds.includes(item._id || item.id));
+    else if (videoSort === 'Favorites') items = items.filter(item => favoriteIds.includes(item._id || item.id));
     return items;
-  }, [sortBy]);
+  }, [videos, debouncedQuery, videoSort, channelFilter]);
+
+  const matchTag = (item, filterId) => {
+    const words = filterId.replace(/-/g, ' ').toLowerCase().split(' ').filter(Boolean);
+    if (words.length === 0) return true;
+    return item.tags?.some(t => {
+      const tag = t.toLowerCase();
+      return words.some(w => tag.includes(w));
+    });
+  };
 
   const filteredRoadmaps = useMemo(() => {
-    let items = roadmaps;
-    if (roadmapFilter !== 'all') items = items.filter(item => item.category === roadmapFilter);
-    if (searchQuery) items = items.filter(item =>
-      (item.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+    let items = videos.filter(v => v.category === 'Roadmaps');
+    if (roadmapFilter !== 'all') items = items.filter(item => matchTag(item, roadmapFilter));
+    if (debouncedQuery) items = items.filter(item =>
+      (item.title || '').toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+      (item.description || '').toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+      (item.tags || []).some(t => t.toLowerCase().includes(debouncedQuery.toLowerCase()))
     );
-    return applySort(items);
-  }, [roadmaps, roadmapFilter, searchQuery, applySort]);
+    return items;
+  }, [videos, roadmapFilter, debouncedQuery]);
+
+  const filteredSubjects = useMemo(() => {
+    let items = videos.filter(v => v.category === 'Subject Resources');
+    if (subjectFilter !== 'all') items = items.filter(item => matchTag(item, subjectFilter));
+    if (debouncedQuery) items = items.filter(item =>
+      (item.title || '').toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+      (item.description || '').toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+      (item.tags || []).some(t => t.toLowerCase().includes(debouncedQuery.toLowerCase()))
+    );
+    return items;
+  }, [videos, subjectFilter, debouncedQuery]);
 
   const filteredStories = useMemo(() => {
-    let items = stories;
-    if (storyFilter !== 'all') items = items.filter(item => item.category === storyFilter);
-    if (searchQuery) items = items.filter(item =>
-      (item.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+    let items = videos.filter(v => v.category === 'Success Stories');
+    if (storyFilter !== 'all') items = items.filter(item => matchTag(item, storyFilter));
+    if (debouncedQuery) items = items.filter(item =>
+      (item.title || '').toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+      (item.description || '').toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+      (item.tags || []).some(t => t.toLowerCase().includes(debouncedQuery.toLowerCase()))
     );
-    return applySort(items);
-  }, [stories, storyFilter, searchQuery, applySort]);
+    return items;
+  }, [videos, storyFilter, debouncedQuery]);
+
+  const filteredAcademy = useMemo(() => {
+    let items = videos.filter(v => v.category === 'Motivation');
+    if (motivationFilter !== 'all') items = items.filter(item => matchTag(item, motivationFilter));
+    if (debouncedQuery) items = items.filter(item =>
+      (item.title || '').toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+      (item.description || '').toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+      (item.tags || []).some(t => t.toLowerCase().includes(debouncedQuery.toLowerCase()))
+    );
+    return items;
+  }, [videos, motivationFilter, debouncedQuery]);
 
   const filteredResources = useMemo(() => {
-    let items = resources;
-    if (resourceFilter !== 'all') items = items.filter(item => item.category === resourceFilter);
-    if (searchQuery) items = items.filter(item =>
-      (item.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+    let items = videos.filter(v => v.category === 'Resources');
+    if (resourceFilter !== 'all') items = items.filter(item => matchTag(item, resourceFilter));
+    if (debouncedQuery) items = items.filter(item =>
+      (item.title || '').toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+      (item.description || '').toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+      (item.tags || []).some(t => t.toLowerCase().includes(debouncedQuery.toLowerCase()))
     );
-    return applySort(items);
-  }, [resources, resourceFilter, searchQuery, applySort]);
+    return items;
+  }, [videos, resourceFilter, debouncedQuery]);
 
-  const stats = useMemo(() => ({
-    streak: 7,
-    resourcesCompleted: roadmaps.length + stories.length + academy.length + resources.length,
-    hoursLearned: 42,
-    saved: 12,
-  }), [roadmaps.length, stories.length, academy.length, resources.length]);
+  const videoCards = useMemo(() => filteredVideos.map(item => ({ ...item, type: 'video', resourceType: 'video' })), [filteredVideos]);
+
+  const stats = useMemo(() => {
+    // Real data — bookmarks count + focus session history, never fake numbers
+    let saved = 0;
+    try { saved = JSON.parse(localStorage.getItem('lh_bookmarks') || '[]').length; } catch {}
+    let totalSeconds = 0;
+    const studyDays = new Set();
+    try {
+      const history = JSON.parse(localStorage.getItem('gatenexa_focus_history') || '[]');
+      for (const h of history) {
+        totalSeconds += h.duration || 0;
+        if (h.date) studyDays.add(new Date(h.date).toDateString());
+      }
+    } catch {}
+    // Consecutive-day streak (allows today or yesterday as the anchor)
+    const daySet = new Set(studyDays);
+    let streak = 0;
+    let cursor = new Date();
+    const hasToday = daySet.has(cursor.toDateString());
+    if (!hasToday) cursor.setDate(cursor.getDate() - 1);
+    while (daySet.has(cursor.toDateString())) {
+      streak += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return {
+      streak,
+      resourcesCompleted: videos.length,
+      hoursLearned: Math.round((totalSeconds / 3600) * 10) / 10,
+      saved,
+    };
+  }, [videos.length]);
 
   return (
-    <div className="pb-28 sm:pb-0">
+    <div className="relative pb-28 sm:pb-0">
+      {/* Page-local ambient glow layers */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-32 w-[560px] h-[560px] rounded-full opacity-[0.12]"
+          style={{ background: 'radial-gradient(ellipse, rgba(139,92,246,0.55), transparent 70%)', filter: 'blur(80px)' }} />
+        <div className="absolute top-1/3 -right-40 w-[480px] h-[480px] rounded-full opacity-[0.08]"
+          style={{ background: 'radial-gradient(ellipse, rgba(34,211,238,0.4), transparent 70%)', filter: 'blur(80px)' }} />
+        <div className="absolute bottom-0 left-1/4 w-[420px] h-[420px] rounded-full opacity-[0.05]"
+          style={{ background: 'radial-gradient(ellipse, rgba(139,92,246,0.45), transparent 70%)', filter: 'blur(90px)' }} />
+      </div>
+
       <AnimatePresence>
         {selectedItem && (
-          <ResourceModal selected={selectedItem} setSelected={setSelectedItem} canAccessPremium={isPremium} />
+          <ResourceModal key={selectedItem._id || selectedItem.id} selected={selectedItem} setSelected={closeResource} canAccessPremium={isPremium} />
         )}
       </AnimatePresence>
 
-      <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+      <div className="relative max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="gpu-layer">
           <div className="flex items-center justify-between gap-4 mb-4">
@@ -750,7 +1108,15 @@ export default function LearningHubPage() {
                   <div className="text-[8px] font-bold uppercase tracking-widest text-text3">Saved</div>
                 </div>
               </div>
-              <button className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center gap-1.5">
+              <button
+                onClick={() => {
+                  setActiveTab('videos');
+                  setSelectedItem(null);
+                  const el = document.querySelector('#learning-content');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all flex items-center gap-1.5"
+              >
                 📚 Continue Learning
               </button>
             </div>
@@ -759,12 +1125,12 @@ export default function LearningHubPage() {
         </motion.div>
 
         {/* Main content */}
-        <div className="grid md:grid-cols-4 gap-6">
-          <div className="md:col-span-3 space-y-5">
+        <div id="learning-content" className="grid md:grid-cols-4 gap-6 scroll-mt-24">
+          <div className="md:col-span-3 space-y-5 min-w-0">
             {/* Editor's Picks */}
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               className="rounded-2xl p-5 relative overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(34,211,238,0.03))', border: '1px solid rgba(139,92,246,0.12)' }}>
+              style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(34,211,238,0.04), rgba(15,17,25,0.7))', border: '1px solid rgba(139,92,246,0.16)', backdropFilter: 'blur(12px)', boxShadow: '0 10px 34px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-sm">⭐</span>
                 <h2 className="text-sm font-bold text-white">Editor's Picks</h2>
@@ -796,6 +1162,56 @@ export default function LearningHubPage() {
               </div>
             </motion.div>
 
+            {/* Featured Channels */}
+            {channelData.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl p-4 relative overflow-hidden"
+                style={{ background: 'linear-gradient(180deg, rgba(23,29,48,0.72), rgba(15,17,25,0.94))', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(14px)', boxShadow: '0 8px 28px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm">📺</span>
+                  <h2 className="text-sm font-bold text-white">Featured Channels</h2>
+                  <span className="text-[10px] text-text3/50">Top content creators</span>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                  {channelData.slice(0, 10).map(ch => {
+                    const subjects = [...ch.subjects].slice(0, 2).join(', ');
+                    return (
+                      <motion.button
+                        key={ch.name}
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setChannelFilter(channelFilter === ch.name ? null : ch.name)}
+                        className="flex items-center gap-2.5 shrink-0 rounded-xl px-3 py-2.5 transition-all touch-target"
+                        style={{
+                          background: channelFilter === ch.name ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.03)',
+                          border: '1px solid ' + (channelFilter === ch.name ? 'rgba(139,92,246,0.35)' : 'rgba(255,255,255,0.06)')
+                        }}
+                      >
+                        <span className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                          style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(34,211,238,0.2))', color: '#C4B5FD' }}>
+                          {ch.name[0]}
+                        </span>
+                        <div className="text-left min-w-0">
+                          <div className="text-[11px] font-semibold text-white truncate max-w-[120px]">{ch.name}</div>
+                          <div className="text-[9px] text-text3/50">{ch.count} video{ch.count > 1 ? 's' : ''}{subjects ? ' · ' + subjects : ''}</div>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Channel filter indicator */}
+            {channelFilter && (
+              <div className="flex items-center gap-2 px-1 py-1">
+                <span className="text-[11px] text-text3/70">Showing videos from:</span>
+                <span className="text-[11px] font-semibold text-primary">{channelFilter}</span>
+                <button onClick={() => setChannelFilter(null)}
+                  className="text-[10px] px-2 py-0.5 rounded-lg bg-white/[0.05] text-text3 hover:text-white transition-colors">✕ Clear</button>
+              </div>
+            )}
+
             {/* Tab bar */}
             <div>
               <div className="flex gap-1 p-1 rounded-2xl mb-5 overflow-x-auto"
@@ -820,19 +1236,10 @@ export default function LearningHubPage() {
                 ))}
               </div>
 
-              {!searchQuery && (
-                <div className="flex gap-1.5 mb-5 overflow-x-auto pb-1">
-                  {SORT_OPTIONS.map(option => (
-                    <button key={option} onClick={() => setSortBy(option)}
-                      className={`text-[10px] font-bold px-3 py-1.5 rounded-full transition-all whitespace-nowrap button-n-doubletap touch-target ${sortBy === option ? 'bg-white/[0.08] text-white' : 'text-text3/50 hover:text-text3/70'}`}>
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Content panels */}
+            <MotionConfig reducedMotion={prefersReducedMotion ? "always" : "never"}>
             <AnimatePresence mode="wait">
               {loading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -846,6 +1253,56 @@ export default function LearningHubPage() {
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.2 }}
                 >
+                  {activeTab === 'videos' && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-4 flex-wrap">
+                        <div className="flex gap-1 overflow-x-auto flex-1 min-w-0">
+                          {VIDEO_FILTERS.map(item => (
+                            <motion.button
+                              key={item.id}
+                              onClick={() => setVideoSort(item.id)}
+                              className="relative flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-xl font-medium transition-all whitespace-nowrap button-n-doubletap shrink-0"
+                              style={{ color: videoSort === item.id ? '#C4B5FD' : 'rgba(255,255,255,0.4)' }}
+                            >
+                              {videoSort === item.id && (
+                                <motion.div layoutId="videoSortActive" className="absolute inset-0 rounded-xl"
+                                  style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.25)' }}
+                                  transition={{ type: 'spring', stiffness: 400, damping: 30 }} />
+                              )}
+                              <span className="relative z-10">{item.icon} {item.label}</span>
+                            </motion.button>
+                          ))}
+                        </div>
+                      </div>
+                      {loadError ? (
+                        <div className="flex flex-col items-center py-16 text-center">
+                          <div className="text-4xl mb-4 opacity-40">⚠️</div>
+                          <p className="text-sm text-text3/60 font-medium">{loadError}</p>
+                          <button
+                            onClick={fetchData}
+                            className="mt-4 px-4 py-2 text-xs font-semibold rounded-xl text-white transition-all hover:opacity-90"
+                            style={{ background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.3)' }}
+                          >
+                            ↻ Retry
+                          </button>
+                        </div>
+                      ) : filteredVideos.length === 0 ? (
+                        <div className="flex flex-col items-center py-16 text-center">
+                          <motion.div animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="text-4xl mb-4 opacity-40">🎬</motion.div>
+                          <p className="text-sm text-text3/60 font-medium">No videos yet</p>
+                          <p className="text-xs text-text3/40 mt-1">Videos will appear here once added by admin</p>
+                        </div>
+                      ) : (
+                        <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }} initial="hidden" animate="show"
+                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 content-visibility-auto">
+                          {videoCards.map(item => (
+                            <ResourceCard key={item._id || item.id} item={item} onClick={openResource} />
+                          ))}
+                        </motion.div>
+                      )}
+                    </div>
+                  )}
+
                   {activeTab === 'roadmap' && (
                     <div>
                       <FilterBar categories={ROADMAP_FILTERS} active={roadmapFilter} onChange={setRoadmapFilter} />
@@ -857,16 +1314,37 @@ export default function LearningHubPage() {
                         </div>
                       ) : (
                         <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }} initial="hidden" animate="show"
-                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 content-visibility-auto">
+                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 content-visibility-auto">
                           {filteredRoadmaps.map(item => (
-                            <ResourceCard key={item._id || item.id} item={item} onClick={() => setSelectedItem(item)} />
+                            <ResourceCard key={item._id || item.id} item={item} onClick={openResource} />
                           ))}
                         </motion.div>
                       )}
                     </div>
                   )}
 
-                  {activeTab === 'subjects' && <SubjectResourcesTable />}
+                  {activeTab === 'subjects' && (
+                    <div>
+                      <FilterBar categories={SUBJECT_FILTERS} active={subjectFilter} onChange={setSubjectFilter} />
+                      {filteredSubjects.length === 0 ? (
+                        <div className="flex flex-col items-center py-16 text-center">
+                          <motion.div animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="text-4xl mb-4 opacity-40">📚</motion.div>
+                          <p className="text-sm text-text3/60 font-medium">No subject resources yet</p>
+                        </div>
+                      ) : (
+                        <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }} initial="hidden" animate="show"
+                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 content-visibility-auto">
+                          {filteredSubjects.map(item => (
+                            <ResourceCard key={item._id || item.id} item={item} onClick={openResource} />
+                          ))}
+                        </motion.div>
+                      )}
+                      <div className="mt-8">
+                        <h3 className="text-sm font-bold text-white mb-3">Recommended Educators by Subject</h3>
+                        <SubjectResourcesTable />
+                      </div>
+                    </div>
+                  )}
 
                   {activeTab === 'success_story' && (
                     <div>
@@ -878,9 +1356,9 @@ export default function LearningHubPage() {
                         </div>
                       ) : (
                         <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }} initial="hidden" animate="show"
-                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 content-visibility-auto">
+                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 content-visibility-auto">
                           {filteredStories.map(item => (
-                            <ResourceCard key={item._id || item.id} item={item} onClick={() => setSelectedItem(item)} />
+                            <ResourceCard key={item._id || item.id} item={item} onClick={openResource} />
                           ))}
                         </motion.div>
                       )}
@@ -889,16 +1367,17 @@ export default function LearningHubPage() {
 
                   {activeTab === 'academy' && (
                     <div>
-                      {academy.length === 0 ? (
+                      <FilterBar categories={MOTIVATION_FILTERS} active={motivationFilter} onChange={setMotivationFilter} />
+                      {filteredAcademy.length === 0 ? (
                         <div className="flex flex-col items-center py-16 text-center">
                           <motion.div animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="text-4xl mb-4 opacity-40">🔥</motion.div>
                           <p className="text-sm text-text3/60 font-medium">No motivation content yet</p>
                         </div>
                       ) : (
                         <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }} initial="hidden" animate="show"
-                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 content-visibility-auto">
-                          {academy.map(item => (
-                            <ResourceCard key={item._id || item.id} item={item} onClick={() => setSelectedItem(item)} />
+                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 content-visibility-auto">
+                          {filteredAcademy.map(item => (
+                            <ResourceCard key={item._id || item.id} item={item} onClick={openResource} />
                           ))}
                         </motion.div>
                       )}
@@ -915,9 +1394,9 @@ export default function LearningHubPage() {
                         </div>
                       ) : (
                         <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }} initial="hidden" animate="show"
-                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 content-visibility-auto">
+                          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 content-visibility-auto">
                           {filteredResources.map(item => (
-                            <ResourceCard key={item._id || item.id} item={item} onClick={() => setSelectedItem(item)} />
+                            <ResourceCard key={item._id || item.id} item={item} onClick={openResource} />
                           ))}
                         </motion.div>
                       )}
@@ -926,25 +1405,29 @@ export default function LearningHubPage() {
 
                   {activeTab === 'insights' && (
                     <div>
-                      <p className="text-[11px] text-text3/70 mb-4">
-                        Data-driven insights from our database — explore trends, ranks, placements, and counselling information.
-                      </p>
-                      <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }} initial="hidden" animate="show"
-                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                        {INSIGHT_CARDS.map((card, index) => (
-                          <InsightCard key={card.title} card={card} index={index} />
-                        ))}
-                      </motion.div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <span className="text-sm">💡</span>
+                        <h3 className="text-sm font-bold text-white">GATE Data Insights</h3>
+                        <span className="text-[10px] text-text3/50">2025-26 Reference Data</span>
+                      </div>
+                      <InsightsDashboard />
+                      <div className="mt-4 text-center">
+                        <Link to="/insights" className="inline-flex items-center gap-1 text-[11px] font-bold px-4 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all">
+                          View All Insights →
+                        </Link>
+                      </div>
                     </div>
                   )}
+
                 </motion.div>
               )}
             </AnimatePresence>
+            </MotionConfig>
           </div>
 
           {/* Sidebar */}
           <div className="hidden md:block md:col-span-1">
-            <Sidebar searchQuery={searchQuery} resources={allItems} />
+            <Sidebar searchQuery={searchQuery} />
           </div>
         </div>
       </div>

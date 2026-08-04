@@ -8,6 +8,9 @@ import { buildAiContext } from '../../utils/aiContextBuilder';
 import useAiStreaming from '../../hooks/useAiStreaming';
 import useAiCache from '../../hooks/useAiCache';
 import useConversation from '../../hooks/useConversation';
+import useAiMode from '../../hooks/useAiMode';
+import { buildModePrompt } from '../../utils/aiModePrompts';
+import AiModeSelector from '../common/AiModeSelector';
 import Icon from '../ui/Icon';
 import GlassCard from '../ui/GlassCard';
 import GateNexaAIIcon from '../ui/GateNexaAIIcon';
@@ -247,6 +250,7 @@ export default function AICoachChat({ initialPrompt }) {
   const lastUserMsgRef = useRef('');
 
   const { startStream, stopStream, streaming, partialText } = useAiStreaming();
+  const { mode, setMode, current: currentMode } = useAiMode();
   const cache = useAiCache();
   const conversation = useConversation('coach');
 
@@ -286,6 +290,7 @@ export default function AICoachChat({ initialPrompt }) {
   const handleSend = useCallback(async (text) => {
     const messageText = text || input;
     if (!messageText.trim() || loadingRef.current || streaming) return;
+
     lastUserMsgRef.current = messageText;
     loadingRef.current = true;
 
@@ -327,6 +332,8 @@ export default function AICoachChat({ initialPrompt }) {
     try {
       const ctx = buildAiContext({ topics, pyqs, mocks, gateFeatures, studyStats });
       ctx.history = conversation.getHistoryForContext();
+      ctx.mode = mode;
+      ctx.modePrompt = buildModePrompt(mode, ctx);
 
       const result = await startStream(messageText, ctx, conversation.sessionId);
       clearInterval(statusIntervalRef.current);
@@ -341,19 +348,19 @@ export default function AICoachChat({ initialPrompt }) {
         setSuggestions(result.suggestions?.length > 0 ? result.suggestions : generateSmartSuggestions(messageText, reply));
       } else if (!streaming) {
         const aid = ++msgIdCounter.current;
-        setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', content: "Unable to connect to GateNexa AI. Please try again in a moment.", source: 'error', thumbs: null }]);
+        setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', content: "Live AI could not be reached. Here's a general reply while it's unavailable:\n\nI'm here to help! Focus on completing your weak subjects and solving PYQs daily. What specific topic would you like advice on?", source: 'heuristic', thumbs: null }]);
       }
     } catch (error) {
       clearInterval(statusIntervalRef.current);
       console.error('AI Coach Error:', error);
-      let displayMsg = "Unable to connect to GateNexa AI. Please try again in a moment.";
+      let displayMsg = "Live AI could not be reached. Here's a general reply while it's unavailable:\n\nI'm here to help! Focus on completing your weak subjects and solving PYQs daily. What specific topic would you like advice on?";
       if (error.message?.includes('rate limit')) {
-        displayMsg = "You're asking questions too fast! Please wait a moment.";
+        displayMsg = "You're asking questions too fast! Live AI is temporarily rate-limited. Please wait a moment and try again.";
       } else if (error.message?.includes('timed out')) {
-        displayMsg = "The request timed out. Please try again.";
+        displayMsg = "Live AI took too long to respond and timed out. Please try again.";
       }
       const aid = ++msgIdCounter.current;
-      setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', content: displayMsg, source: 'error', thumbs: null }]);
+      setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', content: displayMsg, source: 'heuristic', thumbs: null }]);
     } finally {
       clearInterval(statusIntervalRef.current);
       loadingRef.current = false;
@@ -388,7 +395,10 @@ export default function AICoachChat({ initialPrompt }) {
       <div className="p-4 border-b border-border flex items-center gap-3 bg-primary/5 shrink-0">
         <GateNexaAIIcon size={32} thinking={streaming || loading} />
         <div className="flex-1">
-          <div className="text-sm font-bold text-text"><BrandText /> AI</div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-text"><BrandText /> AI</span>
+            <AiModeSelector mode={mode} setMode={setMode} current={currentMode} />
+          </div>
           <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: streaming ? '#22d3ee' : '#22C55E' }} />
             <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: streaming ? '#22d3ee' : '#22C55E' }}>

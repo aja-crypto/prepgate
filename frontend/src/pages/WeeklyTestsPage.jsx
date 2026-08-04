@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { weeklyTestService } from '../services/api';
 import { PageLoading } from '../components/common/GateLoadingScreen';
@@ -31,9 +31,9 @@ export default function WeeklyTestsPage() {
     setLoading(true);
     setLoadError(false);
     Promise.all([
-      weeklyTestService.getSubjectCounts().then(r => { setSubjects(r.data.data || []); return r.data.data?.length; }).catch(e => { console.warn('WeeklyTests getSubjectCounts failed', e?.message); return 0; }),
-      weeklyTestService.getAll().then(r => { setTests(r.data.data || []); return r.data.data?.length; }).catch(e => { console.warn('WeeklyTests getAll failed', e?.message); return 0; }),
-      weeklyTestService.getProgress().then(r => setProgress(r.data.data || [])).catch(e => { console.warn('WeeklyTests getProgress failed', e?.message); }),
+      weeklyTestService.getSubjectCounts().then(r => { setSubjects(r.data.data || []); return r.data.data?.length; }).catch(e => { console.error('WeeklyTests getSubjectCounts failed', e?.message); return 0; }),
+      weeklyTestService.getAll().then(r => { setTests(r.data.data || []); return r.data.data?.length; }).catch(e => { console.error('WeeklyTests getAll failed', e?.message); return 0; }),
+      weeklyTestService.getProgress().then(r => setProgress(r.data.data || [])).catch(e => { console.error('WeeklyTests getProgress failed', e?.message); }),
     ]).then(([subjectCount, testCount]) => {
       if (!subjectCount && !testCount) setLoadError(true);
     }).catch(() => setLoadError(true)).finally(() => setLoading(false));

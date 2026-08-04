@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { sanitizeFilename, createFileFilter } = require('../utils/uploadValidator');
 const { protect } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
 const { WeeklyTest, UserTestProgress } = require('../models/WeeklyTest');
@@ -37,10 +38,7 @@ const weeklyTestStorage = multer.diskStorage({
 const uploadPdf = multer({
   storage: weeklyTestStorage,
   limits: { fileSize: 20 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, ext === '.pdf');
-  },
+  fileFilter: createFileFilter('pdf'),
 });
 
 // Seed weekly tests on first load

@@ -72,6 +72,7 @@ const userSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
   verifyEmailToken: String,
   verifyEmailExpire: Date,
+  pendingNewEmail: { type: String, default: null },
   lastLogin: { type: Date, default: null },
   deletedAt: { type: Date, default: null },
   // Referral & Premium fields
@@ -85,6 +86,13 @@ const userSchema = new mongoose.Schema({
   aiQuestionsUsed: { type: Number, default: 0 },
   aiQuestionsDate: { type: Date, default: null },
   badges: [{ type: String }],
+  hasCompletedOnboarding: { type: Boolean, default: false },
+  onboardingSkipped: { type: Boolean, default: false },
+  completedMilestones: [{ type: String }],
+  firstLoginAt: { type: Date, default: null },
+  lastDailyWelcome: { type: String, default: '' },
+  // Token version — incremented on password reset to invalidate all outstanding JWTs
+  tokenVersion: { type: Number, default: 0 },
 }, {
   timestamps: true,
 });

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useProgress } from '../../context/ProgressContext';
@@ -14,14 +14,14 @@ export default function NotesHubWidget() {
     api.get('/cms/featured-resources?limit=6').then(r => {
       const data = r.data?.data || [];
       if (data.length) setResources(data);
-    }).catch(e => console.warn('[NotesHubWidget] resources fetch failed', e?.message));
+    }).catch(e => console.error('[NotesHubWidget] resources fetch failed', e?.message));
   }, []);
 
   useEffect(() => {
     api.get('/cms/featured-content').then(r => {
       const data = r.data?.data || [];
       if (data.length) setFeaturedContent(data);
-    }).catch(e => console.warn('[NotesHubWidget] content fetch failed', e?.message));
+    }).catch(e => console.error('[NotesHubWidget] content fetch failed', e?.message));
   }, []);
 
   const safeNotes = notes || [];

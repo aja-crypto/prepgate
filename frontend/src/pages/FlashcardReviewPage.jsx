@@ -33,8 +33,11 @@ export default function FlashcardReviewPage() {
         setReviewStartTime(Date.now());
       }
     } catch (err) {
-      console.error('Failed to load review queue:', err);
-      toast.error('Failed to load flashcards');
+      // 403 = premium-gated — empty state renders cleanly without an error
+      if (err?.response?.status !== 403) {
+        console.error('Failed to load review queue:', err);
+        toast.error('Failed to load flashcards');
+      }
     } finally {
       setLoading(false);
     }
@@ -45,7 +48,8 @@ export default function FlashcardReviewPage() {
       const res = await flashcardService.getStats();
       setStats(res.data?.data);
     } catch (err) {
-      console.error('Failed to load stats:', err);
+      // 403 = premium-gated — stats stay at defaults without an error
+      if (err?.response?.status !== 403) console.error('Failed to load stats:', err);
     }
   };
 

@@ -14,8 +14,9 @@ export default function FlashcardBankPage() {
   const [filter, setFilter] = useState({ subject: '', difficulty: '', type: '' });
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [addingId, setAddingId] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+const [addingId, setAddingId] = useState(null);
+const [addedIds, setAddedIds] = useState(new Set());
+const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadFlashcards();
@@ -41,7 +42,9 @@ export default function FlashcardBankPage() {
   const handleAddToDeck = async (flashcardId) => {
     try {
       setAddingId(flashcardId);
-      await flashcardService.addFlashcard(flashcardId, 'manual');
+      const res = await flashcardService.addFlashcard(flashcardId, 'manual');
+      const added = res?.data?.data;
+      if (added?._id) setAddedIds(prev => new Set([...prev, added._id]));
       toast.success('Added to your deck!');
     } catch (err) {
       console.error('Failed to add flashcard:', err);
@@ -195,10 +198,14 @@ export default function FlashcardBankPage() {
 
                 <button
                   onClick={() => handleAddToDeck(card._id)}
-                  disabled={addingId === card._id}
-                  className="w-full py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-medium hover:bg-primary/20 transition-all disabled:opacity-50"
+                  disabled={addingId === card._id || addedIds.has(card._id)}
+                  className={`w-full py-2 rounded-lg text-xs font-medium transition-all ${
+                    addedIds.has(card._id)
+                      ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 cursor-default'
+                      : 'bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 disabled:opacity-50'
+                  }`}
                 >
-                  {addingId === card._id ? 'Adding...' : 'Add to Deck'}
+                  {addingId === card._id ? 'Adding...' : addedIds.has(card._id) ? '✓ Added to Deck' : 'Add to Deck'}
                 </button>
               </GlassCard>
             ))}

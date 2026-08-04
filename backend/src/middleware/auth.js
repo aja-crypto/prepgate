@@ -2,7 +2,9 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { isMockAuthEnabled, enableMockAuth } = require('../config/devMode');
+const { isMongoConnected } = require('../config/db');
 const mockStore = require('../store/mockStore');
+const tokenBlacklist = require('./tokenBlacklist');
 
 /**
  * Protect routes – verifies JWT access token
@@ -16,9 +18,9 @@ exports.protect = async (req, res, next) => {
   }
 
   if (!token) {
-    // Check if it's a demo/guest user (only if not in strict mode)
+    // Demo bypass is ONLY available in non-production environments
     const isDemoRequest = req.headers['x-demo-user'] === 'true';
-    if (isDemoRequest) {
+    if (isDemoRequest && process.env.NODE_ENV !== 'production') {
       enableMockAuth();
       req.user = {
         _id: 'demo_user_id',
@@ -26,7 +28,9 @@ exports.protect = async (req, res, next) => {
         name: 'GATE Aspirant (Demo)',
         email: 'demo@gate2027.in',
         role: 'user',
-        isGuest: true
+        isGuest: true,
+        isPremium: true,
+        premiumUnlockedViaReferral: true,
       };
       return next();
     }
@@ -41,12 +45,54 @@ exports.protect = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
+    // Check blacklist (sync fast path — DB fallback in async check)
+    if (tokenBlacklist.hasSync(token)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token has been revoked. Please login again.',
+        code: 'TOKEN_REVOKED',
+      });
+    }
+
+    // Full async blacklist check (covers DB after server restart)
+    const isBlacklisted = await tokenBlacklist.has(token);
+    if (isBlacklisted) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token has been revoked. Please login again.',
+        code: 'TOKEN_REVOKED',
+      });
+    }
+
+    // If MongoDB is connected, try to fetch from MongoDB first
+    // (mock store users have UUID IDs which are incompatible with ObjectId refs)
+    if (isMongoConnected()) {
+      // Only try MongoDB if the ID looks like a valid ObjectId (24 hex chars)
+      if (/^[0-9a-f]{24}$/i.test(decoded.id)) {
+        req.user = await User.findById(decoded.id).select('-password');
+        if (req.user) {
+          if (decoded.v !== undefined && decoded.v !== req.user.tokenVersion) {
+            return res.status(401).json({ success: false, message: 'Session expired. Please login again.', code: 'TOKEN_VERSION_MISMATCH' });
+          }
+          return next();
+        }
+      }
+    }
+
     if (isMockAuthEnabled()) {
       const user = mockStore.findById(decoded.id);
       if (!user) {
         return res.status(401).json({
           success: false,
           message: 'User not found. Token invalid.',
+        });
+      }
+      // Check tokenVersion for global invalidation (mock mode)
+      if (decoded.v !== undefined && decoded.v !== (user.tokenVersion || 0)) {
+        return res.status(401).json({
+          success: false,
+          message: 'Session expired. Please login again.',
+          code: 'TOKEN_VERSION_MISMATCH',
         });
       }
       // Attach the mock user object with methods (save, updateStreak, etc.)
@@ -79,6 +125,15 @@ exports.protect = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         message: 'User not found. Token invalid.',
+      });
+    }
+
+    // Check tokenVersion — reject tokens issued before password reset
+    if (decoded.v !== undefined && decoded.v !== req.user.tokenVersion) {
+      return res.status(401).json({
+        success: false,
+        message: 'Session expired. Please login again.',
+        code: 'TOKEN_VERSION_MISMATCH',
       });
     }
 
@@ -119,18 +174,20 @@ exports.adminOnly = (req, res, next) => {
 
 /**
  * Generate JWT tokens
+ * @param {string} userId
+ * @param {number} [tokenVersion=0] - User's token version for global invalidation
  */
-exports.generateTokens = (userId) => {
+exports.generateTokens = (userId, tokenVersion = 0) => {
   const accessToken = jwt.sign(
-    { id: userId },
+    { id: userId, v: tokenVersion },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRE || '15m' }
+    { algorithm: 'HS256', expiresIn: process.env.JWT_EXPIRE || '15m' }
   );
 
   const refreshToken = jwt.sign(
-    { id: userId },
+    { id: userId, v: tokenVersion },
     process.env.JWT_REFRESH_SECRET,
-    { expiresIn: process.env.JWT_REFRESH_EXPIRE || '7d' }
+    { algorithm: 'HS256', expiresIn: process.env.JWT_REFRESH_EXPIRE || '7d' }
   );
 
   return { accessToken, refreshToken };

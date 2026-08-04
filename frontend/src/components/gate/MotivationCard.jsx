@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 
 const QUOTES = [
@@ -18,7 +18,7 @@ export default function MotivationCard() {
         const data = Array.isArray(r.data.data) ? r.data.data : [r.data.data];
         if (data.length) setQuote(data[0]);
       }
-    }).catch(e => console.warn('[MotivationCard] fetch failed', e?.message));
+    }).catch(e => console.error('[MotivationCard] fetch failed', e?.message));
   }, []);
 
   useEffect(() => {

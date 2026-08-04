@@ -23,6 +23,8 @@ const adminSchema = new mongoose.Schema({
 
 adminSchema.pre('save', async function (next) {
   if (!this.isModified('passwordHash')) return next();
+  // Never re-hash an already-hashed value (bcrypt hashes start with $2a/$2b/$2y)
+  if (typeof this.passwordHash === 'string' && /^\$2[aby]\$/.test(this.passwordHash)) return next();
   this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
   next();
 });

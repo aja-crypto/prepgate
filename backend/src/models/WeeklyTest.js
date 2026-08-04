@@ -16,6 +16,7 @@ const weeklyTestSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 weeklyTestSchema.index({ subject: 1, testNumber: 1 }, { unique: true });
+weeklyTestSchema.index({ subject: 1, isActive: 1 });
 
 const userTestProgressSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

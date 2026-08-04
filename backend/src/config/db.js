@@ -8,8 +8,10 @@ const { seedLocalSyllabus } = require('../store/localDataStore');
 let mongoConnected = false;
 let reconnectTimer = null;
 
-const RECONNECT_INTERVAL_MS = 10000; // check every 10s
-const MAX_RECONNECT_ATTEMPTS = 0; // 0 = unlimited
+const RECONNECT_INTERVAL_MS = 10000;
+const MAX_RECONNECT_ATTEMPTS = 0;
+
+const POOL_SIZE = parseInt(process.env.MONGODB_MAX_POOL_SIZE, 10) || 10;
 
 let reconnectAttempts = 0;
 
@@ -22,8 +24,7 @@ function startReconnectPing() {
   if (reconnectTimer) return;
   reconnectTimer = setInterval(async () => {
     if (mongoConnected && mongoose.connection.readyState === 1) return;
-    // In auto mode, keep trying to reconnect even if currently in mock fallback
-    if (!isAutoModeEnabled() && isMockAuthEnabled()) return;
+    // Keep trying to reconnect even in mock mode — predictor needs MongoDB data
     try {
       if (mongoose.connection.readyState === 1) {
         await mongoose.connection.db.admin().ping();
@@ -40,14 +41,14 @@ function startReconnectPing() {
           connectTimeoutMS: 8000,
           socketTimeoutMS: 45000,
           heartbeatFrequencyMS: 10000,
-          maxPoolSize: 10,
+          maxPoolSize: POOL_SIZE,
           minPoolSize: 2,
           retryWrites: true,
           w: 'majority',
         });
         setConnected(true);
         stopReconnectPing();
-        console.log('✅ MongoDB reconnected (fresh connection)');
+        console.log(`✅ MongoDB reconnected (pool: ${POOL_SIZE})`);
       }
     } catch (e) {
       if (e?.message) console.error(`⏳ MongoDB reconnect attempt failed: ${e.message}`);
@@ -66,12 +67,12 @@ const connectDB = async () => {
   // Disable buffering so failed queries fail immediately instead of hanging
   mongoose.set('bufferCommands', false);
 
-  // Forced mock mode — skip MongoDB entirely
+  // Forced mock mode — seed local data but still try MongoDB for datasets (predictor, etc.)
   if (isMockAuthEnabled() && !isAutoModeEnabled()) {
     await seedDemoUser();
     seedLocalSyllabus();
-    console.warn('⚠️  USE_MOCK_AUTH=true — using local in-memory data');
-    return false;
+    console.warn('⚠️  USE_MOCK_AUTH=true — using local in-memory data for auth');
+    // Don't return — continue to MongoDB connection attempt for data access
   }
 
   // Auto mode or forced MongoDB — attempt MongoDB connection
@@ -82,7 +83,7 @@ const connectDB = async () => {
         connectTimeoutMS: 8000,
         socketTimeoutMS: 45000,
         heartbeatFrequencyMS: 10000,
-        maxPoolSize: 10,
+        maxPoolSize: POOL_SIZE,
         minPoolSize: 2,
         retryWrites: true,
         w: 'majority',
@@ -90,7 +91,7 @@ const connectDB = async () => {
 
       setConnected(true);
       stopReconnectPing();
-      console.log(`✅ MongoDB Connected: ${conn.connection.host} (DB: ${conn.connection.name})`);
+      console.log(`✅ MongoDB Connected: ${conn.connection.host} (DB: ${conn.connection.name}) (pool: ${POOL_SIZE})`);
 
       mongoose.connection.on('connected', () => {
         console.log('🔌 MongoDB connection established');

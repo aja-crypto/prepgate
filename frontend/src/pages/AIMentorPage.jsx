@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useProgress } from '../context/ProgressContext';
+import { useAiMentor } from '../context/AiMentorContext';
 import { aiService } from '../services/api';
 import { MentorLoading } from '../components/common/GateLoadingScreen';
 import toast from 'react-hot-toast';
@@ -8,8 +10,8 @@ import GlassCard from '../components/ui/GlassCard';
 import Icon from '../components/ui/Icon';
 import { computeSubjectCompletion, computeReadinessScore, computeCompletionForecast } from '../utils/gateUtils';
 
-import AICoachChat from '../components/gate/AICoachChat';
 import StrategyHub from '../components/gate/StrategyHub';
+import EveningReview from '../components/mentor/EveningReview';
 
 function localHeuristicRecommendations(data) {
   const { subjects = [], topics = [], pyqs = [], mocks = [], studyStats = {} } = data;
@@ -162,13 +164,13 @@ const MorningBriefing = ({ subjects, topics, pyqs, gateFeatures, forecast }) => 
 
 const AIMentorPage = () => {
   const navigate = useNavigate();
+  const { profile, roadmap: aiRoadmap } = useAiMentor();
   const { topics, pyqs, mocks, studyStats, gateFeatures, revisionSchedule } = useProgress();
   const [recommendations, setRecommendations] = useState([]);
   const [analysis, setAnalysis] = useState(null);
   const [aiError, setAiError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [coachPrompt, setCoachPrompt] = useState(null);
 
   const subjects = useMemo(
     () => computeSubjectCompletion(studyStats?.subjects || [], topics || [], pyqs || []),
@@ -195,6 +197,19 @@ const AIMentorPage = () => {
 
   useEffect(() => {
     if (!localStorage.getItem('accessToken') && localStorage.getItem('isGuest') !== 'true') return;
+
+    // Demo mode — use local recommendations directly, skip API call
+    if (localStorage.getItem('isGuest') === 'true' && !localStorage.getItem('accessToken')) {
+      const fallback = localHeuristicRecommendations({
+        subjects: subjects || [], topics: topics || [], pyqs: pyqs || [],
+        mocks: mocks || [], overall: { percentage: overall || 0 }, studyStats: studyStats || {},
+      });
+      setRecommendations(fallback.recommendations);
+      setAnalysis(fallback.analysis);
+      setAiError(null);
+      setLoading(false);
+      return;
+    }
 
     if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
     if (abortRef.current) abortRef.current.abort();
@@ -358,34 +373,13 @@ const AIMentorPage = () => {
         forecast={{ ...forecast, readiness }}
       />
 
-      <GlassCard padding="p-4" className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/10">
-        <div className="flex items-center gap-2 mb-3">
-          <Icon name="zap" className="w-4 h-4 text-primary" />
-          <span className="text-sm font-semibold text-text">Quick Actions</span>
-          <span className="text-[10px] text-text3 ml-auto">Click to ask AI Coach</span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { label: 'What should I study today?', icon: 'book' },
-            { label: 'Which subject needs most attention?', icon: 'trending-down' },
-            { label: 'Create a study plan for this week', icon: 'calendar' },
-            { label: 'How can I improve my weak areas?', icon: 'alert-triangle' },
-            { label: "What's my predicted rank?", icon: 'award' },
-            { label: 'Give me a revision schedule', icon: 'refresh' },
-            { label: 'How to prepare for mock tests?', icon: 'target' },
-            { label: 'Which PYQs should I practice?', icon: 'file-text' },
-          ].map((item, i) => (
-            <button
-              key={i}
-              onClick={() => setCoachPrompt(item.label)}
-              className="flex items-center gap-1.5 px-3 py-2 bg-bg-2 border border-border rounded-xl text-sm text-text3 hover:border-primary/40 hover:bg-primary/5 transition-all"
-            >
-              <Icon name={item.icon} className="w-3.5 h-3.5 text-primary" />
-              <span className="font-medium">{item.label}</span>
-            </button>
-          ))}
-        </div>
-      </GlassCard>
+      <EveningReview
+        topics={topics}
+        pyqs={pyqs}
+        mocks={mocks}
+        studyStats={studyStats}
+        subjects={subjects}
+      />
 
       <GlassCard className="border-primary/20 bg-primary/5" padding="p-5">
         <div className="flex items-center justify-between gap-3 mb-4">
@@ -409,6 +403,84 @@ const AIMentorPage = () => {
             </div>
           ))}
         </div>
+      </GlassCard>
+
+      {/* Personalization */}
+      <GlassCard padding="p-5" className="border-white/5">
+        <div className="flex items-center gap-2 mb-4">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-primary"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
+          <h2 className="text-lg font-bold text-text">Your Profile</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: 'Exam Year', value: profile?.gateExamYear || '2027' },
+            { label: 'Daily Study', value: `${profile?.dailyStudyHours || 4}h/day` },
+            { label: 'Target AIR', value: profile?.targetAIR ? `#${profile.targetAIR}` : 'Not set' },
+            { label: 'Dream Institute', value: profile?.dreamCollege || 'Not set' },
+            { label: 'Current Phase', value: aiRoadmap?.currentPhase || 'Foundation' },
+            { label: 'Student Type', value: profile?.preparationStage || 'Beginner' },
+            { label: 'First Attempt', value: profile?.firstAttempt !== false ? 'Yes' : 'No' },
+            { label: 'Subjects Done', value: `${(profile?.completedSubjects || []).length} / 11` },
+          ].map((item) => (
+            <div key={item.label} className="bg-bg-2 border border-border rounded-xl p-3">
+              <div className="text-[9px] uppercase tracking-wider text-text3">{item.label}</div>
+              <div className="text-sm font-semibold text-text mt-1 truncate">{item.value}</div>
+            </div>
+          ))}
+        </div>
+      </GlassCard>
+
+      {/* Roadmap */}
+      <GlassCard padding="p-5" className="border-white/5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-primary"><path fillRule="evenodd" d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z" clipRule="evenodd" /></svg>
+            <h2 className="text-lg font-bold text-text">Roadmap</h2>
+          </div>
+          {aiRoadmap?.estimatedDays && (
+            <span className="text-[10px] px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+              ~{aiRoadmap.estimatedDays} days remaining
+            </span>
+          )}
+        </div>
+        {aiRoadmap?.stages?.length > 0 ? (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { label: 'Current Stage', value: aiRoadmap.currentStage?.label || aiRoadmap.currentPhase || 'Foundation' },
+                { label: 'Subjects Left', value: `${aiRoadmap.remainingSubjects ?? 11} remaining` },
+                { label: 'Readiness', value: `${aiRoadmap.readinessScore || 0}%` },
+                { label: 'Milestone', value: aiRoadmap.nextMilestone || aiRoadmap.nextPhase || 'Build Foundation' },
+              ].map((item) => (
+                <div key={item.label} className="bg-bg-2 border border-border rounded-xl p-3">
+                  <div className="text-[9px] uppercase tracking-wider text-text3">{item.label}</div>
+                  <div className="text-sm font-semibold text-text mt-1 truncate">{item.value}</div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => navigate('/subjects')}
+              className="text-xs font-bold text-primary flex items-center gap-1 hover:underline mt-2"
+            >
+              Continue Roadmap <Icon name="chevron-right" className="w-3 h-3" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3" style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.15)' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6 text-primary"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+            </div>
+            <h4 className="text-sm font-semibold text-text mb-1">No roadmap generated yet</h4>
+            <p className="text-xs text-text3 mb-4 max-w-xs">Complete your onboarding and study profile to generate a personalized roadmap.</p>
+            <button
+              onClick={() => navigate('/subjects')}
+              className="text-xs font-semibold px-4 py-2 rounded-lg transition-all"
+              style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', color: 'white' }}
+            >
+              Generate Roadmap
+            </button>
+          </div>
+        )}
       </GlassCard>
 
       <StrategyHub
@@ -601,7 +673,6 @@ const AIMentorPage = () => {
             </div>
           </GlassCard>
 
-          <AICoachChat initialPrompt={coachPrompt} />
         </div>
       </div>
     </div>

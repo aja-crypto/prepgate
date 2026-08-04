@@ -51,6 +51,7 @@ const monthlySetSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 monthlySetSchema.index({ month: 1, year: 1 }, { unique: true });
+monthlySetSchema.index({ month: 1, isPublished: 1 });
 
 const userProgressSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -73,6 +74,7 @@ const userProgressSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 userProgressSchema.index({ user: 1, monthlySet: 1 }, { unique: true });
+userProgressSchema.index({ user: 1, lastStudiedAt: -1 });
 
 let Flashcard, MonthlySet, UserFlashcardProgress;
 try { Flashcard = mongoose.model('Flashcard'); } catch { Flashcard = mongoose.model('Flashcard', flashcardSchema); }

@@ -33,7 +33,7 @@ function getChanceConfig(probability) {
 
 function formatLPA(val) {
   if (val == null) return '\u2014';
-  if (val >= 100) return `\u20B9${(val / 100).toFixed(1)}L`;
+  if (val >= 100) return `\u20B9${(val / 100).toFixed(1)} Cr`;
   return `\u20B9${val} LPA`;
 }
 

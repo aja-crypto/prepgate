@@ -1,7 +1,6 @@
 // Analytics: weekly/monthly graphs, accuracy, mock trends, completion forecast
 import { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Chart, registerables } from 'chart.js';
 import { useProgress } from '../context/ProgressContext';
 import {
   buildFinalModePlans,
@@ -21,10 +20,14 @@ import StreakTracker from '../components/gate/StreakTracker';
 import WeakTopicsPanel from '../components/gate/WeakTopicsPanel';
 import AirPredictor from '../components/gate/AirPredictor';
 
-Chart.register(...registerables);
-
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+
+let chartJsPromise;
+async function getChart() {
+  if (!chartJsPromise) chartJsPromise = import('chart.js').then(mod => { mod.Chart.register(...mod.registerables); return mod.Chart; });
+  return chartJsPromise;
+}
 
 function useInView(options = {}) {
   const ref = useRef(null);
@@ -51,6 +54,52 @@ function ChartContainer({ title, children, className = '' }) {
   );
 }
 
+// Explain WHY the analytics numbers are what they are — derived from real data.
+function buildInsightNarrative({ readiness, recentScore, rankRange, consistencyScore, revisionHealth, pace, subjects, mocks, pyqs, topics, weakCount }) {
+  const parts = [];
+  const weakest = [...(subjects || [])].sort((a, b) => a.progress - b.progress)[0];
+  const strongest = [...(subjects || [])].sort((a, b) => b.progress - a.progress)[0];
+
+  if (readiness >= 70) parts.push(`Your readiness is strong (${readiness}/100) — the effort is paying off.`);
+  else if (readiness >= 40) parts.push(`Your readiness is ${readiness}/100 — solid momentum, but ${weakest?.name ? weakest.name : 'some subjects'} need attention.`);
+  else parts.push(`You're building foundations (readiness ${readiness}/100) — early progress counts.`);
+
+  if (weakest && weakest.progress < 50) {
+    parts.push(`Weakest area: ${weakest.name} at ${weakest.progress}% — focusing here yields the biggest score gains.`);
+  }
+  if (strongest && strongest.progress >= 60) {
+    parts.push(`Strongest: ${strongest.name} at ${strongest.progress}% — maintain it while lifting weaker subjects.`);
+  }
+
+  if (mocks && mocks.length > 0) {
+    parts.push(`Your recent mock average is ${Math.round(recentScore)} — each mock is sharpening your timing and accuracy.`);
+  } else {
+    parts.push(`No mock tests logged yet — one baseline mock now will unlock score prediction.`);
+  }
+
+  if (revisionHealth && revisionHealth.score < 60) {
+    parts.push(`Revision health is ${revisionHealth.score}/100 (${revisionHealth.missed || 0} missed) — spaced repetition will lock in gains.`);
+  } else if (revisionHealth) {
+    parts.push(`Revision health is ${revisionHealth.score}/100 — good recall rhythm.`);
+  }
+
+  if (consistencyScore >= 70) {
+    parts.push(`Consistency ${consistencyScore}/100 — your study rhythm is your biggest asset.`);
+  } else {
+    parts.push(`Consistency ${consistencyScore}/100 — steady daily hours beat occasional marathons.`);
+  }
+
+  if (pace && pace.completionDate) {
+    parts.push(`At your current pace you'll finish the syllabus around ${pace.completionDate}.`);
+  }
+
+  if (weakCount > 0) {
+    parts.push(`${weakCount} weak topic(s) flagged below — tackle one per day.`);
+  }
+
+  return parts.join(' ');
+}
+
 export default function AnalyticsPage() {
   const { studyStats, topics, pyqs, mocks, gateFeatures, revisionSchedule } = useProgress();
   const radarRef = useRef(null);
@@ -75,12 +124,14 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     if (!hasData) return;
-    const chartOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
-    const destroy = (key) => { charts.current[key]?.destroy(); };
-
-    if (radarRef.current) {
-      destroy('radar');
-      charts.current.radar = new Chart(radarRef.current, {
+    let cancelled = false;
+    getChart().then(Chart => {
+      if (cancelled) return;
+      const chartOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
+      const destroy = (key) => { charts.current[key]?.destroy(); };
+      if (radarRef.current) {
+        destroy('radar');
+        charts.current.radar = new Chart(radarRef.current, {
         type: 'radar',
         data: { labels, datasets: [{ label: 'Completion %', data: scores, borderColor: '#4f8dff', backgroundColor: '#4f8dff20', pointBackgroundColor: '#4f8dff', borderWidth: 2 }] },
         options: { ...chartOpts, scales: { r: { min: 0, max: 100, grid: { color: '#ffffff10' }, angleLines: { color: '#ffffff10' }, ticks: { color: '#636b82', font: { size: 9 }, backdropColor: 'transparent' }, pointLabels: { color: '#9ba3b8', font: { size: 8 } } } } },
@@ -162,7 +213,8 @@ export default function AnalyticsPage() {
       });
     }
 
-    return () => Object.values(charts.current).forEach((c) => c?.destroy());
+    });
+    return () => { cancelled = true; Object.values(charts.current).forEach((c) => c?.destroy()); };
   }, [hasData, subjects, labels, scores, studyStats.weeklyHours, gateFeatures, mocks]);
 
   if (!hasData) {
@@ -208,6 +260,7 @@ export default function AnalyticsPage() {
   const pace = computeStudyPace(studyStats, topics, gateFeatures);
   const recoveryPlans = buildWeakRecoveryPlans(subjects, topics, pyqs);
   const finalPlans = buildFinalModePlans();
+  const weakTopicsCount = recoveryPlans.length || (topics || []).filter(t => t.revisionNeeded || t.markedDifficult).length;
 
   return (
     <div>
@@ -229,6 +282,15 @@ export default function AnalyticsPage() {
             {s.tip && <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-bg-2 border border-border rounded-lg px-3 py-1.5 text-[10px] text-text2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">{s.tip}</div>}
           </div>
         ))}
+      </div>
+
+      {/* ── AI Insight: explains WHY the numbers are what they are ── */}
+      <div className="bg-surface border border-primary/20 rounded-xl p-5 mb-5" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.07), rgba(6,182,212,0.03))' }}>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="w-7 h-7 rounded-lg flex items-center justify-center text-sm" style={{ background: 'linear-gradient(135deg, rgba(167,139,250,0.25), rgba(34,211,238,0.15))' }}>🤖</span>
+          <span className="text-sm font-semibold text-text">Nexa AI Performance Insight</span>
+        </div>
+        <p className="text-sm text-text leading-relaxed">{buildInsightNarrative({ readiness, recentScore, rankRange, consistencyScore, revisionHealth, pace, subjects, mocks, pyqs, topics, weakCount: weakTopicsCount })}</p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-4 mb-4">

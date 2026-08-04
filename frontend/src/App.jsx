@@ -1,13 +1,10 @@
 // src/App.jsx – Main Router
-import React, { Suspense, lazy, useState, useCallback, useEffect, useMemo, Profiler } from 'react';
+import React, { Suspense, lazy, useState, useCallback, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useAdminAuth } from './context/AdminAuthContext';
 import Layout from './components/common/Layout';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import LandingPage from './pages/LandingPage';
 import DiagnosticsModal from './components/common/DiagnosticsModal';
 import { useDiagnostics } from './context/DiagnosticsContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -15,12 +12,16 @@ import PremiumLoadingScreen from './components/common/PremiumLoadingScreen';
 import FloatingAIAssistant from './components/common/FloatingAIAssistant';
 import AmbientBackground from './components/common/AmbientBackground';
 import InstallPrompt from './components/common/InstallPrompt';
+import WelcomeManager from './components/onboarding/WelcomeManager';
 import PremiumGateDialog from './components/referral/PremiumGateDialog';
 import CelebrationAnimation from './components/referral/CelebrationAnimation';
-import AiIntroModal, { shouldShowAiIntro } from './components/common/AiIntroModal';
 import BrandIntroModal from './components/common/BrandIntroModal';
+import AiIntroModal, { shouldShowAiIntro } from './components/common/AiIntroModal';
 import { SkeletonDashboard, SkeletonSubjectGrid, SkeletonTable } from './components/ui/SkeletonLoader';
 
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
@@ -64,6 +65,8 @@ const WeakTopicsPage = lazy(() => import('./pages/WeakTopicsPage'));
 const InsightsPage = lazy(() => import('./pages/InsightsPage'));
 const InsightDetailPage = lazy(() => import('./pages/InsightDetailPage'));
 const InsightReportPage = lazy(() => import('./pages/InsightReportPage'));
+const InsightsHub = lazy(() => import('./pages/InsightsHub'));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 const SuccessHubPage = lazy(() => import('./pages/SuccessHubPage'));
 const FeedbackPage = lazy(() => import('./pages/FeedbackPage'));
 const MistakeNotebookPage = lazy(() => import('./pages/MistakeNotebookPage'));
@@ -110,9 +113,7 @@ const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage'));
 
 // Protected route wrapper
 const PrivateRoute = ({ children }) => {
-  useEffect(() => { const t = Date.now(); console.log('[Trace] PrivateRoute MOUNTED at', t, '— loading:', true, 'hasUser:', !!null); return () => console.log('[Trace] PrivateRoute UNMOUNTED after', Date.now() - t, 'ms'); }, []);
   const { user, loading } = useAuth();
-  console.log('[Trace] PrivateRoute render — loading:', loading, 'hasUser:', !!user);
   if (loading) return (
     <div className="flex items-center justify-center h-screen bg-bg mesh-bg">
       <div className="text-center animate-fade-in">
@@ -159,11 +160,13 @@ const AdminPublicRoute = ({ children }) => {
 
 // Floating widgets — mounted outside Suspense to prevent DOM reconciliation errors
 function AppFloatingWidgets() {
-  useEffect(() => { const t = Date.now(); console.log('[Trace] AppFloatingWidgets MOUNTED at', t); return () => console.log('[Trace] AppFloatingWidgets UNMOUNTED after', Date.now() - t, 'ms'); }, []);
   const { user, showReferralModal, showCelebration } = useAuth();
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [aiIntroOpen, setAiIntroOpen] = useState(false);
   const [brandIntroOpen, setBrandIntroOpen] = useState(false);
+  const isAdmin = user?.role === 'admin';
+  const isPremium = user?.isPremium || false;
+  const showGate = showReferralModal && !isAdmin && !isPremium;
 
   // Show AI intro on first login (when user first becomes available)
   useEffect(() => {
@@ -187,9 +190,10 @@ function AppFloatingWidgets() {
 
   const path = window.location.pathname;
   if (!user) return null;
-  // Don't show on landing page or public auth pages
-  const hideOn = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/verify-email'];
-  if (hideOn.includes(path) || path.startsWith('/legal/')) {
+  // Don't show on landing page, public auth pages, or focused flow pages
+  const hideOn = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/feedback', '/about', '/help'];
+  const hideFloatingWidgets = path.startsWith('/legal/');
+  if (hideOn.includes(path) || hideFloatingWidgets) {
     // Still allow brand intro to show
     return <BrandIntroModal open={brandIntroOpen} onClose={() => setBrandIntroOpen(false)} />;
   }
@@ -199,9 +203,9 @@ function AppFloatingWidgets() {
       <BrandIntroModal open={brandIntroOpen} onClose={() => setBrandIntroOpen(false)} />
       <AmbientBackground />
       {localStorage.getItem('gatenexa_ai_fab') !== 'false' && (
-        <Profiler id="FloatingAIAssistant" onRender={(id, phase, d) => { if (phase === 'mount') console.log('[Profiler] FloatingAIAssistant MOUNT —', d.toFixed(2), 'ms'); }}><FloatingAIAssistant open={aiPanelOpen} setOpen={setAiPanelOpen} /></Profiler>
+        <FloatingAIAssistant open={aiPanelOpen} setOpen={setAiPanelOpen} />
       )}
-      {showReferralModal && <PremiumGateDialog />}
+      {showGate && <PremiumGateDialog />}
       {showCelebration && <CelebrationAnimation />}
       <InstallPrompt />
     </>
@@ -237,44 +241,6 @@ function RoutePrefetcher() {
   return null;
 }
 
-// DEBUG: DOM verification helper — call `inspectDOM()` from console when page blanks
-if (typeof window !== 'undefined') {
-  window.inspectDOM = () => {
-    const root = document.getElementById('root');
-    const body = document.body;
-    const html = document.documentElement;
-    console.log('========== DOM INSPECTION ==========');
-    console.log('URL:', window.location.href);
-    console.log('root innerHTML length:', root?.innerHTML?.length || 0);
-    console.log('root childNodes count:', root?.childNodes?.length || 0);
-    const reactRoot = root?._reactRootContainer || Object.keys(root || {}).find(k => k.startsWith('__reactFiber'));
-    console.log('React root attached:', !!reactRoot);
-    console.log('body styles:', {
-      display: getComputedStyle(body).display,
-      visibility: getComputedStyle(body).visibility,
-      opacity: getComputedStyle(body).opacity,
-      overflow: getComputedStyle(body).overflow,
-      height: getComputedStyle(body).height,
-    });
-    console.log('html styles:', {
-      display: getComputedStyle(html).display,
-      visibility: getComputedStyle(html).visibility,
-      opacity: getComputedStyle(html).opacity,
-      height: getComputedStyle(html).height,
-    });
-    const errBoundary = document.querySelector('.glass-card');
-    console.log('ErrorBoundary UI visible:', !!errBoundary);
-    const allFixed = document.querySelectorAll('.fixed');
-    console.log('Fixed elements count:', allFixed.length);
-    allFixed.forEach((el, i) => {
-      const rect = el.getBoundingClientRect();
-      console.log(`  [${i}]`, el.className.slice(0, 60), `— zIndex:`, getComputedStyle(el).zIndex, `— visible:`, rect.width > 0 && rect.height > 0, `— rect:`, `${rect.width}x${rect.height}`);
-    });
-    console.log('=====================================');
-    return 'DOM inspection complete. Check above.';
-  };
-}
-
 export default function App() {
   const [initialLoad, setInitialLoad] = useState(true);
   const location = useLocation();
@@ -285,7 +251,6 @@ export default function App() {
     return () => { delete window.__openDiagnostics; };
   }, [openDiagnostics]);
   const handleLoadComplete = useCallback(() => {
-    console.log('[Trace] App — PremiumLoadingScreen complete, initialLoad=false');
     setInitialLoad(false);
     document.body.classList.remove('app-loading');
   }, []);
@@ -293,8 +258,6 @@ export default function App() {
   useEffect(() => {
     if (initialLoad) document.body.classList.add('app-loading');
   }, [initialLoad]);
-
-  console.log('[Trace] App render — path:', location.pathname, 'initialLoad:', initialLoad);
 
   const routeFallback = useMemo(() => (
     <div className="min-h-screen flex items-center justify-center bg-bg">
@@ -305,19 +268,13 @@ export default function App() {
     </div>
   ), []);
 
-  // DEBUG: React Profiler callback
-  const profileCallback = useCallback((id, phase, actualDuration, baseDuration, startTime, commitTime) => {
-    if (phase === 'mount') console.log('[Profiler]', id, 'MOUNT —', actualDuration.toFixed(2), 'ms');
-    else if (phase === 'update') console.log('[Profiler]', id, 'UPDATE —', actualDuration.toFixed(2), 'ms');
-  }, []);
-
   return (
     <ErrorBoundary name="App">
       {initialLoad && <PremiumLoadingScreen onComplete={handleLoadComplete} />}
       <RoutePrefetcher />
-      <Profiler id="AppFloatingWidgets" onRender={profileCallback}><AppFloatingWidgets /></Profiler>
+      <AppFloatingWidgets />
+      <WelcomeManager>
       <Suspense fallback={routeFallback}>
-      <Profiler id="Routes" onRender={profileCallback}>
       <Routes location={location}>
       {/* Public routes */}
       <Route path="/" element={<HomePageWrapper />} />
@@ -330,7 +287,7 @@ export default function App() {
       {/* Protected layout */}
       <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route path="dashboard" element={<ErrorBoundary key="dashboard"><DashboardPage /></ErrorBoundary>} />
-        <Route path="GateNexa-ai" element={<ErrorBoundary key="ai"><GateNexaAIPage /></ErrorBoundary>} />
+        <Route path="GateNexa-ai" element={<Navigate to="/mentor" replace />} />
         <Route path="study-hub" element={<StudyHubPage />} />
         <Route path="subjects" element={<ErrorBoundary key="subjects"><SubjectsPage /></ErrorBoundary>} />
         <Route path="topics" element={<ErrorBoundary key="topics"><TopicsPage /></ErrorBoundary>} />
@@ -339,7 +296,7 @@ export default function App() {
         <Route path="mocks" element={<MocksPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="air-predictor" element={<AirPredictorPage />} />
-        <Route path="mentor" element={<ErrorBoundary key="mentor"><AIMentorPage /></ErrorBoundary>} />
+        <Route path="mentor" element={<ErrorBoundary key="ai"><GateNexaAIPage /></ErrorBoundary>} />
         <Route path="ai-coach" element={<AICoachPage />} />
         <Route path="notes" element={<ErrorBoundary key="notes"><NotesPage /></ErrorBoundary>} />
         <Route path="planner" element={<StudyPlannerPage />} />
@@ -349,9 +306,10 @@ export default function App() {
         <Route path="daily-coach" element={<DailyCoachPage />} />
         <Route path="weak-topics" element={<WeakTopicsPage />} />
         <Route path="success-hub" element={<SuccessHubPage />} />
-        <Route path="insights" element={<InsightsPage />} />
+        <Route path="insights" element={<InsightsHub />} />
         <Route path="insights/topic/:slug" element={<InsightDetailPage />} />
         <Route path="insights/:slug" element={<InsightReportPage />} />
+        <Route path="insights-hub" element={<InsightsHub />} />
         <Route path="mistakes" element={<MistakeNotebookPage />} />
         <Route path="weekly-tests" element={<WeeklyTestsPage />} />
         <Route path="weekly-tests/:subjectCode" element={<WeeklyTestDetailPage />} />
@@ -378,8 +336,11 @@ export default function App() {
         <Route path="report" element={<ReportPage />} />
         <Route path="premium" element={<PremiumPage />} />
         <Route path="referral" element={<ReferralDashboardPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="learning-hub" element={<LearningHubPage />} />
       </Route>
+
+      {/* Full-screen routes (no sidebar) */}
 
       {/* Admin routes (own layout, separate auth) */}
       <Route path="/admin/login" element={<AdminPublicRoute><AdminLoginPage /></AdminPublicRoute>} />
@@ -420,8 +381,8 @@ export default function App() {
       <Route path="/500" element={<ServerErrorPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
-    </Profiler>
     </Suspense>
+    </WelcomeManager>
     <DiagnosticsModal />
     </ErrorBoundary>
   );

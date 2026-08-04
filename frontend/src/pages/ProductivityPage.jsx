@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProgress } from '../context/ProgressContext';
-import { useFocus } from '../context/FocusContext';
+import { useFocus, useFocusTimer } from '../context/FocusContext';
 import { computeSubjectCompletion } from '../utils/gateUtils';
 
 const GATE_SUBJECTS = [
@@ -365,11 +365,12 @@ export default function ProductivityPage() {
   const navigate = useNavigate();
   const { productivity, updateProductivity, topics, pyqs, studyStats } = useProgress();
   const {
-    isActive, isPaused, timeRemaining, mode, sessionsCompleted, dailyStreak,
+    isActive, isPaused, mode, sessionsCompleted, dailyStreak,
     sessionDuration, DURATIONS, formatTime, startSession, selectDuration,
-    pauseSession, resumeSession, stopSession, progress, focusHours,
+    pauseSession, resumeSession, stopSession, focusHours,
     currentSubject, setCurrentSubject,
   } = useFocus();
+  const { timeRemaining, progress } = useFocusTimer();
 
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('');

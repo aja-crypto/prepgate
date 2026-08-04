@@ -1,6 +1,0 @@
-[STARTUP WARNING] SMTP_PASS is missing or still a placeholder. Set it for full functionality.
-?? Startup validation issues:
-   MongoDB not connected - using local fallback mode
-⚠️  USE_MOCK_AUTH=true — using local in-memory data
-⚠️  Live data scheduler disabled (mock auth / no MongoDB)
-[Predictor] prediction engine error, using fallback: Cannot call `gateyears.findOne()` before initial connection is complete if `bufferCommands = false`. Make sure you `await mongoose.connect()` if you have `bufferCommands = false`.

@@ -51,7 +51,7 @@ function buildListRoutes(basePath, Model, label, searchFields = [], sortDefault 
           }
         });
         const skip = (parseInt(page) - 1) * parseInt(limit);
-        const data = await Model.find(filter).sort(sortDefault).skip(skip).limit(parseInt(limit));
+        const data = await Model.find(filter).sort(sortDefault).skip(skip).limit(parseInt(limit)).lean();
         const total = await Model.countDocuments(filter);
         res.json({ success: true, count: data.length, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)), data });
       } catch (e) { next(e); }
@@ -251,7 +251,7 @@ router.get('/college-cutoffs', adminProtect, requirePermission('content.manage')
     if (collegeType) filter.collegeType = collegeType;
     if (admissionType) filter.admissionType = admissionType;
     if (college) filter.collegeName = { $regex: college, $options: 'i' };
-    const cutoffs = await CollegeCutoff.find(filter).sort({ year: -1, closingScore: -1 });
+    const cutoffs = await CollegeCutoff.find(filter).sort({ year: -1, closingScore: -1 }).lean();
     res.json({ success: true, count: cutoffs.length, data: cutoffs });
   } catch (e) { next(e); }
 });
@@ -362,7 +362,7 @@ router.get('/dataset-counts', adminProtect, requirePermission('content.manage'),
       CollegeProgram.countDocuments(), CollegeCutoff.countDocuments(), PsuRequirement.countDocuments(),
       PsuRecruitment.countDocuments(), PredictionHistory.countDocuments(), PredictionFeedback.countDocuments(),
     ]);
-    const accuracy = await PredictionAccuracy.findOne().sort({ lastCalculated: -1 });
+    const accuracy = await PredictionAccuracy.findOne().sort({ lastCalculated: -1 }).lean();
     res.json({
       success: true,
       data: {
@@ -384,7 +384,7 @@ router.get('/feedback', adminProtect, requirePermission('content.manage'), requi
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const skip = (page - 1) * limit;
-    const data = await PredictionFeedback.find().populate('user', 'name email').sort({ createdAt: -1 }).skip(skip).limit(limit);
+    const data = await PredictionFeedback.find().populate('user', 'name email').sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
     const total = await PredictionFeedback.countDocuments();
     res.json({ success: true, count: data.length, total, page, pages: Math.ceil(total / limit), data });
   } catch (e) { next(e); }
@@ -392,7 +392,7 @@ router.get('/feedback', adminProtect, requirePermission('content.manage'), requi
 
 router.get('/accuracy', adminProtect, requirePermission('content.manage'), requireMongo, async (req, res, next) => {
   try {
-    const data = await PredictionAccuracy.findOne().sort({ lastCalculated: -1 });
+    const data = await PredictionAccuracy.findOne().sort({ lastCalculated: -1 }).lean();
     res.json({ success: true, data: data || { overallAccuracy: 0, totalPredictions: 0 } });
   } catch (e) { next(e); }
 });
@@ -430,8 +430,8 @@ router.get('/stats', adminProtect, requirePermission('content.manage'), requireM
       CollegeProgram.countDocuments(), CollegeCutoff.countDocuments(), PsuRequirement.countDocuments(),
       PsuRecruitment.countDocuments(), PredictionHistory.countDocuments(), PredictionFeedback.countDocuments(),
     ]);
-    const latestYear = await GateYear.findOne().sort({ year: -1 });
-    const accuracy = await PredictionAccuracy.findOne().sort({ lastCalculated: -1 });
+    const latestYear = await GateYear.findOne().sort({ year: -1 }).lean();
+    const accuracy = await PredictionAccuracy.findOne().sort({ lastCalculated: -1 }).lean();
     res.json({
       success: true,
       data: {

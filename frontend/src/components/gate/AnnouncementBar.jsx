@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 
 export default function AnnouncementBar() {
@@ -9,7 +9,7 @@ export default function AnnouncementBar() {
     api.get('/cms/announcements').then(r => {
       const data = r.data?.data || [];
       if (data.length) setItems(data);
-    }).catch(e => console.warn('[AnnouncementBar] fetch failed', e?.message));
+    }).catch(e => console.error('[AnnouncementBar] fetch failed', e?.message));
   }, []);
 
   useEffect(() => {

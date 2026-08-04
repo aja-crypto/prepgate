@@ -1,17 +1,20 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import { useAuth } from '../../context/AuthContext';
 import { useProgress } from '../../context/ProgressContext';
-import { useFocus } from '../../context/FocusContext';
+import { useFocus, useFocusTimer } from '../../context/FocusContext';
 import useAiStreaming from '../../hooks/useAiStreaming';
 import useAiCache from '../../hooks/useAiCache';
 import useConversation from '../../hooks/useConversation';
 import GateNexaAIIcon from '../ui/GateNexaAIIcon';
 import Icon from '../ui/Icon';
 import AiLimitBadge from '../referral/AiLimitBadge';
+import AiModeSelector from './AiModeSelector';
+import useAiMode from '../../hooks/useAiMode';
+import { buildModePrompt } from '../../utils/aiModePrompts';
 
 const STORAGE_KEY_POS = 'gatenexa_ai_pos';
 const STORAGE_KEY_SIZE = 'gatenexa_ai_size';
@@ -40,16 +43,36 @@ const STATUS_PHRASES = [
 ];
 
 const badgeConf = {
-  provider: { label: 'AI', color: '#06d6a0' },
-  cache: { label: 'Cached', color: '#4f8dff' },
-  heuristic: { label: 'Fallback', color: '#ff9f43' },
-  error: { label: 'Error', color: '#f87171' },
-  thinking: { label: '...', color: '#a78bfa' },
-  aborted: { label: 'Stopped', color: '#fbbf24' },
+  provider: { label: 'Live AI', color: '#06d6a0', dot: '#06d6a0' },
+  cache: { label: 'Cached', color: '#4f8dff', dot: '#4f8dff' },
+  heuristic: { label: 'Offline AI', color: '#ff9f43', dot: '#ff9f43' },
+  offline: { label: 'Offline AI', color: '#ff9f43', dot: '#ff9f43' },
+  error: { label: 'Error', color: '#f87171', dot: '#f87171' },
+  thinking: { label: '...', color: '#a78bfa', dot: '#a78bfa' },
+  aborted: { label: 'Stopped', color: '#fbbf24', dot: '#fbbf24' },
+  quota: { label: 'Limit Reached', color: '#f87171', dot: '#f87171' },
+  ollama: { label: 'Ollama', color: '#38bdf8', dot: '#38bdf8' },
+  openai: { label: 'OpenAI', color: '#a78bfa', dot: '#a78bfa' },
+  openrouter: { label: 'Nexa AI', color: '#f97316', dot: '#f97316' },
+  dashscope: { label: 'DashScope', color: '#22d3ee', dot: '#22d3ee' },
+  ai: { label: 'Live AI', color: '#06d6a0', dot: '#06d6a0' },
 };
 
+function sourceBadgeKey(source, provider) {
+  if (source === 'heuristic') return 'heuristic';
+  if (source === 'offline') return 'offline';
+  if (source === 'ai' || source === 'provider') {
+    if (provider === 'OpenRouter') return 'openrouter';
+    if (provider === 'OpenAI') return 'openai';
+    if (provider === 'Ollama') return 'ollama';
+    if (provider === 'DashScope') return 'dashscope';
+    return 'provider';
+  }
+  return source || 'provider';
+}
+
 function MarkdownContent({ text }) {
-  if (!text) return null;
+  if (!text || typeof text !== 'string') return null;
   return (
     <ReactMarkdown
       rehypePlugins={[rehypeHighlight]}
@@ -93,15 +116,58 @@ function MarkdownContent({ text }) {
   );
 }
 
-function StatusBadge({ source }) {
-  const cfg = badgeConf[source] || badgeConf.provider;
+function StatusBadge({ source, provider }) {
+  const key = sourceBadgeKey(source, provider);
+  const cfg = badgeConf[key] || badgeConf.provider;
   return (
     <span
-      className="inline-flex text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+      className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
       style={{ background: cfg.color + '20', color: cfg.color, border: '1px solid ' + cfg.color + '30' }}
     >
+      <span className="w-1.5 h-1.5 rounded-full" style={{ background: cfg.dot }} />
       {cfg.label}
     </span>
+  );
+}
+
+function OfflineDetails({ offlineInfo, onClose }) {
+  const [show, setShow] = useState(false);
+  if (!offlineInfo) return null;
+  const ts = offlineInfo.ts ? new Date(offlineInfo.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
+  const status = offlineInfo.status != null ? offlineInfo.status : '—';
+  const statusLabel = offlineInfo.status === 429 ? 'Rate limited' : '—';
+  const reason = offlineInfo.reason || 'Live AI is temporarily unavailable.';
+  const shortReason = reason.length > 60 ? reason.slice(0, 57) + '…' : reason;
+  return (
+    <div className="mt-1.5 rounded-lg px-2 py-1.5 text-[10px]" style={{ background: 'rgba(255,159,67,0.06)', border: '1px solid rgba(255,159,67,0.18)' }}>
+      <div className="flex items-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#ff9f43' }} />
+        <span className="font-semibold" style={{ color: '#ff9f43' }}>Offline AI</span>
+        <span className="flex-1" style={{ color: 'rgba(255,255,255,0.6)' }}>{shortReason}</span>
+        <button
+          onClick={() => setShow(v => !v)}
+          className="px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wide font-medium transition-colors hover:bg-white/10"
+          style={{ color: 'rgba(255,255,255,0.55)' }}
+        >
+          {show ? 'Hide' : 'Details'}
+        </button>
+      </div>
+      {show && (
+        <div className="mt-1.5 pt-1.5 border-t space-y-0.5" style={{ borderColor: 'rgba(255,159,67,0.15)' }}>
+          <div className="flex justify-between gap-3"><span style={{ color: 'rgba(255,255,255,0.4)' }}>Provider</span><span style={{ color: 'rgba(255,255,255,0.7)' }}>{offlineInfo.provider || '—'}</span></div>
+          <div className="flex justify-between gap-3"><span style={{ color: 'rgba(255,255,255,0.4)' }}>Model</span><span style={{ color: 'rgba(255,255,255,0.7)' }}>{offlineInfo.model || '—'}</span></div>
+          <div className="flex justify-between gap-3"><span style={{ color: 'rgba(255,255,255,0.4)' }}>Status</span><span style={{ color: 'rgba(255,255,255,0.7)' }}>{status}{statusLabel !== '—' ? ` (${statusLabel})` : ''}</span></div>
+          <div className="flex justify-between gap-3"><span style={{ color: 'rgba(255,255,255,0.4)' }}>Fallback reason</span><span style={{ color: 'rgba(255,255,255,0.7)', textAlign: 'right' }}>{reason}</span></div>
+          <div className="flex justify-between gap-3"><span style={{ color: 'rgba(255,255,255,0.4)' }}>Time</span><span style={{ color: 'rgba(255,255,255,0.7)' }}>{ts}</span></div>
+          {offlineInfo.detail && (
+            <div className="mt-1 pt-1 border-t" style={{ borderColor: 'rgba(255,159,67,0.12)' }}>
+              <div style={{ color: 'rgba(255,255,255,0.4)' }}>Detail</div>
+              <div style={{ color: 'rgba(255,255,255,0.6)' }} className="break-words">{offlineInfo.detail}</div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -146,6 +212,8 @@ function ChatMessage({ msg, isLast, streaming, partialText, responseTime, onSend
   const displayText = isLastAssistant && streaming ? partialText || msg.text : msg.text;
   const source = msg.source || 'provider';
   const cached = msg.cached;
+  const isOffline = source === 'heuristic' || source === 'offline';
+  const showCaret = streaming && isLastAssistant && !isOffline;
 
   return (
     <motion.div
@@ -182,7 +250,7 @@ function ChatMessage({ msg, isLast, streaming, partialText, responseTime, onSend
         >
           {!isUser && !streaming && source !== 'thinking' && (
             <div className="flex items-center gap-2 mb-1.5">
-              <StatusBadge source={source} />
+              <StatusBadge source={source} provider={msg.provider} />
               {cached && <span className="text-[8px] text-text3 uppercase tracking-wider">Cached</span>}
               {responseTime != null && (
                 <span className="text-[8px] text-text3">{responseTime}s</span>
@@ -196,7 +264,7 @@ function ChatMessage({ msg, isLast, streaming, partialText, responseTime, onSend
               <MarkdownContent text={displayText} />
             </div>
           )}
-          {streaming && isLastAssistant && (
+          {showCaret && (
             <span className="inline-block w-1.5 h-3.5 ml-0.5 animate-pulse align-middle" style={{ background: '#A78BFA' }} />
           )}
           {!isUser && !streaming && source !== 'thinking' && displayText && (
@@ -230,6 +298,9 @@ function ChatMessage({ msg, isLast, streaming, partialText, responseTime, onSend
               </button>
             </div>
           )}
+          {!isUser && !streaming && source !== 'thinking' && isOffline && (
+            <OfflineDetails offlineInfo={msg.offlineInfo} />
+          )}
         </div>
       </div>
     </motion.div>
@@ -239,14 +310,15 @@ function ChatMessage({ msg, isLast, streaming, partialText, responseTime, onSend
 
 
 export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
-  useEffect(() => { const t = Date.now(); console.log('[Trace] FloatingAIAssistant MOUNTED — open:', open, 'at', t); return () => console.log('[Trace] FloatingAIAssistant UNMOUNTED after', Date.now() - t, 'ms'); }, []);
   const navigate = useNavigate();
-  const { user, aiQuestionsRemaining, setAiQuestionsRemaining, setShowReferralModal, isPremium, refreshReferralStatus, decrementAiQuestions } = useAuth();
+  const { user, aiQuestionsRemaining, setAiQuestionsRemaining, aiQuestionLimit, setAiQuestionLimit: setLimit, setShowReferralModal, isPremium, refreshReferralStatus, refreshAiQuota, decrementAiQuestions } = useAuth();
   const { topics, pyqs, mocks, studyStats, gateFeatures } = useProgress();
-  const { isActive, isPaused, timeRemaining, mode, startSession, pauseSession, resumeSession, stopSession, selectDuration, formatTime, DURATIONS } = useFocus();
+  const { isActive, isPaused, mode, startSession, pauseSession, resumeSession, stopSession, selectDuration, formatTime, DURATIONS } = useFocus();
+  const { timeRemaining } = useFocusTimer();
   const { startStream, stopStream, streaming, partialText, error: streamError } = useAiStreaming();
   const cache = useAiCache();
   const conversation = useConversation('floating');
+  const { mode: aiMode, setMode: setAiMode, current: currentAiMode } = useAiMode();
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -289,6 +361,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     } catch { return null; }
   });
   const fabRef = useRef(null);
+  const fabControls = useAnimationControls();
 
   const w = Math.max(MIN_W, popupSize.w);
   const h = Math.max(MIN_H, popupSize.h);
@@ -330,19 +403,57 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
 
   const overallProgress = useMemo(() => topics?.length ? Math.round(topics.reduce((s, t) => s + (t.completed ? 100 : 0), 0) / topics.length) : 0, [topics]);
   const avgMock = useMemo(() => mocks?.length ? Math.round(mocks.reduce((s, m) => s + (m.score || 0), 0) / mocks.length) : 0, [mocks]);
-  const streak = gateFeatures?.streak?.current || 0;
+  const streak = gateFeatures?.streak?.current || studyStats?.streak?.current || 0;
 
-  const buildContext = useCallback(() => ({
-    weakSubjects,
-    strongSubjects,
-    weakTopics: (topics || []).slice(0, 5).map(t => t.name),
-    overallProgress,
-    mockAvg: avgMock,
-    streak,
-    overdueTopics: (pyqs || []).filter(p => p.revisionNeeded).length,
-    recentAccuracy: avgMock,
-    history: conversation.getHistoryForContext(),
-  }), [weakSubjects, strongSubjects, topics, avgMock, streak, pyqs, conversation]);
+  // Real weak topics: derived from PYQ accuracy, falling back to flagged topics
+  const weakTopics = useMemo(() => {
+    if (!pyqs?.length) {
+      return (topics || []).filter(t => t.markedDifficult || t.revisionNeeded).slice(0, 5).map(t => t.name)
+        || (topics || []).slice(0, 5).map(t => t.name);
+    }
+    const acc = {};
+    pyqs.forEach(p => {
+      const key = p.topic || p.name;
+      if (!key) return;
+      acc[key] = acc[key] || { correct: 0, total: 0 };
+      acc[key].total++;
+      if (p.isCorrect) acc[key].correct++;
+    });
+    return Object.entries(acc)
+      .filter(([, d]) => d.total >= 2 && d.correct / d.total < 0.6)
+      .sort((a, b) => a[1].correct / a[1].total - b[1].correct / b[1].total)
+      .slice(0, 5)
+      .map(([name]) => name);
+  }, [pyqs, topics]);
+
+  const recentAccuracy = useMemo(() => {
+    if (!pyqs?.length) return 0;
+    const correct = pyqs.filter(p => p.isCorrect).length;
+    return Math.round((correct / pyqs.length) * 100);
+  }, [pyqs]);
+
+  const buildContext = useCallback(() => {
+    const base = {
+      weakSubjects,
+      strongSubjects,
+      weakTopics,
+      overallProgress,
+      mockAvg: avgMock,
+      streak,
+      overdueTopics: (pyqs || []).filter(p => p.revisionNeeded).length || (topics || []).filter(t => t.revisionNeeded).length,
+      recentAccuracy,
+      studyStats,
+      dailyTargetHours: gateFeatures?.dailyTarget?.hours || 8,
+      studyHoursToday: studyStats?.todayHours || 0,
+      studyHoursWeek: studyStats?.weekHours || 0,
+      history: conversation.getHistoryForContext(),
+    };
+    return {
+      ...base,
+      mode: aiMode,
+      lastTopic: conversation.lastTopic(),
+    };
+  }, [weakSubjects, strongSubjects, weakTopics, avgMock, streak, pyqs, topics, studyStats, gateFeatures, recentAccuracy, conversation, aiMode]);
 
   useEffect(() => {
     chatEnd.current?.scrollIntoView({ behavior: 'smooth' });
@@ -417,9 +528,14 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
   const handleSend = useCallback(async (text) => {
     const msg = text || input;
     if (!msg.trim() || streaming) return;
-    if (user?.role !== 'owner' && !isPremium && aiQuestionsRemaining <= 0) {
+
+    if (user?.role !== 'admin' && !isPremium && aiQuestionsRemaining !== null && aiQuestionsRemaining <= 0) {
       setShowReferralModal(true);
       setInput('');
+      const id = ++msgIdCounter.current;
+      setMessages(prev => [...prev, { id: `u-${id}`, role: 'user', text: msg }]);
+      const aid = ++msgIdCounter.current;
+      setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: "You have reached today's AI question limit. Upgrade to continue learning with AI.", source: 'quota', cached: false, thumbs: null }]);
       return;
     }
     lastUserMsgRef.current = msg;
@@ -433,6 +549,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     setMessages(prev => [...prev, { id: `u-${id}`, role: 'user', text: msg }]);
 
     const ctx = buildContext();
+    ctx.modePrompt = buildModePrompt(aiMode, ctx);
     setStatusText('Thinking');
 
     let phaseIdx = 0;
@@ -442,7 +559,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
       setStatusText(phases[phaseIdx]);
     }, 2000);
 
-    const cached = cache.getCached(msg);
+    const cached = cache.getCached(msg, aiMode);
     if (cached) {
       clearInterval(statusIntervalRef.current);
       conversation.addAssistantMessage(cached.text);
@@ -457,24 +574,43 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     const result = await startStream(msg, ctx, conversation.sessionId);
     clearInterval(statusIntervalRef.current);
     if (streamStartRef.current) setResponseTime(((performance.now() - streamStartRef.current) / 1000).toFixed(1));
-    if (!isPremium) {
-      if (result?.remaining != null) setAiQuestionsRemaining(result.remaining);
-      else decrementAiQuestions();
-      refreshReferralStatus();
+    if (result?.quotaExceeded) {
+      clearInterval(statusIntervalRef.current);
+      if (streamStartRef.current) setResponseTime(((performance.now() - streamStartRef.current) / 1000).toFixed(1));
+      const aid = ++msgIdCounter.current;
+      const msg = !isPremium ? "You have reached today's AI question limit. Upgrade to continue learning with AI." : "You have reached today's AI question limit. Your limit resets tomorrow.";
+      setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: msg, source: 'quota', cached: false, thumbs: null }]);
+      setSuggestions(null);
+      if (!isPremium) setShowReferralModal(true);
+      setStatusText('Thinking');
+      return;
+    }
+
+    if (result?.remaining != null) {
+      setAiQuestionsRemaining(result.remaining.remaining);
+      if (result.remaining.limit != null) setLimit(result.remaining.limit);
+    } else if (result?.text) {
+      decrementAiQuestions();
     }
 
     if (result?.text) {
+      const source = result.source || 'provider';
       conversation.addAssistantMessage(result.text);
-      cache.setCached(msg, { text: result.text, suggestions: result.suggestions });
+      cache.setCached(msg, { text: result.text, suggestions: result.suggestions }, undefined, aiMode);
       const aid = ++msgIdCounter.current;
-      setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: result.text, source: result.source || 'provider', cached: false, thumbs: null }]);
+      setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: result.text, source, provider: result.provider, offlineInfo: result.offlineInfo, cached: false, thumbs: null }]);
       setSuggestions(result.suggestions?.length > 0 ? result.suggestions : generateSmartSuggestions(msg, result.text));
     } else if (!streaming && !result) {
+      clearInterval(statusIntervalRef.current);
+      if (streamStartRef.current) setResponseTime(((performance.now() - streamStartRef.current) / 1000).toFixed(1));
       const aid = ++msgIdCounter.current;
-      setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: "Unable to connect to GateNexa AI. Please try again in a moment.", source: 'error', thumbs: null }]);
+      const fallbackText = "Live AI could not be reached, so I'm replying from the offline knowledge base. Ask me to explain any core GATE topic (CPU scheduling, deadlock, DBMS normalization, Dijkstra, TCP, binary search…) and I'll go deep.";
+      setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: fallbackText, source: 'heuristic', provider: null, offlineInfo: { provider: null, model: null, status: null, reason: 'Live AI could not be reached.', detail: null, ts: new Date().toISOString() }, cached: false, thumbs: null }]);
+      setSuggestions(["What should I study today?", "Am I on track?", "Which subject should I prioritize?"]);
+      refreshAiQuota();
     }
     setStatusText('Thinking');
-  }, [input, streaming, conversation, buildContext, cache, startStream, generateSmartSuggestions, aiQuestionsRemaining, setShowReferralModal, isPremium, refreshReferralStatus]);
+  }, [input, streaming, conversation, buildContext, cache, startStream, generateSmartSuggestions, aiQuestionsRemaining, setShowReferralModal, isPremium, refreshAiQuota, decrementAiQuestions, setAiQuestionsRemaining, setLimit, aiMode]);
 
   const handleStop = useCallback(() => {
     stopStream();
@@ -484,9 +620,9 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
       conversation.addAssistantMessage(partialText);
       const aid = ++msgIdCounter.current;
       setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: partialText, source: 'aborted', thumbs: null }]);
-      cache.setCached(lastUserMsgRef.current, { text: partialText, suggestions: null });
+      cache.setCached(lastUserMsgRef.current, { text: partialText, suggestions: null }, undefined, aiMode);
     }
-  }, [stopStream, partialText, conversation, cache]);
+  }, [stopStream, partialText, conversation, cache, aiMode]);
 
   const handleSuggestion = useCallback((text) => {
     if (streaming) return;
@@ -564,9 +700,10 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
 
   return (
     <>
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {open && (
           <motion.div
+            key="assistant-panel"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -634,7 +771,10 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
               <div className="flex items-center gap-3">
                 <GateNexaAIIcon size={32} thinking={streaming} />
                 <div>
-                  <div className="text-sm font-bold text-white leading-tight">GateNexa AI</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-white leading-tight">GateNexa AI</span>
+                    <AiModeSelector mode={aiMode} setMode={setAiMode} current={currentAiMode} />
+                  </div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full" style={{ background: streaming ? '#22d3ee' : '#22C55E' }} />
                     <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: streaming ? '#22d3ee' : '#22C55E' }}>
@@ -676,7 +816,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
             {!isMobile && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 border-b shrink-0" style={{ borderColor: 'rgba(139,92,246,0.06)' }}>
                 {!isActive ? (
-                  <button onClick={() => { setOpen(false); navigate('/focus'); }}
+                  <button onClick={() => { setOpen(false); navigate('/focus-session'); }}
                     className="text-[10px] font-medium px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1"
                     style={{ background: 'rgba(139,92,246,0.08)', color: '#A78BFA', border: '1px solid rgba(139,92,246,0.1)' }}>
                     <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path fillRule="evenodd" d="M8 2a6 6 0 100 12A6 6 0 008 2zM7 5a1 1 0 112 0v3a1 1 0 11-2 0V5zm0 5a1 1 0 112 0 1 1 0 01-2 0z" clipRule="evenodd" /></svg>
@@ -833,13 +973,21 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
         className="ai-fab-btn"
         drag
         dragMomentum={false}
-        onDragEnd={(_, info) => {
+        animate={fabControls}
+        onDragEnd={async (_, info) => {
           const el = fabRef.current;
           if (!el) return;
           const r = el.getBoundingClientRect();
-          const newPos = { left: r.left, top: r.top };
+          const width = r.width || 56;
+          const height = r.height || 56;
+          // Clamp within viewport so the FAB can never be dragged off-screen
+          const left = Math.max(0, Math.min(r.left, window.innerWidth - width));
+          const top = Math.max(0, Math.min(r.top, window.innerHeight - height));
+          const newPos = { left, top };
           setFabPos(newPos);
           try { localStorage.setItem(STORAGE_KEY_FAB_POS, JSON.stringify(newPos)); } catch {}
+          // Reset the framer-motion drag transform so it doesn't stack with left/top
+          fabControls.start({ x: 0, y: 0 });
         }}
         style={{
           position: 'fixed',
@@ -862,10 +1010,6 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
         aria-label={open ? 'Close AI Assistant' : 'Open AI Assistant'}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
-        animate={{
-          y: fabPos ? 0 : [0, -3, 0],
-        }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
         whileHover={{
           scale: 1.08,
           filter: 'drop-shadow(0 0 20px rgba(168,85,247,0.5))',
@@ -873,21 +1017,23 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
         }}
         whileTap={{ scale: 0.95, cursor: 'grabbing' }}
       >
-        <img
-          src="/images/ai symbol.png"
-          alt="AI NEXA Assistant"
-          width={56}
-          height={56}
-          style={{
-            display: 'block',
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            borderRadius: '50%',
-          }}
-          loading="lazy"
-          draggable="false"
-        />
+        <span className="ai-fab-bob" style={{ display: 'block', width: '100%', height: '100%' }}>
+          <img
+            src="/images/ai symbol.png"
+            alt="AI NEXA Assistant"
+            width={56}
+            height={56}
+            style={{
+              display: 'block',
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              borderRadius: '50%',
+            }}
+            loading="lazy"
+            draggable="false"
+          />
+        </span>
         {(() => {
           const tooltipEnabled = typeof window !== 'undefined' && localStorage.getItem('gatenexa_ai_tooltip') !== 'false';
           if (hover && !open && tooltipEnabled) {
@@ -910,6 +1056,9 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
         .ai-fab-btn img { border-radius: 50% !important; }
         @media (min-width: 768px) { .ai-fab-btn { width: 72px !important; height: 72px !important; } }
         @media (max-width: 767px) { .ai-fab-btn { width: 56px !important; height: 56px !important; } }
+        @keyframes ai-fab-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        .ai-fab-bob { animation: ai-fab-bob 4s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .ai-fab-bob { animation: none; } }
       `}</style>
     </>
   );

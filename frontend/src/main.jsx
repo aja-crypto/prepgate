@@ -50,7 +50,10 @@ import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { DashboardProvider } from './context/DashboardContext';
 import { DiagnosticsProvider } from './context/DiagnosticsContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { ProgressProvider, useProgress } from './context/ProgressContext';
+import { AiMentorProvider } from './context/AiMentorContext';
+import AiMentorTracker from './components/ai-mentor/AiMentorTracker';
 import { FocusProvider } from './context/FocusContext';
 import { Analytics } from '@vercel/analytics/react';
 import { checkReminders } from './utils/reminderUtils';
@@ -90,9 +93,12 @@ function ProgressProviderWrapper() {
     <ProgressProvider>
       <DashboardProvider>
         <FocusProvider>
-          <PwaSetup />
-          <ReminderScheduler />
-          <App />
+          <AiMentorProvider>
+            <PwaSetup />
+            <ReminderScheduler />
+            <AiMentorTracker />
+            <App />
+          </AiMentorProvider>
         </FocusProvider>
       </DashboardProvider>
     </ProgressProvider>
@@ -106,7 +112,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AdminAuthProvider>
             <DiagnosticsProvider>
-              <ProgressProviderWrapper />
+            <NotificationProvider>
+          <ProgressProviderWrapper />
+        </NotificationProvider>
             </DiagnosticsProvider>
             <Toaster position="top-right" />
             {import.meta.env.PROD && <Analytics />}

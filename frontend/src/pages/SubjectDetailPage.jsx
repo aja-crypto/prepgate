@@ -149,17 +149,17 @@ export default function SubjectDetailPage() {
           setLoading(false);
           return;
         }
-        const [topicsRes, notesRes, weeklyRes, mockRes] = await Promise.all([
+        const [topicsRes, notesRes, weeklyRes, mockRes] = await Promise.allSettled([
           topicService.getAll({ subject: subjectId }),
           shortNoteService.getAll(),
           weeklyTestService.getAll({ subject: subjectCode }),
           mockTestService.getAll({ subject: subjectCode }),
         ]);
 
-        setTopics(topicsRes.data?.data || []);
-        setShortNotes(notesRes.data?.data || []);
-        setWeeklyTests(weeklyRes.data?.data || []);
-        setMockTests(mockRes.data?.data || []);
+        setTopics(topicsRes.status === 'fulfilled' ? topicsRes.value.data?.data || [] : []);
+        setShortNotes(notesRes.status === 'fulfilled' ? notesRes.value.data?.data || [] : []);
+        setWeeklyTests(weeklyRes.status === 'fulfilled' ? weeklyRes.value.data?.data || [] : []);
+        setMockTests(mockRes.status === 'fulfilled' ? mockRes.value.data?.data || [] : []);
       } catch (err) {
         toast.error(getApiErrorMessage(err, 'Failed to load subject data'));
       } finally {

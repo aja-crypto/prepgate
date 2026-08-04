@@ -33,6 +33,8 @@ function validateFields(fields) {
       if (val === undefined || val === null) return;
       if (type === 'string' && typeof val !== 'string') errors.push(`${name} must be a string`);
       if (type === 'number' && (typeof val !== 'number' || Number.isNaN(val))) errors.push(`${name} must be a number`);
+      if (type === 'number' && min !== undefined && val < min) errors.push(`${name} must be at least ${min}`);
+      if (type === 'number' && max !== undefined && val > max) errors.push(`${name} must be at most ${max}`);
       if (type === 'string' && min !== undefined && val.length < min) errors.push(`${name} must be at least ${min} characters`);
       if (type === 'string' && max !== undefined && val.length > max) errors.push(`${name} must be at most ${max} characters`);
       if (pattern && !pattern.test(val)) errors.push(`${name} has invalid format`);

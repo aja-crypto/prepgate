@@ -56,7 +56,7 @@ export default function NotificationBell() {
         api.get('/notifications'),
         api.get('/notifications/unread-count'),
       ]);
-      if (notesRes.data?.success) setNotifications(notesRes.data.data || []);
+      if (notesRes.data?.success) setNotifications(notesRes.data.data?.notifications || []);
       if (countRes.data?.success) setUnread(countRes.data.count || 0);
     } catch (e) {
       if (e.code !== 'ERR_CANCELED') console.error('Failed to fetch notifications:', e);
@@ -146,7 +146,7 @@ export default function NotificationBell() {
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center px-6">
                 <div className="text-3xl mb-3">🔔</div>
-                <p className="text-xs text-text3">No notifications yet. Start studying to get personalized tips and motivation!</p>
+                <p className="text-xs text-text3">Your AI Mentor will send personalized tips here as you study. Complete your first topic to get started!</p>
               </div>
             ) : (
               notifications.map((n) => {

@@ -75,7 +75,7 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
           if (err?.type === 'popup_closed') return;
           const msg = err?.message || err?.type || '';
           if (msg.includes('origin') || msg.includes('redirect_uri')) {
-            setError('Google Sign-In is not configured for this domain. Contact the site owner.');
+            setError('Google Sign-In blocked: add http://localhost:5173 to Google Cloud Console authorized origins.');
           } else if (msg.includes('network') || msg.includes('fetch')) {
             setError('Network error. Check your connection and try again.');
           } else {

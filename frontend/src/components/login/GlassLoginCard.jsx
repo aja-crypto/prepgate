@@ -20,6 +20,7 @@ function GlowInput({ icon: Icon, type, placeholder, value, onChange, showToggle,
 
   return (
     <motion.div custom={index} variants={INPUT_VARIANTS} initial="hidden" animate="visible">
+      <label htmlFor={inputId} className="sr-only">{placeholder}</label>
       <div
         className="relative group"
         style={{
@@ -57,6 +58,7 @@ function GlowInput({ icon: Icon, type, placeholder, value, onChange, showToggle,
             <button
               type="button"
               onClick={onToggle}
+              aria-label={isVisible ? 'Hide password' : 'Show password'}
               className="shrink-0 p-1 rounded-lg hover:bg-white/5 transition-colors"
             >
               {isVisible ? (

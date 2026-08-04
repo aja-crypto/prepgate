@@ -31,7 +31,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.sansSemibold,
     fontSize: fontSize.bodySm,
     color: colors.textSecondary,
-    letterSpacing: letterSpacing.widest,
     marginTop: spacing.xs,
   },
   medallionGlow: {
@@ -151,7 +150,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.sans,
     fontSize: fontSize.caption,
     color: colors.textMuted,
-    letterSpacing: letterSpacing.widest,
   },
 });
 

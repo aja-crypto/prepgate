@@ -131,7 +131,7 @@ function GlassNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -152,91 +152,193 @@ function GlassNavbar() {
         { label: 'Pricing', to: '/premium' },
       ];
 
+  // Plain div for positioning — avoids framer-motion overriding translateX
   return (
-    <motion.nav initial={{ y: -30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-48px)] max-w-4xl">
-      <div className="relative" style={{
-        background: scrolled ? 'rgba(10,15,30,0.75)' : 'rgba(10,15,30,0.45)',
-        backdropFilter: 'blur(32px) saturate(2.5)',
-        WebkitBackdropFilter: 'blur(32px) saturate(2.5)',
-        borderRadius: '100px',
-        border: '1px solid rgba(139,92,246,0.12)',
-        boxShadow: scrolled
-          ? '0 8px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(139,92,246,0.06) inset, 0 0 60px rgba(139,92,246,0.06)'
-          : '0 4px 20px rgba(0,0,0,0.15), 0 0 0 1px rgba(139,92,246,0.04) inset',
-        transition: 'all 0.25s ease',
-      }}>
-        <div className="flex items-center justify-between h-12 px-4">
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} className="flex items-center gap-2.5 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <motion.div animate={{ filter: ['drop-shadow(0 0 6px rgba(139,92,246,0.2))', 'drop-shadow(0 0 12px rgba(139,92,246,0.4))', 'drop-shadow(0 0 6px rgba(139,92,246,0.2))'] }} transition={{ duration: 3, repeat: Infinity }} className="w-7 h-7 flex items-center justify-center">
-              <Icon name="logo" className="w-full h-full" />
-            </motion.div>
-            <div className="hidden sm:flex flex-col leading-none">
-              <BrandName size="13px" fontWeight={700} letterSpacing="1.5px" />
-              <span className="text-[6px] font-semibold tracking-[1.2px]" style={{ color: '#A855F7' }}>GATE 2027</span>
-            </div>
-          </motion.div>
-
-          <div className="hidden md:flex items-center gap-0.5">
-            {navItems.map(item => (
-              <Link key={item.label} to={item.to}
-                className="relative px-3 py-1.5 text-[11px] font-medium rounded-full transition-all duration-250"
-                style={{ color: 'rgba(255,255,255,0.55)' }}
-                onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(139,92,246,0.12)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(139,92,246,0.08)'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.55)'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.boxShadow = 'none'; }}>
-                {item.label}
-              </Link>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <DemoBell />
-            {user ? (
-              <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-                onClick={() => navigate('/dashboard')}
-                className="text-[10px] font-bold text-white px-3.5 py-1.5 rounded-full transition-all"
-                style={{ background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)', boxShadow: '0 2px 12px rgba(139,92,246,0.3)' }}>
-                Dashboard
-              </motion.button>
-            ) : (
-              <>
-                <Link to="/login" className="text-[10px] font-medium px-3 py-1.5 rounded-full transition-colors" style={{ color: 'rgba(255,255,255,0.55)' }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.55)'}>
-                  Sign in
-                </Link>
-                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
-                  <Link to="/register" className="text-[10px] font-bold text-white px-3.5 py-1.5 rounded-full inline-block"
-                    style={{ background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)', boxShadow: '0 2px 12px rgba(139,92,246,0.3)' }}>
-                    Get Started
-                  </Link>
-                </motion.div>
-              </>
-            )}
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden flex items-center justify-center w-7 h-7 rounded-full" style={{ color: 'rgba(255,255,255,0.55)' }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-4 h-4">
-                {mobileOpen ? <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" /> : <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />}
-              </svg>
-            </button>
-          </div>
-        </div>
-        {scrolled && <motion.div initial={{ opacity: 0, scaleX: 0 }} animate={{ opacity: 1, scaleX: 1 }} className="absolute -bottom-px left-4 right-4 h-[1px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.3), rgba(34,211,238,0.2), transparent)' }} />}
-        <AnimatePresence>
-          {mobileOpen && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden md:hidden">
-              <div className="px-4 pb-3 pt-2 space-y-1 border-t" style={{ borderColor: 'rgba(139,92,246,0.08)' }}>
-                {navItems.map(link => (
-                  <Link key={link.label} to={link.to} onClick={() => setMobileOpen(false)}
-                    className="block text-[12px] font-medium px-3 py-2 rounded-xl transition-colors" style={{ color: 'rgba(255,255,255,0.55)' }}>
-                    {link.label}
-                  </Link>
-                ))}
+    <div
+      className="fixed z-50"
+      style={{ top: scrolled ? 16 : 28, left: '50%', transform: 'translateX(-50%)', transition: 'top 0.35s ease' }}
+    >
+      <motion.nav
+        initial={{ y: -40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+        style={{
+          width: 'min(1320px, 92vw)',
+          borderRadius: 30,
+          transition: 'width 0.35s ease, border-radius 0.35s ease',
+        }}
+      >
+        <div
+          className="relative"
+          style={{
+            height: scrolled ? 64 : 72,
+            background: scrolled
+              ? 'linear-gradient(180deg, rgba(18,22,38,0.9), rgba(12,16,28,0.94))'
+              : 'linear-gradient(180deg, rgba(15,20,40,0.5), rgba(10,14,28,0.62))',
+            backdropFilter: scrolled ? 'blur(44px) saturate(3)' : 'blur(28px) saturate(2.2)',
+            WebkitBackdropFilter: scrolled ? 'blur(44px) saturate(3)' : 'blur(28px) saturate(2.2)',
+            borderRadius: 30,
+            border: scrolled
+              ? '1px solid rgba(139,92,246,0.18)'
+              : '1px solid rgba(139,92,246,0.12)',
+            boxShadow: scrolled
+              ? '0 16px 64px rgba(0,0,0,0.45), 0 0 120px rgba(139,92,246,0.1), 0 0 40px rgba(139,92,246,0.06), inset 0 1px 0 rgba(139,92,246,0.1)'
+              : '0 10px 40px rgba(0,0,0,0.3), 0 0 80px rgba(139,92,246,0.08), 0 0 30px rgba(139,92,246,0.04), inset 0 1px 0 rgba(139,92,246,0.08)',
+            transition: 'all 0.45s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
+          <div className="flex items-center justify-between h-full px-6 md:px-7">
+            {/* Logo */}
+            <motion.div
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              className="flex items-center gap-3.5 cursor-pointer shrink-0 mr-6"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
+              <motion.div
+                animate={{ filter: ['drop-shadow(0 0 8px rgba(139,92,246,0.25))', 'drop-shadow(0 0 18px rgba(139,92,246,0.5))', 'drop-shadow(0 0 8px rgba(139,92,246,0.25))'] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                className="w-9 h-9 flex items-center justify-center"
+              >
+                <Icon name="logo" className="w-full h-full" />
+              </motion.div>
+              <div className="hidden sm:flex flex-col leading-none">
+                <BrandName size="15px" fontWeight={700} letterSpacing="1.8px" />
+                <span className="text-[7px] font-semibold tracking-[1.5px]" style={{ color: '#A855F7' }}>GATE 2027</span>
               </div>
             </motion.div>
+
+            {/* Nav Links */}
+            <div className="hidden md:flex items-center">
+              {navItems.map((item) => (
+                <Link
+                  key={item.label}
+                  to={item.to}
+                  className="relative text-[14px] font-medium rounded-xl transition-all duration-300"
+                  style={{
+                    color: 'rgba(255,255,255,0.52)',
+                    padding: '10px 18px',
+                    lineHeight: 1,
+                    letterSpacing: '0.01em',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.color = '#fff';
+                    e.currentTarget.style.background = 'rgba(139,92,246,0.13)';
+                    e.currentTarget.style.boxShadow = '0 0 24px rgba(139,92,246,0.12), inset 0 1px 0 rgba(139,92,246,0.18)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.52)';
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <div className="flex items-center gap-3">
+              <DemoBell />
+              {user ? (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => navigate('/dashboard')}
+                  className="text-[12px] font-bold text-white rounded-xl transition-all duration-300"
+                  style={{
+                    padding: '10px 20px',
+                    background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+                    boxShadow: '0 4px 24px rgba(139,92,246,0.4), 0 0 48px rgba(139,92,246,0.12), inset 0 1px 0 rgba(255,255,255,0.15)',
+                  }}
+                >
+                  Dashboard
+                </motion.button>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="text-[13px] font-medium rounded-xl transition-all duration-300"
+                    style={{
+                      color: 'rgba(255,255,255,0.48)',
+                      padding: '10px 16px',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.color = '#fff'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.48)'; }}
+                  >
+                    Sign in
+                  </Link>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
+                    <Link
+                      to="/register"
+                      className="text-[12px] font-bold text-white rounded-xl inline-block transition-all duration-300"
+                      style={{
+                        padding: '10px 20px',
+                        background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+                        boxShadow: '0 4px 24px rgba(139,92,246,0.4), 0 0 48px rgba(139,92,246,0.12), inset 0 1px 0 rgba(255,255,255,0.15)',
+                      }}
+                    >
+                      Get Started
+                    </Link>
+                  </motion.div>
+                </>
+              )}
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="md:hidden flex items-center justify-center w-9 h-9 rounded-xl transition-colors"
+                style={{ color: 'rgba(255,255,255,0.55)' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(139,92,246,0.14)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.55)'; e.currentTarget.style.background = 'transparent'; }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-4 h-4">
+                  {mobileOpen ? <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" /> : <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />}
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {scrolled && (
+            <motion.div
+              initial={{ opacity: 0, scaleX: 0 }}
+              animate={{ opacity: 1, scaleX: 1 }}
+              transition={{ duration: 0.3 }}
+              className="absolute -bottom-px left-8 right-8 h-[1px]"
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.4), rgba(34,211,238,0.25), transparent)' }}
+            />
           )}
-        </AnimatePresence>
-      </div>
-    </motion.nav>
+
+          <AnimatePresence>
+            {mobileOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="overflow-hidden md:hidden"
+              >
+                <div className="px-6 pb-5 pt-2 space-y-0.5 border-t" style={{ borderColor: 'rgba(139,92,246,0.12)' }}>
+                  {navItems.map(link => (
+                    <Link
+                      key={link.label}
+                      to={link.to}
+                      onClick={() => setMobileOpen(false)}
+                      className="block text-[14px] font-medium px-4 py-3 rounded-xl transition-all"
+                      style={{ color: 'rgba(255,255,255,0.5)' }}
+                      onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(139,92,246,0.12)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.nav>
+    </div>
   );
 }
 
@@ -1003,7 +1105,7 @@ export default function LandingPage() {
             </div>
             {/* Platform */}
             <div><h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Platform</h4><div className="space-y-2.5">
-              {[{label:'Dashboard',to:'/dashboard'},{label:'College Predictor',to:'/opportunity-predictor'},{label:'Mock Tests',to:'/mocks'},{label:'PYQs',to:'/pyq'},{label:'GateNexa AI',to:'/GateNexa-ai'}].map(l=><Link key={l.label} to={l.to} className="block text-sm text-slate-500 hover:text-white transition-colors">{l.label}</Link>)}
+              {[{label:'Dashboard',to:'/dashboard'},{label:'College Predictor',to:'/opportunity-predictor'},{label:'Mock Tests',to:'/mocks'},{label:'PYQs',to:'/pyq'},{label:'GateNexa AI',to:'/mentor'}].map(l=><Link key={l.label} to={l.to} className="block text-sm text-slate-500 hover:text-white transition-colors">{l.label}</Link>)}
             </div></div>
             {/* Resources */}
             <div><h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Resources</h4><div className="space-y-2.5">

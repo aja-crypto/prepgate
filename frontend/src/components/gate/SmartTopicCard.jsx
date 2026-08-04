@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { publish, EVENTS } from '../../services/aiEventSystem';
 
 const COLOR_MAP = {
   completed: 'border-l-green-500 bg-green-500/5',
@@ -48,7 +49,7 @@ export default function SmartTopicCard({ topic, onClick }) {
 
   return (
     <div
-      onClick={() => navigate(`/learn/topic/${topic._id || topic.id}`)}
+      onClick={() => { navigate(`/learn/topic/${topic._id || topic.id}`); publish(EVENTS.TOPIC_STARTED, { topicName: topic.name, subject: topic.subject?.name || topic.subject }); }}
       className={`relative bg-surface border border-border rounded-xl p-4 cursor-pointer transition-all hover:shadow-lg hover:border-primary/30 hover:-translate-y-0.5 border-l-4 ${COLOR_MAP[effectiveStatus]}`}
     >
       <div className="flex items-start justify-between gap-3">

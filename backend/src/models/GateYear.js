@@ -15,5 +15,6 @@ const gateYearSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 gateYearSchema.index({ year: -1 });
+gateYearSchema.index({ isPublished: 1, year: -1 });
 
 module.exports = mongoose.model('GateYear', gateYearSchema);

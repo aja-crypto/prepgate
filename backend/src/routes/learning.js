@@ -55,34 +55,32 @@ function seedContent() {
   add({ type: 'resource', title: 'GATE Cheat Sheets', description: 'Compact cheat sheets covering key concepts and shortcuts for last-minute revision.', category: 'notes', resourceType: 'link', tags: ['cheat-sheet', 'revision', 'quick'], order: 11 });
   add({ type: 'resource', title: 'Revision PDFs', description: 'Downloadable PDF compilations of important topics and formulae.', category: 'notes', resourceType: 'pdf', tags: ['pdf', 'revision', 'download'], order: 12 });
 
-  // ── Curated Learning Resources (loaded from canonical dataset) ──
+  // ── Video Catalog (loaded from canonical dataset; empty until curated videos are added) ──
   try {
-    const vidsPath = path.join(__dirname, '../../../data/mock_videos.json');
+    const vidsPath = path.join(__dirname, '../../../data/learning_hub_videos.json');
     if (fs.existsSync(vidsPath)) {
       const vids = JSON.parse(fs.readFileSync(vidsPath, 'utf8'));
       vids.forEach((v, i) => {
         add({
           type: 'resource',
-          resourceType: 'study_material',
+          resourceType: 'video',
           title: v.title,
-          description: v.description || ('Comprehensive coverage of ' + (v.topic || 'GATE') + ' for GATE CSE.'),
+          description: v.description || '',
+          category: v.category || 'General',
           subject: v.subject || null,
-          topic: v.topic || null,
-          source: v.source || null,
-          language: v.language || null,
-          duration: v.duration ? (v.duration.minutes + ':' + String(v.duration.seconds).padStart(2, '0')) : null,
-          gateRelevance: v.gateRelevance || 'MEDIUM',
-          viewCount: v.viewCount || 0,
-          category: v.subject || 'General',
-          tags: v.gateRelevance === 'HIGH' ? ['gate', 'important', 'core'] : ['gate', 'supplementary'],
+          channel: v.channel || null,
+          difficulty: v.difficulty || null,
+          youtubeId: v.youtubeId || null,
+          youtubeUrl: v.youtubeUrl || null,
+          thumbnail: v.thumbnail || null,
+          tags: v.tags || [],
           order: 13 + i,
-          difficulty: v.gateRelevance === 'HIGH' ? 'intermediate' : 'beginner',
-          isFeatured: v.gateRelevance === 'HIGH',
+          isFeatured: false,
         });
       });
     }
   } catch (e) {
-    console.warn('[Learning] Could not load mock videos:', e.message);
+    console.warn('[Learning] Could not load video catalog:', e.message);
   }
 
   localStore.push(...items);

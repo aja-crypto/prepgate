@@ -23,7 +23,7 @@ export default function GateNexaAIWidget() {
       const data = r.data?.data;
       if (Array.isArray(data) && data.length) setInsights(data[0]);
       else if (data) setInsights(data);
-    }).catch(e => console.warn('[GateNexaAIWidget] insights fetch failed', e?.message));
+    }).catch(e => console.error('[GateNexaAIWidget] insights fetch failed', e?.message));
   }, []);
 
   const safeTopics = topics || [];
@@ -54,7 +54,7 @@ export default function GateNexaAIWidget() {
                 <p className="text-sm text-gray-400 italic">Great job! No weak topics detected.</p>
               )}
             </div>
-            <Link to="/gatenexa-ai" className="inline-block text-xs font-medium" style={{ color: '#A78BFA' }}>
+            <Link to="/mentor" className="inline-block text-xs font-medium" style={{ color: '#A78BFA' }}>
               View full AI analysis →
             </Link>
           </div>
@@ -182,7 +182,7 @@ export default function GateNexaAIWidget() {
                 <p className="text-xs text-gray-300">{r}</p>
               </div>
             ))}
-            <Link to="/gatenexa-ai" className="inline-block text-xs font-medium mt-2" style={{ color: '#34D399' }}>
+            <Link to="/mentor" className="inline-block text-xs font-medium mt-2" style={{ color: '#34D399' }}>
               Get personalized AI recommendations →
             </Link>
           </div>

@@ -1,17 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useFocus } from '../../context/FocusContext';
+import { useFocus, useFocusTimer } from '../../context/FocusContext';
 
 export default function FocusWidget() {
   const navigate = useNavigate();
   const location = useLocation();
   const {
-    isActive, isPaused, mode, sessionDuration, timeRemaining,
+    isActive, isPaused, mode, sessionDuration,
     sessionsCompleted, dailyStreak, isMinimized, currentSubject,
-    progress, DURATIONS, BREAK_DURATION,
+    DURATIONS, BREAK_DURATION,
     startSession, pauseSession, resumeSession, stopSession,
     toggleMinimized, selectDuration, formatTime,
   } = useFocus();
+  const { timeRemaining, progress } = useFocusTimer();
 
   const [showDurationPicker, setShowDurationPicker] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState(false);

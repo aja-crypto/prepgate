@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useFocus, ACHIEVEMENT_DEFS } from '../context/FocusContext';
+import { useFocus, useFocusTimer, ACHIEVEMENT_DEFS } from '../context/FocusContext';
 import { useProgress } from '../context/ProgressContext';
 import MotivationalQuote from '../components/common/MotivationalQuote';
 import SessionCompletionDialog from '../components/common/SessionCompletionDialog';
@@ -222,12 +222,13 @@ function AchievementPopup({ achievement }) {
 // ─── MAIN COMPONENT ────────────────────────────────────────
 export default function FocusSessionPage() {
   const {
-    isActive, isPaused, mode, sessionDuration, timeRemaining,
+    isActive, isPaused, mode, sessionDuration,
     sessionsCompleted, dailyStreak, currentSubject, setCurrentSubject,
     startSession, pauseSession, resumeSession, stopSession, skipBreak,
     formatTime, history, xp, xpLevel, totalXp, earnedAchievements,
     newAchievement, distractions, MOTIVATION_QUOTES,
   } = useFocus();
+  const { timeRemaining } = useFocusTimer();
   const { data: progressData, studyStats } = useProgress();
 
   const [selectedDuration, setSelectedDuration] = useState(25);

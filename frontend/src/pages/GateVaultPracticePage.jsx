@@ -14,7 +14,6 @@ import {
   NeuralBackground,
   CompletionScreen,
   useSoundEffects,
-  FloatingOrb,
 } from '../components/gate/GateVaultAnimations';
 
 export default function GateVaultPracticePage() {
@@ -214,12 +213,6 @@ export default function GateVaultPracticePage() {
   return (
     <div className="relative min-h-screen">
       <NeuralBackground />
-
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <FloatingOrb color="#a855f7" size={200} blur={80} x="5%" y="10%" duration={20} />
-        <FloatingOrb color="#6366f1" size={150} blur={60} x="70%" y="50%" duration={25} />
-        <FloatingOrb color="#10b981" size={100} blur={50} x="85%" y="15%" duration={18} />
-      </div>
 
       <ConfettiCelebration active={showConfetti} count={60} />
 

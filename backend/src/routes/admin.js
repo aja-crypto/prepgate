@@ -1,6 +1,6 @@
 // src/routes/admin.js
 const router = require('express').Router();
-const { adminProtect } = require('../middleware/adminAuth');
+const { adminProtect, requirePermission } = require('../middleware/adminAuth');
 const { isMongoConnected } = require('../config/db');
 const User = require('../models/User');
 const Subject = require('../models/Subject');
@@ -304,8 +304,8 @@ function timeAgo(date) {
   return d.toLocaleDateString();
 }
 
-// PUT update user role
-router.put('/users/:id/role', adminProtect, async (req, res, next) => {
+// PUT update user role — only super_admin (or admins with users.manage) may promote users
+router.put('/users/:id/role', adminProtect, requirePermission('users.manage'), async (req, res, next) => {
   try {
     const { role } = req.body;
     if (!['user', 'admin'].includes(role)) {
@@ -323,7 +323,7 @@ router.put('/users/:id/role', adminProtect, async (req, res, next) => {
 });
 
 // PUT activate/suspend user
-router.put('/users/:id/status', adminProtect, async (req, res, next) => {
+router.put('/users/:id/status', adminProtect, requirePermission('users.manage'), async (req, res, next) => {
   try {
     const { isActive } = req.body;
     if (typeof isActive !== 'boolean') {
@@ -341,7 +341,7 @@ router.put('/users/:id/status', adminProtect, async (req, res, next) => {
 });
 
 // DELETE soft-delete user
-router.delete('/users/:id', adminProtect, async (req, res, next) => {
+router.delete('/users/:id', adminProtect, requirePermission('users.manage'), async (req, res, next) => {
   try {
     if (!isMongoConnected()) {
       const user = updateLocalUser(req.params.id, { deletedAt: new Date().toISOString() });

@@ -1,5 +1,6 @@
 // src/routes/mocks.js
 const router = require('express').Router();
+const mongoose = require('mongoose');
 const { protect } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
 const { MockTest } = require('../models');
@@ -12,9 +13,15 @@ const emptyAnalytics = {
   improvement: 0,
 };
 
+// Mock/local users use non-ObjectId ids (UUID) and have no Mongo mock records
+function isMongoUserId(user) {
+  const id = user?._id?.toString?.() || user?.id;
+  return !!id && mongoose.Types.ObjectId.isValid(id);
+}
+
 router.get('/', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || !isMongoUserId(req.user)) {
       return res.json({ success: true, count: 0, data: [] });
     }
     const tests = await MockTest.find({ user: req.user._id }).sort('-testDate');
@@ -24,7 +31,7 @@ router.get('/', protect, async (req, res, next) => {
 
 router.get('/analytics', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || !isMongoUserId(req.user)) {
       return res.json({ success: true, data: emptyAnalytics });
     }
     const tests = await MockTest.find({ user: req.user._id }).sort('testDate');

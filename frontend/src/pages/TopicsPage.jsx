@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useProgress } from '../context/ProgressContext';
 import { topicService, subjectService, getApiErrorMessage } from '../services/api';
 import { PageLoading } from '../components/common/GateLoadingScreen';
 import SmartTopicCard from '../components/gate/SmartTopicCard';
 import { useSEO } from '../hooks/useSEO';
+import { publish, EVENTS } from '../services/aiEventSystem';
 
 function computeSubjectReadiness(topics) {
   const subjects = {};
@@ -54,6 +55,7 @@ function getHighWeightageNotDone(topics) {
 export default function TopicsPage() {
   useSEO({ title: 'Topics', description: 'Study GATE topics with progress tracking and completion checklists.' });
   const { topics: localTopics, studyStats } = useProgress();
+  const navigate = useNavigate();
   const [topics, setTopics] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [filter, setFilter] = useState('All');
@@ -98,6 +100,11 @@ export default function TopicsPage() {
   };
 
   useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (topics.length > 0) {
+      publish('page:navigated', { page: 'topics', topicCount: topics.length, timestamp: Date.now() });
+    }
+  }, [topics.length > 0]);
 
   const subjectNames = ['All', ...subjects.map((s) => s.name).filter(Boolean)];
 

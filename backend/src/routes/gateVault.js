@@ -1,11 +1,12 @@
 const router = require('express').Router();
 const { protect } = require('../middleware/auth');
+const { requirePremium } = require('../middleware/requirePremium');
 const { isMongoConnected, isMockAuthEnabled } = require('../config/db');
 const { Flashcard, MonthlySet, UserFlashcardProgress } = require('../models/GateVault');
 const localStore = require('../store/localDataStore');
 
 // GET current month's published set with questions
-router.get('/monthly-set', protect, async (req, res, next) => {
+router.get('/monthly-set', protect, requirePremium, async (req, res, next) => {
   try {
     if (!isMongoConnected()) {
       return res.json({ success: false, message: 'MongoDB required for GateVault' });
@@ -38,7 +39,7 @@ router.get('/monthly-set', protect, async (req, res, next) => {
 });
 
 // GET user's progress for current month
-router.get('/progress', protect, async (req, res, next) => {
+router.get('/progress', protect, requirePremium, async (req, res, next) => {
   try {
     if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.json({ success: false, message: 'MongoDB required' });
@@ -63,7 +64,7 @@ router.get('/progress', protect, async (req, res, next) => {
 });
 
 // POST start/continue session
-router.post('/start', protect, async (req, res, next) => {
+router.post('/start', protect, requirePremium, async (req, res, next) => {
   try {
     if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.status(503).json({ success: false, message: 'MongoDB required' });
@@ -112,7 +113,7 @@ router.post('/start', protect, async (req, res, next) => {
 });
 
 // POST submit answer
-router.post('/answer', protect, async (req, res, next) => {
+router.post('/answer', protect, requirePremium, async (req, res, next) => {
   try {
     if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.status(503).json({ success: false, message: 'MongoDB required' });
@@ -209,7 +210,7 @@ router.post('/answer', protect, async (req, res, next) => {
 });
 
 // GET stats/analytics
-router.get('/stats', protect, async (req, res, next) => {
+router.get('/stats', protect, requirePremium, async (req, res, next) => {
   try {
     if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.json({ success: true, data: { totalAttempted: 0, bestScore: 0, avgAccuracy: 0 } });

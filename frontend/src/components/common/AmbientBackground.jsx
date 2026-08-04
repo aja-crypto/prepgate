@@ -12,6 +12,8 @@ export default function AmbientBackground() {
     const PARTICLE_COUNT = 25;
     const CONNECTION_DIST = 120;
     let hidden = false;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let animating = true;
 
     function resize() {
       w = canvas.width = window.innerWidth;
@@ -33,10 +35,8 @@ export default function AmbientBackground() {
     }
 
     function draw() {
-      if (hidden) {
-        animRef.current = requestAnimationFrame(draw);
-        return;
-      }
+      // Respect reduced motion and hidden tabs — stop the rAF loop entirely
+      if (!animating || hidden || prefersReduced) return;
       ctx.clearRect(0, 0, w, h);
 
       particles.forEach(p => {
@@ -76,7 +76,13 @@ export default function AmbientBackground() {
     createParticles();
     draw();
 
-    const handleVisibility = () => { hidden = document.hidden; };
+    const handleVisibility = () => {
+      hidden = document.hidden;
+      if (!hidden && !prefersReduced) {
+        if (animRef.current) cancelAnimationFrame(animRef.current);
+        animRef.current = requestAnimationFrame(draw);
+      }
+    };
     document.addEventListener('visibilitychange', handleVisibility);
     const handleResize = () => { resize(); createParticles(); };
     window.addEventListener('resize', handleResize);

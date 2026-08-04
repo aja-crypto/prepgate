@@ -25,8 +25,8 @@ export default function FinalRevisionHubPage() {
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {subjects.map(sub => (
-          <div key={sub.code || sub.folder} className="bg-surface border border-border rounded-xl p-5 hover:border-white/15 transition-all group">
+        {subjects.map((sub, si) => (
+          <div key={`${sub.code || sub.folder || sub.name}-${si}`} className="bg-surface border border-border rounded-xl p-5 hover:border-white/15 transition-all group">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style={{ background: `${sub.color}15`, color: sub.color }}>{sub.icon}</div>
               <div className="flex-1">
@@ -36,9 +36,9 @@ export default function FinalRevisionHubPage() {
               <span className="text-[9px] uppercase tracking-wider px-2 py-1 rounded-full border text-green-400 border-green-500/20 bg-green-500/5">AIR 1</span>
             </div>
             <div className="space-y-1.5">
-              {sub.files.map(file => (
+              {sub.files.map((file, fi) => (
                 <a
-                  key={file.name}
+                  key={`${file.name}-${fi}`}
                   href={resolveMediaUrl(file.fileUrl)}
                   target="_blank"
                   rel="noopener noreferrer"

@@ -61,7 +61,7 @@ function NeuralBackground({ transparent } = {}) {
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 overflow-hidden"
+      className="absolute inset-0 overflow-hidden pointer-events-none"
       style={transparent ? undefined : {
         background: 'radial-gradient(circle at center, #0F172A 0%, #020617 100%)',
       }}

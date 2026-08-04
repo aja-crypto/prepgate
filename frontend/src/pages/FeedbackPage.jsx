@@ -38,7 +38,6 @@ function saveDraft(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d
 function clearDraft() { try { localStorage.removeItem(STORAGE_KEY); } catch {} }
 
 export default function FeedbackPage() {
-  useEffect(() => { const t = Date.now(); console.log('[Trace] FeedbackPage MOUNTED at', t); return () => console.log('[Trace] FeedbackPage UNMOUNTED after', Date.now() - t, 'ms'); }, []);
   const [step, setStep] = useState(() => loadDraft().step || 'welcome');
   const [rating, setRating] = useState(() => loadDraft().rating || 0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -56,7 +55,7 @@ export default function FeedbackPage() {
 
   const save = useCallback(() => saveDraft({ step, rating, category, description, screenshot, screenshotPreview, recommend }), [step, rating, category, description, screenshot, screenshotPreview, recommend]);
 
-  const go = (s) => { setStep(s); setTimeout(save, 0); };
+  const go = (s) => { setStep(s); setTimeout(() => { if (s !== 'done') save(); }, 0); };
 
   const handleDrop = (e) => {
     e.preventDefault();

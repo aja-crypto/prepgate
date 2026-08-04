@@ -33,6 +33,11 @@ export default function AIMentorWidget() {
         setLoading(false);
         return;
       }
+      // Demo mode — skip API call, use placeholder state
+      if (isGuest && !hasToken) {
+        setLoading(false);
+        return;
+      }
 
       try {
         const currentSubjects = computeSubjectCompletion(studyStats?.subjects || [], topics || [], pyqs || []);

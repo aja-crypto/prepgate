@@ -2,10 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GlassCard from '../components/ui/GlassCard';
+import LazyYouTubePlayer from '../components/learning/LazyYouTubePlayer';
 import toast from 'react-hot-toast';
-import axios from 'axios';
-
-const API = '/api/video-lectures';
+import { api } from '../services/api';
 
 export default function VideoLecturesPage() {
   const navigate = useNavigate();
@@ -21,9 +20,8 @@ export default function VideoLecturesPage() {
   const loadLectures = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('accessToken');
-      const params = new URLSearchParams({ page, limit: 12, ...filter });
-      const res = await axios.get(`${API}?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+      const params = { page, limit: 12, ...filter };
+      const res = await api.get('/video-lectures', { params });
       setLectures(res.data?.data || []);
       setTotalPages(res.data?.pagination?.pages || 1);
     } catch (err) {
@@ -36,8 +34,7 @@ export default function VideoLecturesPage() {
 
   const handleMarkHelpful = async (lectureId) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      await axios.post(`${API}/${lectureId}/helpful`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      await api.post(`/video-lectures/${lectureId}/helpful`);
       loadLectures();
       toast.success('Marked as helpful!');
     } catch (err) {
@@ -190,11 +187,8 @@ export default function VideoLecturesPage() {
           <div className="max-w-4xl w-full bg-bg-1 rounded-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="aspect-video bg-black">
               {selectedVideo.source === 'YouTube' && selectedVideo.sourceUrl?.includes('youtube.com') && (
-                <iframe
-                  src={selectedVideo.sourceUrl.replace('watch?v=', 'embed/').split('&')[0]}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
+                <LazyYouTubePlayer
+                  videoId={selectedVideo.sourceUrl.match(/(?:v=|\/)([\w-]{11})/)?.[1]}
                   title={selectedVideo.title}
                 />
               )}

@@ -65,7 +65,8 @@ export default function GateVaultPage() {
         useDemoMode();
       }
     } catch (e) {
-      console.error('Failed to load monthly set:', e);
+      // 403 = premium-gated in this environment — fall back to demo mode silently
+      if (e?.response?.status !== 403) console.error('Failed to load monthly set:', e);
       useDemoMode();
     } finally {
       setLoading(false);

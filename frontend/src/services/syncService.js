@@ -1,5 +1,7 @@
 // Hybrid MongoDB sync — pull on login, push on change
 import api, { progressService } from './api';
+import { getEmptyProgressData, isEmptyProgress } from '../data/emptyState';
+import { getDemoProgressData } from '../data/defaults';
 
 /** Check if backend has MongoDB (not mock-only) */
 export async function checkMongoAvailable() {
@@ -69,15 +71,7 @@ export async function pullFromServer(localData, user, currentState = null) {
       }
     } else if (user?.email !== 'demo@gate2027.in') {
       // New account — use empty state from server or local
-      const { getEmptyProgressData } = await import('../data/emptyState');
       merged = backup?.data ? mergeProgressData(getEmptyProgressData(), backup) : localData;
-    }
-
-    // Demo account gets sample data when progress is empty
-    if (user?.email === 'demo@gate2027.in') {
-      const { getDemoProgressData } = await import('../data/defaults');
-      const { isEmptyProgress } = await import('../data/emptyState');
-      if (isEmptyProgress(merged)) merged = getDemoProgressData();
     }
 
     if (mocks?.length) merged = { ...merged, mocks: mergeEntities(merged.mocks, mocks) };

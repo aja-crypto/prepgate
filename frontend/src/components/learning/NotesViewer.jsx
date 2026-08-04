@@ -1,8 +1,19 @@
 import { useState, useMemo } from 'react';
 
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function simpleMarkdown(text) {
   if (!text) return '';
-  return text
+  // Escape raw HTML first so user-supplied note content can never inject markup (XSS guard)
+  const escaped = escapeHtml(text);
+  return escaped
     .replace(/### (.+)/g, '<h3 class="text-base font-semibold text-gray-100 mt-4 mb-2">$1</h3>')
     .replace(/## (.+)/g, '<h2 class="text-lg font-semibold text-gray-100 mt-5 mb-2">$1</h2>')
     .replace(/# (.+)/g, '<h1 class="text-xl font-bold text-gray-100 mt-6 mb-3">$1</h1>')
@@ -23,7 +34,8 @@ export default function NotesViewer({ content, contentType, title }) {
     if (contentType === 'markdown' || contentType === 'text') {
       return simpleMarkdown(content);
     }
-    return content;
+    // Never inject raw HTML — treat any other type as plain text (XSS guard)
+    return escapeHtml(String(content)).replace(/\n/g, '<br />');
   }, [content, contentType]);
 
   const copyContent = () => {

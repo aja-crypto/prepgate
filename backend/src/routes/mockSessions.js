@@ -1,5 +1,6 @@
 // Interactive mock tests generated from PYQ bank
 const router = require('express').Router();
+const mongoose = require('mongoose');
 const { protect } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
 const { MockSession, PYQ } = require('../models');
@@ -43,7 +44,7 @@ router.post('/generate', protect, async (req, res, next) => {
 // GET user's mock sessions
 router.get('/', protect, async (req, res, next) => {
   try {
-    if (!isMongoConnected()) {
+    if (!isMongoConnected() || !mongoose.Types.ObjectId.isValid(req.user._id)) {
       return res.json({ success: true, count: 0, data: [] });
     }
     const filter = { user: req.user._id };

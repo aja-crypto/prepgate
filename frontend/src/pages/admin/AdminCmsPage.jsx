@@ -222,6 +222,11 @@ function FormModal({ tab, item, onClose, onSave }) {
       }
       if (payload.priority) payload.priority = Number(payload.priority);
 
+      // Drop empty values so Mongoose defaults (e.g. priority='medium') apply instead of failing enum validation
+      Object.keys(payload).forEach(k => {
+        if (payload[k] === '' || payload[k] === undefined) delete payload[k];
+      });
+
       await onSave(payload);
       toast.success(item ? 'Updated successfully' : 'Created successfully');
       onClose();

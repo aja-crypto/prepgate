@@ -13,6 +13,9 @@ export function getCached(key) {
 export function setCache(key, data) {
   apiCache.set(key, { data, timestamp: Date.now() });
 }
+export function clearApiCache() {
+  apiCache.clear();
+}
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
@@ -213,8 +216,8 @@ export const progressService = {
 export const aiService = {
   generatePlan: (payload) => api.post('/ai/planner', payload),
   getRecommendations: (payload) => api.post('/ai/recommendations', payload),
-  askCoach: (message, context, sessionId) => api.post('/ai/chat', { message, context, sessionId }),
-  streamCoach: (message, context, sessionId, signal) => {
+  askCoach: (message, context, sessionId) => api.post('/ai/chat', { message, context, sessionId, conversationId: sessionId }),
+  streamCoach: (message, context, sessionId, signal, modePrompt) => {
     const headers = { 'Content-Type': 'application/json' };
     const token = localStorage.getItem('accessToken');
     if (token) {
@@ -222,15 +225,18 @@ export const aiService = {
     } else if (localStorage.getItem('isGuest') === 'true') {
       headers['X-Demo-User'] = 'true';
     }
+    const body = { message, context, sessionId, conversationId: sessionId };
+    if (modePrompt) body.modePrompt = modePrompt;
     return fetch(`${api.defaults.baseURL}/ai/chat`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ message, context, sessionId }),
+      body: JSON.stringify(body),
       signal,
     });
   },
   doubtSolve: (payload) => api.post('/ai/doubt-solver', payload),
   getQuota: () => api.get('/ai/quota'),
+  getContext: () => api.get('/ai/context'),
   getDoubtSubjects: () => api.get('/ai/doubt-subjects'),
   getCacheStats: () => api.get('/ai/cache/stats'),
   clearCache: () => api.delete('/ai/cache'),
@@ -355,6 +361,7 @@ export const mistakeService = {
   getAll: (params) => api.get('/mistakes', { params }),
   getAggregates: () => api.get('/mistakes/aggregates'),
   create: (data) => api.post('/mistakes', data),
+  update: (id, data) => api.put(`/mistakes/${id}`, data),
   delete: (id) => api.delete(`/mistakes/${id}`),
 };
 
@@ -385,19 +392,30 @@ export const feedbackService = {
 };
 
 export const adminLiveService = {
-  getPending: (params) => api.get('/admin/live/pending', { params }),
-  getUpdates: (params) => api.get('/admin/live/updates', { params }),
-  updateStatus: (id, status) => api.put(`/admin/live/updates/${id}/status`, { status }),
-  publishVerified: () => api.post('/admin/live/publish-verified'),
-  createUpdate: (d) => api.post('/admin/live/updates', d),
-  deleteUpdate: (id) => api.delete(`/admin/live/updates/${id}`),
-  getJobs: () => api.get('/admin/live/jobs'),
-  triggerFetch: (jobName) => api.post('/admin/live/fetch', jobName ? { jobName } : {}),
+  getPending: (params) => api.get('/admin/live-data/live/pending', { params }),
+  getUpdates: (params) => api.get('/admin/live-data/live/updates', { params }),
+  updateStatus: (id, status) => api.put(`/admin/live-data/live/updates/${id}/status`, { status }),
+  publishVerified: () => api.post('/admin/live-data/live/publish-verified'),
+  createUpdate: (d) => api.post('/admin/live-data/live/updates', d),
+  deleteUpdate: (id) => api.delete(`/admin/live-data/live/updates/${id}`),
+  getJobs: () => api.get('/admin/live-data/live/jobs'),
+  triggerFetch: (jobName) => api.post('/admin/live-data/live/fetch', jobName ? { jobName } : {}),
 };
 
 export default api;
 
 // ΓöÇΓöÇΓöÇ GateVault API ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── Learning Hub Videos API ─────────────────────────────────────
+export const learningHubVideoService = {
+  list: (params) => api.get('/learning-hub/videos', { params }),
+  getById: (id) => api.get(`/learning-hub/videos/${id}`),
+};
+
+export const insightsService = {
+  list: () => api.get('/insights/topics'),
+  getBySlug: (slug) => api.get(`/insights/topics/${slug}`),
+};
+
 export const gateVaultService = {
   getMonthlySet: () => api.get('/gate-vault/monthly-set'),
   getProgress: () => api.get('/gate-vault/progress'),
@@ -445,4 +463,15 @@ export const referralService = {
   getPremiumStatus: () => api.get('/referral/premium-status'),
   refresh: () => api.post('/referral/refresh'),
   validate: (code) => api.get(`/referral/validate/${encodeURIComponent(code)}`),
+};
+
+export const notificationService = {
+  list: (params) => api.get('/notifications', { params }),
+  generate: (type, context) => api.post('/notifications/generate', { type, context }),
+  markRead: (id) => api.put(`/notifications/${id}/read`),
+  markAllRead: () => api.put('/notifications/read-all'),
+  toggleBookmark: (id) => api.put(`/notifications/${id}/bookmark`),
+  delete: (id) => api.delete(`/notifications/${id}`),
+  getPrefs: () => api.get('/notifications/prefs'),
+  updatePrefs: (prefs) => api.put('/notifications/prefs', prefs),
 };

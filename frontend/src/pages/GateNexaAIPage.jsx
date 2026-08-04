@@ -3,15 +3,15 @@ import { Link } from 'react-router-dom';
 import NeuralBackground from '../components/common/NeuralBackground';
 import AIMentorPage from './AIMentorPage';
 import DailyCoachPage from './DailyCoachPage';
-import WeakTopicsPage from './WeakTopicsPage';
 import InsightsPage from './InsightsPage';
 import DoubtSolverPage from './DoubtSolverPage';
 import GateNexaAIIcon from '../components/ui/GateNexaAIIcon';
+import AiCoachDashboard from '../components/aicoach/AiCoachDashboard';
 
 const TABS = [
+  { id: 'ai-coach', label: 'AI Coach' },
   { id: 'mentor', label: 'Ask AI' },
   { id: 'coach', label: 'Daily Guidance' },
-  { id: 'weak-topics', label: 'Weak Topic Analysis' },
   { id: 'insights', label: 'Progress Insights' },
   { id: 'doubt', label: 'Doubt Solver' },
 ];
@@ -58,7 +58,7 @@ const HowItWorks = () => {
 };
 
 export default function GateNexaAIPage() {
-  const [activeTab, setActiveTab] = useState('mentor');
+  const [activeTab, setActiveTab] = useState('ai-coach');
 
   return (
     <div className="min-h-screen bg-bg text-text relative">
@@ -99,9 +99,9 @@ export default function GateNexaAIPage() {
         </div>
 
         <div className="animate-fade-in">
+          <div style={{ display: activeTab === 'ai-coach' ? 'block' : 'none' }}><AiCoachDashboard /></div>
           <div style={{ display: activeTab === 'mentor' ? 'block' : 'none' }}><AIMentorPage /></div>
           <div style={{ display: activeTab === 'coach' ? 'block' : 'none' }}><DailyCoachPage /></div>
-          <div style={{ display: activeTab === 'weak-topics' ? 'block' : 'none' }}><WeakTopicsPage /></div>
           <div style={{ display: activeTab === 'insights' ? 'block' : 'none' }}><InsightsPage /></div>
           <div style={{ display: activeTab === 'doubt' ? 'block' : 'none' }}><DoubtSolverPage /></div>
         </div>

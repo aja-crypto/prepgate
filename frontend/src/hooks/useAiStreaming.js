@@ -16,13 +16,19 @@ export default function useAiStreaming() {
 
     const controller = new AbortController();
     abortRef.current = controller;
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 150000);
 
     try {
-      const res = await aiService.streamCoach(message, context, sessionId, controller.signal);
+      const modePrompt = context?.modePrompt || null;
+      const res = await aiService.streamCoach(message, context, sessionId, controller.signal, modePrompt);
       clearTimeout(timeoutId);
       if (!res.ok) {
-        if (res.status === 429) throw new Error('rate_limit');
+        if (res.status === 429) {
+          const errorData = await res.json().catch(() => null);
+          setStreaming(false);
+          abortRef.current = null;
+          return { text: null, suggestions: null, source: 'quota', quotaExceeded: true, limit: errorData?.data?.limit, resetAt: errorData?.data?.resetAt };
+        }
         if (res.status === 401) throw new Error('auth');
         if (res.status >= 500) throw new Error('server');
         throw new Error(`http_${res.status}`);
@@ -32,12 +38,15 @@ export default function useAiStreaming() {
       const contentType = res.headers.get('content-type') || '';
       if (!contentType.includes('text/event-stream')) {
         const data = await res.json();
-        const text = data?.data?.text || data?.data?.message || '';
+        const raw = data?.data?.text ?? data?.data?.message ?? '';
+        const text = typeof raw === 'string' ? raw : '';
         const suggestions = data?.data?.suggestions || null;
         const source = data?.data?.source || 'heuristic';
+        const provider = data?.data?.provider || null;
+        const offlineInfo = data?.data?.offlineInfo || null;
         setStreaming(false);
         abortRef.current = null;
-        return { text, suggestions, source };
+        return { text, suggestions, source, provider, offlineInfo };
       }
 
       if (!res.body) {
@@ -52,6 +61,8 @@ export default function useAiStreaming() {
       let fullText = '';
       let suggestions = null;
       let source = 'provider';
+      let provider = null;
+      let offlineInfo = null;
       let remaining = null;
 
       while (true) {
@@ -76,12 +87,16 @@ export default function useAiStreaming() {
               setPartialText(fullText);
               suggestions = parsed.suggestions || null;
               source = parsed.source || 'provider';
+              provider = parsed.provider || null;
+              offlineInfo = parsed.offlineInfo || null;
               remaining = parsed.remaining;
             } else if (parsed.type === 'fallback') {
               fullText = parsed.content || '';
               setPartialText(fullText);
               suggestions = parsed.suggestions || null;
               source = parsed.source || 'heuristic';
+              provider = parsed.provider || null;
+              offlineInfo = parsed.offlineInfo || null;
               remaining = parsed.remaining;
             }
           } catch {}
@@ -90,7 +105,7 @@ export default function useAiStreaming() {
 
       setStreaming(false);
       abortRef.current = null;
-      return { text: fullText, suggestions, source, remaining };
+      return { text: fullText, suggestions, source, provider, offlineInfo, remaining };
     } catch (err) {
       clearTimeout(timeoutId);
       if (err.name === 'AbortError' || controller.signal.aborted) {

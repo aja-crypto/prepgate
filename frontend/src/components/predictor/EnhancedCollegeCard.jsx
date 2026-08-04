@@ -64,7 +64,7 @@ function TrendIndicator({ trend }) {
 
 function formatLPA(val) {
   if (val == null) return '—';
-  if (val >= 100) return `₹${(val / 100).toFixed(1)}L`;
+  if (val >= 100) return `₹${(val / 100).toFixed(1)} Cr`;
   return `₹${val} LPA`;
 }
 
@@ -78,11 +78,16 @@ function formatFees(val) {
 export default function EnhancedCollegeCard({ opportunity: opp, onCompare, inCompareList }) {
   const [expanded, setExpanded] = useState(false);
   const [showFullCurriculum, setShowFullCurriculum] = useState(false);
+  const [showMatchBreakdown, setShowMatchBreakdown] = useState(false);
 
   const chanceCfg = getChanceConfig(opp.probability);
   const typeStyle = COLLEGE_TYPE_STYLES[opp.collegeType] || { color: '#94A3B8', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.2)' };
   const tierCfg = TIER_CONFIG[opp.tier] || { label: 'Emerging', icon: '⭐', color: '#94A3B8' };
   const borderColor = chanceCfg.border;
+
+  // Calculate derived values
+  const calcROI = opp.roiScore ?? (opp.avgPlacement && opp.fees ? Math.min(10, Math.round((opp.avgPlacement * 100000) / (opp.fees || 1) * 2)) : null);
+  const calcTotalCost = opp.totalCost ?? (opp.fees ? (opp.hostelFee ? opp.fees + opp.hostelFee : opp.fees * 2) : null);
 
   return (
     <motion.div
@@ -124,15 +129,46 @@ export default function EnhancedCollegeCard({ opportunity: opp, onCompare, inCom
         </div>
         <div className="shrink-0 ml-2 min-w-[100px]">
           <div className="flex flex-col items-center">
-            <div className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full whitespace-nowrap" style={{ color: chanceCfg.color, background: chanceCfg.bg, border: `1px solid ${chanceCfg.border}` }}>
+            <button
+              onClick={() => setShowMatchBreakdown(!showMatchBreakdown)}
+              className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity"
+              style={{ color: chanceCfg.color, background: chanceCfg.bg, border: `1px solid ${chanceCfg.border}` }}
+            >
               {chanceCfg.icon} {chanceCfg.label} {opp.probability}%
-            </div>
+            </button>
             <div className="w-full h-1.5 rounded-full mt-1.5 overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
               <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, opp.probability)}%`, background: chanceCfg.color }} />
             </div>
           </div>
         </div>
       </div>
+
+      {/* Match Score Breakdown */}
+      <AnimatePresence>
+        {showMatchBreakdown && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+            <div className="mb-3 rounded-lg p-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px]" style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.12)' }}>
+              <div className="col-span-2 text-[10px] text-purple-400 font-semibold mb-1">Match Score Breakdown</div>
+              <div><span className="text-slate-500">Your Score:</span> <span className="text-white font-mono">{opp.predictedScore || opp.gateScore || '—'}</span></div>
+              <div><span className="text-slate-500">Closing Score:</span> <span className="text-white font-mono">{opp.closingScore || '—'}</span></div>
+              <div><span className="text-slate-500">Opening Score:</span> <span className="text-white font-mono">{opp.openingScore || '—'}</span></div>
+              <div><span className="text-slate-500">Difference:</span> <span className={`font-mono ${opp.closingScore && (opp.predictedScore ?? 0) >= opp.closingScore ? 'text-green-400' : 'text-orange-400'}`}>
+                {opp.closingScore ? (opp.predictedScore ?? opp.gateScore ?? 0) >= opp.closingScore ? `+${(opp.predictedScore ?? 0) - opp.closingScore}` : `${(opp.predictedScore ?? 0) - opp.closingScore}` : '—'}
+              </span></div>
+              <div><span className="text-slate-500">Category:</span> <span className="text-slate-300">{opp.category || 'General'}</span></div>
+              <div><span className="text-slate-500">Confidence:</span> <span className="font-medium" style={{ color: opp.probability >= 80 ? '#22C55E' : opp.probability >= 60 ? '#EAB308' : '#F97316' }}>
+                {opp.probability >= 80 ? 'High' : opp.probability >= 60 ? 'Medium' : 'Moderate'}
+              </span></div>
+              <div className="col-span-2 mt-1 pt-1.5 border-t border-white/5 text-[9px] text-slate-500 flex flex-wrap gap-x-4 gap-y-0.5">
+                <span>✓ Historical Cutoffs</span>
+                <span>✓ Seat Trends</span>
+                <span>✓ Score Margin</span>
+                <span>✓ Past Admissions</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Why This College? — always visible */}
       {opp.whyExplanation?.whyMatched && (
@@ -168,6 +204,7 @@ export default function EnhancedCollegeCard({ opportunity: opp, onCompare, inCom
       </div>
 
       <div className="grid grid-cols-12 gap-3 mb-3">
+      {((opp.previousClosingScores || []).length > 0 || opp.trend) && (
         <div className="col-span-12 sm:col-span-5">
           <div className="text-[9px] text-slate-500 uppercase mb-1 font-semibold">Cutoff Trend</div>
           <div className="rounded-lg p-2" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
@@ -184,9 +221,7 @@ export default function EnhancedCollegeCard({ opportunity: opp, onCompare, inCom
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="text-[10px] text-slate-600 py-1 text-center">No trend data</div>
-            )}
+            ) : null}
             {opp.trend && (
               <div className="mt-1.5 pt-1.5 border-t border-white/5">
                 <TrendIndicator trend={opp.trend} />
@@ -194,6 +229,7 @@ export default function EnhancedCollegeCard({ opportunity: opp, onCompare, inCom
             )}
           </div>
         </div>
+      )}
         <div className="col-span-12 sm:col-span-4">
           <div className="text-[9px] text-slate-500 uppercase mb-1 font-semibold">Placements</div>
           <div className="rounded-lg p-2 space-y-1" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
@@ -214,8 +250,8 @@ export default function EnhancedCollegeCard({ opportunity: opp, onCompare, inCom
           <div className="rounded-lg p-2 space-y-1" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
             {[
               { label: 'Tuition', value: formatFees(opp.fees), icon: null },
-              { label: 'Total Cost', value: formatFees(opp.totalCost), icon: DollarSign },
-              { label: 'ROI Score', value: opp.roiScore != null ? `${opp.roiScore}/10` : '—', icon: TrendingUp },
+              { label: 'Total Cost', value: formatFees(calcTotalCost), icon: DollarSign },
+              { label: 'ROI Score', value: calcROI != null ? `${calcROI}/10` : '—', icon: TrendingUp },
             ].map((item, i) => (
               <div key={i} className="flex items-center justify-between">
                 <span className="flex items-center gap-1 text-[9px] text-slate-500">

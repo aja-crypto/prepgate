@@ -308,6 +308,20 @@ export default function StudyPlannerPage() {
 
   const generateAiSchedule = async () => {
     setAiGenerating(true);
+
+    // Demo mode — skip API call, use smart heuristic immediately
+    if (localStorage.getItem('isGuest') === 'true' && !localStorage.getItem('accessToken')) {
+      const key = format(today, 'yyyy-MM-dd');
+      const fallbackPlans = [...subjects].sort((a, b) => a.progress - b.progress).slice(0, 4).map((s, i) => ({
+        id: Date.now() + i, subject: s.name, topic: 'Study Session', hours: 1.5, notes: '',
+        startHour: 14 + i * 2,
+      }));
+      updateGateFeatures((gf) => { const existing = gf.studyPlans[key] || []; return { ...gf, studyPlans: { ...gf.studyPlans, [key]: [...existing, ...fallbackPlans] } }; });
+      toast('Smart schedule created', { icon: '📋' });
+      setAiGenerating(false);
+      return;
+    }
+
     try {
       const res = await aiService.generatePlan({
         subjects: studyStats.subjects || [],

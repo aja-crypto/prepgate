@@ -11,6 +11,7 @@ import Modal from '../components/common/Modal';
 import toast from 'react-hot-toast';
 import { SUBJECTS, PYQ_PDF_FILENAME } from '../config/pyqIndex';
 import { BookOpen } from 'lucide-react';
+import { publish, EVENTS } from '../services/aiEventSystem';
 
 const DIFF_STYLE = {
   easy: 'bg-green-500/10 border-green-500/20 text-green-400',
@@ -64,6 +65,7 @@ const HowItWorks = () => {
 export default function PYQPage() {
   const { pyqs, updatePyqs, refreshPyqs, mongoAvailable } = useProgress();
   const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => { publish(EVENTS.LOGIN, { source: 'pyq_page', timestamp: Date.now() }); }, []);
   const [filter, setFilter] = useState(searchParams.get('subject') || 'All');
   const [topicFilter, setTopicFilter] = useState(searchParams.get('topic') || 'All');
   const [yearFilter, setYearFilter] = useState(searchParams.get('year') || 'All');
@@ -101,9 +103,9 @@ export default function PYQPage() {
     ]).finally(() => setLoading(false));
   }, [refreshPyqs]);
 
-  const subjects = useMemo(() => ['All', ...new Set(pyqs.map((q) => q.subject))], [pyqs]);
+  const subjects = useMemo(() => ['All', ...new Set(pyqs.map((q) => q.subject).filter(Boolean))], [pyqs]);
   const topics = useMemo(() => ['All', ...new Set(pyqs.map((q) => q.topic).filter(Boolean))], [pyqs]);
-  const years = useMemo(() => ['All', ...new Set(pyqs.map((q) => q.year))].sort((a, b) => (b === 'All' ? 1 : a === 'All' ? -1 : b - a)), [pyqs]);
+  const years = useMemo(() => ['All', ...new Set(pyqs.map((q) => q.year).filter(Boolean))].sort((a, b) => (b === 'All' ? 1 : a === 'All' ? -1 : b - a)), [pyqs]);
   const stats = useMemo(() => computePyqStats(pyqs), [pyqs]);
   const mistakeSummary = useMemo(() => getMistakePatternSummary(pyqs), [pyqs]);
 

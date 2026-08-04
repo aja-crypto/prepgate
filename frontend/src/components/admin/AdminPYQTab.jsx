@@ -1,4 +1,4 @@
-// Admin PYQ bulk import — CSV/JSON (legal content only, no scraping)
+﻿// Admin PYQ bulk import — CSV/JSON (legal content only, no scraping)
 import { useState, useEffect } from 'react';
 import { adminPyqService, getApiErrorMessage } from '../../services/api';
 import toast from 'react-hot-toast';
@@ -57,7 +57,7 @@ export default function AdminPYQTab() {
       }
       const { inserted, failed } = res.data.data;
       toast.success(`Imported ${inserted.length} questions (${failed.length} failed)`);
-      if (failed.length) console.warn('Import failures:', failed);
+      if (failed.length) console.error('Import failures:', failed);
       setImportText('');
       setValidation(null);
       load();

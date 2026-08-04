@@ -1,7 +1,6 @@
-// src/pages/MocksPage.jsx
+﻿// src/pages/MocksPage.jsx
 import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Chart, registerables } from 'chart.js';
 import { useProgress } from '../context/ProgressContext';
 import AirPredictor from '../components/gate/AirPredictor';
 import MockTestBuilder from '../components/mock/MockTestBuilder';
@@ -11,7 +10,11 @@ import { silentCatch } from '../utils/errorHandler';
 import toast from 'react-hot-toast';
 import { predictAIR } from '../utils/gateUtils';
 
-Chart.register(...registerables);
+let chartJsPromise;
+async function getChart() {
+  if (!chartJsPromise) chartJsPromise = import('chart.js').then(mod => { mod.Chart.register(...mod.registerables); return mod.Chart; });
+  return chartJsPromise;
+}
 
 const TABS = ['Interactive Mocks', 'Score Tracker'];
 
@@ -79,13 +82,15 @@ export default function MocksPage() {
           return [...backend, ...localOnly];
         });
       }
-    }).catch(e => console.warn('MocksPage fetch failed', e?.message));
+    }).catch(e => console.error('MocksPage fetch failed', e?.message));
   }, []);
 
   useEffect(() => {
     if (!chartRef.current || tab !== 'Score Tracker') return;
     if (chartInst.current) chartInst.current.destroy();
-    chartInst.current = new Chart(chartRef.current, {
+    getChart().then(Chart => {
+      if (!chartRef.current) return;
+      chartInst.current = new Chart(chartRef.current, {
       type: 'line',
       data: {
         labels: mocks.map((t) => t.name.split(' ').slice(-2).join(' ')),
@@ -110,7 +115,8 @@ export default function MocksPage() {
         },
       },
     });
-    return () => chartInst.current?.destroy();
+    }).catch(() => {});
+    return () => { if (chartInst.current) { chartInst.current.destroy(); chartInst.current = null; } };
   }, [mocks, tab]);
 
   const addTest = () => {

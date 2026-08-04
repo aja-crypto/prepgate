@@ -29,17 +29,49 @@ export function predictAIR(score) {
   };
 }
 
+/** A PYQ counts as "correct/solved" across the app's data variants */
+export function isPyqCorrect(p) {
+  return p?.isCorrect === true || p?.correct === true || p?.status === 'correct' || p?.solved === true;
+}
+
+const SUBJECT_ALIASES = {
+  'toc': 'theory of computation',
+  'coa': 'computer organization',
+  'ds': 'programming & data structures',
+  'os': 'operating systems',
+  'cn': 'computer networks',
+  'dbms': 'dbms',
+  'em': 'engineering mathematics',
+  'maths': 'engineering mathematics',
+  'cd': 'compiler design',
+  'dl': 'digital logic',
+  'apt': 'general aptitude',
+};
+const normSub = (s) => (s || '').toString().toLowerCase().trim();
+
+/** True when two subject references (e.g. "OS" vs "Operating Systems") refer to the same subject */
+export function matchesSubject(a, b) {
+  const x = normSub(a);
+  const y = normSub(b);
+  if (!x || !y) return false;
+  if (x === y) return true;
+  if (SUBJECT_ALIASES[x] === y || SUBJECT_ALIASES[y] === x) return true;
+  if (x.includes(y) || y.includes(x)) return true;
+  return false;
+}
+
 /** Compute subject completion % from topics + PYQs */
 export function computeSubjectCompletion(subjects, topics, pyqs) {
   const safeSubjects = subjects || [];
   const safeTopics = topics || [];
   const safePyqs = pyqs || [];
+
   return safeSubjects.map((sub) => {
-    const subTopics = safeTopics.filter((t) => t.subject === sub.name || sub.name.includes(t.subject) || t.subject.includes(sub.name.split(' ')[0]));
-    const subPyqs = safePyqs.filter((p) => p.subject === sub.name || sub.name.includes(p.subject) || p.subject.includes(sub.name.split(' ')[0]));
+    const subTopics = safeTopics.filter((t) => matchesSubject(sub.name, t.subject));
+    const subPyqs = safePyqs.filter((p) => matchesSubject(sub.name, p.subject));
 
     const topicPct = subTopics.length ? (subTopics.filter((t) => t.done).length / subTopics.length) * 100 : sub.progress || 0;
-    const pyqPct = subPyqs.length ? (subPyqs.filter((p) => p.solved).length / subPyqs.length) * 100 : sub.progress || 0;
+    const pyqPct = subPyqs.length ? (subPyqs.filter((p) => isPyqCorrect(p)).length / subPyqs.length) * 100 : sub.progress || 0;
     const progress = Math.round((topicPct * 0.6 + pyqPct * 0.4));
     const color = progress >= 70 ? '#06d6a0' : progress >= 30 ? '#ff9f43' : '#ff6b6b';
 
@@ -172,63 +204,104 @@ export function buildFinalModePlans() {
 }
 
 /** Detect weak topics from mock notes, incomplete topics, unsolved PYQs */
+/** Explain WHY a topic/subject is weak using real signals. */
+function explainWeakness({ progress, accuracy, solvedPct, missedCount, incompleteCount, revisionDue, hasData }) {
+  if (hasData === false) return 'Not started yet — no topics or PYQs recorded';
+  if (accuracy != null && accuracy < 40) return `Only ${Math.round(accuracy)}% accuracy on PYQs — wrong answers show shaky concepts`;
+  if (solvedPct != null && solvedPct < 40) return `Just ${Math.round(solvedPct)}% of its PYQs solved — needs more practice`;
+  if (missedCount > 0) return `${missedCount} PYQ${missedCount > 1 ? 's' : ''} answered incorrectly — review the mistakes`;
+  if (revisionDue) return 'Revision is due — recall has likely faded';
+  if (incompleteCount > 0) return `${incompleteCount} topic${incompleteCount > 1 ? 's' : ''} incomplete`;
+  if (progress != null && progress < 50) return `Only ${Math.round(progress)}% complete`;
+  return 'Lowest-priority area based on your recent activity';
+}
+
 export function detectWeakTopics(topics, pyqs, mocks, subjects) {
   const weak = [];
-  const subjectScores = computeSubjectCompletion(subjects, topics, pyqs);
+  const safeTopics = topics || [];
+  const safePyqs = pyqs || [];
+  const subjectScores = computeSubjectCompletion(subjects, safeTopics, safePyqs);
 
-  subjectScores.filter((s) => s.progress < 50).forEach((s) => {
-    weak.push({
-      type: 'subject',
-      name: s.name,
-      score: s.progress,
-      reason: 'Subject completion below 50%',
-      recommendation: `Focus on core topics in ${s.name.split(' ')[0]}`,
-      icon: s.icon,
-      color: s.color,
+  // Subject-level weakness driven by real completion + accuracy
+  subjectScores
+    .filter((s) => s.progress < 60)
+    .forEach((s) => {
+      const subPyqs = safePyqs.filter((p) => matchesSubject(s.name, p.subject));
+      const solvedCount = subPyqs.filter(isPyqCorrect).length;
+      const accuracy = subPyqs.length ? (solvedCount / subPyqs.length) * 100 : null;
+      const solvedPct = subPyqs.length ? (subPyqs.filter((p) => p.solved === true || p.isCorrect === true).length / subPyqs.length) * 100 : null;
+      const incorrect = subPyqs.filter((p) => !isPyqCorrect(p)).length;
+      const hasTopics = safeTopics.some((t) => matchesSubject(s.name, t.subject));
+      const hasData = hasTopics || subPyqs.length > 0;
+      weak.push({
+        type: 'subject',
+        name: s.name,
+        score: hasData ? Math.max(s.progress, accuracy != null ? 100 - accuracy : s.progress) : 100,
+        completion: s.progress,
+        topicPct: s.topicPct,
+        pyqPct: s.pyqPct,
+        accuracy,
+        reason: explainWeakness({ progress: s.progress, accuracy, solvedPct, missedCount: incorrect, hasData }),
+        recommendation: !hasData
+          ? `Start ${s.name} — no topics or PYQs recorded yet`
+          : accuracy != null
+            ? `Re-answer the ${subPyqs.length} PYQs in ${s.name} and review wrong ones`
+            : `Complete unfinished topics in ${s.name}`,
+        icon: s.icon,
+        color: s.color,
+        pyqTotal: subPyqs.length,
+        pyqSolved: solvedCount,
+      });
     });
+
+  // Topic-level weakness: incomplete topics + low topic accuracy
+  const topicStats = {};
+  safePyqs.forEach((p) => {
+    const key = p.topic || p.subject;
+    if (!topicStats[key]) topicStats[key] = { total: 0, correct: 0, subject: p.subject };
+    topicStats[key].total++;
+    if (isPyqCorrect(p)) topicStats[key].correct++;
   });
 
-  topics.filter((t) => !t.done).slice(0, 5).forEach((t) => {
+  safeTopics.filter((t) => !t.done).slice(0, 5).forEach((t) => {
     if (!weak.some((w) => w.name === t.name)) {
+      const st = topicStats[t.name] || topicStats[t.subject];
+      const accuracy = st?.total ? Math.round((st.correct / st.total) * 100) : null;
+      const revisionDue = t.revisionNeeded === true;
       weak.push({
         type: 'topic',
         name: t.name,
-        score: 0,
-        reason: 'Incomplete topic',
-        recommendation: `Complete "${t.name}" in ${t.subject}`,
-        icon: '📌',
+        score: Math.max(0, 100 - (accuracy ?? 50)),
+        completion: 0,
+        accuracy,
+        reason: explainWeakness({ missedCount: st && st.total - st.correct, incompleteCount: 1, revisionDue }),
+        recommendation: revisionDue ? `Revise ${t.name} — it's due for spaced repetition` : `Complete "${t.name}" in ${t.subject}`,
+        icon: 'topic',
         color: '#ff6b6b',
+        pyqTotal: st?.total || 0,
+        pyqSolved: st?.correct || 0,
       });
     }
   });
 
-  pyqs.filter((p) => !p.solved && p.difficulty === 'hard').slice(0, 3).forEach((p) => {
-    weak.push({
-      type: 'pyq',
-      name: p.title,
-      score: 0,
-      reason: `Unsolved hard PYQ (GATE ${p.year})`,
-      recommendation: `Practice ${p.title} from ${p.subject}`,
-      icon: '🗂',
-      color: '#ff9f43',
-    });
-  });
-
-  const latestMock = mocks[mocks.length - 1];
-  if (latestMock?.notes) {
-    const note = latestMock.notes.toLowerCase();
-    if (note.includes('weak')) {
+  // Missed/incorrect PYQs are a concrete weakness signal
+  safePyqs.filter((p) => !isPyqCorrect(p)).slice(0, 3).forEach((p) => {
+    if (!weak.some((w) => w.name === (p.title || p.topic))) {
+      const label = p.title || p.topic || `${p.subject} PYQ`;
       weak.push({
-        type: 'mock',
-        name: latestMock.name,
-        score: latestMock.score,
-        reason: `Mock feedback: "${latestMock.notes}"`,
-        recommendation: 'Revise weak areas noted in your latest mock',
-        icon: '🎯',
-        color: '#a855f7',
+        type: 'pyq',
+        name: label,
+        score: 60,
+        accuracy: 0,
+        reason: 'Answered incorrectly — this is a live gap',
+        recommendation: `Retry this PYQ and note why the previous attempt was wrong (${p.subject})`,
+        icon: 'pyq',
+        color: '#ff9f43',
+        pyqTotal: 1,
+        pyqSolved: 0,
       });
     }
-  }
+  });
 
   return weak.slice(0, 8);
 }
@@ -353,19 +426,113 @@ export function predictScore(topics, pyqs, mocks) {
 }
 
 /** Generate smart study recommendations */
-export function generateRecommendations(topics, pyqs, mocks, subjects, revisionSchedule) {
+export function generateRecommendations(topics, pyqs, mocks, subjects, revisionSchedule, studyStats = {}) {
   const recs = [];
-  const weak = detectWeakTopics(topics, pyqs, mocks, subjects);
-  weak.slice(0, 3).forEach((w) => recs.push({ type: 'weak', icon: w.icon, title: w.name, action: w.recommendation, priority: 'high' }));
+  const safeTopics = topics || [];
+  const safePyqs = pyqs || [];
+  const safeMocks = mocks || [];
+  const safeSubs = subjects || [];
+  const today = todayKey();
 
-  const unsolvedHard = pyqs.filter((p) => !p.solved && p.difficulty === 'hard').slice(0, 2);
-  unsolvedHard.forEach((p) => recs.push({ type: 'pyq', icon: '🗂', title: p.title, action: `Solve hard PYQ from ${p.subject}`, priority: 'medium' }));
+  // 1. Weak areas (with the real reason)
+  const weak = detectWeakTopics(safeTopics, safePyqs, safeMocks, safeSubs);
+  weak.slice(0, 3).forEach((w) => {
+    recs.push({
+      type: 'weak',
+      kind: 'priority',
+      icon: w.type === 'pyq' ? 'pyq' : w.type === 'topic' ? 'topic' : 'weak',
+      title: w.name,
+      action: w.recommendation,
+      detail: w.reason,
+      priority: 'high',
+      progress: w.score,
+      completion: w.completion != null ? w.completion : (typeof w.score === 'number' ? 100 - w.score : null),
+      accuracy: w.accuracy,
+      pyqTotal: w.pyqTotal,
+      pyqSolved: w.pyqSolved,
+    });
+  });
 
-  const missed = (revisionSchedule || []).filter((r) => r.status === 'missed' || getRevisionStatus(r.dueDate) === 'missed');
-  missed.slice(0, 2).forEach((r) => recs.push({ type: 'revision', icon: '🔄', title: r.topicName, action: `Missed revision — review ${r.subject}`, priority: 'high' }));
+  // 2. Revision due (from schedule, or topics flagged for revision)
+  const dueRevisions = (revisionSchedule || []).filter((r) => {
+    if (r.status === 'done') return false;
+    return r.status === 'missed' || getRevisionStatus(r.dueDate) === 'missed' || getRevisionStatus(r.dueDate) === 'today';
+  });
+  dueRevisions.slice(0, 2).forEach((r) => {
+    const daysLate = r.dueDate < today ? Math.round((new Date(today) - new Date(r.dueDate)) / 86400000) : 0;
+    recs.push({
+      type: 'revision',
+      kind: 'revision-due',
+      icon: 'revision',
+      title: r.topicName || r.topic,
+      action: `Review ${r.subject || 'this topic'} now`,
+      detail: daysLate > 0 ? `Overdue by ${daysLate} day${daysLate > 1 ? 's' : ''}` : 'Due today',
+      priority: 'high',
+      progress: 100,
+    });
+  });
 
-  if (!mocks.length || (mocks[mocks.length - 1] && Date.now() - new Date(mocks[mocks.length - 1].date).getTime() > 14 * 86400000)) {
-    recs.push({ type: 'mock', icon: '🎯', title: 'Take a Mock Test', action: 'No recent mock — schedule one this week', priority: 'medium' });
+  // 3. Incorrect PYQs are the sharpest signal — recommended next
+  const incorrectPyqs = safePyqs.filter((p) => !isPyqCorrect(p));
+  incorrectPyqs.slice(0, 2).forEach((p) => {
+    recs.push({
+      type: 'pyq',
+      kind: 'next-action',
+      icon: 'pyq',
+      title: p.topic || p.title || `${p.subject} PYQ`,
+      action: `Retry this PYQ in ${p.subject}`,
+      detail: 'Incorrect previously — fix the gap now',
+      priority: 'high',
+      progress: 0,
+      accuracy: 0,
+    });
+  });
+
+  // 4. Mock recommendation when stale
+  const lastMock = safeMocks[safeMocks.length - 1];
+  const mockStale = !lastMock || (lastMock.date && Date.now() - new Date(lastMock.date).getTime() > 14 * 86400000);
+  if (mockStale) {
+    recs.push({
+      type: 'mock',
+      kind: 'next-action',
+      icon: 'mock',
+      title: 'Take a Mock Test',
+      action: lastMock ? `Last mock was ${Math.round((Date.now() - new Date(lastMock.date).getTime()) / 86400000)} days ago` : 'No mock taken yet',
+      detail: 'A fresh mock resets your practice loop',
+      priority: 'medium',
+      progress: 0,
+    });
+  }
+
+  // 5. Recently completed → review schedule keeps retention
+  const recentDone = safeTopics.filter((t) => t.done && (t.lastReviewed || t.lastRevisionDate)).slice(0, 2);
+  recentDone.forEach((t) => {
+    recs.push({
+      type: 'review',
+      kind: 'completed',
+      icon: 'done',
+      title: t.name,
+      action: `Reviewed in ${t.subject}`,
+      detail: `Last reviewed ${t.lastReviewed || t.lastRevisionDate || 'recently'}`,
+      priority: 'low',
+      progress: 100,
+    });
+  });
+
+  // 6. Next best action derived from study stats when list is thin
+  if (recs.length < 3) {
+    const weekHours = studyStats?.weekHours || 0;
+    const next = getNextTopicRecommendation(safeTopics, safePyqs, safeSubs, studyStats);
+    recs.push({
+      type: 'next',
+      kind: 'next-action',
+      icon: 'next',
+      title: next.topicName,
+      action: `Study in ${next.subject}`,
+      detail: `${next.reason}${weekHours ? ` · ${weekHours}h studied this week` : ''}`,
+      priority: 'medium',
+      progress: 0,
+    });
   }
 
   return recs.slice(0, 6);

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { topicService, mockSessionService, getApiErrorMessage } from '../services/api';
+import { useProgress } from '../context/ProgressContext';
 import { silentCatch } from '../utils/errorHandler';
 import { PageLoading } from '../components/common/GateLoadingScreen';
 import QuestionPractice from '../components/pyq/QuestionPractice';
@@ -29,6 +30,7 @@ const COMPLETION_TASKS = [
 ];
 
 export default function TopicDetailPage() {
+  const { refreshPyqs } = useProgress();
   const { topicId } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
@@ -148,7 +150,7 @@ export default function TopicDetailPage() {
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11a1 1 0 11-2 0V9a1 1 0 112 0v4zm-1-6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /></svg>
           Browse Topics
         </Link>
-        <button onClick={() => navigate('/GateNexa-ai')} className="inline-flex items-center gap-2 text-sm px-6 py-3 rounded-xl font-semibold transition-all hover:scale-[1.02]" style={{ background: 'rgba(168,85,247,0.1)', color: '#A78BFA', border: '1px solid rgba(168,85,247,0.3)', boxShadow: '0 0 15px rgba(168,85,247,0.1)' }}>
+        <button onClick={() => navigate('/mentor')} className="inline-flex items-center gap-2 text-sm px-6 py-3 rounded-xl font-semibold transition-all hover:scale-[1.02]" style={{ background: 'rgba(168,85,247,0.1)', color: '#A78BFA', border: '1px solid rgba(168,85,247,0.3)', boxShadow: '0 0 15px rgba(168,85,247,0.1)' }}>
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
           Ask AI Mentor
         </button>
@@ -428,7 +430,7 @@ export default function TopicDetailPage() {
       )}
 
       <Modal open={!!practicePyq} onClose={() => setPracticePyq(null)} title="Practice PYQ" maxWidth="max-w-2xl">
-        {practicePyq && <QuestionPractice pyqId={practicePyq} onClose={() => { setPracticePyq(null); load(); }} />}
+        {practicePyq && <QuestionPractice pyqId={practicePyq} onClose={() => { setPracticePyq(null); load(); }} onAttempt={() => refreshPyqs?.()} />}
       </Modal>
     </div>
   );

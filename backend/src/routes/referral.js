@@ -13,10 +13,15 @@ function genCode() {
 }
 
 // ─── Helper: get or create referral record ─────────────────────
+const mongoose = require('mongoose');
+
 async function getOrCreate(user) {
-  if (isMongoConnected()) {
+  const userId = user._id?.toString() || user.id;
+  // Mock/local users use non-ObjectId ids (e.g. UUID) — always use the local store for them
+  const isMongoUser = mongoose.Types.ObjectId.isValid(userId);
+  if (isMongoConnected() && isMongoUser) {
     // Fetch fresh user from DB to ensure we have Mongoose document with methods
-    const mongoUser = await User.findById(user._id || user.id);
+    const mongoUser = await User.findById(userId);
     if (mongoUser) {
       if (!mongoUser.referralCode) {
         mongoUser.referralCode = genCode();
@@ -35,7 +40,7 @@ async function getOrCreate(user) {
       };
     }
   }
-  const local = localReferralStore.getOrCreateReferral(user._id?.toString() || user.id, user.email);
+  const local = localReferralStore.getOrCreateReferral(userId, user.email);
   return {
     referralCode: local.referralCode,
     referralCount: local.referralCount,
@@ -78,7 +83,8 @@ router.post('/claim', protect, async (req, res, next) => {
     const { code } = req.body;
     if (!code) return res.status(400).json({ success: false, message: 'Referral code is required.' });
 
-    if (isMongoConnected()) {
+    const claimUserId = req.user._id?.toString() || req.user.id;
+    if (isMongoConnected() && mongoose.Types.ObjectId.isValid(claimUserId)) {
       const referrer = await User.findOne({ referralCode: code.toUpperCase() });
       if (!referrer) return res.status(404).json({ success: false, message: 'Invalid referral code.' });
       if (referrer._id.toString() === req.user._id.toString()) {
@@ -99,7 +105,7 @@ router.post('/claim', protect, async (req, res, next) => {
       return res.json({ success: true, message: 'Referral code applied!' });
     }
 
-    const result = localReferralStore.claimReferral(code.toUpperCase(), req.user._id?.toString() || req.user.id, req.user.email);
+    const result = localReferralStore.claimReferral(code.toUpperCase(), claimUserId, req.user.email);
     if (result.error) return res.status(400).json({ success: false, message: result.error });
     res.json({ success: true, message: 'Referral code applied!' });
   } catch (e) { next(e); }
@@ -111,7 +117,7 @@ router.post('/complete', protect, async (req, res, next) => {
     const userId = req.user._id?.toString() || req.user.id;
 
     // MongoDB path
-    if (isMongoConnected()) {
+    if (isMongoConnected() && mongoose.Types.ObjectId.isValid(userId)) {
       const currentUser = await User.findById(req.user._id);
       if (currentUser && currentUser.referredBy) {
         // Found referrer via user's referredBy field
@@ -155,7 +161,7 @@ router.post('/complete', protect, async (req, res, next) => {
 router.get('/history', protect, async (req, res, next) => {
   try {
     const userId = req.user._id?.toString() || req.user.id;
-    if (isMongoConnected()) {
+    if (isMongoConnected() && mongoose.Types.ObjectId.isValid(userId)) {
       const user = await User.findById(req.user._id).populate('pendingReferrals', 'name email').populate('referredBy', 'name email');
       const history = [];
       if (user.pendingReferrals?.length > 0) {
@@ -173,12 +179,13 @@ router.get('/history', protect, async (req, res, next) => {
 // GET /api/referral/premium-status — Check premium
 router.get('/premium-status', protect, async (req, res, next) => {
   try {
-    if (isMongoConnected()) {
+    const userId = req.user._id?.toString() || req.user.id;
+    if (isMongoConnected() && mongoose.Types.ObjectId.isValid(userId)) {
       const isPremium = req.user.checkPremiumStatus ? req.user.checkPremiumStatus() : req.user.isPremium;
       if (req.user.isModified?.('isPremium')) await req.user.save();
       return res.json({ success: true, data: { isPremium, premiumUnlockedViaReferral: req.user.premiumUnlockedViaReferral || false } });
     }
-    const local = localReferralStore.getReferralStatus(req.user._id?.toString() || req.user.id);
+    const local = localReferralStore.getReferralStatus(userId);
     res.json({ success: true, data: { isPremium: local.isPremium, premiumUnlockedViaReferral: local.premiumUnlockedViaReferral || false } });
   } catch (e) { next(e); }
 });

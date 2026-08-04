@@ -6,7 +6,7 @@
  */
 import React from 'react';
 import { Page, View, Text, StyleSheet } from '@react-pdf/renderer';
-import { colors } from '../theme/colors';
+import { colors, tierColors } from '../theme/colors';
 import { fontFamily, fontSize, lineHeight } from '../theme/typography';
 import { layout, spacing, radius } from '../theme/spacing';
 import { Watermark } from '../components/common/Watermark';
@@ -38,22 +38,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     alignItems: 'center',
   },
-  summaryValueSafe: {
+  summaryValue: {
     fontFamily: fontFamily.sansBold,
     fontSize: fontSize.h2,
-    color: colors.safe,
-    marginBottom: 2,
-  },
-  summaryValueModerate: {
-    fontFamily: fontFamily.sansBold,
-    fontSize: fontSize.h2,
-    color: colors.moderate,
-    marginBottom: 2,
-  },
-  summaryValueDream: {
-    fontFamily: fontFamily.sansBold,
-    fontSize: fontSize.h2,
-    color: colors.dream,
     marginBottom: 2,
   },
   summaryLabel: {
@@ -155,9 +142,11 @@ export interface CounsellingStrategyPageProps {
 }
 
 function summaryValueStyle(id: string) {
-  if (id === 'safe') return styles.summaryValueSafe;
-  if (id === 'dream') return styles.summaryValueDream;
-  return styles.summaryValueModerate;
+  const tc = tierColors[id];
+  if (tc) return { color: tc.fg };
+  if (id === 'safe') return { color: colors.safe };
+  if (id === 'dream') return { color: colors.dream };
+  return { color: colors.moderate };
 }
 
 export const CounsellingStrategyPage: React.FC<CounsellingStrategyPageProps> = ({ data }) => {
@@ -174,7 +163,7 @@ export const CounsellingStrategyPage: React.FC<CounsellingStrategyPageProps> = (
       <View style={styles.summaryRow}>
         {counsellingSummary.map((s) => (
           <View style={styles.summaryCard} key={s.id}>
-            <Text style={summaryValueStyle(s.id)}>{s.value}</Text>
+            <Text style={[styles.summaryValue, summaryValueStyle(s.id)]}>{s.value}</Text>
             <Text style={styles.summaryLabel}>{s.label}</Text>
           </View>
         ))}

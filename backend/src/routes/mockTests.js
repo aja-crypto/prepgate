@@ -48,7 +48,7 @@ router.get('/', protect, async (req, res, next) => {
     if (!isMongoConnected()) {
       return res.json({ success: true, data: getLocalMockTests(filter) });
     }
-    const tests = await MockTest.find({ isActive: true, ...filter }).sort({ subject: 1, testNumber: 1 });
+    const tests = await MockTest.find({ isActive: true, ...filter }).sort({ subject: 1, testNumber: 1 }).lean();
     res.json({ success: true, data: tests });
   } catch (err) {
     next(err);
@@ -70,7 +70,7 @@ router.get('/analytics', protect, async (req, res, next) => {
     if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.json({ success: true, data: getLocalMockAnalytics(userId) });
     }
-    const attempts = await UserMockAttempt.find({ user: userId }).sort('createdAt');
+    const attempts = await UserMockAttempt.find({ user: userId }).sort('createdAt').lean();
     if (!attempts.length) {
       return res.json({ success: true, data: { count: 0, avgScore: 0, avgAccuracy: 0, bestScore: 0, improvement: 0, trend: [] } });
     }
@@ -98,7 +98,7 @@ router.get('/progress', protect, async (req, res, next) => {
       const attempts = getAllLocalMockAttempts(userId);
       return res.json({ success: true, data: attempts });
     }
-    const attempts = await UserMockAttempt.find({ user: userId }).populate('test');
+    const attempts = await UserMockAttempt.find({ user: userId }).populate('test').lean();
     res.json({ success: true, data: attempts });
   } catch (err) {
     next(err);
@@ -233,7 +233,8 @@ router.post('/:id/submit', protect, async (req, res, next) => {
 
     const lastAttempt = await UserMockAttempt.findOne({ user: userId, test: req.params.id })
       .sort('-attemptNumber')
-      .limit(1);
+      .limit(1)
+      .lean();
     const nextAttemptNumber = lastAttempt ? lastAttempt.attemptNumber + 1 : 1;
 
     const attempt = await UserMockAttempt.create({
@@ -272,9 +273,10 @@ router.get('/:id/result', protect, async (req, res, next) => {
     }
     const attempt = await UserMockAttempt.findOne({ user: userId, test: req.params.id })
       .sort('-attemptNumber')
-      .populate('test');
+      .populate('test')
+      .lean();
     if (!attempt) return res.status(404).json({ success: false, message: 'No attempt found' });
-    const test = await MockTest.findById(req.params.id).populate('questionIds');
+    const test = await MockTest.findById(req.params.id).populate('questionIds').lean();
     const enriched = test.questionIds.map(q => {
       const ans = (attempt.answers || []).find(a => String(a.questionId) === String(q._id));
       return { ...q.toObject(), selectedAnswer: ans?.selectedAnswer ?? null, isCorrect: ans?.isCorrect ?? false };

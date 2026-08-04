@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { mockTestService } from '../services/api';
 import { useSEO } from '../hooks/useSEO';
@@ -72,9 +72,9 @@ export default function MockTestsPage() {
     setLoadError(false);
     setApiSucceeded(false);
     Promise.all([
-      mockTestService.getAll().then(r => { setTests(r.data.data || []); setApiSucceeded(true); return r.data.data?.length; }).catch(e => { console.warn('MockTests getAll failed', e?.message); return 0; }),
-      mockTestService.getSubjectCounts().then(r => setSubjectCounts(r.data.data || [])).catch(e => { console.warn('MockTests getSubjectCounts failed', e?.message); }),
-      mockTestService.getAnalytics().then(r => setAnalytics(r.data.data || null)).catch(e => { console.warn('MockTests getAnalytics failed', e?.message); }),
+      mockTestService.getAll().then(r => { setTests(r.data.data || []); setApiSucceeded(true); return r.data.data?.length; }).catch(e => { console.error('MockTests getAll failed', e?.message); return 0; }),
+      mockTestService.getSubjectCounts().then(r => setSubjectCounts(r.data.data || [])).catch(e => { console.error('MockTests getSubjectCounts failed', e?.message); }),
+      mockTestService.getAnalytics().then(r => setAnalytics(r.data.data || null)).catch(e => { console.error('MockTests getAnalytics failed', e?.message); }),
     ]).then(([testCount]) => {
       if (!testCount && !apiSucceeded) setLoadError(true);
     }).catch(() => setLoadError(true)).finally(() => setLoading(false));

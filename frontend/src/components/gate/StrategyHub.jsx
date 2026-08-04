@@ -1,21 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import GlassCard from '../ui/GlassCard';
 
 const STRATEGIES = [
   {
-    id: '30-marks',
-    icon: '🎯',
-    title: 'Score 30 Marks',
-    difficulty: 'Easy',
-    target: '30–40 Marks',
-    studyTime: '2–3 Hours Daily',
-    duration: '30 Days',
+    id: '30-marks', icon: '🎯', title: 'Score 30 Marks', difficulty: 'Easy',
+    target: '30–40 Marks', studyTime: '2–3h/day', duration: '30 Days',
+    subjectsCount: 4, confidence: 95, recommended: false,
     focus: ['Engineering Mathematics', 'Aptitude', 'Digital Logic', 'C Programming'],
-    color: 'from-green-500/20 to-emerald-500/10',
-    border: 'border-green-500/20',
-    textColor: 'text-green-400',
+    color: 'from-green-500/20 to-emerald-500/10', border: 'border-green-500/20', textColor: 'text-green-400',
     plan: {
       overview: 'This foundational strategy focuses on high-weightage, low-difficulty subjects to get you to a qualifying score quickly.',
       weekly: [
@@ -29,17 +21,11 @@ const STRATEGIES = [
     },
   },
   {
-    id: '50-marks',
-    icon: '🚀',
-    title: 'Score 50 Marks',
-    difficulty: 'Medium',
-    target: '50–60 Marks',
-    studyTime: '3–4 Hours Daily',
-    duration: '60 Days',
+    id: '50-marks', icon: '🚀', title: 'Score 50 Marks', difficulty: 'Medium',
+    target: '50–60 Marks', studyTime: '3–4h/day', duration: '60 Days',
+    subjectsCount: 5, confidence: 88, recommended: true,
     focus: ['Engineering Mathematics', 'Aptitude', 'Digital Logic', 'C Programming', 'Computer Networks'],
-    color: 'from-blue-500/20 to-cyan-500/10',
-    border: 'border-blue-500/20',
-    textColor: 'text-blue-400',
+    color: 'from-blue-500/20 to-cyan-500/10', border: 'border-blue-500/20', textColor: 'text-blue-400',
     plan: {
       overview: 'An NIT-focused plan. Builds on the foundation with Computer Networks and structured PYQ practice.',
       weekly: [
@@ -53,17 +39,11 @@ const STRATEGIES = [
     },
   },
   {
-    id: 'air-5000',
-    icon: '🏆',
-    title: 'AIR Below 5000',
-    difficulty: 'Hard',
-    target: '65–75 Marks',
-    studyTime: '4–5 Hours Daily',
-    duration: '90 Days',
+    id: 'air-5000', icon: '🏆', title: 'AIR Below 5000', difficulty: 'Hard',
+    target: '65–75 Marks', studyTime: '4–5h/day', duration: '90 Days',
+    subjectsCount: 7, confidence: 82, recommended: false,
     focus: ['All core CS subjects', 'Engineering Mathematics', 'Aptitude', 'OS', 'DBMS', 'CN', 'Algorithms'],
-    color: 'from-purple-500/20 to-violet-500/10',
-    border: 'border-purple-500/20',
-    textColor: 'text-purple-400',
+    color: 'from-purple-500/20 to-violet-500/10', border: 'border-purple-500/20', textColor: 'text-purple-400',
     plan: {
       overview: 'A structured roadmap covering all core CS subjects with regular mock tests and error analysis for a top 5000 rank.',
       weekly: [
@@ -77,17 +57,11 @@ const STRATEGIES = [
     },
   },
   {
-    id: 'air-1000',
-    icon: '💎',
-    title: 'AIR Below 1000',
-    difficulty: 'Hard',
-    target: '80–85 Marks',
-    studyTime: '5–6 Hours Daily',
-    duration: '120 Days',
+    id: 'air-1000', icon: '💎', title: 'AIR Below 1000', difficulty: 'Hard',
+    target: '80–85 Marks', studyTime: '5–6h/day', duration: '120 Days',
+    subjectsCount: 8, confidence: 76, recommended: false,
     focus: ['All CS subjects', 'TOC', 'COA', 'Compiler Design', 'Advanced Math'],
-    color: 'from-rose-500/20 to-pink-500/10',
-    border: 'border-rose-500/20',
-    textColor: 'text-rose-400',
+    color: 'from-rose-500/20 to-pink-500/10', border: 'border-rose-500/20', textColor: 'text-rose-400',
     plan: {
       overview: 'An advanced roadmap for competitive ranks. Covers all GATE subjects with deep PYQ analysis and weekly mock assessments.',
       weekly: [
@@ -101,17 +75,11 @@ const STRATEGIES = [
     },
   },
   {
-    id: 'air-100',
-    icon: '👑',
-    title: 'AIR Below 100',
-    difficulty: 'Expert',
-    target: '90+ Marks',
-    studyTime: '6–8 Hours Daily',
-    duration: '180 Days',
+    id: 'air-100', icon: '👑', title: 'AIR Below 100', difficulty: 'Expert',
+    target: '90+ Marks', studyTime: '6–8h/day', duration: '180 Days',
+    subjectsCount: 11, confidence: 68, recommended: false,
     focus: ['All subjects with mastery', 'Advanced problem-solving', 'Speed & accuracy'],
-    color: 'from-amber-500/20 to-yellow-500/10',
-    border: 'border-amber-500/20',
-    textColor: 'text-amber-400',
+    color: 'from-amber-500/20 to-yellow-500/10', border: 'border-amber-500/20', textColor: 'text-amber-400',
     plan: {
       overview: 'The top-tier strategy for single-digit ranks. Requires complete syllabus coverage with rigorous mock analysis and continuous improvement.',
       weekly: [
@@ -121,21 +89,15 @@ const STRATEGIES = [
         { week: 4, subjects: ['All subjects'], tasks: ['3 subject tests', '1 full mock', 'Mistake analysis', 'Speed drills'], hours: '8h' },
       ],
       pyqs: ['All GATE PYQs (2000-2025) with time tracking', 'International exams for advanced practice'],
-      mockSchedule: '3 subject tests + 2 full-length mocks weekly with detailed performance analysis',
+      mockSchedule: '3 subject tests + 2 full-length mocks weekly',
     },
   },
   {
-    id: 'crash-course',
-    icon: '📅',
-    title: '30-Day Crash Course',
-    difficulty: 'Intense',
-    target: '45–55 Marks',
-    studyTime: '6–8 Hours Daily',
-    duration: '30 Days',
+    id: 'crash-course', icon: '📅', title: '30-Day Crash Course', difficulty: 'Intense',
+    target: '45–55 Marks', studyTime: '6–8h/day', duration: '30 Days',
+    subjectsCount: 4, confidence: 72, recommended: false,
     focus: ['High-weightage topics only', 'Quick revision cycles', 'Mock test focus'],
-    color: 'from-orange-500/20 to-red-500/10',
-    border: 'border-orange-500/20',
-    textColor: 'text-orange-400',
+    color: 'from-orange-500/20 to-red-500/10', border: 'border-orange-500/20', textColor: 'text-orange-400',
     plan: {
       overview: 'A last-month intensive plan focusing on high-weightage topics, rapid revision cycles, and mock test performance optimization.',
       weekly: [
@@ -150,183 +112,163 @@ const STRATEGIES = [
   },
 ];
 
-function StrategyDrawer({ strategy, onClose }) {
-  if (!strategy) return null;
-
+function ExpandedPanel({ strategy, onClose }) {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4"
-      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
-      onClick={onClose}
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ height: 'auto', opacity: 1 }}
+      exit={{ height: 0, opacity: 0 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className="overflow-hidden"
     >
-      <motion.div
-        initial={{ y: 40, opacity: 0, scale: 0.96 }}
-        animate={{ y: 0, opacity: 1, scale: 1 }}
-        exit={{ y: 40, opacity: 0, scale: 0.96 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="w-full max-w-3xl relative rounded-2xl border border-white/[0.08] overflow-hidden my-8"
-        style={{ background: '#0C0F23' }}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="p-6 sm:p-8">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <span className="text-4xl">{strategy.icon}</span>
-              <div>
-                <h2 className="text-xl font-bold text-text">{strategy.title}</h2>
-                <div className="flex items-center gap-3 mt-1">
-                  <span className={`text-[10px] font-semibold ${strategy.textColor} bg-white/[0.04] px-2 py-0.5 rounded-full border ${strategy.border}`}>
-                    {strategy.difficulty}
-                  </span>
-                  <span className="text-[10px] text-text3">Target: {strategy.target}</span>
-                  <span className="text-[10px] text-text3">{strategy.duration}</span>
-                </div>
+      <div className="rounded-2xl border border-white/[0.08] p-6 space-y-5 my-2" style={{ background: '#0C0F23' }}>
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <span className="text-4xl">{strategy.icon}</span>
+            <div>
+              <h3 className="text-xl font-bold text-text">{strategy.title}</h3>
+              <div className="flex items-center gap-3 mt-1">
+                <span className={`text-[10px] font-semibold ${strategy.textColor} bg-white/[0.04] px-2 py-0.5 rounded-full border ${strategy.border}`}>
+                  {strategy.difficulty}
+                </span>
+                <span className="text-[10px] text-text3">Target: {strategy.target}</span>
+                <span className="text-[10px] text-text3">{strategy.duration}</span>
               </div>
             </div>
-            <button onClick={onClose} className="text-text3 hover:text-text p-1 text-xl leading-none">&times;</button>
           </div>
+          <button onClick={onClose} className="text-text3 hover:text-text text-xl leading-none">&times;</button>
+        </div>
 
-          {/* Overview */}
-          <div className="mb-6 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-            <p className="text-sm text-text2 leading-relaxed">{strategy.plan.overview}</p>
-          </div>
+        <div className="mb-4 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <p className="text-sm text-text2 leading-relaxed">{strategy.plan.overview}</p>
+        </div>
 
-          {/* Weekly Plan */}
-          <h3 className="text-sm font-bold text-text mb-4">Weekly Plan</h3>
-          <div className="space-y-3 mb-6">
-            {strategy.plan.weekly.map((week) => (
-              <div key={week.week} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+        <h4 className="text-sm font-bold text-text mb-3">Weekly Plan</h4>
+        <div className="space-y-3 mb-4">
+          {strategy.plan.weekly.map(function(w) {
+            return (
+              <div key={w.week} className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-primary">Week {week.week} ({week.hours}/day)</span>
+                  <span className="text-xs font-bold text-primary">Week {w.week} ({w.hours}/day)</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5 mb-2">
-                  {week.subjects.map((sub) => (
-                    <span key={sub} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                      {sub}
-                    </span>
-                  ))}
+                  {w.subjects.map(function(s) {
+                    return <span key={s} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">{s}</span>;
+                  })}
                 </div>
                 <div className="space-y-0.5">
-                  {week.tasks.map((task) => (
-                    <div key={task} className="flex items-center gap-2 text-[11px] text-text3">
-                      <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
-                      {task}
-                    </div>
-                  ))}
+                  {w.tasks.map(function(t) {
+                    return (
+                      <div key={t} className="flex items-center gap-2 text-[11px] text-text3">
+                        <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
+                        {t}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
+        </div>
 
-          {/* PYQs & Mock Schedule */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-              <h4 className="text-xs font-bold text-text mb-2">Recommended PYQs</h4>
-              <div className="space-y-1">
-                {strategy.plan.pyqs.map((pyq) => (
-                  <div key={pyq} className="flex items-center gap-2 text-[10px] text-text3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+            <h4 className="text-xs font-bold text-text mb-2">Recommended PYQs</h4>
+            <div className="space-y-1">
+              {strategy.plan.pyqs.map(function(p) {
+                return (
+                  <div key={p} className="flex items-center gap-2 text-[10px] text-text3">
                     <span className="w-1 h-1 rounded-full bg-purple-400/40 shrink-0" />
-                    {pyq}
+                    {p}
                   </div>
-                ))}
-              </div>
-            </div>
-            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-              <h4 className="text-xs font-bold text-text mb-2">Mock Test Schedule</h4>
-              <p className="text-[10px] text-text3 leading-relaxed">{strategy.plan.mockSchedule}</p>
+                );
+              })}
             </div>
           </div>
-
-          {/* Why this roadmap */}
-          <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-transparent border border-primary/10 mb-6">
-            <p className="text-xs text-text2 leading-relaxed italic">
-              "{strategy.plan.overview}"
-            </p>
-          </div>
-
-          <div className="flex gap-3">
-            <button onClick={onClose}
-              className="flex-1 px-4 py-2.5 rounded-xl text-xs font-medium text-text3 border border-white/[0.08] hover:text-text transition-all">
-              Close
-            </button>
-            <button onClick={() => { onClose(); }}
-              className="flex-1 px-4 py-2.5 rounded-xl text-xs font-semibold text-white"
-              style={{ background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)' }}>
-              Start This Strategy →
-            </button>
+          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+            <h4 className="text-xs font-bold text-text mb-2">Mock Test Schedule</h4>
+            <p className="text-[10px] text-text3 leading-relaxed">{strategy.plan.mockSchedule}</p>
           </div>
         </div>
-      </motion.div>
+
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl text-xs font-medium text-text3 border border-white/[0.08] hover:text-text transition-all">
+            Close
+          </button>
+          <button className="flex-1 px-4 py-2.5 rounded-xl text-xs font-semibold text-white" style={{ background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)' }}>
+            Start This Strategy →
+          </button>
+        </div>
+      </div>
     </motion.div>
   );
 }
 
 export default function StrategyHub({ weakSubject, onStartLearning }) {
-  const [selected, setSelected] = useState(null);
-  const navigate = useNavigate();
+  var [expanded, setExpanded] = useState(null);
 
   return (
-    <>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-text flex items-center gap-2">
-            <span>🎯</span> AI Strategy Hub
-          </h3>
-          <span className="text-[10px] text-text3">Choose your target</span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-          {STRATEGIES.map((s) => (
-            <motion.button
-              key={s.id}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setSelected(s)}
-              className={`relative p-4 rounded-xl border text-left transition-all bg-gradient-to-br ${s.color} ${s.border} hover:border-white/[0.15] group`}
-              style={{ background: 'rgba(255,255,255,0.02)' }}
-            >
-              <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${s.color} opacity-30 group-hover:opacity-40 transition-opacity`} />
-              <div className="relative z-10">
-                <span className="text-2xl block mb-2">{s.icon}</span>
-                <h4 className={`text-sm font-bold ${s.textColor} mb-1`}>{s.title}</h4>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full border ${s.border} ${s.textColor}`}>
-                    {s.difficulty}
-                  </span>
-                  <span className="text-[9px] text-text3">{s.target}</span>
-                </div>
-                <div className="flex items-center gap-2 text-[10px] text-text3">
-                  <span>{s.studyTime}</span>
-                  <span>·</span>
-                  <span>{s.duration}</span>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {s.focus.slice(0, 3).map((f) => (
-                    <span key={f} className="text-[8px] px-1.5 py-0.5 rounded-full bg-white/[0.04] text-text3">{f}</span>
-                  ))}
-                  {s.focus.length > 3 && (
-                    <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-white/[0.04] text-text3">+{s.focus.length - 3}</span>
-                  )}
-                </div>
-              </div>
-            </motion.button>
-          ))}
-        </div>
-        <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-          <p className="text-[10px] text-text3 leading-relaxed">
-            These strategies are generated based on your target, current progress, and available study time.
-            Adjust your inputs in the dashboard for better personalization.
-          </p>
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold text-text flex items-center gap-2">
+          <span>🎯</span> AI Strategy Hub
+        </h3>
+        <span className="text-[10px] text-text3">Choose your target</span>
       </div>
 
-      <AnimatePresence>
-        {selected && (
-          <StrategyDrawer strategy={selected} onClose={() => setSelected(null)} />
-        )}
-      </AnimatePresence>
-    </>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+        {STRATEGIES.map(function(s) {
+          var isOpen = expanded?.id === s.id;
+          return (
+            <div key={s.id}>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setExpanded(isOpen ? null : s)}
+                className={`relative p-4 rounded-xl border text-left w-full transition-all bg-gradient-to-br ${s.color} ${s.border} hover:border-white/[0.15] group`}
+                style={{ background: 'rgba(255,255,255,0.02)', borderColor: isOpen ? '#8B5CF6' : undefined }}
+              >
+                <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${s.color} opacity-30 group-hover:opacity-40 transition-opacity`} />
+                <div className="relative z-10">
+                  <span className="text-2xl block mb-2">{s.icon}</span>
+                  <h4 className={`text-sm font-bold ${s.textColor} mb-1`}>{s.title}</h4>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full border ${s.border} ${s.textColor}`}>{s.difficulty}</span>
+                    <span className="text-[9px] text-text3">{s.target}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] text-text3">
+                    <span>{s.studyTime}</span>
+                    <span>·</span>
+                    <span>{s.duration}</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {s.focus.slice(0, 3).map(function(f) {
+                      return <span key={f} className="text-[8px] px-1.5 py-0.5 rounded-full bg-white/[0.04] text-text3">{f}</span>;
+                    })}
+                    {s.focus.length > 3 && <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-white/[0.04] text-text3">+{s.focus.length - 3}</span>}
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="flex-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: s.confidence + '%' }} />
+                    </div>
+                    <span className="text-[8px] text-text3">{s.confidence}%</span>
+                  </div>
+                </div>
+              </motion.button>
+              <AnimatePresence>
+                {isOpen && <ExpandedPanel strategy={s} onClose={function() { setExpanded(null); }} />}
+              </AnimatePresence>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+        <p className="text-[10px] text-text3 leading-relaxed">
+          These strategies are generated based on your target, current progress, and available study time.
+          Adjust your inputs in the dashboard for better personalization.
+        </p>
+      </div>
+    </div>
   );
 }

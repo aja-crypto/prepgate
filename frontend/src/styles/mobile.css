@@ -114,7 +114,7 @@
     header [class*="rounded-xl"][class*="border"] { padding: 0.35rem 0.6rem !important; border-radius: 10px !important; }
     header [class*="w-5"][class*="h-5"] { width: 1rem !important; height: 1rem !important; }
 
-    header button[aria-label="Open search"] { font-size: 0.75rem !important; padding: 0.35rem 0.6rem !important; min-height: 36px !important; }
+    header button[aria-label="Open search"] { font-size: 0.75rem !important; padding: 0.35rem 0.6rem !important; min-height: 44px !important; }
     header button[aria-label="Open search"] span { font-size: 0.7rem !important; }
 
     [class*="NotificationBell"] button, [class*="notification"] button { width: 36px !important; height: 36px !important; }
@@ -247,7 +247,7 @@
       padding: 0.6rem 0.75rem !important;
     }
     aside > div:last-child [class*="text-xs"] { font-size: 0.75rem !important; font-weight: 600 !important; }
-    aside > div:last-child button { min-width: 36px !important; min-height: 36px !important; border-radius: 10px !important; }
+    aside > div:last-child button { min-width: 44px !important; min-height: 44px !important; border-radius: 10px !important; }
 
     aside { transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), opacity 220ms ease-out !important; opacity: 1 !important; }
     aside[class*="-translate-x-full"] { opacity: 0.3 !important; }

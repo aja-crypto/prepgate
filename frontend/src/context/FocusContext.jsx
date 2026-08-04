@@ -123,7 +123,6 @@ function xpForLevel(level) {
 const FocusContext = createContext(null);
 
 export function FocusProvider({ children }) {
-  useEffect(() => { const t = Date.now(); console.log('[Trace] FocusProvider MOUNTED at', t); return () => console.log('[Trace] FocusProvider UNMOUNTED after', Date.now() - t, 'ms'); }, []);
   const { updateStudyStats, updateProductivity } = useProgress();
   const { user } = useAuth();
 
@@ -712,9 +711,9 @@ export function FocusProvider({ children }) {
     : 0;
 
   const value = useMemo(() => ({
-    isActive, isPaused, mode, sessionDuration, endTime, timeRemaining,
+    isActive, isPaused, mode, sessionDuration, endTime,
     sessionsCompleted, focusHours, dailyStreak, isMinimized, currentSubject, setCurrentSubject,
-    progress, isExpanded, setIsExpanded, DURATIONS, BREAK_DURATION,
+    isExpanded, setIsExpanded, DURATIONS, BREAK_DURATION,
     startSession, pauseSession, resumeSession, stopSession, skipBreak,
     toggleMinimized, selectDuration, getTodayFocus, history,
     requestNotificationPermission, formatTime,
@@ -723,17 +722,29 @@ export function FocusProvider({ children }) {
     getDailyReview, MOTIVATION_QUOTES,
     showCompletion, completedSession, dismissCompletion, saveSessionNotes,
     getYesterdaySummary, getDailyHistory, getWeeklyMonthlyTotals, sessionNotes,
-  }), [isActive, isPaused, mode, sessionDuration, endTime, timeRemaining, sessionsCompleted, focusHours, dailyStreak, isMinimized, currentSubject, progress, isExpanded, history, xpData, earnedAchievements, newAchievement, distractions, getDailyReview, showCompletion, completedSession, sessionNotes]);
+  }), [isActive, isPaused, mode, sessionDuration, endTime, sessionsCompleted, focusHours, dailyStreak, isMinimized, currentSubject, isExpanded, history, xpData, earnedAchievements, newAchievement, distractions, getDailyReview, showCompletion, completedSession, sessionNotes]);
+
+  const timerValue = useMemo(() => ({ timeRemaining, progress, formatTime }),
+    [timeRemaining, progress, formatTime]);
 
   return (
-    <FocusContext.Provider value={value}>
-      {children}
-    </FocusContext.Provider>
+    <FocusTimerContext.Provider value={timerValue}>
+      <FocusContext.Provider value={value}>
+        {children}
+      </FocusContext.Provider>
+    </FocusTimerContext.Provider>
   );
 }
+
+const FocusTimerContext = createContext(null);
 
 export const useFocus = () => {
   const ctx = useContext(FocusContext);
   if (!ctx) throw new Error('useFocus must be used within FocusProvider');
   return ctx;
+};
+
+export const useFocusTimer = () => {
+  const ctx = useContext(FocusTimerContext);
+  return ctx || { timeRemaining: 0, progress: 0, formatTime: (s) => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}` };
 };

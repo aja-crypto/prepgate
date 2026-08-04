@@ -15,6 +15,7 @@ const PsuRecruitment = require('../models/PsuRecruitment');
 const PredictionCache = require('../models/PredictionCache');
 const PredictionAccuracy = require('../models/PredictionAccuracy');
 const CollegeProgram = require('../models/CollegeProgram');
+const { predict: gateScorePredict } = require('./gateScoreCalculator');
 
 const {
   normalizeInstituteName,
@@ -201,118 +202,64 @@ async function predict(input) {
   const dbCategory = categoryMap[category] || category;
 
   timings.start = Date.now() - startTime;
-  const latestYear = await GateYear.findOne({ paper, isActive: true }).sort({ year: -1 });
+  const latestYear = await GateYear.findOne({ paper, isActive: true }).sort({ year: -1 }).lean();
   if (!latestYear) {
     return { error: 'No GATE data available. Admin must upload datasets first.', confidence: 'Low', confidenceScore: 0 };
   }
   const baseYear = targetYear || latestYear.year;
   timings.fetchYear = Date.now() - startTime;
 
-  // Fetch all years of data for multi-year analysis
-  const allYears = await GateYear.find({ paper, isActive: true }).sort({ year: -1 }).limit(5);
-  const yearList = allYears.map(y => y.year).filter(y => y <= baseYear);
-
-  // Pipeline Step 1: Expected Marks → Normalized Score
-  const marksScoreData = await GateMarksScore.find({ paper, year: { $in: yearList } }).sort({ year: -1, marks: 1 });
-  let normalizedScore = null;
-  if (marksScoreData.length >= 2) {
-    normalizedScore = Math.round(interpolateFromData(marksScoreData, marks, 'marks', 'score') * 10) / 10;
-  }
-  // P1 fix (audit): GateScoreData is keyed by `score`, not `marks`, so the previous
-  // `interpolateFromData(scoreData, marks, 'score', 'score')` was incorrect.
-  // If we have scoreData but no marks→score mapping, use the scoreData's average score
-  // as a sanity baseline (proportional to marks).
-  if (!normalizedScore) {
-    const scoreData = await GateScoreData.find({ paper, year: { $in: yearList } }).sort({ year: -1, score: 1 });
-    if (scoreData.length >= 2) {
-      const avgScore = scoreData.reduce((sum, d) => sum + d.score, 0) / scoreData.length;
-      // Approximate: if marks are proportional to score, use marks/max-marks as ratio
-      // When max marks = 100 and score range ~ 0-1000, use ratio * avgScore as fallback
-      normalizedScore = Math.round((marks / 100) * avgScore * 10) / 10;
-    }
-  }
-  if (!normalizedScore) {
-    // Non-linear fallback: realistic GATE score curve
-    // 0 marks → 0 score, 50 marks → ~330, 75 → ~610, 90 → ~830, 100 → 1000
-    normalizedScore = Math.round(Math.pow(marks / 100, 1.6) * 1000 * 10) / 10;
+  // ── Pipeline Step 1: Score, AIR, Formula from gateScoreCalculator ──
+  const gateResult = gateScorePredict(marks, paper, category, baseYear);
+  if (gateResult.error) {
+    return { error: gateResult.error, confidence: 'Low', confidenceScore: 0 };
   }
 
-  // Step 2: Marks → Estimated AIR (direct marks→rank with calibration)
-  const [rankData, gateStats, scoreRankData] = await Promise.all([
-    GateRankData.find({ paper, year: { $in: yearList } }).sort({ year: -1, marks: 1 }),
-    GateStatistics.find({ paper, year: { $in: yearList } }),
-    GateScoreRank.find({ paper, year: { $in: yearList } }).sort({ year: -1, score: 1 }),
-  ]);
+  const normalizedScore = gateResult.gateScore.value;       // 0-1000 GATE score
+  const gateAirRange = gateResult.air?.range || null;       // { low, high }
+  const estimatedRank = gateAirRange ? Math.round((gateAirRange.low + gateAirRange.high) / 2) : null;
+  const qualifyingMq = gateResult.formula.Mq;               // qualifying marks from calculator
+  const isQualified = marks >= qualifyingMq;
 
-  let estimatedRank = null;
+  // AIR range from calculator (overwrites later trend-based range if available)
+  let airRange = gateAirRange ? {
+    low: gateAirRange.low,
+    high: gateAirRange.high,
+    best: gateAirRange.low,
+    average: estimatedRank,
+    worst: gateAirRange.high,
+    uncertaintyPct: gateResult.confidence?.factors?.estimatedMt ? 30 : 20,
+    confidenceLevel: gateResult.confidence?.label || 'Medium',
+  } : null;
 
-  // Compute calibration factors from GateStatistics qualifying cutoffs
-  const calibrationFactors = {};
-  for (const st of gateStats) {
-    if (st.qualifyingMarks && st.qualifyingPercentile && st.totalCandidates) {
-      const yrRanks = rankData.filter(d => d.year === st.year);
-      if (yrRanks.length >= 2) {
-        const rawAtCutoff = interpolateFromData(yrRanks, st.qualifyingMarks, 'marks', 'rank');
-        if (rawAtCutoff > 0) {
-          const expectedRank = Math.round(st.totalCandidates * (1 - st.qualifyingPercentile / 100));
-          calibrationFactors[st.year] = expectedRank / rawAtCutoff;
-        }
-      }
-    }
-  }
-
-  // Primary: use GateRankData (direct marks→rank) with calibration
-  if (rankData.length >= 2) {
-    const baseYearRankData = rankData.filter(d => d.year === baseYear);
-    if (baseYearRankData.length >= 2) {
-      estimatedRank = Math.round(interpolateFromData(baseYearRankData, marks, 'marks', 'rank'));
-    } else {
-      estimatedRank = Math.round(interpolateFromData(rankData, marks, 'marks', 'rank'));
-    }
-    const factor = calibrationFactors[baseYear] || calibrationFactors[Math.max(...Object.keys(calibrationFactors).map(Number), 0)] || 1;
-    if (estimatedRank && factor > 0) {
-      const totalCand = gateStats.find(s => s.year === baseYear)?.totalCandidates || 150000;
-      estimatedRank = Math.min(totalCand, Math.max(1, Math.round(estimatedRank * factor)));
-      console.log('[Engine] marks=%d → rank=%d (calibrated×%s)', marks, estimatedRank, factor.toFixed(2));
-    }
-  }
-
-  // Fallback: GateScoreRank (score→rank) if GateRankData had insufficient data
-  if (!estimatedRank && scoreRankData.length >= 2) {
-    estimatedRank = Math.round(interpolateFromData(scoreRankData, normalizedScore, 'score', 'rank'));
-    console.log('[Engine] marks=%d → rank=%d (scoreRank fallback)', marks, estimatedRank);
-  }
-
-  // Step 3: Estimated AIR → Estimated Percentile
+  // Estimated percentile from AIR
   let estimatedPercentile = null;
-  const rankPercentileData = await GateRankPercentile.find({ paper, year: { $in: yearList } }).sort({ year: -1, rank: 1 });
-  if (rankPercentileData.length >= 2 && estimatedRank) {
-    estimatedPercentile = Math.round(interpolateFromData(rankPercentileData, estimatedRank, 'rank', 'percentile') * 10) / 10;
-  }
-  if (!estimatedPercentile && estimatedRank) {
-    const totalCandidates = gateStats.find(s => s.year === baseYear)?.totalCandidates || 150000;
+  if (estimatedRank) {
+    const totalCandidates = 150000;
     estimatedPercentile = Math.round((1 - estimatedRank / totalCandidates) * 10000) / 100;
   }
 
-  // Step 4: Category Adjustment (using qualifying cutoffs)
-  const cutoffs = await GateCutoff.find({ paper, year: { $in: yearList } });
-  const latestCutoffs = cutoffs.filter(c => c.year === baseYear);
-  const categoryCutoff = latestCutoffs.find(c => c.category === dbCategory);
-  const generalCutoff = latestCutoffs.find(c => c.category === 'General');
-  const qualifyingCutoff = categoryCutoff?.qualifyingMarks || generalCutoff?.qualifyingMarks || 0;
-  const isQualified = marks >= qualifyingCutoff;
-
+  const qualifyingCutoff = qualifyingMq;
   timings.preQuery = Date.now() - startTime;
+
+  // ── Keep MongoDB queries for trends/confidence (non-scoring) but skip score/rank calculation ──
+  // Fetch all years of data for trends analysis
+  const allYears = await GateYear.find({ paper, isActive: true }).sort({ year: -1 }).limit(5).lean();
+  const yearList = allYears.map(y => y.year).filter(y => y <= baseYear);
+
+  // Lightweight queries for confidence/completeness metrics (don't block matching)
+  const marksScoreData = []; // no longer needed for scoring; gateScoreCalculator handles it
+  const scoreRankData = [];  // no longer needed; calculator provides AIR
 
   // Step 5: Fetch CCMT / COAP / Seat / College Metadata
   const [ccmtCutoffs, coapCutoffs, seatData, branchStats, psuData, psuRecruitments, statistics, collegePrograms] = await Promise.all([
-    CcmtCutoff.find({ year: baseYear }).sort({ closingScore: -1 }),
-    CoapCutoff.find({ year: baseYear }).sort({ closingScore: -1 }),
-    SeatMatrix.find({ year: baseYear }),
-    BranchStatistics.find({ year: baseYear }),
-    PsuRequirement.find({ year: baseYear, paper, category: dbCategory }),
-    PsuRecruitment.find({ year: baseYear, status: { $ne: 'Closed' } }),
-    GateStatistics.findOne({ year: baseYear, paper }),
+    CcmtCutoff.find({ year: baseYear }).sort({ closingScore: -1 }).lean(),
+    CoapCutoff.find({ year: baseYear }).sort({ closingScore: -1 }).lean(),
+    SeatMatrix.find({ year: baseYear }).lean(),
+    BranchStatistics.find({ year: baseYear }).lean(),
+    PsuRequirement.find({ year: baseYear, paper, category: dbCategory }).lean(),
+    PsuRecruitment.find({ year: baseYear, status: { $ne: 'Closed' } }).lean(),
+    GateStatistics.findOne({ year: baseYear, paper }).lean(),
     CollegeProgram.find({ isActive: true }).lean(),
   ]);
 
@@ -331,6 +278,19 @@ async function predict(input) {
   if (filteredCcmt.length === 0 && ccmtCutoffs.length > 0) {
     const availableCategories = [...new Set(ccmtCutoffs.map(c => c.category))];
     console.warn(`[Predictor] Category '${category}' has no CCMT data. Available: ${availableCategories.join(', ')}`);
+    return {
+      error: `Category "${category}" not available in the dataset.`,
+      availableCategories,
+      confidence: 'Low',
+      confidenceScore: 0,
+      isQualified: true,
+      qualifyingCutoff: 0,
+      predictedScore: normalizedScore,
+      predictedRank: estimatedRank,
+      predictedPercentile: estimatedPercentile,
+      datasetsUsed: [],
+      baseYear,
+    };
   }
 
   if (collegeType && collegeType !== 'Any') {
@@ -721,7 +681,7 @@ async function predict(input) {
   }
 
   // Step 9: Last 5 year trend data
-  const last5YearData = await GateStatistics.find({ paper }).sort({ year: 1 }).limit(5);
+  const last5YearData = await GateStatistics.find({ paper }).sort({ year: 1 }).limit(5).lean();
   const last5YearTrend = {
     scores: last5YearData.map(d => d.qualifyingMarks).filter(Boolean),
     ranks: last5YearData.map(d => d.qualifyingPercentile).filter(Boolean),
@@ -758,19 +718,11 @@ async function predict(input) {
     })(),
   } : null;
 
-  // Step 10c: AIR Range (best/avg/worst) — Priority 4: never show exact rank alone
-  let airRange = null;
-  if (estimatedRank && aggregateTrend) {
-    airRange = calculateAIRRange(estimatedRank, dataQuality, aggregateTrend, aggregateTrend.competitionLevel || 'Medium');
-  } else if (estimatedRank) {
-    // Fallback for low marks where aggregateTrend is null (no eligible colleges for trend analysis)
-    // Use Poor data quality and a conservative range estimate
-    const fallbackTrend = { trendDirection: 'Stable', volatility: 20, competitionLevel: 'Medium' };
-    airRange = calculateAIRRange(estimatedRank, 'Poor', fallbackTrend, 'Medium');
-  }
+  // Skip old AIR range calculation — gateScoreCalculator provides it
+  // (airRange already set from calculator above)
 
   // Step 11: Confidence with quantified sub-scores (Priority 5: never hardcode)
-  const totalDataPoints = marksScoreData.length + scoreRankData.length + allCcmtCutoffs.length + allCoapCutoffs.length + allSeatData.length;
+  const totalDataPoints = allCcmtCutoffs.length + allCoapCutoffs.length + allSeatData.length;
   const hasMultiYear = yearList.length >= 2;
   const totalSeats = allSeatData.reduce((sum, s) => sum + (s.totalSeats || 0), 0);
   let { label: confidence, score: confidenceScore, factors } = computeConfidenceWithFactors(
@@ -808,8 +760,9 @@ async function predict(input) {
 
   // Step 13: Why This Prediction
   const whyBasedOn = [];
-  if (marksScoreData.length > 0) whyBasedOn.push('GATE Historical Marks→Score Data');
-  if (scoreRankData.length > 0) whyBasedOn.push('GATE Score→Rank Data');
+  whyBasedOn.push('Official GATE Score Formula (Sq=350, St=900)');
+  whyBasedOn.push(`Qualifying Marks: ${qualifyingMq} (${category})`);
+  if (gateResult.air?.historicalBasis) whyBasedOn.push(`AIR: ${gateResult.air.historicalBasis}`);
   if (ccmtCutoffs.length > 0) whyBasedOn.push(`CCMT Cutoffs (${ccmtCutoffs.length} entries)`);
   if (coapCutoffs.length > 0) whyBasedOn.push(`COAP Offers (${coapCutoffs.length} entries)`);
   if (seatData.length > 0) whyBasedOn.push('Seat Matrix');
@@ -821,9 +774,8 @@ async function predict(input) {
   if (totalDataPoints >= 100) confidenceFactors.push('Large dataset size');
   if (hasMultiYear) confidenceFactors.push('Multi-year trend analysis');
   if (ccmtCutoffs.length >= 50) confidenceFactors.push('Comprehensive CCMT data');
-  if (normalizedScore != null && estimatedRank != null) confidenceFactors.push('Complete marks→score→rank pipeline');
-  if (totalDataPoints < 50) confidenceFactors.push('Limited dataset — improve by uploading more data');
-  if (marksScoreData.length < 10) confidenceFactors.push('Missing marks→score mapping');
+  if (normalizedScore != null && estimatedRank != null) confidenceFactors.push('Complete GATE score→AIR pipeline');
+  confidenceFactors.push('Official GATE Score Formula (Sq=350, St=900)');
 
   // Step 14: Generate recommendations
   const recommendations = [];
@@ -852,20 +804,22 @@ async function predict(input) {
 
   if (preferredProgram) recommendations.push(`Your preferred program "${preferredProgram}" has ${targetColleges.length + safeColleges.length} options in your range.`);
 
-  // Step 15: Multi-year what-if baseline
+  // Step 15: Multi-year what-if baseline (uses gateScoreCalculator)
   const whatIfBaseline = [];
   for (const delta of [0, 5, 10, 15]) {
     const testMarks = clamp(marks + delta, 0, 100);
-    const testScore = marksScoreData.length >= 2 ? Math.round(interpolateFromData(marksScoreData, testMarks, 'marks', 'score') * 10) / 10 : normalizedScore + delta * 9.5;
-    const testRank = scoreRankData.length >= 2 ? Math.round(interpolateFromData(scoreRankData, testScore, 'score', 'rank')) : estimatedRank ? Math.round(estimatedRank * (1 - delta * 0.08)) : null;
+    const testResult = gateScorePredict(testMarks, paper, category, baseYear);
+    const testScore = testResult.gateScore?.value || (normalizedScore + delta * 9.5);
+    const testAirRange = testResult.air?.range;
+    const testRank = testAirRange ? Math.round((testAirRange.low + testAirRange.high) / 2) : (estimatedRank ? Math.round(estimatedRank * (1 - delta * 0.08)) : null);
     const testOpps = filteredCcmt.filter(c => testScore >= (c.closingScore || 0)).length;
-    whatIfBaseline.push({ marks: testMarks, score: testScore, rank: testRank, opportunities: testOpps });
+    whatIfBaseline.push({ marks: testMarks, score: Math.round(testScore), rank: testRank, opportunities: testOpps });
   }
 
   // Step 16: Get prediction accuracy from feedback
   let predictionAccuracy = null;
   try {
-    const accData = await PredictionAccuracy.findOne().sort({ lastCalculated: -1 });
+    const accData = await PredictionAccuracy.findOne().sort({ lastCalculated: -1 }).lean();
     if (accData) predictionAccuracy = accData.overallAccuracy;
   } catch (e) { /* no accuracy data yet */ }
 
@@ -894,7 +848,11 @@ async function predict(input) {
     predictedScore: Math.round(normalizedScore * 10) / 10,
     predictedRank: estimatedRank,
     predictedPercentile: estimatedPercentile,
-    airRange, // Priority 4: {best, average, worst, uncertainty, confidenceLevel} — never show exact rank alone
+    airRange, // from gateScoreCalculator: {low, high, best, average, worst}
+    gateFormula: gateResult.formula,
+    officialData: gateResult.officialData || ['Qualifying Marks', 'Formula', 'Score Constants'],
+    estimatedData: gateResult.estimatedData || ['Mt (not published by IITs)', 'AIR Range'],
+    disclaimer: gateResult.disclaimer,
     airUncertaintyFactors: airRange ? [
       dataQuality === 'Excellent' ? 'High data quality across 5+ years of cutoffs' : dataQuality === 'Good' ? 'Solid dataset but limited coverage' : 'Limited data increases uncertainty',
       aggregateTrend?.trendDirection === 'Stable' ? 'Most eligible colleges show stable cutoffs' : aggregateTrend?.trendDirection === 'Rising' ? 'Rising cutoffs signal tighter competition' : 'Falling cutoffs favor applicants',
@@ -932,6 +890,9 @@ async function predict(input) {
     eligibleGFTIs,
     eligibleIISc,
     eligibleIIEST,
+    categoryDataNote: totalOpportunities < 50 && category !== 'General'
+      ? `Results are based on the currently available cutoff records for ${category}. As more historical data is added, recommendations will become more comprehensive.`
+      : null,
     eligiblePSUs: eligiblePsus,
     // Unsliced totals (accurate counts for summary metrics)
     totalOpportunities,
@@ -956,12 +917,12 @@ async function predict(input) {
     whatIfBaseline,
     totalDataPoints,
     datasetsUsed: [
-      { name: 'Marks→Score', year: baseYear, entries: marksScoreData.length, source: 'GateMarksScore' },
-      { name: 'Score→Rank', year: baseYear, entries: scoreRankData.length, source: 'GateScoreRank' },
+      { name: 'GATE Score Calculator', year: baseYear, entries: 1, source: 'gateScoreCalculator (official formula)' },
+      { name: 'AIR Mapping', year: baseYear, entries: 1, source: 'gateScoreCalculator (historical data)' },
       { name: 'CCMT Cutoffs', year: baseYear, entries: allCcmtCutoffs.length, source: 'CcmtCutoff' },
       { name: 'COAP Offers', year: baseYear, entries: allCoapCutoffs.length, source: 'CoapCutoff' },
       { name: 'Seat Matrix', year: baseYear, entries: allSeatData.length, source: 'SeatMatrix' },
-    ].filter(d => d.entries > 0),
+    ],
     predictionAccuracy,
     timestamp: new Date().toISOString(),
     _debug: {

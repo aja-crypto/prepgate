@@ -9,7 +9,7 @@ import { StatsProvider } from './domains/StatsContext';
 import {
   getEmptyProgressData, mergeProgressData, isEmptyProgress, BADGE_DEFINITIONS,
 } from '../data/emptyState';
-import { getDefaultGateFeatures } from '../data/defaults';
+import { getDefaultGateFeatures, getDemoProgressData } from '../data/defaults';
 import { checkNewBadges } from '../utils/gateUtils';
 import { progressService, pyqService } from '../services/api';
 import { silentCatch, warn } from '../utils/errorHandler';
@@ -39,7 +39,6 @@ function loadFromStorage(userId) {
 }
 
 export const ProgressProvider = ({ children }) => {
-  useEffect(() => { const t = Date.now(); console.log('[Trace] ProgressProvider MOUNTED at', t); return () => console.log('[Trace] ProgressProvider UNMOUNTED after', Date.now() - t, 'ms'); }, []);
   const { user } = useAuth();
   const userId = user?.id || user?._id || 'guest';
   const [data, setData] = useState(() => loadFromStorage(userId));
@@ -86,9 +85,14 @@ export const ProgressProvider = ({ children }) => {
       const mongo = await checkMongoAvailable();
       setMongoAvailable(mongo);
       const local = loadFromStorage(userId, user);
-      const { data: merged, updatedAt, mongoAvailable: ma, fromCloud } = await pullFromServer(local, user, dataRef.current);
+      let { data: merged, updatedAt, mongoAvailable: ma, fromCloud } = await pullFromServer(local, user, dataRef.current);
 
       if (controller.signal.aborted) return;
+
+      // Demo account gets sample data when progress is empty (even w/o backend)
+      if (user?.email === 'demo@gate2027.in' && isEmptyProgress(merged)) {
+        merged = getDemoProgressData();
+      }
 
       setData(merged);
       setLastBackupAt(merged.lastSaved);
@@ -380,7 +384,7 @@ export const ProgressProvider = ({ children }) => {
   useEffect(() => {
     const newBadges = checkNewBadges(data.gamification, data);
     if (newBadges.length) awardBadges(newBadges);
-  }, [data.gateFeatures?.streak?.current, data.pyqs, data.mocks.length, awardBadges]);
+  }, [data.gateFeatures?.streak?.current, data.pyqs?.length, data.mocks?.length, awardBadges]);
 
   const value = useMemo(() => ({
     data,
@@ -442,7 +446,7 @@ export const ProgressProvider = ({ children }) => {
         <NoteProvider data={data} setData={setData}>
           <PYQProvider data={data} setData={setData}>
             <MockProvider data={data} setData={setData}>
-              <StatsProvider data={data} setData={setData}>
+              <StatsProvider data={data} setData={setData} backupStatus={backupStatus}>
                 {children}
               </StatsProvider>
             </MockProvider>

@@ -1,372 +1,204 @@
 // src/pages/PersonalizedRoadmapPage.jsx
+// Intelligent, data-driven GATE roadmap generated from the server AI context.
+// Loads /api/ai/context (real backend data) and renders timeline, subjects,
+// milestones, pacing, and Nexa AI guidance — no placeholders.
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { aiService } from '../services/api';
 import GlassCard from '../components/ui/GlassCard';
-import ProgressRing from '../components/ui/ProgressRing';
-import toast from 'react-hot-toast';
-import axios from 'axios';
+import { PageLoading } from '../components/common/GateLoadingScreen';
 
-const API = '/api';
+const SUBJECT_ICONS = {
+  'Engineering Mathematics': '📐', 'Digital Logic': '💻', 'Computer Organization & Architecture': '🖥️',
+  'Programming & DS': '🐍', 'Algorithms': '⚡', 'Operating Systems': '⚙️', 'DBMS': '🗄️',
+  'Computer Networks': '🌐', 'Theory of Computation': '🤖', 'Compiler Design': '🔧', 'General Aptitude': '🧮',
+};
+
+function subjectColor(name) {
+  const map = {
+    'Engineering Mathematics': '#10B981', 'Algorithms': '#3B82F6', 'DBMS': '#F59E0B',
+    'Operating Systems': '#22C55E', 'Computer Networks': '#06B6D4', 'Theory of Computation': '#A855F7',
+    'Compiler Design': '#EC4899', 'Computer Organization & Architecture': '#EF4444', 'Digital Logic': '#84CC16',
+    'Programming & DS': '#38BDF8', 'General Aptitude': '#F97316',
+  };
+  return map[name] || '#8B5CF6';
+}
 
 export default function PersonalizedRoadmapPage() {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [roadmap, setRoadmap] = useState(null);
-  const [examDate, setExamDate] = useState('2027-02-07');
-  const [dailyHours, setDailyHours] = useState(8);
-  const [weakTopics, setWeakTopics] = useState([]);
-  const [subjectProgress, setSubjectProgress] = useState([]);
-  const [generating, setGenerating] = useState(false);
+  const [ctx, setCtx] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [expandedSubject, setExpandedSubject] = useState(null);
 
   useEffect(() => {
-    loadProgressData();
+    let cancelled = false;
+    setLoading(true);
+    aiService.getContext()
+      .then(res => { if (!cancelled) setCtx(res.data?.data || null); })
+      .catch(() => { if (!cancelled) setCtx(null); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
-  const loadProgressData = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('accessToken');
-      // Load subjects and progress
-      const [subjectsRes, progressRes] = await Promise.all([
-        axios.get(`${API}/subjects`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API}/progress/stats`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: { data: {} } })),
-      ]);
-      
-      const subjects = subjectsRes.data?.data || [];
-      const progress = progressRes.data?.data || {};
-      
-      // Calculate progress per subject
-      const progressMap = progress.subjectProgress || {};
-      const subjectProgressData = subjects.map(s => ({
-        name: s.name,
-        code: s.code,
-        progress: progressMap[s.name] || 0,
-        weightage: s.weightage || 10,
-        topicsTotal: s.topics?.length || 0,
-        topicsDone: Math.round((progressMap[s.name] || 0) / 100 * (s.topics?.length || 10)),
-      })).sort((a, b) => b.progress - a.progress);
+  if (loading) return <PageLoading title="Generating your intelligent roadmap" />;
 
-      setSubjectProgress(subjectProgressData);
+  if (!ctx?.roadmap) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <GlassCard hover={false} padding="p-8" className="text-center">
+          <div className="text-4xl mb-3">🗺️</div>
+          <h2 className="text-lg font-bold text-text mb-2">No roadmap data yet</h2>
+          <p className="text-sm text-text3">Complete some topics and solve PYQs to generate your AI roadmap.</p>
+        </GlassCard>
+      </div>
+    );
+  }
 
-      // Identify weak topics
-      const weak = subjectProgressData.filter(s => s.progress < 50).map(s => s.name);
-      setWeakTopics(weak);
-    } catch (err) {
-      console.error('Failed to load progress data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGenerateRoadmap = async () => {
-    try {
-      setGenerating(true);
-      const token = localStorage.getItem('accessToken');
-      
-      // Call AI service to generate personalized roadmap
-      const res = await axios.post(`${API}/ai/generate-roadmap`, {
-        subjects: subjectProgress,
-        weakTopics,
-        examDate,
-        dailyHours,
-        daysRemaining: Math.ceil((new Date(examDate) - new Date()) / (1000 * 60 * 60 * 24)),
-      }, { headers: { Authorization: `Bearer ${token}` } });
-
-      if (res.data?.success) {
-        setRoadmap(res.data.data);
-        toast.success('Roadmap generated!');
-      } else {
-        // Generate a basic roadmap in case AI fails
-        generateBasicRoadmap();
-      }
-    } catch (err) {
-      console.error('Failed to generate roadmap:', err);
-      // Fallback to basic roadmap generation
-      generateBasicRoadmap();
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  const generateBasicRoadmap = () => {
-    const daysRemaining = Math.max(1, Math.ceil((new Date(examDate) - new Date()) / (1000 * 60 * 60 * 24)));
-    const totalHours = daysRemaining * dailyHours;
-    
-    // Sort subjects by priority (weightage and low progress)
-    const prioritizedSubjects = [...subjectProgress].sort((a, b) => {
-      const priorityA = (a.weightage * 2) + (100 - a.progress);
-      const priorityB = (b.weightage * 2) + (100 - b.progress);
-      return priorityB - priorityA;
-    });
-
-    const weeks = Math.ceil(daysRemaining / 7);
-    const weeklyPlan = [];
-    let hoursUsed = 0;
-
-    prioritizedSubjects.forEach((subject, idx) => {
-      const subjectHours = Math.round((subject.weightage / 100) * totalHours * 1.5);
-      hoursUsed += subjectHours;
-      
-      weeklyPlan.push({
-        subject: subject.name,
-        color: getSubjectColor(subject.name),
-        totalHours: subjectHours,
-        weeklyDistribution: Array(weeks).fill(Math.round(subjectHours / weeks)),
-        focus: subject.progress < 30 ? 'Foundation building' : subject.progress < 60 ? 'Intermediate concepts' : 'Advanced practice',
-        priority: idx + 1,
-        milestones: generateMilestones(subject, daysRemaining),
-      });
-    });
-
-    setRoadmap({
-      examDate,
-      daysRemaining,
-      dailyHours,
-      totalStudyHours: totalHours,
-      subjects: weeklyPlan,
-      strategy: {
-        phase1: { name: 'Foundation', weeks: Math.floor(weeks * 0.3), description: 'Build strong base in weak areas' },
-        phase2: { name: 'Strengthening', weeks: Math.floor(weeks * 0.4), description: 'Deep dive into all topics' },
-        phase3: { name: 'Mock & Revision', weeks: Math.floor(weeks * 0.3), description: 'Practice tests and quick revision' },
-      },
-    });
-
-    toast.success('Basic roadmap generated!');
-  };
-
-  const generateMilestones = (subject, totalDays) => {
-    return [
-      { day: Math.round(totalDays * 0.3), label: 'Complete topic coverage', progress: 60 },
-      { day: Math.round(totalDays * 0.6), label: 'Solve PYQs & practice', progress: 80 },
-      { day: Math.round(totalDays * 0.9), label: 'Final revision', progress: 95 },
-    ];
-  };
-
-  const getSubjectColor = (name) => {
-    const colors = {
-      'Engineering Mathematics': '#10B981',
-      'Algorithms': '#3B82F6',
-      'DBMS': '#F59E0B',
-      'Operating Systems': '#22C55E',
-      'Computer Networks': '#06B6D4',
-      'Theory of Computation': '#A855F7',
-      'Compiler Design': '#EC4899',
-      'Computer Organization': '#EF4444',
-      'Digital Logic': '#84CC16',
-      'General Aptitude': '#F97316',
-    };
-    return colors[name] || '#8B5CF6';
-  };
-
-  const getDaysLabel = () => {
-    if (!roadmap) return '';
-    const days = roadmap.daysRemaining;
-    if (days <= 30) return `${days} days - Sprint mode!`;
-    if (days <= 100) return `${days} days - Intensive prep`;
-    return `${days} days - Comprehensive coverage`;
-  };
+  const rm = ctx.roadmap;
+  const narrative = rm.narrative;
+  const onTrack = rm.onTrack;
+  const timeline = rm.timeline || [];
+  const subjects = rm.subjects || [];
+  const milestones = rm.milestones || [];
+  const prediction = ctx.prediction;
 
   return (
-    <div className="min-h-[calc(100vh-80px)]">
+    <div className="min-h-[calc(100vh-80px)] max-w-6xl mx-auto px-4 py-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-text">Personalized Roadmap</h1>
-        <p className="text-sm text-text3 mt-0.5">AI-generated study plan based on your progress</p>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-text">🗺️ Your GATE 2027 Roadmap</h1>
+          <p className="text-sm text-text3 mt-0.5">
+            {rm.daysToExam} days to exam · generated from your live progress
+          </p>
+        </div>
+        <span className="text-xs px-3 py-1.5 rounded-xl font-semibold" style={{
+          background: onTrack ? 'rgba(34,197,94,0.1)' : 'rgba(245,158,11,0.1)',
+          color: onTrack ? '#4ADE80' : '#FBBF24',
+          border: `1px solid ${onTrack ? 'rgba(34,197,94,0.25)' : 'rgba(245,158,11,0.25)'}`,
+        }}>
+          {onTrack ? '✓ On Track' : '⚠ Behind Schedule'}
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
-        {/* Main Content */}
-        <div className="space-y-6">
-          {/* Configuration */}
-          {!roadmap && (
-            <GlassCard hover={false} padding="p-6">
-              <h2 className="text-lg font-semibold text-text mb-4">Generate Your Roadmap</h2>
-              
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs text-text2 uppercase tracking-wider font-semibold block mb-1.5">Exam Date</label>
-                    <input
-                      type="date"
-                      value={examDate}
-                      onChange={(e) => setExamDate(e.target.value)}
-                      className="w-full bg-bg-2 border border-border rounded-xl px-4 py-2.5 text-sm text-text focus:outline-none focus:border-primary/60"
+      {/* Nexa AI narrative */}
+      {narrative && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-6 p-5 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(34,211,238,0.05))', border: '1px solid rgba(139,92,246,0.2)' }}>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-7 h-7 rounded-lg flex items-center justify-center text-sm" style={{ background: 'linear-gradient(135deg, rgba(167,139,250,0.25), rgba(34,211,238,0.15))' }}>🤖</span>
+            <span className="text-sm font-semibold text-text">Nexa AI Roadmap Guidance</span>
+          </div>
+          <p className="text-sm text-text leading-relaxed">{narrative}</p>
+          <div className="flex flex-wrap gap-2 mt-3">
+            {rm.probability != null && <Chip label="Schedule probability" value={`${rm.probability}%`} />}
+            {rm.dailyHoursNeeded != null && <Chip label="Hours/day to catch up" value={`${rm.dailyHoursNeeded}h`} />}
+            {rm.currentMonth && <Chip label="Current month" value={rm.currentMonth} />}
+            {prediction?.air && <Chip label="Predicted AIR" value={`#${prediction.air}`} />}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Month timeline */}
+      {timeline.length > 0 && (
+        <GlassCard hover={false} padding="p-5" className="mb-6">
+          <h3 className="text-[10px] font-semibold text-text uppercase tracking-wider mb-3">📅 Timeline to Exam</h3>
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {timeline.map((t, i) => (
+              <div key={i} className="flex-1 min-w-[72px] text-center p-2 rounded-xl" style={{
+                background: t.status === 'current' ? 'rgba(139,92,246,0.12)' : t.status === 'completed' ? 'rgba(34,197,94,0.08)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${t.status === 'current' ? 'rgba(139,92,246,0.3)' : t.status === 'completed' ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.06)'}`,
+              }}>
+                <div className="text-sm font-bold" style={{ color: t.status === 'completed' ? '#4ADE80' : t.status === 'current' ? '#C4B5FD' : 'var(--color-text2)' }}>
+                  {t.isExam ? '🎯 ' : ''}{t.month}
+                </div>
+                <div className="text-[9px] text-text3 mt-0.5 truncate">{t.phase}</div>
+                {t.status === 'current' && <div className="text-[9px] font-bold text-primary mt-1">● Now</div>}
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Subject progression */}
+      <GlassCard hover={false} padding="p-5" className="mb-6">
+        <h3 className="text-[10px] font-semibold text-text uppercase tracking-wider mb-3">📚 Subject Progression</h3>
+        <div className="space-y-2.5">
+          {subjects.map((s, i) => (
+            <motion.div key={s.name} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 * i }}>
+              <div className="flex items-center gap-3">
+                <span className="text-base shrink-0">{SUBJECT_ICONS[s.name] || '📘'}</span>
+                <button
+                  onClick={() => setExpandedSubject(expandedSubject === s.name ? null : s.name)}
+                  className="flex-1 min-w-0 text-left"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-text truncate">
+                      {s.name}
+                      {s.status === 'mastered' && <span className="ml-1.5 text-success">✓</span>}
+                    </span>
+                    <span className="text-xs font-bold font-mono" style={{ color: s.progress >= 80 ? '#4ADE80' : s.progress >= 40 ? '#C4B5FD' : 'var(--color-text3)' }}>
+                      {s.progress}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${s.progress}%` }}
+                      transition={{ duration: 0.7, ease: 'easeOut', delay: 0.05 * i }}
+                      className="h-full rounded-full"
+                      style={{ background: subjectColor(s.name) }}
                     />
                   </div>
-                  <div>
-                    <label className="text-xs text-text2 uppercase tracking-wider font-semibold block mb-1.5">Daily Study Hours</label>
-                    <select
-                      value={dailyHours}
-                      onChange={(e) => setDailyHours(Number(e.target.value))}
-                      className="w-full bg-bg-2 border border-border rounded-xl px-4 py-2.5 text-sm text-text focus:outline-none focus:border-primary/60"
-                    >
-                      {[4, 5, 6, 7, 8, 9, 10, 12].map(h => (
-                        <option key={h} value={h}>{h} hours/day</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Subject Progress Overview */}
-                {subjectProgress.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-text mb-3">Your Subject Progress</h3>
-                    <div className="space-y-2">
-                      {subjectProgress.slice(0, 6).map((sub) => (
-                        <div key={sub.name} className="flex items-center gap-3">
-                          <div className="w-2 h-2 rounded-full shrink-0" style={{ background: getSubjectColor(sub.name) }} />
-                          <span className="text-sm text-text flex-1 truncate">{sub.name}</span>
-                          <div className="w-24 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
-                            <div className="h-full rounded-full" style={{ width: `${sub.progress}%`, background: getSubjectColor(sub.name) }} />
-                          </div>
-                          <span className="text-xs text-text3 w-10 text-right">{sub.progress}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <button
-                  onClick={handleGenerateRoadmap}
-                  disabled={generating}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-primary to-blue-600 text-white text-sm font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-50"
-                >
-                  {generating ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>✨ Generate Personalized Roadmap</>
-                  )}
                 </button>
               </div>
-            </GlassCard>
-          )}
-
-          {/* Generated Roadmap */}
-          {roadmap && (
-            <>
-              {/* Overview */}
-              <GlassCard hover={false} padding="p-6" className="mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-lg font-bold text-text">Your GATE 2027 Roadmap</h2>
-                    <p className="text-sm text-text3">{getDaysLabel()}</p>
-                  </div>
-                  <button onClick={() => setRoadmap(null)} className="text-xs px-3 py-1.5 rounded-lg bg-white/[0.06] text-text2 hover:bg-white/[0.1] transition-all">
-                    Regenerate
-                  </button>
+              {expandedSubject === s.name && (
+                <div className="ml-7 mt-1.5 text-[10px] text-text3">
+                  {s.topicsTotal ? `${s.topicsDone}/${s.topicsTotal} topics` : 'Topics not tracked'} · PYQ accuracy {s.pyqAccuracy != null ? `${s.pyqAccuracy}%` : 'n/a'}
                 </div>
-
-                <div className="grid grid-cols-3 gap-4 mb-6">
-                  <div className="bg-bg-2 border border-border rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold font-mono text-primary">{roadmap.totalStudyHours}h</div>
-                    <div className="text-xs text-text3 mt-1">Total Study Hours</div>
-                  </div>
-                  <div className="bg-bg-2 border border-border rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold font-mono text-green-400">{roadmap.dailyHours}h</div>
-                    <div className="text-xs text-text3 mt-1">Daily Target</div>
-                  </div>
-                  <div className="bg-bg-2 border border-border rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold font-mono text-orange-400">{roadmap.subjects.length}</div>
-                    <div className="text-xs text-text3 mt-1">Subjects</div>
-                  </div>
-                </div>
-
-                {/* Three Phases */}
-                <div className="grid grid-cols-3 gap-3">
-                  {Object.values(roadmap.strategy).map((phase, i) => (
-                    <div key={i} className="bg-bg-2 border border-border rounded-xl p-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">Phase {i + 1}</span>
-                      </div>
-                      <h4 className="text-sm font-semibold text-text">{phase.name}</h4>
-                      <p className="text-[10px] text-text3 mt-1">{phase.description}</p>
-                      <div className="text-[10px] text-text2 mt-1">{phase.weeks} weeks</div>
-                    </div>
-                  ))}
-                </div>
-              </GlassCard>
-
-              {/* Subject-wise Plan */}
-              <h3 className="text-lg font-semibold text-text mb-3">Subject-wise Breakdown</h3>
-              <div className="space-y-4">
-                {roadmap.subjects.map((subject, idx) => (
-                  <GlassCard key={idx} hover={false} padding="p-5">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0" style={{ background: `${subject.color}15` }}>
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="text-base font-semibold text-text">{subject.subject}</h4>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: `${subject.color}15`, color: subject.color }}>
-                            {subject.focus}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-text3 mb-3">
-                          <span>{subject.totalHours}h total</span>
-                          <span>{Math.round(subject.totalHours / roadmap.daysRemaining * 7)}h/week</span>
-                          <span>Priority #{subject.priority}</span>
-                        </div>
-                        {subject.milestones && (
-                          <div className="space-y-1.5">
-                            {subject.milestones.map((m, i) => (
-                              <div key={i} className="flex items-center gap-2 text-xs">
-                                <div className="w-16 text-text2">Day {m.day}</div>
-                                <div className="flex-1 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
-                                  <div className="h-full rounded-full" style={{ width: `${m.progress}%`, background: subject.color }} />
-                                </div>
-                                <div className="text-text3">{m.label}</div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </GlassCard>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Sidebar */}
-        {subjectProgress.length > 0 && (
-          <div className="space-y-4">
-            <GlassCard hover={false} padding="p-5">
-              <h3 className="text-[10px] font-semibold text-text uppercase tracking-wider mb-3">Subject Priority</h3>
-              <div className="space-y-2">
-                {[...subjectProgress].sort((a, b) => (b.weightage * (100 - b.progress)) - (a.weightage * (100 - a.progress))).map((sub, i) => (
-                  <div key={sub.name} className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-text3 w-4">{i + 1}</span>
-                    <div className="w-2 h-2 rounded-full shrink-0" style={{ background: getSubjectColor(sub.name) }} />
-                    <span className="text-xs text-text flex-1 truncate">{sub.name}</span>
-                    <span className="text-[10px] text-text3">{sub.progress}%</span>
-                  </div>
-                ))}
-              </div>
-            </GlassCard>
-
-            <GlassCard hover={false} padding="p-5">
-              <h3 className="text-[10px] font-semibold text-text uppercase tracking-wider mb-3">Weak Areas</h3>
-              {weakTopics.length > 0 ? (
-                <div className="space-y-1.5">
-                  {weakTopics.map((topic, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5">
-                      <span className="text-red-400">⚠️</span>
-                      <span className="text-text">{topic}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-text3">Great! No weak topics identified.</p>
               )}
-            </GlassCard>
+            </motion.div>
+          ))}
+        </div>
+      </GlassCard>
+
+      {/* Milestones */}
+      {milestones.length > 0 && (
+        <GlassCard hover={false} padding="p-5" className="mb-6">
+          <h3 className="text-[10px] font-semibold text-text uppercase tracking-wider mb-3">🎖 Milestones & Rewards</h3>
+          <div className="space-y-2">
+            {milestones.map((m, i) => (
+              <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl" style={{
+                background: m.unlocked ? 'rgba(34,197,94,0.08)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${m.unlocked ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                opacity: m.unlocked ? 1 : 0.6,
+              }}>
+                <span className="text-lg">{m.unlocked ? '🏅' : '🔒'}</span>
+                <div className="flex-1">
+                  <div className="text-xs font-semibold" style={{ color: m.unlocked ? '#4ADE80' : 'var(--color-text2)' }}>{m.title}</div>
+                  {m.reward && <div className="text-[10px] text-text3">{m.reward}</div>}
+                </div>
+                {m.unlocked && <span className="text-[10px] font-bold text-success">DONE</span>}
+              </div>
+            ))}
           </div>
-        )}
-      </div>
+        </GlassCard>
+      )}
+
+      {/* Next milestone banner */}
+      {rm.nextMilestone && (
+        <div className="p-5 rounded-2xl mb-6" style={{ background: 'rgba(139,92,246,0.06)', border: '1px dashed rgba(139,92,246,0.3)' }}>
+          <div className="text-[10px] text-text3 mb-1">🎯 Next milestone</div>
+          <div className="text-sm font-bold text-text">{rm.nextMilestone}</div>
+          {rm.nextMilestoneReward && <div className="text-xs text-primary mt-1">Reward: {rm.nextMilestoneReward}</div>}
+        </div>
+      )}
     </div>
+  );
+}
+
+function Chip({ label, value }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium" style={{ background: 'rgba(139,92,246,0.1)', color: '#C4B5FD', border: '1px solid rgba(139,92,246,0.2)' }}>
+      {label}: <span className="font-bold">{value}</span>
+    </span>
   );
 }

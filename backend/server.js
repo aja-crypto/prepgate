@@ -85,6 +85,7 @@ const cspDirectives = {
   // In production, use nonce-based styles; fallback to unsafe-inline only when necessary
   styleSrc: ["'self'", ...(isViteDev ? ["'unsafe-inline'"] : []), "https:"],
   fontSrc: ["'self'", "https:", "data:"],
+  frameSrc: ["'self'", "https://www.youtube.com", "https://www.youtube-nocookie.com"],
   frameAncestors: ["'self'"],
   // Upgrade insecure requests in production
   ...(isViteDev ? {} : { upgradeInsecureRequests: [] }),
@@ -162,9 +163,11 @@ function rl(windowMs, max, skip) {
   };
 }
 
+app.use('/api/auth/register', rl(15 * 60 * 1000, isDev ? 20 : 5));
 app.use('/api/auth/login', rl(15 * 60 * 1000, isDev ? 30 : 10));
 app.use('/api/auth/forgot-password', rl(60 * 60 * 1000, isDev ? 10 : 3));
 app.use('/api/auth/reset-password', rl(60 * 60 * 1000, isDev ? 10 : 3));
+app.use('/api/auth/refresh', rl(60 * 60 * 1000, isDev ? 30 : 10));
 
 app.use('/api/admin/', rl(15 * 60 * 1000, isDev ? 500 : 100));
 
@@ -204,14 +207,11 @@ if (!require('fs').existsSync(uploadsNotesDir)) require('fs').mkdirSync(uploadsN
 app.use('/uploads', express.static(uploadsDir));
 app.use('/resources', express.static(path.join(__dirname, '..', 'resources')));
 
-// --- Logging (production: combined, development: dev) ---
-if (process.env.NODE_ENV === 'production') {
-  app.use(morgan('combined', {
-    skip: (req) => req.url === '/health' || req.url === '/api/health',
-  }));
-} else {
-  app.use(morgan('dev'));
-}
+// --- Correlation ID + Structured Logging ---
+const { correlationId } = require('./src/middleware/correlationId');
+const { requestLogger } = require('./src/middleware/requestLogger');
+app.use(correlationId);
+app.use(requestLogger);
 
 // --- Health Check ────────────────────────────────────────---
 app.get('/api/health', (req, res) => {
@@ -283,6 +283,41 @@ app.get('/api/admin/health', (req, res) => {
       heapTotal: Math.round(mem.heapTotal / 1024 / 1024),
       rss: Math.round(mem.rss / 1024 / 1024),
     },
+  });
+});
+
+// --- Server Readiness & Metrics ──────────────────────────---
+app.get('/health/readiness', (req, res) => {
+  const ready = isMongoConnected() || isMockAuthEnabled();
+  res.status(ready ? 200 : 503).json({
+    status: ready ? 'ready' : 'not_ready',
+    database: isMongoConnected() ? 'connected' : 'disconnected',
+    mockAuth: isMockAuthEnabled(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/health/metrics', (req, res) => {
+  const mem = process.memoryUsage();
+  const cpu = process.cpuUsage();
+  res.json({
+    uptime: Math.floor((Date.now() - SERVER_START_TIME) / 1000),
+    memory: {
+      heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
+      heapTotalMB: Math.round(mem.heapTotal / 1024 / 1024),
+      rssMB: Math.round(mem.rss / 1024 / 1024),
+      externalMB: Math.round(mem.external / 1024 / 1024),
+    },
+    cpu: {
+      user: Math.round(cpu.user / 1000),
+      system: Math.round(cpu.system / 1000),
+    },
+    database: {
+      connected: isMongoConnected(),
+      mockAuth: isMockAuthEnabled(),
+    },
+    eventLoopDelay: 0,
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -366,6 +401,8 @@ app.use('/api/admin/cms', require('./src/routes/adminCms'));
 app.use('/api/admin/question-bank', require('./src/routes/adminQuestionBank'));
 app.use('/api/admin/notifications', require('./src/routes/adminNotifications'));
 app.use('/api/admin/feedback', require('./src/routes/adminFeedback'));
+app.use('/api/learning-hub/videos', require('./src/routes/learningHubVideos'));
+app.use('/api/insights', require('./src/routes/insights'));
 
 // Admin audit log endpoint
 app.get('/api/admin/audit-logs', adminProtect, requirePermission('settings.manage'), (req, res) => {
@@ -402,8 +439,13 @@ app.use('*', (req, res) => {
 });
 
 // --- Seed default dev admin & owner ──────────────────────---
-const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'GateNexa@Owner2026';
-const DEV_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+// Require env vars in production; fallback to dev-only defaults otherwise.
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.OWNER_PASSWORD) throw new Error('OWNER_PASSWORD env var is required in production');
+  if (!process.env.ADMIN_PASSWORD) throw new Error('ADMIN_PASSWORD env var is required in production');
+}
+const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'owner_dev_fallback';
+const DEV_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin_dev_fallback';
 
 if (!isMongoConnected() && process.env.NODE_ENV !== 'production') {
   try {

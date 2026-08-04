@@ -290,7 +290,7 @@ function calcEnhancedProbability(userScore, closingScore, openingScore, trend, c
  * AI Trend Analysis using multi-year data
  */
 async function analyzeInstituteProgramTrends(institute, program, category, maxYears = 6) {
-  const cutoffs = await CcmtCutoff.find({ institute, program, category }).sort({ year: -1 }).limit(maxYears);
+  const cutoffs = await CcmtCutoff.find({ institute, program, category }).sort({ year: -1 }).limit(maxYears).lean();
   if (!cutoffs || cutoffs.length < 2) return null;
 
   cutoffs.sort((a, b) => a.year - b.year);
@@ -314,7 +314,7 @@ async function analyzeInstituteProgramTrends(institute, program, category, maxYe
   const longTrend = scores[scores.length - 1] - scores[0];
 
   // Competition analysis using seat matrix and trend volatility
-  const seatData = await SeatMatrix.findOne({ institute, program });
+  const seatData = await SeatMatrix.findOne({ institute, program }).lean();
   const competitionLevel = (seatData?.totalSeats || 100) <= 30 ? 'High' :
                             (seatData?.totalSeats || 100) >= 100 ? 'Low' : 'Medium';
 

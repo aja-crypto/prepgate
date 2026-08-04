@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, FileText, TrendingUp, Award, MapPin, Target, ListOrdered, DollarSign, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { generatePredictionReport } from '../../utils/pdfReportGenerator';
+import { useAuth } from '../../context/AuthContext';
 
 const TIER_ICON = { 1: '\uD83C\uDFC6', 2: '\uD83E\uDD48', 3: '\uD83E\uDD49' };
 
@@ -24,13 +25,14 @@ function Stars({ rating }) {
 export default function PredictionReportModal({ isOpen, onClose, result, compareList, choiceOrder }) {
   const reportRef = useRef(null);
   const [generating, setGenerating] = useState(false);
+  const { user } = useAuth();
 
   const opps = result?.opportunities || [];
   const dream = opps.filter(o => o.path === 'Dream');
   const target = opps.filter(o => o.path === 'Target');
   const safe = opps.filter(o => o.path === 'Safe');
 
-  const candName = result.candidateName || 'GATE Aspirant';
+  const candName = user?.name?.trim() || result.candidateName || 'GATE Aspirant';
   const predId = result.historyId ? result.historyId.toString().slice(-6).toUpperCase() : 'N/A';
 
   const handleDownload = async () => {
@@ -89,7 +91,7 @@ export default function PredictionReportModal({ isOpen, onClose, result, compare
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   { label: 'GATE Score', value: result.predictedScore, icon: Award, color: '#8B5CF6' },
-                  { label: 'AIR', value: result.predictedRank, icon: Target, color: '#06B6D4' },
+                  { label: 'AIR', value: result.airRange ? `${result.airRange.low}-${result.airRange.high}` : (result.predictedRank ?? '—'), icon: Target, color: '#06B6D4' },
                   { label: 'Percentile', value: `${result.predictedPercentile}%`, icon: TrendingUp, color: '#22C55E' },
                   { label: 'Confidence', value: result.confidence, icon: Star, color: '#EAB308' },
                 ].map((s, i) => (

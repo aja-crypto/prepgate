@@ -1,6 +1,7 @@
 // AIR Predictor Page
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AirPredictor from '../components/gate/AirPredictor';
+import { publish, EVENTS } from '../services/aiEventSystem';
 
 const HowItWorks = () => {
   const [open, setOpen] = useState(true);
@@ -46,6 +47,8 @@ const HowItWorks = () => {
 };
 
 export default function AirPredictorPage() {
+  useEffect(() => { publish('page:navigated', { page: 'air_predictor', timestamp: Date.now() }); }, []);
+
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold text-text mb-6">🏆 AIR Predictor</h1>

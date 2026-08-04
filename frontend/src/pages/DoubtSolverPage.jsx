@@ -44,6 +44,22 @@ export default function DoubtSolverPage() {
     setLoading(true);
     setResult(null);
 
+    // Demo mode — return contextual response, skip API
+    if (localStorage.getItem('isGuest') === 'true' && !localStorage.getItem('accessToken')) {
+      await new Promise(r => setTimeout(r, 800));
+      setResult({
+        answer: `Great question about "${doubt.trim().substring(0, 80)}". This is a key concept for GATE. I'd recommend reviewing the fundamentals first, then practicing related PYQs to strengthen your understanding.`,
+        explanation: 'In demo mode, I can provide general guidance. Connect with a real account for detailed GATE-specific solutions.',
+        keyPoints: ['Review core concepts', 'Practice related PYQs', 'Focus on weak areas'],
+        confidence: 'medium',
+      });
+      setHistory((prev) => [{ doubt: doubt.trim(), subject, topic,
+        answer: 'Demo mode response — connect for full AI doubt solving.',
+      }, ...prev].slice(0, 10));
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await aiService.doubtSolve({
         doubt: doubt.trim(),

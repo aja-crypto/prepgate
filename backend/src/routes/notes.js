@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const Tesseract = require('tesseract.js');
+const { sanitizeFilename, createFileFilter } = require('../utils/uploadValidator');
 const { protect } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
 const { isMockAuthEnabled } = require('../config/devMode');
@@ -31,19 +32,15 @@ const storage = multer.diskStorage({
     cb(null, uploadsNotesDir);
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`);
+    const safe = sanitizeFilename(file.originalname);
+    cb(null, `${Date.now()}-${safe}`);
   }
 });
 
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
-    const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.pdf'];
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (allowed.includes(ext)) cb(null, true);
-    else cb(new Error('Invalid file type. Only images and PDFs are allowed.'));
-  }
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: createFileFilter('document'),
 });
 
 // Stats for Revision Mode (Moved up for priority)
@@ -187,7 +184,7 @@ router.put('/:id', protect, upload.single('file'), validateFields([
       // Delete old file before replacing
       let oldNote;
       if (isMongoConnected() && !isMockAuthEnabled()) {
-        oldNote = await Note.findOne({ _id: req.params.id, user: req.user._id });
+        oldNote = await Note.findOne({ _id: req.params.id, user: req.user._id }).lean();
       } else {
         const allLocal = getLocalNotes({ user: req.user._id });
         oldNote = allLocal.find(n => n._id === req.params.id);
@@ -221,7 +218,7 @@ router.delete('/:id', protect, async (req, res, next) => {
   try {
     let note;
     if (isMongoConnected() && !isMockAuthEnabled()) {
-      note = await Note.findOne({ _id: req.params.id, user: req.user._id });
+      note = await Note.findOne({ _id: req.params.id, user: req.user._id }).lean();
     } else {
       const allLocal = getLocalNotes({ user: req.user._id });
       note = allLocal.find(n => n._id === req.params.id);

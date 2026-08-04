@@ -162,3 +162,162 @@
 .animate-card-lift:hover { animation: cardLift 0.3s ease-out forwards; }
 .animate-glow-pulse { animation: glowPulse 2s ease-in-out infinite; }
 .animate-float { animation: float 6s ease-in-out infinite; }
+
+/* ─── Cinematic Learning Hub design system ─────────────────────── */
+
+/* Ambient drift for floating particles behind hero */
+@keyframes lh-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); opacity: 0; }
+  15%  { opacity: var(--lh-p-opacity, 0.55); }
+  85%  { opacity: var(--lh-p-opacity, 0.55); }
+  100% { transform: translate3d(var(--lh-dx, 30px), var(--lh-dy, -60px), 0) scale(0.4); opacity: 0; }
+}
+.lh-particle {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: lh-drift var(--lh-duration, 9s) linear infinite;
+  animation-delay: var(--lh-delay, 0s);
+}
+
+/* Slow rotating conic glow behind the hero card */
+@keyframes lh-conic-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.lh-conic-glow {
+  background: conic-gradient(from 180deg at 50% 50%,
+    rgba(139,92,246,0.32), rgba(34,211,238,0.14),
+    rgba(236,72,153,0.10), rgba(139,92,246,0.32));
+  filter: blur(48px);
+  animation: lh-conic-spin 18s linear infinite;
+}
+
+/* Soft breathing ambient glow behind cards */
+@keyframes lh-breathe {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 0.85; transform: scale(1.06); }
+}
+.lh-breathe { animation: lh-breathe 5s ease-in-out infinite; }
+
+/* Frosted-glass button treatment */
+.lh-glass {
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.lh-glass:hover {
+  background: rgba(255,255,255,0.18);
+  box-shadow: 0 12px 44px rgba(139,92,246,0.45), inset 0 1px 0 rgba(255,255,255,0.35);
+  transform: translateY(-2px);
+}
+.lh-glass:active { transform: translateY(0) scale(0.97); }
+
+/* Cinematic card hover: lift + animated border glow */
+.lh-card {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.lh-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(139,92,246,0.45);
+  box-shadow: 0 24px 60px -12px rgba(0,0,0,0.6), 0 0 40px -8px rgba(139,92,246,0.28);
+}
+.lh-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.55), rgba(34,211,238,0.28), rgba(255,255,255,0.06));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 3;
+}
+.lh-card:hover::before { opacity: 1; }
+
+/* Top sheen that sweeps across on hover */
+.lh-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,0.08), transparent);
+  transform: skewX(-18deg);
+  transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 3;
+}
+.lh-card:hover::after { left: 130%; }
+
+/* Thumbnail zoom on hover */
+.lh-thumb { transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.lh-card:hover .lh-thumb { transform: scale(1.08); }
+
+/* Meta chip pills */
+.lh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.65);
+  backdrop-filter: blur(8px);
+}
+
+/* Skeleton shimmer used while content loads */
+.lh-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255,255,255,0.05);
+}
+.lh-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.09), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* Section row header: animated gradient text accent */
+@keyframes lh-rainbow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.lh-rainbow-text {
+  background: linear-gradient(90deg, #a78bfa, #22d3ee, #a78bfa);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lh-rainbow 6s ease infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lh-particle,
+  .lh-conic-glow,
+  .lh-breathe,
+  .lh-rainbow-text,
+  .lh-card::after,
+  .lh-card:hover { transform: none; transition: none; }
+  .lh-card::before, .lh-card::after { display: none; }
+  .lh-thumb { transition: none; }
+  .lh-card:hover .lh-thumb { transform: none; }
+}

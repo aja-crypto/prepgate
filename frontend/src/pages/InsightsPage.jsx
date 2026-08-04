@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import InsightsDashboard from '../components/gate/InsightsDashboard';
 import SuccessBlueprintCard from '../components/gate/SuccessBlueprintCard';
 import StrategyInsightCard from '../components/gate/StrategyInsightCard';
 import QandACard from '../components/gate/QandACard';
@@ -93,6 +95,16 @@ export default function InsightsPage() {
         <h1 className="text-xl font-bold text-text">GATE 2027 Insights</h1>
         <p className="text-sm text-text3 mt-0.5">Curated strategies, topper advice, subject insights, and success principles — powered by 8 expert sources.</p>
       </div>
+
+      {/* GATE Data Insights Dashboard */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-lg">💡</span>
+          <h2 className="text-sm font-bold text-white">GATE Data Insights</h2>
+          <span className="text-[10px] text-text3/50">Admission, Placement & Trend Analysis</span>
+        </div>
+        <InsightsDashboard />
+      </motion.div>
 
       {/* Tabs */}
       <div className="flex gap-1 flex-wrap mb-5">

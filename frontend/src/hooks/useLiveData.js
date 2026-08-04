@@ -25,10 +25,6 @@ export function useLiveData(refreshInterval = 1800000) { // Default to 30 mins
         if (prevData && freshData) {
           const hasNewAnnouncements = freshData.announcements?.length > prevData.announcements?.length ||
             (freshData.announcements?.[0]?.contentHash !== prevData.announcements?.[0]?.contentHash);
-          
-          if (hasNewAnnouncements) {
-            console.log('New GATE updates available!');
-          }
         }
         
         try { localStorage.setItem('gatenexa_cached_live_data', JSON.stringify(freshData)); } catch {}

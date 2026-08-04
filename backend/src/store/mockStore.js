@@ -61,6 +61,7 @@ const formatUser = (user) => ({
   name: user.name,
   email: user.email,
   role: user.role,
+  isPremium: user.isPremium ?? false,
   streak: user.streak,
   preferences: user.preferences,
   targetYear: user.targetYear,
@@ -121,10 +122,10 @@ const deleteUser = (id) => {
 
 async function seedDemoUser() {
   const pwHash = await bcrypt.hash('demo1234', 10);
-  function makeUser(id, name, email) {
+  function demoUser(id, name, email, role, isPremium = false) {
     const d = getEmptyProgressData();
     return {
-      _id: id, name, email, password: pwHash, role: 'owner', isPremium: true,
+      _id: id, name, email, password: pwHash, role, isPremium,
       authProvider: 'local', isVerified: true, googleId: null,
       streak: { current: 0, longest: 0, lastStudyDate: null }, preferences: { theme: 'dark', notifications: true },
       targetYear: 2027, studyGoalHours: 8, progressBackup: { data: d, updatedAt: new Date() }, fcmToken: null,
@@ -133,12 +134,46 @@ async function seedDemoUser() {
       save: async function () { saveUsersToDisk(); return this; },
     };
   }
-  if (!usersByEmail.get('demo@gate2027.in')) {
-    const u = makeUser(crypto.randomUUID(), 'Demo Student', 'demo@gate2027.in');
+  // Seed accounts: preserve existing roles/premium from disk, create if missing
+  const OWNER_EMAIL = 'purruajaykumar@gmail.com';
+  const DEMO_EMAIL = 'demo@gate2027.in';
+  const ADMIN_EMAIL = 'owner@test.com';
+  const PREMIUM_EMAIL = 'premium@test.com';
+  const BASIC_EMAIL = 'basic@test.com';
+
+  // Ensure owner and demo always have correct access
+  for (const [email, user] of usersByEmail) {
+    if (email === OWNER_EMAIL) {
+      if (user.role !== 'owner' || user.isPremium !== true) {
+        user.role = 'owner';
+        user.isPremium = true;
+      }
+    } else if (email === DEMO_EMAIL) {
+      user.isPremium = false;
+      user.role = 'user';
+    }
+    // Don't strip role/isPremium from test accounts — they are loaded from disk with correct values
+  }
+
+  // Create seed accounts if missing
+  if (!usersByEmail.get(DEMO_EMAIL)) {
+    const u = demoUser(crypto.randomUUID(), 'Demo Student', DEMO_EMAIL, 'user', false);
     usersByEmail.set(u.email, u); usersById.set(u._id, u);
   }
-  if (!usersByEmail.get('purruajaykumar@gmail.com')) {
-    const u = makeUser(crypto.randomUUID(), 'Puru Ajay Kumar', 'purruajaykumar@gmail.com');
+  if (!usersByEmail.get(OWNER_EMAIL)) {
+    const u = demoUser(crypto.randomUUID(), 'Puru Ajay Kumar', OWNER_EMAIL, 'owner', true);
+    usersByEmail.set(u.email, u); usersById.set(u._id, u);
+  }
+  if (!usersByEmail.get(ADMIN_EMAIL)) {
+    const u = demoUser(crypto.randomUUID(), 'Owner Admin', ADMIN_EMAIL, 'admin', true);
+    usersByEmail.set(u.email, u); usersById.set(u._id, u);
+  }
+  if (!usersByEmail.get(PREMIUM_EMAIL)) {
+    const u = demoUser(crypto.randomUUID(), 'Premium Student', PREMIUM_EMAIL, 'user', true);
+    usersByEmail.set(u.email, u); usersById.set(u._id, u);
+  }
+  if (!usersByEmail.get(BASIC_EMAIL)) {
+    const u = demoUser(crypto.randomUUID(), 'Basic Student', BASIC_EMAIL, 'user', false);
     usersByEmail.set(u.email, u); usersById.set(u._id, u);
   }
   saveUsersToDisk();

@@ -69,23 +69,24 @@ router.get('/aggregates', protect, async (req, res, next) => {
 router.post('/', protect, async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { questionText, subject, topic, difficulty, mistakeType, correctAnswer, userAnswer, reason, learning, source, sourceTest, priority, tags, attachments } = req.body;
+    const { questionText, subject, topic, difficulty, mistakeType, correctAnswer, userAnswer, reason, learning, source, sourceTest, priority, tags, attachments, mistake, correctConcept } = req.body;
 
-    if (!questionText || !subject) {
-      return res.status(400).json({ success: false, message: 'questionText and subject are required' });
+    const text = mistake || learning || questionText;
+    if (!text || !subject) {
+      return res.status(400).json({ success: false, message: 'Mistake description and subject are required' });
     }
 
     const data = {
       user: userId,
-      questionText: questionText || '',
+      questionText: questionText || text,
       subject: subject || '',
       topic: topic || '',
-      difficulty: difficulty || 'Medium',
-      mistakeType: mistakeType || 'concept_error',
+      difficulty: difficulty || '',
+      mistakeType: mistakeType || 'concept_mistake',
       correctAnswer: correctAnswer || '',
       userAnswer: userAnswer || '',
-      reason: reason || '',
-      learning: learning || '',
+      reason: correctConcept || reason || '',
+      learning: mistake || learning || text,
       source: source || 'Practice',
       sourceTest: sourceTest || '',
       priority: priority || 'Medium',
@@ -119,6 +120,26 @@ router.put('/:id', protect, async (req, res, next) => {
     const entry = await MistakeEntry.findOneAndUpdate(
       { _id: req.params.id, user: userId },
       { $set: updates },
+      { new: true }
+    );
+    if (!entry) return res.status(404).json({ success: false, message: 'Entry not found' });
+    res.json({ success: true, data: entry });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/:id/review', protect, async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { reviewed } = req.body;
+
+    if (!isMongoConnected() || isMockAuthEnabled()) {
+      return res.json({ success: true, message: 'Review not supported in local mode' });
+    }
+    const entry = await MistakeEntry.findOneAndUpdate(
+      { _id: req.params.id, user: userId },
+      { $set: { resolved: reviewed === true, reviewCount: reviewed === true ? 1 : 0 } },
       { new: true }
     );
     if (!entry) return res.status(404).json({ success: false, message: 'Entry not found' });

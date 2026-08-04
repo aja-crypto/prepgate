@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const path = require('path');
 const fs = require('fs');
+const { sanitizeFilename, createFileFilter } = require('../utils/uploadValidator');
 const { adminProtect, requirePermission } = require('../middleware/adminAuth');
 const { isMongoConnected } = require('../config/db');
 const { Flashcard, MonthlySet } = require('../models/GateVault');
@@ -87,9 +88,12 @@ const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'gatevault');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
+  filename: (req, file, cb) => {
+    const safe = sanitizeFilename(file.originalname);
+    cb(null, `${Date.now()}-${safe}`);
+  },
 });
-const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
+const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 }, fileFilter: createFileFilter('document') });
 
 router.post('/upload', adminProtect, requirePermission('content.manage'), upload.single('file'), async (req, res, next) => {
   try {

@@ -25,7 +25,7 @@ export function formatPercent(value: number): string {
  */
 export function formatLakhs(value: number): string {
   const trimmed = Number.isInteger(value) ? value.toString() : value.toFixed(1);
-  return `\u20B9${trimmed}L`;
+  return `Rs. ${trimmed}L`;
 }
 
 /** Safe display for nullable table fields. */

@@ -41,3 +41,18 @@ backend/test-*.js
 backend/src/config/test-dir.js
 
 .vercel
+
+# Dev logs & debug artifacts (not for production)
+*.out
+*.err
+*.txt
+pcheck.json
+raw_pred.json
+screenshots/
+_audit/
+_scripts/
+ai_captures/
+data/ccmt_extracted/
+tunnel_url.txt
+vite.err
+vite.out

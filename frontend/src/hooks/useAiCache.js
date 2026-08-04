@@ -6,22 +6,22 @@ const TTL_MS = 3600000;
 function createCache() {
   const cache = new Map();
 
-  function _key(question) {
-    return question.trim().toLowerCase();
+  function _key(question, mode) {
+    return `${(mode || 'auto').toLowerCase()}:${question.trim().toLowerCase()}`;
   }
 
-  function get(question) {
-    const entry = cache.get(_key(question));
+  function get(question, mode) {
+    const entry = cache.get(_key(question, mode));
     if (!entry) return null;
     if (Date.now() > entry.expiresAt) {
-      cache.delete(_key(question));
+      cache.delete(_key(question, mode));
       return null;
     }
     entry.hits++;
     return entry.data;
   }
 
-  function set(question, data, ttl = TTL_MS) {
+  function set(question, data, ttl = TTL_MS, mode) {
     if (cache.size >= MAX_ENTRIES) {
       let oldest = null;
       let oldestTime = Infinity;
@@ -33,7 +33,7 @@ function createCache() {
       }
       if (oldest) cache.delete(oldest);
     }
-    cache.set(_key(question), {
+    cache.set(_key(question, mode), {
       data,
       expiresAt: Date.now() + ttl,
       hits: 0,
@@ -41,8 +41,8 @@ function createCache() {
     });
   }
 
-  function has(question) {
-    return get(question) !== null;
+  function has(question, mode) {
+    return get(question, mode) !== null;
   }
 
   function clear() {
@@ -55,16 +55,16 @@ function createCache() {
 export default function useAiCache() {
   const cacheRef = useRef(createCache());
 
-  const getCached = useCallback((question) => {
-    return cacheRef.current.get(question);
+  const getCached = useCallback((question, mode) => {
+    return cacheRef.current.get(question, mode);
   }, []);
 
-  const setCached = useCallback((question, data, ttl) => {
-    cacheRef.current.set(question, data, ttl);
+  const setCached = useCallback((question, data, ttl, mode) => {
+    cacheRef.current.set(question, data, ttl, mode);
   }, []);
 
-  const hasCached = useCallback((question) => {
-    return cacheRef.current.has(question);
+  const hasCached = useCallback((question, mode) => {
+    return cacheRef.current.has(question, mode);
   }, []);
 
   const clearCache = useCallback(() => {

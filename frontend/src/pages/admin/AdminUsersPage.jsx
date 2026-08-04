@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import adminApi from '../../services/adminApi';
 import GlassCard from '../../components/ui/GlassCard';
 import Icon from '../../components/ui/Icon';
@@ -130,7 +130,7 @@ export default function AdminUsersPage() {
           newThisWeek: r.data.data.users.newThisWeek || 0,
         }));
       }
-    }).catch(e => console.warn('AdminUsersPage fetch failed', e?.message));
+    }).catch(e => console.error('AdminUsersPage fetch failed', e?.message));
   }, []);
 
   const handleStatusToggle = async (user) => {

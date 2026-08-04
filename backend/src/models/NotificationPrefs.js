@@ -1,0 +1,56 @@
+const mongoose = require('mongoose');
+
+const notifPrefsSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true,
+  },
+  enabled: {
+    type: Boolean,
+    default: true,
+  },
+  maxPerDay: {
+    type: Number,
+    default: 3,
+    min: 1,
+    max: 5,
+  },
+  quietHoursStart: { type: Number, default: 22 },
+  quietHoursEnd: { type: Number, default: 7 },
+  categories: {
+    morning_mission: { type: Boolean, default: true },
+    motivation: { type: Boolean, default: true },
+    success_story: { type: Boolean, default: true },
+    roadmap: { type: Boolean, default: true },
+    recommendation: { type: Boolean, default: true },
+    dsa_challenge: { type: Boolean, default: true },
+    revision: { type: Boolean, default: true },
+    focus_reminder: { type: Boolean, default: true },
+    daily_content: { type: Boolean, default: true },
+    weekly_report: { type: Boolean, default: true },
+    did_you_know: { type: Boolean, default: true },
+    quick_fact: { type: Boolean, default: true },
+    productivity_tip: { type: Boolean, default: true },
+    campus_insight: { type: Boolean, default: true },
+    success_spotlight: { type: Boolean, default: true },
+    learning_hub: { type: Boolean, default: true },
+    discovery: { type: Boolean, default: true },
+    smart_reminder: { type: Boolean, default: true },
+    daily_inspiration: { type: Boolean, default: true },
+    login_day: { type: Boolean, default: true },
+    milestone: { type: Boolean, default: true },
+  },
+  seenStories: [String],
+  seenMotivations: [String],
+  seenLearningHub: [String],
+  seenDiscovery: [String],
+  seenSuccessStories: [String],
+  lastSentAt: { type: Date, default: null },
+  todayCount: { type: Number, default: 0 },
+  todayDate: { type: String, default: '' },
+  onboardingSeeded: { type: Boolean, default: false },
+}, { timestamps: true });
+
+module.exports = mongoose.model('NotificationPrefs', notifPrefsSchema);

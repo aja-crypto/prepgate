@@ -1,5 +1,8 @@
 const router = require('express').Router();
+const fs = require('fs');
+const path = require('path');
 const { protect } = require('../middleware/auth');
+const { requirePremium } = require('../middleware/requirePremium');
 const { validateFields } = require('../middleware/validateInput');
 const { isMongoConnected, isMockAuthEnabled } = require('../config/db');
 const { predict, whatIf, generateAiReport } = require('../services/predictionEngine');
@@ -59,7 +62,7 @@ function requireMongo(req, res, next) {
 }
 
 // ─── Main Prediction ──────────────────────────────────────────────
-router.post('/predict', protect, predictRateLimit, requireMongo, validateFields([
+router.post('/predict', protect, requirePremium, predictRateLimit, requireMongo, validateFields([
   { name: 'expectedMarks', type: 'number', required: true, min: 0, max: 100 },
   { name: 'category', type: 'string', required: true },
 ]), async (req, res, next) => {
@@ -73,38 +76,44 @@ router.post('/predict', protect, predictRateLimit, requireMongo, validateFields(
       mockAverage = null, preparationLevel = null,
     } = req.body;
 
-    // Check cache (same input params = same prediction)
-    const cacheKey = `predict:${expectedMarks}:${category}:${paper}:${admissionType}:${collegeType}:${preferredState}`;
+    // Check cache (scoped to user — different users never share cache)
+    const userId = req.user?._id?.toString() || 'anon';
+    const cacheKey = `predict:${userId}:${expectedMarks}:${category}:${paper}:${admissionType}:${collegeType}:${preferredState}`;
     const CACHE_TTL_MINUTES = 360;
-    console.log('[Predictor] mongoConnected:', isMongoConnected(), 'mockAuth:', isMockAuthEnabled());
     if (isMongoConnected() && !isMockAuthEnabled()) {
       const cached = await PredictionCache.findOne({ cacheKey, expiresAt: { $gt: new Date() } }).lean();
       if (cached) {
-        console.log('[Predictor] Cache HIT');
         await PredictionCache.updateOne({ _id: cached._id }, { $inc: { hitCount: 1 } });
         return res.json({ success: true, data: { ...cached.output, cached: true } });
       }
-      console.log('[Predictor] Cache MISS');
     }
 
     timingMarks.push('pre-predict');
     const predictStart = Date.now();
     let result;
     try {
-      result = await predict({
-        expectedMarks, category, paper, admissionType,
-        preferredState, collegeType, preferredProgram,
-        attemptNumber, targetYear, mockAverage, preparationLevel,
-      });
+      // Use MongoDB prediction engine when available, fall back to local static data
+      if (isMongoConnected()) {
+        result = await predict({
+          expectedMarks, category, paper, admissionType,
+          preferredState, collegeType, preferredProgram,
+          attemptNumber, targetYear, mockAverage, preparationLevel,
+        });
+      } else {
+        const { localPredict } = require('../services/localPredictor');
+        result = localPredict({ expectedMarks, category, paper, admissionType, preferredState, collegeType, preferredProgram });
+      }
     } catch (err) {
-      console.warn('[Predictor] prediction engine error, using fallback:', err.message);
+      console.error('[Predictor] prediction engine error, using fallback:', err.message);
       // Fallback heuristic when MongoDB unavailable
+      // NOTE: predictedScore must use the canonical 0-1000 scale (same as the prediction engine)
       const score = Math.min(100, Math.max(0, expectedMarks));
+      const gateScore = Math.round(score * 10);
       const rank = Math.round(Math.pow(10, (100 - score) / 25) * 100);
       const percentile = Math.max(0.1, 100 - (rank / 200000) * 100);
       result = {
-        predictedScore: score, predictedRank: rank, predictedPercentile: +percentile.toFixed(2),
-        confidence: 'Medium', confidenceScore: 50, isQualified: score >= 25, qualifyingCutoff: 25,
+        predictedScore: gateScore, predictedRank: rank, predictedPercentile: +percentile.toFixed(2),
+        confidence: 'Medium', confidenceScore: 50, isQualified: gateScore >= 250, qualifyingCutoff: 25,
         dreamColleges: [], targetColleges: [], safeColleges: [], backupColleges: [],
         guaranteedColleges: [], veryHighColleges: [], likelyColleges: [], competitiveColleges: [],
         dreamTierColleges: [], eligibleIITs: 0, eligibleNITs: 0, eligibleIIITs: 0, eligibleGFTIs: 0,
@@ -116,7 +125,12 @@ router.post('/predict', protect, predictRateLimit, requireMongo, validateFields(
     timingMarks.push('post-predict');
 
     if (result.error) {
-      return res.status(400).json({ success: false, message: result.error });
+      const statusCode = result.availableCategories ? 404 : 400;
+      return res.status(statusCode).json({
+        success: false,
+        message: result.error,
+        ...(result.availableCategories ? { availableCategories: result.availableCategories } : {}),
+      });
     }
 
     // Build datasets used array
@@ -167,7 +181,7 @@ router.post('/predict', protect, predictRateLimit, requireMongo, validateFields(
         });
       }
     } catch (e) {
-      console.warn('Failed to save prediction history:', e.message);
+      console.error('Failed to save prediction history:', e.message);
     }
 
     // Map 5-tier college lists → flat opportunities array with collegeBlock tier
@@ -224,13 +238,6 @@ router.post('/predict', protect, predictRateLimit, requireMongo, validateFields(
     };
 
     const totalTime = Date.now() - routeStart;
-    console.log(`[Predictor] marks=${expectedMarks} cat=${category} predict=${predictTime}ms total=${totalTime}ms opps=${opportunities.length} cached=${!!result.cached}`);
-    console.log('[Predictor] instituteType breakdown:', JSON.stringify(
-      [...new Set(opportunities.map(o => o.collegeType))].map(t => ({
-        type: t,
-        count: opportunities.filter(o => o.collegeType === t).length,
-      }))
-    ));
     const responseData = { 
       baseYear: result.baseYear, 
       predictedScore: result.predictedScore, 
@@ -239,10 +246,21 @@ router.post('/predict', protect, predictRateLimit, requireMongo, validateFields(
       airRange: result.airRange, 
       isQualified: result.isQualified,
       qualifyingCutoff: result.qualifyingCutoff,
+      gateScore: { value: result.predictedScore, type: 'Estimated' },
+      air: { range: result.airRange, interpolatedAIR: result.predictedRank },
+      formula: result.gateFormula,
       confidence: result.confidence,
       confidenceScore: result.confidenceScore,
+      gateFormula: result.gateFormula,
+      disclaimer: 'GATE Score and AIR are estimated using official GATE formulas, published qualifying marks, and historical counselling data. Mt (average marks of top 0.1% candidates) is not officially published by IITs and is estimated from historical score distributions. Results should be treated as guidance only.',
       totalDataPoints: result.totalDataPoints,
       totalOpportunities: result.totalOpportunities,
+      totalColleges: result.totalColleges,
+      totalProgrammes: result.totalProgrammes,
+      officialData: result.officialData,
+      estimatedData: result.estimatedData,
+      datasetsUsed: result.datasetsUsed || [],
+      confidenceFactors: result.confidenceFactors || [],
       totalIITs: result.totalIITs,
       totalNITs: result.totalNITs,
       totalIIITs: result.totalIIITs,
@@ -252,6 +270,13 @@ router.post('/predict', protect, predictRateLimit, requireMongo, validateFields(
       totalIIEST: result.totalIIEST,
       totalOther: result.totalOther,
       databaseCoverage: result.databaseCoverage,
+      databaseStats: result.databaseStats,
+      datasetInfo: (() => {
+        try {
+          const catPath = path.join(__dirname, '..', '..', 'data', 'dataset_catalogue.json');
+          return JSON.parse(fs.readFileSync(catPath, 'utf-8'));
+        } catch { return null; }
+      })(),
       eligibleIITs: result.eligibleIITs,
       eligibleNITs: result.eligibleNITs,
       eligibleIIITs: result.eligibleIIITs,
@@ -281,7 +306,7 @@ router.post('/predict', protect, predictRateLimit, requireMongo, validateFields(
     if (isMongoConnected()) {
       PredictionCache.findOneAndUpdate(
         { cacheKey },
-        { cacheKey, input: req.body, output: responseData, expiresAt: new Date(Date.now() + CACHE_TTL_MINUTES * 60 * 1000) },
+        { $set: { cacheKey, input: req.body, output: responseData, expiresAt: new Date(Date.now() + CACHE_TTL_MINUTES * 60 * 1000) } },
         { upsert: true, new: false }
       ).catch(() => {});
     }
@@ -291,7 +316,7 @@ router.post('/predict', protect, predictRateLimit, requireMongo, validateFields(
 });
 
 // ─── What-If Analysis ─────────────────────────────────────────────
-router.post('/what-if', protect, requireMongo, validateFields([
+router.post('/what-if', protect, requirePremium, requireMongo, validateFields([
   { name: 'historyId', type: 'string', required: true },
   { name: 'marksDelta', type: 'number', required: true },
 ]), async (req, res, next) => {
@@ -299,7 +324,7 @@ router.post('/what-if', protect, requireMongo, validateFields([
     const userId = req.user?._id?.toString() || '';
     const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(userId);
     if (!isValidObjectId) return res.status(400).json({ success: false, message: 'User not found.' });
-    const history = await PredictionHistory.findOne({ _id: req.body.historyId, user: userId });
+    const history = await PredictionHistory.findOne({ _id: req.body.historyId, user: userId }).lean();
     if (!history) return res.status(404).json({ success: false, message: 'Prediction not found.' });
 
     const scenario = whatIf(history.output, req.body.marksDelta);
@@ -316,11 +341,11 @@ router.post('/what-if', protect, requireMongo, validateFields([
 });
 
 // ─── Cutoff Trends ────────────────────────────────────────────────
-router.get('/trends/:institute/:program', protect, requireMongo, async (req, res, next) => {
+router.get('/trends/:institute/:program', protect, requirePremium, requireMongo, async (req, res, next) => {
   try {
     const { institute, program } = req.params;
     const { category = 'General' } = req.query;
-    const cutoffs = await CcmtCutoff.find({ institute, program, category }).sort({ year: 1 });
+    const cutoffs = await CcmtCutoff.find({ institute, program, category }).sort({ year: 1 }).lean();
     if (!cutoffs || cutoffs.length === 0) {
       return res.status(404).json({ success: false, message: 'No trend data found.' });
     }
@@ -335,7 +360,7 @@ router.get('/trends/:institute/:program', protect, requireMongo, async (req, res
 });
 
 // ─── CCMT Data Query ──────────────────────────────────────────────
-router.get('/ccmt', protect, requireMongo, async (req, res, next) => {
+router.get('/ccmt', protect, requirePremium, requireMongo, async (req, res, next) => {
   try {
     const { year, category, instituteType, state, program, round } = req.query;
     const filter = {};
@@ -345,46 +370,46 @@ router.get('/ccmt', protect, requireMongo, async (req, res, next) => {
     if (state) filter.state = state;
     if (program) filter.program = { $regex: program, $options: 'i' };
     if (round) filter.round = parseInt(round);
-    const data = await CcmtCutoff.find(filter).sort({ closingScore: -1 }).limit(500);
+    const data = await CcmtCutoff.find(filter).sort({ closingScore: -1 }).limit(500).lean();
     res.json({ success: true, count: data.length, data });
   } catch (e) { next(e); }
 });
 
 // ─── COAP Data Query ──────────────────────────────────────────────
-router.get('/coap', protect, requireMongo, async (req, res, next) => {
+router.get('/coap', protect, requirePremium, requireMongo, async (req, res, next) => {
   try {
     const { year, category, institute } = req.query;
     const filter = {};
     if (year) filter.year = parseInt(year);
     if (category) filter.category = category;
     if (institute) filter.institute = { $regex: institute, $options: 'i' };
-    const data = await CoapCutoff.find(filter).sort({ offerRound: 1 });
+    const data = await CoapCutoff.find(filter).sort({ offerRound: 1 }).lean();
     res.json({ success: true, count: data.length, data });
   } catch (e) { next(e); }
 });
 
 // ─── Seat Matrix Query ────────────────────────────────────────────
-router.get('/seats', protect, requireMongo, async (req, res, next) => {
+router.get('/seats', protect, requirePremium, requireMongo, async (req, res, next) => {
   try {
     const { year, institute, program } = req.query;
     const filter = {};
     if (year) filter.year = parseInt(year);
     if (institute) filter.institute = { $regex: institute, $options: 'i' };
     if (program) filter.program = { $regex: program, $options: 'i' };
-    const data = await SeatMatrix.find(filter).sort({ year: -1 });
+    const data = await SeatMatrix.find(filter).sort({ year: -1 }).lean();
     res.json({ success: true, count: data.length, data });
   } catch (e) { next(e); }
 });
 
 // ─── Prediction Validation ────────────────────────────────────────
-router.post('/validate', protect, requireMongo, validateFields([
+router.post('/validate', protect, requirePremium, requireMongo, validateFields([
   { name: 'predictionId', type: 'string', required: true },
   { name: 'isCorrect', type: 'boolean', required: true },
 ]), async (req, res, next) => {
   try {
     const { predictionId, isCorrect, actualRank, actualScore, actualCollege, actualProgram, feedbackText } = req.body;
 
-    const prediction = await PredictionHistory.findOne({ _id: predictionId, user: req.user._id });
+    const prediction = await PredictionHistory.findOne({ _id: predictionId, user: req.user._id }).lean();
     if (!prediction) return res.status(404).json({ success: false, message: 'Prediction not found.' });
 
     prediction.validation = {
@@ -412,11 +437,13 @@ router.post('/validate', protect, requireMongo, validateFields([
     const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
 
     await PredictionAccuracy.findOneAndUpdate({}, {
-      overallAccuracy: accuracy,
-      totalPredictions: total,
-      correctPredictions: correct,
-      incorrectPredictions: incorrect,
-      lastCalculated: new Date(),
+      $set: {
+        overallAccuracy: accuracy,
+        totalPredictions: total,
+        correctPredictions: correct,
+        incorrectPredictions: incorrect,
+        lastCalculated: new Date(),
+      },
     }, { upsert: true });
 
     res.json({ success: true, accuracy, total, correct, incorrect });
@@ -426,7 +453,7 @@ router.post('/validate', protect, requireMongo, validateFields([
 // ─── Prediction Accuracy Stats ────────────────────────────────────
 router.get('/accuracy', protect, requireMongo, async (req, res, next) => {
   try {
-    const accData = await PredictionAccuracy.findOne().sort({ lastCalculated: -1 });
+    const accData = await PredictionAccuracy.findOne().sort({ lastCalculated: -1 }).lean();
     if (!accData) {
       return res.json({ success: true, data: { overallAccuracy: 0, totalPredictions: 0, correctPredictions: 0, incorrectPredictions: 0 } });
     }
@@ -435,40 +462,51 @@ router.get('/accuracy', protect, requireMongo, async (req, res, next) => {
 });
 
 // ─── History ──────────────────────────────────────────────────────
-router.get('/history', protect, requireMongo, async (req, res, next) => {
+router.get('/history', protect, requirePremium, async (req, res, next) => {
   try {
-    // Skip MongoDB query for mock (UUID-based) users that can't cast to ObjectId
-    if (typeof req.user._id === 'string' && req.user._id.includes('-')) {
+    if (!isMongoConnected()) {
       return res.json({ success: true, count: 0, total: 0, page: 1, pages: 0, data: [] });
     }
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const userId = req.user?._id?.toString() || req.user?.id?.toString() || '';
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(userId);
+    // Non-ObjectId users (demo / mock UUID) can't be queried in MongoDB — return empty gracefully
+    if (!userId || !isValidObjectId) {
+      return res.json({ success: true, count: 0, total: 0, page: 1, pages: 0, data: [] });
+    }
+    const rawPage = parseInt(req.query.page, 10);
+    const rawLimit = parseInt(req.query.limit, 10);
+    const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : 20;
     const skip = (page - 1) * limit;
-    const predictions = await PredictionHistory.find({ user: req.user._id })
+    const predictions = await PredictionHistory.find({ user: userId })
       .sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
-    const total = await PredictionHistory.countDocuments({ user: req.user._id });
+    const total = await PredictionHistory.countDocuments({ user: userId });
     res.json({ success: true, count: predictions.length, total, page, pages: Math.ceil(total / limit), data: predictions });
   } catch (e) { next(e); }
 });
 
-router.get('/history/:id', protect, requireMongo, async (req, res, next) => {
+router.get('/history/:id', protect, requirePremium, requireMongo, async (req, res, next) => {
   try {
-    if (typeof req.user._id === 'string' && req.user._id.includes('-')) {
+    const userId = req.user?._id?.toString() || req.user?.id?.toString() || '';
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(userId);
+    if (!userId || !isValidObjectId) {
       return res.status(404).json({ success: false, message: 'Prediction not found.' });
     }
-    const prediction = await PredictionHistory.findOne({ _id: req.params.id, user: req.user._id }).lean();
+    const prediction = await PredictionHistory.findOne({ _id: req.params.id, user: userId }).lean();
     if (!prediction) return res.status(404).json({ success: false, message: 'Prediction not found.' });
     res.json({ success: true, data: prediction });
   } catch (e) { next(e); }
 });
 
-router.delete('/history/:id', protect, async (req, res, next) => {
+router.delete('/history/:id', protect, requirePremium, async (req, res, next) => {
   try {
     if (!isMongoConnected()) return res.status(503).json({ success: false, message: 'MongoDB required.' });
-    if (typeof req.user._id === 'string' && req.user._id.includes('-')) {
+    const userId = req.user?._id?.toString() || req.user?.id?.toString() || '';
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(userId);
+    if (!userId || !isValidObjectId) {
       return res.status(404).json({ success: false, message: 'Prediction not found.' });
     }
-    const result = await PredictionHistory.deleteOne({ _id: req.params.id, user: req.user._id });
+    const result = await PredictionHistory.deleteOne({ _id: req.params.id, user: userId });
     if (result.deletedCount === 0) return res.status(404).json({ success: false, message: 'Prediction not found.' });
     res.json({ success: true, message: 'Prediction deleted.' });
   } catch (e) { next(e); }
@@ -478,7 +516,7 @@ router.delete('/history/:id', protect, async (req, res, next) => {
 router.get('/years', protect, async (req, res, next) => {
   try {
     if (!isMongoConnected()) return res.json({ success: true, data: [] });
-    const years = await GateYear.find({ isPublished: true }).sort({ year: -1 });
+    const years = await GateYear.find({ isPublished: true }).sort({ year: -1 }).lean();
     res.json({ success: true, data: years });
   } catch (e) { next(e); }
 });
@@ -491,7 +529,7 @@ router.get('/colleges', protect, async (req, res, next) => {
     if (type) filter.type = type;
     if (state) filter.state = state;
     if (search) filter.name = { $regex: search, $options: 'i' };
-    const colleges = await CollegeProgram.find(filter).sort({ nirfRanking: 1 });
+    const colleges = await CollegeProgram.find(filter).sort({ nirfRanking: 1 }).lean();
     res.json({ success: true, count: colleges.length, data: colleges });
   } catch (e) { next(e); }
 });
@@ -504,20 +542,22 @@ router.get('/psus', protect, async (req, res, next) => {
     if (year) filter.year = parseInt(year);
     if (category) filter.category = category;
     if (paper) filter.paper = paper;
-    const psus = await PsuRequirement.find(filter).sort({ cutoffScore: -1 });
+    const psus = await PsuRequirement.find(filter).sort({ cutoffScore: -1 }).lean();
     res.json({ success: true, count: psus.length, data: psus });
   } catch (e) { next(e); }
 });
 
 router.get('/stats', protect, requireMongo, async (req, res, next) => {
   try {
+    const userId = req.user?._id?.toString() || req.user?.id?.toString() || '';
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(userId);
     const [gateYears, gateCutoffs, ccmtEntries, coapEntries, seatEntries, branchEntries, historyCount] = await Promise.all([
       GateYear.countDocuments(), GateCutoff.countDocuments(), CcmtCutoff.countDocuments(),
       CoapCutoff.countDocuments(), SeatMatrix.countDocuments(), BranchStatistics.countDocuments(),
-      PredictionHistory.countDocuments({ user: req.user._id }),
+      isValidObjectId ? PredictionHistory.countDocuments({ user: userId }) : Promise.resolve(0),
     ]);
-    const accData = await PredictionAccuracy.findOne().sort({ lastCalculated: -1 });
-    const latestYear = await GateYear.findOne().sort({ year: -1 });
+    const accData = await PredictionAccuracy.findOne().sort({ lastCalculated: -1 }).lean();
+    const latestYear = await GateYear.findOne().sort({ year: -1 }).lean();
     res.json({
       success: true,
       data: {
@@ -532,7 +572,7 @@ router.get('/stats', protect, requireMongo, async (req, res, next) => {
 });
 
 // ─── Choice Filling Order ──────────────────────────────────────────
-router.post('/choice-order', protect, async (req, res, next) => {
+router.post('/choice-order', protect, requirePremium, async (req, res, next) => {
   try {
     const { opportunities, preferredState, collegeType } = req.body;
     if (!opportunities || !Array.isArray(opportunities) || opportunities.length === 0) {
@@ -575,7 +615,7 @@ router.post('/choice-order', protect, async (req, res, next) => {
 });
 
 // ─── College Comparison ────────────────────────────────────────────
-router.post('/compare', protect, async (req, res, next) => {
+router.post('/compare', protect, requirePremium, async (req, res, next) => {
   try {
     const { colleges } = req.body;
     if (!colleges || !Array.isArray(colleges) || colleges.length < 2) {
@@ -623,6 +663,11 @@ router.get('/unlock-status', protect, async (req, res, next) => {
     if (bypassPredictorLimits(req.user)) {
       return res.json({ success: true, data: { isUnlocked: true, referralCount: 0, targetReferrals: 2 } });
     }
+    // When mock auth is enabled (MongoDB disconnected for mock users), check the user's in-memory premium status
+    if (isMockAuthEnabled()) {
+      const isUnlocked = req.user?.isPremium === true || req.user?.premiumUnlockedViaReferral === true;
+      return res.json({ success: true, data: { isUnlocked, referralCount: 0, targetReferrals: 2 } });
+    }
     let isUnlocked = false;
     let referralCount = 0;
     const userId = req.user?._id?.toString() || '';
@@ -641,7 +686,7 @@ router.get('/unlock-status', protect, async (req, res, next) => {
 });
 
 // ─── College Details ───────────────────────────────────────────────
-router.get('/college/:id', protect, async (req, res, next) => {
+router.get('/college/:id', protect, requirePremium, async (req, res, next) => {
   try {
     const program = await CollegeProgram.findById(req.params.id).lean();
     if (!program) return res.status(404).json({ success: false, message: 'College not found' });
