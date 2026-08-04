@@ -439,13 +439,17 @@ app.use('*', (req, res) => {
 });
 
 // --- Seed default dev admin & owner ──────────────────────---
-// Require env vars in production; fallback to dev-only defaults otherwise.
+// In production these manage the owner/admin accounts. Do NOT hard-fail
+// startup if they are missing — warn instead so the server can still start;
+// existing accounts keep their passwords and only the auto-manage step is skipped.
+const crypto = require('crypto');
+const secureFallbackPassword = () => 'GN_' + crypto.randomBytes(12).toString('hex');
 if (process.env.NODE_ENV === 'production') {
-  if (!process.env.OWNER_PASSWORD) throw new Error('OWNER_PASSWORD env var is required in production');
-  if (!process.env.ADMIN_PASSWORD) throw new Error('ADMIN_PASSWORD env var is required in production');
+  if (!process.env.OWNER_PASSWORD) console.warn('[STARTUP] OWNER_PASSWORD not set — owner password will not be auto-managed. Set it in env to update the owner password.');
+  if (!process.env.ADMIN_PASSWORD) console.warn('[STARTUP] ADMIN_PASSWORD not set — admin password will not be auto-managed. Set it in env to update the admin password.');
 }
-const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'owner_dev_fallback';
-const DEV_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin_dev_fallback';
+const OWNER_PASSWORD = process.env.OWNER_PASSWORD || null;
+const DEV_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || null;
 
 if (!isMongoConnected() && process.env.NODE_ENV !== 'production') {
   try {
@@ -502,12 +506,12 @@ connectDB().then(async () => {
         await Admin.create({
           name: 'Dev Admin',
           email: 'admin@gatenexa.dev',
-          passwordHash: DEV_ADMIN_PASSWORD,
+          passwordHash: DEV_ADMIN_PASSWORD || secureFallbackPassword(),
           role: 'super_admin',
           isActive: true,
         });
         console.log('Dev admin seeded in MongoDB: admin@gatenexa.dev');
-      } else {
+      } else if (DEV_ADMIN_PASSWORD) {
         existing.passwordHash = DEV_ADMIN_PASSWORD;
         await existing.save();
         console.log('Dev admin password updated');
@@ -525,10 +529,10 @@ connectDB().then(async () => {
       if (!existing) {
         await Admin.create({
           name: 'Owner', email: ownerEmail,
-          passwordHash: OWNER_PASSWORD, role: 'owner', isActive: true,
+          passwordHash: OWNER_PASSWORD || secureFallbackPassword(), role: 'owner', isActive: true,
         });
         console.log('?? Owner created in Admin model');
-      } else {
+      } else if (OWNER_PASSWORD) {
         existing.passwordHash = OWNER_PASSWORD;
         existing.role = 'owner';
         await existing.save();
@@ -540,12 +544,12 @@ connectDB().then(async () => {
         await User.create({
           name: 'Owner',
           email: ownerEmail,
-          password: OWNER_PASSWORD,
+          password: OWNER_PASSWORD || secureFallbackPassword(),
           role: 'owner',
           isPremium: true,
         });
         console.log('?? Owner User created');
-      } else {
+      } else if (OWNER_PASSWORD) {
         ownerUser.password = OWNER_PASSWORD;
         ownerUser.role = 'owner';
         await ownerUser.save({ validateBeforeSave: false });
