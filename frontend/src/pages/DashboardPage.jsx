@@ -175,7 +175,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { user, isPremium } = useAuth();
   const { studyStats, topics, pyqs, mocks, gateFeatures, gamification, isEmptyProgress, mongoAvailable } = useProgress();
-  const { data: liveData, loading: liveLoading, refresh: refreshLive } = useLiveData();
+  const { data: liveData, loading: liveLoading, refresh: refreshLive } = useLiveData(1800000, !user?.isGuest);
   const { visibleWidgets, editMode, setEditMode } = useDashboard();
   const [customizerOpen, setCustomizerOpen] = useState(false);
   const [interruptedSession, setInterruptedSession] = useState(null);

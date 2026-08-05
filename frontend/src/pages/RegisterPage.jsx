@@ -200,6 +200,7 @@ export default function RegisterPage() {
             onError={(err) => toast.error(err?.message || 'Google sign-up failed. Try email registration or Demo Mode.')}
           />
 
+          {!import.meta.env.PROD && (
           <button
             onClick={handleDemoMode}
             className="w-full mt-3 py-2 px-4 rounded-xl border border-white/20 text-white/60 text-xs font-bold hover:bg-white/5 transition-colors flex items-center justify-center gap-2"
@@ -207,6 +208,7 @@ export default function RegisterPage() {
             <Icon name="zap" className="w-3.5 h-3.5" />
             Explore Demo Mode (No Setup Required)
           </button>
+        )}
 
           <p className="text-center text-sm text-white/40 mt-6">
             Have an account? <Link to="/login" className="text-purple-400 font-medium">Sign in</Link>

@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { liveDataService } from '../services/api';
 
-export function useLiveData(refreshInterval = 1800000) { // Default to 30 mins
+export function useLiveData(refreshInterval = 1800000, enabled = true) { // Default to 30 mins
   const [data, setData] = useState(() => {
     try {
       const cached = localStorage.getItem('gatenexa_cached_live_data');
@@ -39,10 +39,14 @@ export function useLiveData(refreshInterval = 1800000) { // Default to 30 mins
   }, []); // Remove data from dependencies to prevent loop
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
     fetchData(true);
     const interval = setInterval(() => fetchData(false), refreshInterval); // Auto-refresh every 30 mins
     return () => clearInterval(interval);
-  }, [fetchData, refreshInterval]);
+  }, [fetchData, refreshInterval, enabled]);
 
   return { data, loading, error, refresh: () => fetchData(true) };
 }

@@ -164,17 +164,28 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
   }, [scriptReady]);
 
   if (IS_PLACEHOLDER) {
+    // In production, never silently route a "Google sign-in" click into guest/demo mode.
+    // Surface a disabled/error state instead.
     return (
       <button
-        onClick={handleDemoMode}
-        aria-label="Google Sign-In disabled — enter demo mode"
-        className="w-full group text-[11px] text-text3 text-center py-4 px-4 border border-dashed border-border rounded-xl bg-bg-3/30 hover:border-primary/50 hover:bg-primary/5 transition-all"
+        type="button"
+        disabled={import.meta.env.PROD}
+        onClick={import.meta.env.PROD ? undefined : handleDemoMode}
+        aria-label="Google Sign-In disabled"
+        className="w-full group text-[11px] text-text3 text-center py-4 px-4 border border-dashed border-border rounded-xl bg-bg-3/30 transition-all disabled:cursor-not-allowed"
+        style={import.meta.env.PROD ? { cursor: 'not-allowed', opacity: 0.6 } : { cursor: 'pointer' }}
       >
-        <p className="font-bold text-text mb-1 group-hover:text-primary transition-colors italic">Google Sign-In Disabled</p>
-        <p className="mb-2 opacity-70">Set VITE_GOOGLE_CLIENT_ID in .env</p>
-        <div className="text-primary font-bold uppercase tracking-widest text-[10px] bg-primary/10 py-1.5 rounded-xl border border-primary/20">
-          Enter Demo Mode instead →
-        </div>
+        <p className="font-bold text-text mb-1 italic">Google Sign-In Unavailable</p>
+        <p className="mb-2 opacity-70">
+          {import.meta.env.PROD
+            ? 'Please sign in with email & password or Sign up.'
+            : 'Set VITE_GOOGLE_CLIENT_ID in .env'}
+        </p>
+        {!import.meta.env.PROD && (
+          <div className="text-primary font-bold uppercase tracking-widest text-[10px] bg-primary/10 py-1.5 rounded-xl border border-primary/20">
+            Enter Demo Mode instead →
+          </div>
+        )}
       </button>
     );
   }

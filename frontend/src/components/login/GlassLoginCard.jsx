@@ -347,14 +347,16 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                 animate="visible"
                 className="mt-4 sm:mt-6 flex flex-col items-center gap-2.5 sm:gap-3.5"
               >
-                <button
-                  type="button"
-                  onClick={handleDemo}
-                  className="text-xs text-white/20 hover:text-white/40 transition-colors font-normal"
-                  style={{ cursor: 'pointer', fontFamily: "'Inter', -apple-system, sans-serif" }}
-                >
-                  Try Demo Mode
-                </button>
+                {!import.meta.env.PROD && (
+                  <button
+                    type="button"
+                    onClick={handleDemo}
+                    className="text-xs text-white/20 hover:text-white/40 transition-colors font-normal"
+                    style={{ cursor: 'pointer', fontFamily: "'Inter', -apple-system, sans-serif" }}
+                  >
+                    Try Demo Mode
+                  </button>
+                )}
                 <p className="text-xs text-white/20 font-normal">
                   Don't have an account?{' '}
                   <a href="/register" className="text-purple-400/60 hover:text-purple-300 transition-colors">
