@@ -42,6 +42,34 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 // =============================================
 
+// =============================================
+// Stale-chunk auto-recovery after deploys
+// When index.html (or a cached app shell / service worker) is old, it can
+// reference lazy chunk hashes that a new build replaced. The import throws
+// "Failed to fetch dynamically imported module". Reload ONCE to grab the
+// latest build instead of leaving the user stuck on a blank/broken screen.
+// A sessionStorage flag prevents any infinite reload loop.
+// =============================================
+(function () {
+  let fired = false;
+  const marker = 'gatenexa_chunk_reload_done';
+  window.addEventListener('error', (event) => {
+    if (fired) return;
+    const msg = event.message || '';
+    if (msg.indexOf('Failed to fetch dynamically imported module') !== -1 ||
+        msg.indexOf('error loading dynamically imported module') !== -1 ||
+        msg.indexOf('Importing a module script failed') !== -1) {
+      fired = true;
+      if (!sessionStorage.getItem(marker)) {
+        sessionStorage.setItem(marker, '1');
+        console.warn('[GLOBAL] Stale chunk detected after deploy — reloading once to fetch the latest build.');
+        window.location.reload();
+      }
+    }
+  });
+})();
+// =============================================
+
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import App from './App';

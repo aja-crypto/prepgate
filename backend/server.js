@@ -433,6 +433,14 @@ app.use('/api/admin/predictor', require('./src/routes/adminPredictor'));
 app.use('/api/learning', require('./src/routes/learning'));
 app.use('/api/admin/learning', require('./src/routes/adminLearning'));
 
+// --- Root / health ─────────────────────────────────────
+app.get('/', (req, res) => {
+  res.status(200).json({ success: true, message: 'GateNexa API is running', uptime: process.uptime() });
+});
+app.get('/api', (req, res) => {
+  res.status(200).json({ success: true, message: 'GateNexa API is running' });
+});
+
 // --- 404 Handler ─────────────────────────────────────────---
 app.use('*', (req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
