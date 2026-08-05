@@ -79,7 +79,14 @@ export const AuthProvider = ({ children }) => {
     initRanRef.current = true;
 
     const token = safeGet('accessToken');
-    const isGuest = safeGet('isGuest') === 'true';
+    let isGuest = safeGet('isGuest') === 'true';
+    if (isGuest && import.meta.env.PROD) {
+      // Demo/guest mode is unsupported in production. Purge any leftover 'isGuest'
+      // flag persisted by pre-fix demo sessions so returning users aren't stuck in
+      // guest mode (which the prod backend rejects with 401 on every protected call).
+      localStorage.removeItem('isGuest');
+      isGuest = false;
+    }
     const genAtInit = authGenRef.current;
     console.log('[AUTH-DEBUG] INIT: token=', token ? 'EXISTS(' + token.length + ')' : 'NULL', 'isGuest=', isGuest);
 

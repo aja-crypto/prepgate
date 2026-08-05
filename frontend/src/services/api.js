@@ -41,6 +41,15 @@ api.interceptors.request.use(
     const hasDefaultAuth = !!api.defaults.headers.common['Authorization'];
 
     if (isGuest) {
+      const isAuthRoute = (config.url || '').startsWith('/auth/');
+      if (import.meta.env.PROD && !isAuthRoute) {
+        // Centralized guard: demo/guest mode is disabled in production, so never
+        // send protected calls as a guest. Skip before the network emits a 401 storm,
+        // and self-heal the leftover flag so the session recovers on next load.
+        localStorage.removeItem('isGuest');
+        console.warn(`[AUTH-DEBUG] GUEST BLOCKED (production) ${config.method?.toUpperCase()} ${config.url}`);
+        return Promise.reject(new Error('Guest mode unavailable in production'));
+      }
       config.headers['X-Demo-User'] = 'true';
     } else if (token) {
       config.headers.Authorization = `Bearer ${token}`;
