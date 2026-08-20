@@ -93,7 +93,7 @@ export default function AboutPage() {
                   <div className="fc-banner-text">
                     <h2 className="fc-banner-name">PURRU AJAY KUMAR</h2>
                     <p className="fc-banner-sub">Full Stack Web Developer</p>
-                    <p className="fc-banner-sub">Exploring AI &amp; Education</p>
+                    <p className="fc-banner-sub">Building AI-Powered Education Platforms</p>
                   </div>
                 </div>
               </div>
@@ -103,10 +103,11 @@ export default function AboutPage() {
                   <span className="fc-detail-tag-em">🎓 B.Tech Final Year Student</span>
                   <span className="fc-detail-tag-em">💻 Full Stack Developer</span>
                   <span className="fc-detail-tag-em">📚 GATE 2027 Aspirant</span>
-                  <span className="fc-detail-tag-em">🤖 Exploring AI &amp; Education</span>
+                  <span className="fc-detail-tag-em">🤖 AI &amp; EdTech Builder</span>
+                  <span className="fc-detail-tag-em">⚙️ React • Node.js • MongoDB</span>
                 </div>
                 <div className="fc-quote">
-                  Helping GATE aspirants spend less time searching<br />and more time learning, revising, and improving.
+                Building AI-powered tools and learning experiences that help GATE aspirants learn, practice, and prepare smarter.<br />
                 </div>
 
                 <a href="/about" className="fc-btn-glass">About the Founder &rarr;</a>
