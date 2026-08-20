@@ -99,6 +99,7 @@ export default function OnboardingPanel({ colors, onComplete, fullWidth }) {
   var [completed, setCompleted] = useState(false);
   var [inputVal, setInputVal] = useState('');
   var endRef = useRef(null);
+  var initRef = useRef(false);
   var totalSteps = 12;
 
   useEffect(function() {
@@ -107,6 +108,8 @@ export default function OnboardingPanel({ colors, onComplete, fullWidth }) {
 
   useEffect(function() {
     if (completed) return;
+    if (initRef.current) return;
+    initRef.current = true;
     runStep(stepIndex);
   }, [stepIndex]);
 

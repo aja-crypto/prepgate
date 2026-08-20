@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { useParams, useNavigate, NavLink, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuthData } from '../context/AuthContext';
 import { useProgress } from '../context/ProgressContext';
 import { PageLoading } from '../components/common/GateLoadingScreen';
-import PremiumPdfViewer from '../components/common/PremiumPdfViewer';
+const PremiumPdfViewer = lazy(() => import('../components/common/PremiumPdfViewer'));
 import {
   subjectService, topicService, shortNoteService,
   weeklyTestService, mockTestService, getApiErrorMessage,
@@ -118,7 +118,7 @@ export default function SubjectDetailPage() {
   const { subjectId } = useParams();
   const subjectCode = subjectId;
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useAuthData();
   const { topics: localTopics } = useProgress();
 
   const [activeTab, setActiveTab] = useState('theory');

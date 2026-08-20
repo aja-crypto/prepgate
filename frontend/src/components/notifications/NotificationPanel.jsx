@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useId } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { CheckCheck, X, Trash2, Bell } from 'lucide-react';
-import { useNotifications } from '../../context/NotificationContext';
+import { useNotificationData, useNotificationActions } from '../../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 import Portal from '../ui/Portal';
 /* ── Type → category visual mapping ─────────────────────── */
@@ -121,7 +121,8 @@ export default function NotificationPanel() {
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
   );
-  const { notifications = [], unreadCount = 0, markRead, markAllRead, delete: deleteNotif, clearAll } = useNotifications();
+  const { notifications = [], unreadCount = 0 } = useNotificationData();
+  const { markRead, markAllRead, delete: deleteNotif, clearAll } = useNotificationActions();
   const nav = useNavigate();
   const btnRef = useRef(null);
   const panelRef = useRef(null);

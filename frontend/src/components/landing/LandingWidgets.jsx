@@ -8,6 +8,13 @@ export function AnimatedStatistics() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Use cached stats from window if available (set by LandingPage)
+    if (window.__landingStats) {
+      setStats(window.__landingStats);
+      setLoading(false);
+      return;
+    }
+    // Fallback: fetch if not cached
     const fetchStats = async () => {
       try {
         const res = await api.get('/landing/stats');

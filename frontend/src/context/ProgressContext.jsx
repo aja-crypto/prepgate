@@ -1,6 +1,6 @@
 // src/context/ProgressContext.jsx – Central progress store with MongoDB hybrid sync
 import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuthData } from './AuthContext';
 import { TopicProvider } from './domains/TopicContext';
 import { NoteProvider } from './domains/NoteContext';
 import { PYQProvider } from './domains/PYQContext';
@@ -39,7 +39,7 @@ function loadFromStorage(userId) {
 }
 
 export const ProgressProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user } = useAuthData();
   const userId = user?.id || user?._id || 'guest';
   const [data, setData] = useState(() => loadFromStorage(userId));
   const [backupStatus, setBackupStatus] = useState('saved');

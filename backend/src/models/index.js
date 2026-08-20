@@ -1,5 +1,17 @@
 const mongoose = require('mongoose');
 
+// Media storage metadata models (Decision 2: single source of truth for files).
+// Requiring them is always safe — each module guards its own model creation.
+let MediaFile, MediaMigration, MediaMigrationLog;
+try {
+  MediaFile = require('./MediaFile');
+  MediaMigration = require('./MediaMigration');
+  MediaMigrationLog = require('./MediaMigrationLog');
+} catch (e) {
+  console.warn('[models/index] media models unavailable:', e.message);
+  MediaFile = {}; MediaMigration = {}; MediaMigrationLog = {};
+}
+
 try {
 // Import models from individual files
 const Subject = require('./Subject');
@@ -385,6 +397,11 @@ const noteSchema = new mongoose.Schema({
   fileUrl: String,
   fileType: String,
   fileSize: Number,
+  fileId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'MediaFile',
+    default: null,
+  },
   lastViewed: { type: Date, default: Date.now },
   viewCount: { type: Number, default: 0 },
   ocrText: String,
@@ -440,12 +457,13 @@ const sessionSchema = new mongoose.Schema({
 const StudySession = mongoose.model('StudySession', sessionSchema);
 
 // ─────────────────────────────────────────────────────────────
-module.exports = { Topic, Subject, Progress, StudyLog, MockTest, PYQ, UserPYQ, MockSession, Note, Mistake, StudySession, Flashcard, UserFlashcard };
+module.exports = { Topic, Subject, Progress, StudyLog, MockTest, PYQ, UserPYQ, MockSession, Note, Mistake, StudySession, Flashcard, UserFlashcard, MediaFile, MediaMigration, MediaMigrationLog };
 } catch (e) {
   // Models unavailable — routes will use local data store instead
   module.exports = { 
     Topic: {}, Subject: {}, Progress: {}, StudyLog: {}, 
     MockTest: {}, PYQ: {}, UserPYQ: {}, MockSession: {}, 
-    Note: {}, Mistake: {}, StudySession: {}, Flashcard: {}, UserFlashcard: {} 
+    Note: {}, Mistake: {}, StudySession: {}, Flashcard: {}, UserFlashcard: {},
+    MediaFile, MediaMigration, MediaMigrationLog
   };
 }

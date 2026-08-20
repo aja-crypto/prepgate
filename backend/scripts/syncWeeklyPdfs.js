@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://gate2027:l2M2shH2nRfQVLFA@ac-pmpdzxm-shard-00-00.sa6kujd.mongodb.net/gate2027?retryWrites=true&w=majority&appName=Cluster0';
+const MONGO_URI = process.env.MONGO_URI;
 const base = path.join(__dirname, '..', '..', 'resources', 'weekly-tests');
 
 async function main() {

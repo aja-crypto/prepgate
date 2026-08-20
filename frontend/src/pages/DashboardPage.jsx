@@ -55,7 +55,7 @@ const PredictionsRow = memo(function PredictionsRow({ gamification }) {
     </div>
   );
 });
-import { useAuth } from '../context/AuthContext';
+import { useAuthData } from '../context/AuthContext';
 import { useProgress } from '../context/ProgressContext';
 import { useDashboard } from '../context/DashboardContext';
 import { useLiveData } from '../hooks/useLiveData';
@@ -173,7 +173,7 @@ function getInterruptedSession() {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { user, isPremium } = useAuth();
+  const { user, isPremium } = useAuthData();
   const { studyStats, topics, pyqs, mocks, gateFeatures, gamification, isEmptyProgress, mongoAvailable } = useProgress();
   const { data: liveData, loading: liveLoading, refresh: refreshLive } = useLiveData(1800000, !user?.isGuest);
   const { visibleWidgets, editMode, setEditMode } = useDashboard();
@@ -518,46 +518,180 @@ export default function DashboardPage() {
         }}
       />
 
-      {/* ═══ MOBILE DASHBOARD ═══ */}
-      <div className="sm:hidden space-y-3 px-3 pb-24">
-        <div className="flex items-center justify-between pt-2">
-          <div>
-            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-primary">
-              {isPremium ? '⭐ PREMIUM' : 'BASIC'}
-            </p>
-            <h1 className="text-lg font-bold text-text">Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name?.split(' ')[0]}</h1>
+            {/* ═══ MOBILE DASHBOARD ═══ */}
+      <div className="sm:hidden space-y-3 px-3 pb-28">
+        {isEmptyProgress ? (
+          <EmptyDashboard userName={user?.name?.split(' ')[0]} />
+        ) : (
+        <>
+        {/* ── Premium Greeting / Status ── */}
+        <section className="mobile-hero">
+          <div className="mobile-hero-glow" />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <span className={`mobile-pill ${isPremium ? 'mobile-pill-gold' : 'mobile-pill-basic'}`}>
+                  {isPremium ? '⭐ PREMIUM' : 'GATE 2027'}
+                </span>
+                <span className="mobile-pill mobile-pill-live">
+                  <span className="mobile-live-dot" />
+                  {mongoAvailable ? 'Live' : 'Local'}
+                </span>
+              </div>
+              <Link to="/settings" aria-label="Settings" className="mobile-icon-btn">
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><circle cx="10" cy="10" r="5" /><path d="M10 1v2M10 17v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 10h2M17 10h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" strokeLinecap="round" /></svg>
+              </Link>
+            </div>
+            <h1 className="mobile-hero-title">
+              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}
+              <span className="mobile-hero-name">, {user?.name?.split(' ')[0]}</span>
+            </h1>
+            <p className="mobile-hero-sub">Your GATE Command Center · Guided by Nexa AI</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Link to="/settings" className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-text2"><circle cx="10" cy="10" r="5" /><path d="M10 1v2M10 17v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 10h2M17 10h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" strokeLinecap="round" /></svg>
+        </section>
+
+        {/* ── Live GATE Information ── */}
+        <section className="mobile-card-glass p-3 mobile-live-card">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center text-sm shrink-0">⏳</span>
+              <div>
+                <div className="text-xs font-bold text-text">GATE 2027 Countdown</div>
+                <div className="text-[9px] text-text3">Exam preparation status</div>
+              </div>
+            </div>
+            <span className="mobile-pill mobile-pill-live"><span className="mobile-live-dot" /> LIVE</span>
+          </div>
+
+          <OfficialCountdown
+            examDate={liveData?.examDate || safeGF.examDate}
+            schedule={liveData?.schedule || []}
+          />
+
+          <div className="mt-2.5 pt-2.5 border-t border-white/[0.06]">
+            {(() => {
+              const ann = (liveData?.announcements || [])[0];
+              if (ann) {
+                return (
+                  <div className="flex items-start gap-2">
+                    <span className="text-sm mt-0.5">📢</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[9px] font-semibold uppercase tracking-wider text-primary">
+                        {ann.type === 'syllabus_update' ? 'Syllabus' : 'GATE'} Update
+                      </div>
+                      <div className="text-[11px] text-text leading-snug line-clamp-2 mt-0.5">{ann.title}</div>
+                      {ann.summary && <div className="text-[10px] text-text3 line-clamp-1 mt-0.5">{ann.summary}</div>}
+                    </div>
+                    <button onClick={refreshLive} aria-label="Refresh live data" className="text-text3 hover:text-primary p-1.5 shrink-0">
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" /></svg>
+                    </button>
+                  </div>
+                );
+              }
+              return (
+                <div className="flex items-center gap-2 text-[11px] text-text3">
+                  <span className="text-sm">📢</span>
+                  <span>{liveLoading ? 'Updating...' : 'No announcements yet. Data refreshes every few hours.'}</span>
+                </div>
+              );
+            })()}
+          </div>
+        </section>
+
+        {/* ── Daily GATE Content ── */}
+        <section className="mobile-daily">
+          <DailyContentCards dailyContent={liveData?.dailyContent || []} />
+        </section>
+
+        {/* ── Today's Progress ── */}
+        <section>
+          <div className="mobile-section-label">🎯 Today's Progress</div>
+          <div className="grid grid-cols-2 gap-2">
+            <Link to="/analytics" className="mobile-stat-tile">
+              <div className="mobile-stat-value">{readiness}%</div>
+              <div className="mobile-stat-label">Readiness</div>
+              <div className="mobile-stat-sub">{overall}% overall</div>
+            </Link>
+            <Link to="/focus-session" className="mobile-stat-tile">
+              <div className="mobile-stat-value">{dailyProgress.hours}h</div>
+              <div className="mobile-stat-label">Study Today</div>
+              <div className="mobile-stat-sub">{dailyProgress.hours}h / {safeGF.dailyTarget?.hours || 8}h</div>
+            </Link>
+            <Link to="/topics" className="mobile-stat-tile">
+              <div className="mobile-stat-value">{dailyProgress.topicsCompleted}</div>
+              <div className="mobile-stat-label">Topics Done</div>
+              <div className="mobile-stat-sub">{dailyProgress.overall}% daily target</div>
+            </Link>
+            <Link to="/analytics" className="mobile-stat-tile">
+              <div className="mobile-stat-value">{streakCurrent > 0 ? `Day ${streakCurrent}` : '0'}</div>
+              <div className="mobile-stat-label">Streak</div>
+              <div className="mobile-stat-sub">Best {(safeGF.streak?.longest || 0)}d</div>
             </Link>
           </div>
-        </div>
+        </section>
 
-        {/* Streak + Study Hours + Next Test */}
-        <div className="grid grid-cols-2 gap-2">
-          <Link to="/analytics" className="mobile-card-glass flex items-center gap-2 p-3">
-            <span className="text-xl">{streakCurrent > 0 ? '🔥' : '✨'}</span>
-            <div>
-              <div className="text-sm font-bold text-text">{streakCurrent > 0 ? `Day ${streakCurrent}` : 'Start Today'}</div>
-              <div className="text-[9px] text-text3">{streakCurrent > 0 ? `${streakCurrent}d streak` : 'Begin your streak'}</div>
+        {/* ── AI Suggestion ── */}
+        <section className="mobile-card-glass p-3 mobile-ai-suggest">
+          <div className="flex items-center gap-2">
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(6,182,212,0.1))' }}>💡</span>
+            <div className="flex-1 min-w-0">
+              <span className="text-[9px] font-semibold text-primary uppercase tracking-wider">AI Suggestion</span>
+              <p className="text-[11px] text-text2 mt-0.5 leading-snug line-clamp-2">
+                {weakestSubject
+                  ? `Focus on ${weakestSubject.name} (${Math.round(weakestSubject.progress)}%). Improve this and see your readiness jump.`
+                  : subjects.length > 0
+                    ? 'Great start! Complete PYQs to build momentum.'
+                    : 'Start exploring subjects to build your study plan.'}
+              </p>
             </div>
-          </Link>
-          <Link to="/focus-session" className="mobile-card-glass flex items-center gap-2 p-3">
-            <span className="text-xl">⏱️</span>
-            <div>
-              <div className="text-sm font-bold text-text">{(safeSS.weeklyHours || []).reduce((a,b)=>a+b, 0)}h</div>
-              <div className="text-[9px] text-text3">This week</div>
-            </div>
-          </Link>
-        </div>
+            <Link to="/mentor" className="text-[10px] text-primary whitespace-nowrap shrink-0">Ask AI →</Link>
+          </div>
+        </section>
 
-        {/* Weak Subjects */}
+        {/* ── Quick Actions ── */}
         <div>
-          <div className="text-[10px] font-semibold text-text3 uppercase tracking-[0.12em] mb-1.5 px-0.5">📚 Weak Subjects</div>
+          <div className="mobile-section-label">⚡ Quick Actions</div>
+          <div className="mobile-quick-actions">
+            {[
+              { icon: '📝', label: 'PYQs', to: '/pyq' },
+              { icon: '📚', label: 'Study', to: '/study-hub' },
+              { icon: '🤖', label: 'AI Mentor', to: '/mentor' },
+              { icon: '📊', label: 'Analytics', to: '/analytics' },
+            ].map(a => (
+              <Link key={a.label} to={a.to} className="mobile-quick-action">
+                <span className="text-lg">{a.icon}</span>
+                <span className="text-[9px] font-semibold text-text2">{a.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Continue Studying ── */}
+        <div className="mobile-card-glass p-3">
+          <div className="mobile-section-label mb-2">📈 Continue Studying</div>
+          <div className="space-y-1.5">
+            {safePyqs.filter(p => !p.solved).slice(0, 3).map(p => (
+              <Link key={p._id || p.id || p.mongoId} to="/pyq" className="flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 active:bg-white/10 transition-all">
+                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-[10px] shrink-0">📝</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] text-text truncate">{p.title || p.question?.substring(0, 40)}</div>
+                  <div className="text-[9px] text-text3">{p.subject} · {p.year || 'PYQ'}</div>
+                </div>
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-text3 shrink-0"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
+              </Link>
+            ))}
+            {(!safePyqs || safePyqs.length === 0) && (
+              <div className="text-[11px] text-text3 text-center py-3">No pending PYQs. Great job! 🎉</div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Weak Subjects ── */}
+        <div>
+          <div className="mobile-section-label">📚 Weak Subjects</div>
           <div className="mobile-carousel">
             {subjects.filter(s => s.progress < 60).slice(0, 5).map(s => (
-              <Link key={s.id || s.name} to="/subjects" className="mobile-carousel-card" style={{ width: 140 }}>
+              <Link key={s.id || s.name} to="/subjects" className="mobile-carousel-card" style={{ width: 148 }}>
                 <div className="text-[11px] font-semibold text-text">{s.name}</div>
                 <div className="flex items-center gap-1.5 mt-1">
                   <div className="flex-1 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
@@ -568,51 +702,16 @@ export default function DashboardPage() {
               </Link>
             ))}
             {subjects.filter(s => s.progress < 60).length === 0 && (
-              <div className="mobile-carousel-card" style={{ width: 140 }}>
+              <div className="mobile-carousel-card" style={{ width: 148 }}>
                 <div className="text-[11px] text-text3">All subjects on track! 🎉</div>
               </div>
             )}
           </div>
         </div>
-
-        {/* Quick Actions */}
-        <div>
-          <div className="text-[10px] font-semibold text-text3 uppercase tracking-[0.12em] mb-1.5 px-0.5">⚡ Quick Actions</div>
-          <div className="mobile-quick-actions">
-            {[
-              { icon: '📝', label: 'PYQs', to: '/pyq' },
-              { icon: '📚', label: 'Study', to: '/study-hub' },
-              { icon: '🤖', label: 'AI Mentor', to: '/mentor' },
-              { icon: '📊', label: 'Analytics', to: '/analytics' },
-            ].map(a => (
-              <Link key={a.label} to={a.to} className="mobile-quick-action">
-                <span className="text-lg">{a.icon}</span>
-                <span className="text-[8px] font-semibold text-text2">{a.label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Activity / Continue */}
-        <div className="mobile-card-glass p-3">
-          <div className="text-[10px] font-semibold text-text3 uppercase tracking-[0.12em] mb-2">📈 Continue Studying</div>
-          <div className="space-y-1.5">
-            {safePyqs.filter(p => !p.solved).slice(0, 3).map(p => (
-              <Link key={p._id || p.id || p.mongoId} to="/pyq" className="flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 transition-all">
-                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-[10px]">📝</div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[11px] text-text truncate">{p.title || p.question?.substring(0, 40)}</div>
-                  <div className="text-[8px] text-text3">{p.subject} · {p.year || 'PYQ'}</div>
-                </div>
-                <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-text3"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
-              </Link>
-            ))}
-            {(!safePyqs || safePyqs.length === 0) && (
-              <div className="text-[11px] text-text3 text-center py-3">No pending PYQs. Great job! 🎉</div>
-            )}
-          </div>
-        </div>
+        </>
+        )}
       </div>
+
 
       {/* ═══ DESKTOP DASHBOARD ═══ */}
       <div className="hidden sm:block relative" style={{ transform: 'scale(0.93)', transformOrigin: 'top center' }}>

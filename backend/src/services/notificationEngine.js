@@ -160,7 +160,15 @@ function getRandomItem(arr, seen = []) {
 async function ensurePrefs(userId) {
   let prefs = await NotificationPrefs.findOne({ user: userId });
   if (!prefs) {
-    prefs = await NotificationPrefs.create({ user: userId, maxPerDay: 5 });
+    try {
+      prefs = await NotificationPrefs.create({ user: userId, maxPerDay: 5 });
+    } catch (e) {
+      if (e.code === 11000) {
+        prefs = await NotificationPrefs.findOne({ user: userId });
+      } else {
+        throw e;
+      }
+    }
   }
   // Reset daily counter if new day
   const today = new Date().toISOString().slice(0, 10);

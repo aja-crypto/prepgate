@@ -18,7 +18,7 @@ async function uploadPdf(fileBuffer, fileName, folder = 'GateNexa/pdfs') {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
-        resource_type: 'raw',
+        resource_type: 'auto',
         folder,
         public_id: fileName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_'),
         use_filename: true,
@@ -34,12 +34,12 @@ async function uploadPdf(fileBuffer, fileName, folder = 'GateNexa/pdfs') {
 }
 
 async function deletePdf(publicId) {
-  return cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+  return cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
 }
 
 async function getPdfPageCount(publicId) {
   try {
-    const result = await cloudinary.api.resource(publicId, { resource_type: 'raw' });
+    const result = await cloudinary.api.resource(publicId, { resource_type: 'image' });
     return result.pages || 1;
   } catch (e) {
     // Fallback: assume single page

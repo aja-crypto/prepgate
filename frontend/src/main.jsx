@@ -145,7 +145,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </NotificationProvider>
             </DiagnosticsProvider>
             <Toaster position="top-right" />
-            {import.meta.env.PROD && <Analytics />}
+            {import.meta.env.PROD && window.location.hostname === 'gatenexa.vercel.app' && <Analytics />}
           </AdminAuthProvider>
         </BrowserRouter>
       </AuthProvider>

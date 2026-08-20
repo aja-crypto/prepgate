@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, Shield, Zap, Globe } from 'lucide-react';
 import GoogleSignInButton from '../auth/GoogleSignInButton';
-import { useAuth } from '../../context/AuthContext';
+import { useAuthActions } from '../../context/AuthContext';
 
 const INPUT_VARIANTS = {
   hidden: { opacity: 0, y: 12, filter: 'blur(8px)' },
@@ -75,7 +75,7 @@ function GlowInput({ icon: Icon, type, placeholder, value, onChange, showToggle,
 }
 
 export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 }, onLoginSuccess }) {
-  const { googleLogin, login, loginAsGuest } = useAuth();
+  const { googleLogin, login, loginAsGuest } = useAuthActions();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -111,7 +111,7 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
     setError('');
     onStatusChange?.('loading');
     try {
-      loginAsGuest();
+      await loginAsGuest();
       onStatusChange?.('success');
       onLoginSuccess?.();
     } catch {
@@ -347,16 +347,14 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                 animate="visible"
                 className="mt-4 sm:mt-6 flex flex-col items-center gap-2.5 sm:gap-3.5"
               >
-                {!import.meta.env.PROD && (
-                  <button
-                    type="button"
-                    onClick={handleDemo}
-                    className="text-xs text-white/20 hover:text-white/40 transition-colors font-normal"
-                    style={{ cursor: 'pointer', fontFamily: "'Inter', -apple-system, sans-serif" }}
-                  >
-                    Try Demo Mode
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={handleDemo}
+                  className="text-xs text-white/20 hover:text-white/40 transition-colors font-normal"
+                  style={{ cursor: 'pointer', fontFamily: "'Inter', -apple-system, sans-serif" }}
+                >
+                  Try Demo Mode
+                </button>
                 <p className="text-xs text-white/20 font-normal">
                   Don't have an account?{' '}
                   <a href="/register" className="text-purple-400/60 hover:text-purple-300 transition-colors">

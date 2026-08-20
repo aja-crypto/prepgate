@@ -1,4 +1,16 @@
-const XLSX = require('xlsx');
+/**
+ * Build CCMT Database from Excel/CSV sources
+ * 
+ * !! IMPORTANT: This script reads from Excel/CSV source files.
+ * !! Opening scores are NOT derivable from closing scores — leave as null.
+ * !! NEVER fabricate opening scores by multiplying closing scores by any factor.
+ * !!
+ * !! This script produces cse-cutoffs-v2.json which is a static fallback.
+ * !! The authoritative data lives in the MongoDB CcmtCutoff collection.
+ * !! Production predictions use the MongoDB collection, not this static file.
+ * 
+ * Run: node scripts/build-ccmt-database.js (legacy — not part of production workflow)
+ */
 const fs = require('fs');
 const path = require('path');
 
@@ -76,12 +88,14 @@ for (let i = 1; i < nitRows.length; i++) {
 
   const cutoffs = [];
   if (closingGen) {
+    // NOTE: opening scores are NOT derivable from closing scores (no fabrication).
+    // Only verified opening values belong here; leave opening null otherwise.
     const entry = { year: 2025, round: 1 };
-    entry['GEN'] = { opening: Math.round(closingGen * 0.8), closing: closingGen };
-    if (closingOBC) entry['OBC-NCL'] = { opening: Math.round(closingOBC * 0.8), closing: closingOBC };
-    if (closingSC) entry['SC'] = { opening: Math.round(closingSC * 0.8), closing: closingSC };
-    if (closingST) entry['ST'] = { opening: Math.round(closingST * 0.8), closing: closingST };
-    if (closingEWS) entry['EWS'] = { opening: Math.round(closingEWS * 0.8), closing: closingEWS };
+    entry['GEN'] = { opening: null, closing: closingGen };
+    if (closingOBC) entry['OBC-NCL'] = { opening: null, closing: closingOBC };
+    if (closingSC) entry['SC'] = { opening: null, closing: closingSC };
+    if (closingST) entry['ST'] = { opening: null, closing: closingST };
+    if (closingEWS) entry['EWS'] = { opening: null, closing: closingEWS };
     cutoffs.push(entry);
   }
 

@@ -5,83 +5,34 @@ const TOPICS_DATA = [
     hero: {
       icon: "🏆",
       title: "Highest Closing Scores",
-      subtitle: "What it actually takes to get an offer at the top IITs",
-      takeaway: "Top IITs need 750-870+; older IITs are safer around 700-780; newer IITs open at 650-700.",
-      badge: { label: "High stakes", tier: "extreme" }
+      subtitle: "Verified closing scores from the live counselling database",
+      takeaway: "Top IIT closing scores are the highest in the country — exact figures vary by institute, programme, category and round. See verified data below.",
+      badge: { label: "Live DB-sourced", tier: "extreme" }
     },
     stat_cards: [
-      { id: "avg_closing_top_iit", label: "Avg closing score (top IITs)", value: 810, unit: "score", confidence: "estimated", delta: { value: 4.2, direction: "up", period: "yoy" } },
-      { id: "avg_closing_older_iit", label: "Avg closing score (older IITs)", value: 740, unit: "score", confidence: "estimated", delta: { value: 3.1, direction: "up", period: "yoy" } },
-      { id: "avg_closing_newer_iit", label: "Avg closing score (newer IITs)", value: 675, unit: "score", confidence: "estimated", delta: { value: 5.8, direction: "up", period: "yoy" } },
-      { id: "highest_closing", label: "Highest recorded closing (any IIT)", value: 870, unit: "score", confidence: "estimated" },
-      { id: "yoy_movement", label: "YoY movement", value: 4.2, unit: "%", confidence: "estimated", delta: { value: 0.8, direction: "up", period: "yoy" } },
       { id: "qualifying_general", label: "Qualifying mark (General)", value: 30, unit: "score", confidence: "official" },
-      { id: "rounds_to_watch", label: "Rounds to watch for score drops", value: "R3-5", unit: "", confidence: "estimated" },
-      { id: "category_spread", label: "Category spread (Gen vs SC/ST)", value: 300, unit: "pts", confidence: "estimated" }
+      { id: "rounds_to_watch", label: "Rounds to watch for score drops", value: "R3-5", unit: "", confidence: "estimated" }
     ],
-    charts: [
-      { type: "horizontal_bar", id: "tier_comparison", reason: "Ranking magnitude comparison across 3 discrete tiers", data_ref: "tier_scores" },
-      { type: "trend_line", id: "yoy_closing_trend", reason: "Shows movement across admission cycles", data_ref: "closing_by_year" },
-      { type: "heatmap", id: "institute_category", reason: "Institute × category closing score matrix", data_ref: "heatmap_data" }
-    ],
-    tier_scores: [
-      { label: "Top IITs (Bombay, Delhi)", low: 800, high: 870 },
-      { label: "Older IITs (KGP, Roorkee)", low: 720, high: 780 },
-      { label: "Newer IITs (Jodhpur, Mandi)", low: 650, high: 700 }
-    ],
-    closing_by_year: [
-      { year: 2022, top: 830, older: 720, newer: 640 },
-      { year: 2023, top: 845, older: 735, newer: 655 },
-      { year: 2024, top: 855, older: 740, newer: 665 },
-      { year: 2025, top: 860, older: 745, newer: 670 },
-      { year: 2026, top: 870, older: 750, newer: 675 }
-    ],
-    heatmap_data: {
-      institutes: ["IIT Bombay", "IIT Delhi", "IIT Madras", "IIT Kanpur", "IIT KGP", "IIT Roorkee", "IIT Jodhpur", "IIT Mandi"],
-      categories: ["General", "OBC", "SC", "ST"],
-      cells: [
-        [860, 780, 620, 560], [855, 775, 610, 550], [840, 760, 600, 540],
-        [835, 755, 595, 535], [780, 710, 560, 500], [770, 700, 550, 490],
-        [690, 630, 500, 440], [670, 610, 480, 420]
-      ]
-    },
-    rankings: [
-      { rank: 1, institute: "IIT Bombay", programme: "CSE", closing_score_est: 860, closing_score_confidence: "estimated", category_cutoffs: { general: 860, obc: 780, sc_st: 520 }, yoy_change: "+2.3%" },
-      { rank: 2, institute: "IIT Delhi", programme: "CSE", closing_score_est: 855, closing_score_confidence: "estimated", category_cutoffs: { general: 855, obc: 775, sc_st: 510 }, yoy_change: "+1.8%" },
-      { rank: 3, institute: "IIT Madras", programme: "CSE", closing_score_est: 840, closing_score_confidence: "estimated", category_cutoffs: { general: 840, obc: 760, sc_st: 500 }, yoy_change: "+2.1%" },
-      { rank: 4, institute: "IIT Kanpur", programme: "CSE", closing_score_est: 835, closing_score_confidence: "estimated", category_cutoffs: { general: 835, obc: 755, sc_st: 495 }, yoy_change: "+1.5%" },
-      { rank: 5, institute: "IIT Kharagpur", programme: "CSE", closing_score_est: 780, closing_score_confidence: "estimated", category_cutoffs: { general: 780, obc: 710, sc_st: 460 }, yoy_change: "+3.2%" },
-      { rank: 6, institute: "IIT Roorkee", programme: "CSE", closing_score_est: 770, closing_score_confidence: "estimated", category_cutoffs: { general: 770, obc: 700, sc_st: 450 }, yoy_change: "+2.7%" },
-      { rank: 7, institute: "IIT (BHU) Varanasi", programme: "CSE", closing_score_est: 760, closing_score_confidence: "estimated", category_cutoffs: { general: 760, obc: 690, sc_st: 440 }, yoy_change: "+3.5%" },
-      { rank: 8, institute: "IIT Hyderabad", programme: "CSE", closing_score_est: 750, closing_score_confidence: "estimated", category_cutoffs: { general: 750, obc: 680, sc_st: 430 }, yoy_change: "+4.1%" },
-      { rank: 9, institute: "IIT Guwahati", programme: "CSE", closing_score_est: 740, closing_score_confidence: "estimated", category_cutoffs: { general: 740, obc: 670, sc_st: 420 }, yoy_change: "+2.9%" },
-      { rank: 10, institute: "IIT Jodhpur", programme: "CSE", closing_score_est: 690, closing_score_confidence: "estimated", category_cutoffs: { general: 690, obc: 630, sc_st: 400 }, yoy_change: "+5.2%" }
-    ],
-    visual_cards: [
-      { rank: 1, institute: "IIT Bombay", expected_score: "860+", difficulty: "extreme", seats: 28, competition_stars: 5 },
-      { rank: 2, institute: "IIT Delhi", expected_score: "855+", difficulty: "extreme", seats: 32, competition_stars: 5 },
-      { rank: 3, institute: "IIT Madras", expected_score: "840+", difficulty: "very_high", seats: 30, competition_stars: 5 },
-      { rank: 4, institute: "IIT Kanpur", expected_score: "835+", difficulty: "very_high", seats: 25, competition_stars: 4 },
-      { rank: 5, institute: "IIT Kharagpur", expected_score: "780+", difficulty: "high", seats: 40, competition_stars: 4 }
-    ],
+    dataNotice: "Closing scores shown here are sourced from the verified CCMT/COAP predictor database at runtime. Rankings below reflect live DB data, not hardcoded values.",
+    charts: [],
     analysis: {
-      word_count: 500,
+      word_count: 480,
       sections: [
         {
           title: "Current Trends",
-          body: "Closing scores at the top IITs have drifted upward over the last three cycles as GATE CSE registrations climb and COAP consolidates counselling across more institutes — more visibility into seat scarcity pushes safe estimates up rather than down. Historically, IIT Bombay and IIT Delhi CSE General-category closes have hovered in the 800s, while IIT Madras and Kanpur trail slightly. The older-but-not-flagship group (Kharagpur, Roorkee, Guwahati, BHU) sits a tier below and is the more reliable target for students in the 700–780 band, since seat count is meaningfully higher relative to demand."
+          body: "Closing scores at the top IITs are the highest in the country and have drifted upward in recent cycles as GATE CSE registrations climb and COAP consolidates counselling across more institutes. The flagship group (Bombay, Delhi), the older-but-not-flagship group (Kharagpur, Roorkee, Guwahati, BHU), and newer IITs sit at distinct, but moving, closing-score tiers. Exact figures vary by institute, programme, category and round — the verified table below reflects the live database."
         },
         {
           title: "Admission Strategy",
-          body: "The single biggest mistake students make is treating 'closing score' as a fixed target rather than a moving, category-dependent, round-dependent range. Closing scores fall meaningfully between COAP Round 1 and Round 5 as higher-scoring students who hold multiple offers release seats — a score that looks out of reach in Round 1 sometimes opens up in Round 3 or 4. Students who 'Reject and Wait' too early on a marginal reach-tier offer sometimes lose position without a corresponding gain."
+          body: "The single biggest mistake students make is treating 'closing score' as a fixed target rather than a moving, category-dependent, round-dependent range. Closing scores fall meaningfully across COAP rounds as higher-scoring students who hold multiple offers release seats — a score that looks out of reach in an early round sometimes opens up in a later round. Students who 'Reject and Wait' too early on a marginal reach-tier offer sometimes lose position without a corresponding gain."
         },
         {
           title: "Category Impact",
-          body: "Category cutoffs vary enormously — a General-category student and an SC/ST-category student targeting the same programme can be separated by 200–300+ score points at official qualifying, and by a smaller but still real margin at admission. Category-aware planning (using category-specific historical closes, not blended averages) meaningfully changes which tier is realistic."
+          body: "Category cutoffs vary enormously — a General-category student and an SC/ST-category student targeting the same programme can be separated by a wide margin at official qualifying, and by a smaller but still real margin at admission. Category-aware planning (using category-specific historical closes, not blended averages) meaningfully changes which tier is realistic. Use the category selector on this page to see verified category-specific figures."
         },
         {
           title: "Who Should Apply",
-          body: "Students scoring 800+ with strong academic-performance weighting where interviews apply, and students with flexibility on specialization within CSE-adjacent branches (some pull lower closes than pure CSE). Students in the 650–750 range should avoid over-indexing on top-IIT reach seats — chasing through multiple 'Reject and Wait' cycles risks missing solid, comfortable offers at older or newer IITs."
+          body: "Students with strong GATE scores and flexibility on specialization within CSE-adjacent branches (some pull lower closes than pure CSE) are the best fits for top-IIT reach seats. Students aiming at top-IIT programmes should avoid over-indexing on a single flagship — chasing through multiple 'Reject and Wait' cycles risks missing solid, comfortable offers at older or newer IITs. Build a three-tier list (dream / safe / backup) early."
         },
         {
           title: "Future Outlook",
@@ -90,26 +41,15 @@ const TOPICS_DATA = [
       ]
     },
     expandables: [
-      { id: "admission_tips", title: "Admission Tips", body: "Research interview weightage at each IIT — some institutes (IIT Bombay, IIT Delhi) place meaningful weight on the written test/interview after the GATE shortlist. A high GATE score gets you into the room but doesn't guarantee the seat alone. Prepare for technical interviews specific to your specialization choice, not just GATE syllabus review." },
+      { id: "admission_tips", title: "Admission Tips", body: "Research interview weightage at each IIT — some institutes place meaningful weight on the written test/interview after the GATE shortlist. A high GATE score gets you into the room but doesn't guarantee the seat alone. Prepare for technical interviews specific to your specialization choice, not just GATE syllabus review." },
       { id: "common_mistakes", title: "Common Mistakes", body: "1) Treating closing scores as fixed numbers — they shift by round. 2) Ignoring category-specific cutoffs. 3) Anchoring on a single target institute without a three-tier list. 4) 'Reject and Wait' on a safe offer hoping for a reach seat that never materializes. 5) Not preparing for the interview/written-test component at institutes that weight it." },
-      { id: "faqs", title: "FAQs", body: "Q: Can I get into IIT Bombay CSE with 800? A: Historically borderline — 860+ is the safer estimate for General category. Q: Do closing scores drop after Round 1? A: Yes, typically 10-30 points by Round 3-5. Q: Are GATE DA closing scores lower than CSE? A: Yes, often 50-100 points lower at the same institute (see AI & DS Demand topic)." }
+      { id: "faqs", title: "FAQs", body: "Q: How do closing scores move during counselling? A: They generally fall across later COAP rounds as higher-scoring students holding multiple offers release seats. Q: How much do category-specific closes differ? A: Significantly — use the category selector on this page to compare verified figures. Q: Are GATE DA closes lower than CSE? A: Often yes at the same institute (see the AI & DS Demand topic); verify against live data." }
     ],
-    ai_recommendations: {
-      input: "user_gate_score",
-      buckets: [
-        { range: [820, 1000], label: "Dream Tier", color: "#FF6B6B", colleges: ["IIT Bombay CSE", "IIT Delhi CSE", "IIT Madras CSE", "IIT Kanpur CSE"] },
-        { range: [700, 819], label: "Safe Tier", color: "#F59E0B", colleges: ["IIT Kharagpur CSE", "IIT Roorkee CSE", "IIT (BHU) CSE", "IIT Hyderabad CSE"] },
-        { range: [600, 699], label: "Backup Tier", color: "#10B981", colleges: ["Newer IITs CSE", "Top NITs Allied Branches"] },
-        { range: [0, 599], label: "NIT/IIIT Path", color: "#6B7280", colleges: ["See Top NIT Placements insight", "Consider IIIT options"] }
-      ]
-    },
     sources: [
       { name: "GATE official", confidence: "official" },
-      { name: "COAP", confidence: "estimated_basis" },
-      { name: "CCMT", confidence: "estimated_basis" },
-      { name: "NIRF", confidence: "estimated_basis" }
+      { name: "CCMT live database", confidence: "official" }
     ],
-    last_verified: "2026-07-27"
+    last_verified: null
   },
   {
     topic_id: "safest-iit-programmes",
@@ -536,36 +476,20 @@ const TOPICS_DATA = [
       { id: "industry_growth", label: "Industry demand growth rate", value: 22, unit: "%", confidence: "estimated" }
     ],
     charts: [
-      { type: "trend_line", id: "da_registrations", reason: "Headline growth story — a line is the only honest way to show acceleration", data_ref: "da_reg_data" },
-      { type: "vertical_bar", id: "da_vs_cse_scores", reason: "DA may be under-priced — paired bars at same institute", data_ref: "da_cse_comparison" }
+      { type: "trend_line", id: "da_registrations", reason: "Headline growth story — a line is the only honest way to show acceleration", data_ref: "da_reg_data" }
     ],
     da_reg_data: [
       { year: 2024, registrations: 52000 },
       { year: 2025, registrations: 74000 },
       { year: 2026, registrations: 91764 }
     ],
-    da_cse_comparison: [
-      { institute: "IIT Bombay", cse: 860, da: 780 },
-      { institute: "IIT Delhi", cse: 855, da: 770 },
-      { institute: "IIT Madras", cse: 840, da: 760 },
-      { institute: "IIT Kharagpur", cse: 780, da: 700 },
-      { institute: "IIT Roorkee", cse: 770, da: 690 },
-      { institute: "IIT Jodhpur", cse: 690, da: 610 },
-      { institute: "IIT Mandi", cse: 670, da: 590 }
-    ],
-    rankings: [
-      { institute: "IIT Bombay", da_closing_est: 780, cse_closing_est: 860, score_gap: 80, industry_demand: "Very High" },
-      { institute: "IIT Delhi", da_closing_est: 770, cse_closing_est: 855, score_gap: 85, industry_demand: "Very High" },
-      { institute: "IIT Madras", da_closing_est: 760, cse_closing_est: 840, score_gap: 80, industry_demand: "Very High" },
-      { institute: "IIT Kharagpur", da_closing_est: 700, cse_closing_est: 780, score_gap: 80, industry_demand: "High" },
-      { institute: "IIT Roorkee", da_closing_est: 690, cse_closing_est: 770, score_gap: 80, industry_demand: "High" },
-      { institute: "IIT Jodhpur", da_closing_est: 610, cse_closing_est: 690, score_gap: 80, industry_demand: "High" },
-      { institute: "IIT Mandi", da_closing_est: 590, cse_closing_est: 670, score_gap: 80, industry_demand: "Moderate" }
-    ],
+    da_cse_comparison: [],
+    dataNotice: "CSE vs DA closing-score comparison is sourced from the verified predictor database at runtime. Use the Opportunity Predictor for live, DB-backed figures.",
+    rankings: [],
     visual_cards: [
       { rank: 1, institute: "GATE DA", registrations: 91764, growth: "+76%", industry_demand: "1.4M+", competition_stars: 3 },
-      { rank: 2, institute: "IIT Bombay DA", expected_score: "780+", gap_vs_cse: "80pts", competition_stars: 3 },
-      { rank: 3, institute: "IIT Delhi DA", expected_score: "770+", gap_vs_cse: "85pts", competition_stars: 3 }
+      { rank: 2, institute: "IIT DA Programmes", expected_score: "See predictor", gap_vs_cse: "Varies by institute", competition_stars: 3 },
+      { rank: 3, institute: "NIT DA Programmes", expected_score: "See predictor", gap_vs_cse: "Varies by institute", competition_stars: 3 }
     ],
     analysis: {
       word_count: 420,

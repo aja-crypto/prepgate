@@ -44,5 +44,9 @@ const notificationSchema = new mongoose.Schema({
 
 notificationSchema.index({ user: 1, isRead: 1, scheduledAt: -1 });
 notificationSchema.index({ user: 1, type: 1, scheduledAt: -1 });
+// Compound index for the most common query pattern: filter by user, isRead, type, sort by scheduledAt
+notificationSchema.index({ user: 1, isRead: 1, type: 1, scheduledAt: -1 });
+// Index for count queries with user + isRead filter
+notificationSchema.index({ user: 1, isRead: 1 });
 
 module.exports = mongoose.model('Notification', notificationSchema);

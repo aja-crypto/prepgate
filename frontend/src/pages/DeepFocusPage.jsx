@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFocus, useFocusTimer } from '../context/FocusContext';
 import { useProgress } from '../context/ProgressContext';
-import { useAuth } from '../context/AuthContext';
+import { useAuthData } from '../context/AuthContext';
 
 const BG_OPTIONS = [
   { id: 'deepfocus', label: 'Deep Focus', icon: '◈' },
@@ -687,7 +687,7 @@ function Confetti() {
 // â”€â”€─ MAIN PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€─
 export default function DeepFocusPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useAuthData();
   const { data, updateProductivity, updateStudyStats, syncToCloud } = useProgress();
   const focus = useFocus();
   const timer = useFocusTimer();

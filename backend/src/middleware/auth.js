@@ -111,6 +111,7 @@ exports.protect = async (req, res, next) => {
         user.name = this.name;
         user.targetYear = this.targetYear;
         user.studyGoalHours = this.studyGoalHours;
+        if (this.nexaPredictorTestUses !== undefined) user.nexaPredictorTestUses = this.nexaPredictorTestUses;
         return await user.save();
       };
       req.user.updateStreak = user.updateStreak.bind(user);

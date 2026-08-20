@@ -21,10 +21,25 @@ const BranchStatistics = require('../models/BranchStatistics');
 const GateStatistics = require('../models/GateStatistics');
 const User = require('../models/User');
 
+// dataset_catalogue.json is static — read & parse it at most once per process
+let _datasetCatalogueCache = null;
+function readDatasetCatalogue() {
+  if (_datasetCatalogueCache !== null) return _datasetCatalogueCache;
+  try {
+    const catPath = path.join(__dirname, '..', '..', 'data', 'dataset_catalogue.json');
+    _datasetCatalogueCache = JSON.parse(fs.readFileSync(catPath, 'utf-8'));
+  } catch {
+    _datasetCatalogueCache = null;
+  }
+  return _datasetCatalogueCache;
+}
+
 const predictLimiter = new Map();
 const PREDICT_LIMIT = 10;
 const PREDICT_LIMIT_DEMO = 50;
 const PREDICT_WINDOW = 60000;
+
+const TESTING_PREDICT_LIMIT = 10;
 
 function predictRateLimit(req, res, next) {
   const isDemo = req.headers['x-demo-user'] || req.headers['x-testing'] || (isMockAuthEnabled() && req.query.demo === 'true');
@@ -61,11 +76,151 @@ function requireMongo(req, res, next) {
   next();
 }
 
+function initTestingAccess(req) {
+  req.testingAccess = {
+    enabled: false,
+    limit: TESTING_PREDICT_LIMIT,
+    used: 0,
+    remaining: TESTING_PREDICT_LIMIT,
+  };
+}
+
+function testingLimitReachedResponse(used) {
+  return {
+    success: false,
+    code: 'PREDICTOR_TEST_LIMIT_REACHED',
+    message: "You've used all 10 free testing predictions.",
+    testingLimit: TESTING_PREDICT_LIMIT,
+    testingUsed: used,
+    testingRemaining: Math.max(0, TESTING_PREDICT_LIMIT - used),
+  };
+}
+
+async function loadPredictorAccess(req, res) {
+  initTestingAccess(req);
+  const { canAccessPremium, isDemoUser } = require('../utils/permissions');
+
+  // Demo / guest access is never allowed — must be a real registered user.
+  if (isDemoUser(req.user)) {
+    res.status(401).json({ success: false, message: 'Not authorized. Please login.' });
+    return false;
+  }
+
+  if (canAccessPremium(req.user)) {
+    return true;
+  }
+
+  const userId = req.user?._id?.toString() || '';
+  const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(userId);
+  let used = 0;
+
+  if (isMockAuthEnabled()) {
+    const mockStore = require('../store/mockStore');
+    const u = mockStore.findById(userId);
+    if (!u) {
+      res.status(401).json({ success: false, message: 'Not authorized. Please login.' });
+      return false;
+    }
+    used = u.nexaPredictorTestUses || 0;
+  } else if (!isValidObjectId) {
+    res.status(403).json({
+      success: false,
+      message: 'Premium feature. Upgrade your account to access this.',
+      code: 'PREMIUM_REQUIRED',
+    });
+    return false;
+  } else if (!isMongoConnected()) {
+    res.status(503).json({ success: false, message: 'Database connection required for predictor access.' });
+    return false;
+  } else {
+    const userNow = await User.findById(userId).select('nexaPredictorTestUses').lean();
+    used = userNow?.nexaPredictorTestUses || 0;
+  }
+
+  if (used >= TESTING_PREDICT_LIMIT) {
+    res.status(403).json(testingLimitReachedResponse(used));
+    return false;
+  }
+
+  req.testingAccess = {
+    enabled: true,
+    limit: TESTING_PREDICT_LIMIT,
+    used,
+    remaining: TESTING_PREDICT_LIMIT - used,
+    userId,
+  };
+  return true;
+}
+
+async function consumeTestingUse(req) {
+  if (!req.testingAccess?.enabled) return true;
+
+  const userId = req.testingAccess.userId;
+
+  if (isMockAuthEnabled()) {
+    const mockStore = require('../store/mockStore');
+    const u = mockStore.findById(userId);
+    if (!u || (u.nexaPredictorTestUses || 0) >= TESTING_PREDICT_LIMIT) {
+      return false;
+    }
+    u.nexaPredictorTestUses = (u.nexaPredictorTestUses || 0) + 1;
+    await u.save();
+    req.testingAccess.used = u.nexaPredictorTestUses;
+    req.testingAccess.remaining = Math.max(0, TESTING_PREDICT_LIMIT - u.nexaPredictorTestUses);
+    req.testingAccess.rollbackUserMockId = userId;
+    return true;
+  }
+
+  const updatedUser = await User.findOneAndUpdate(
+    { _id: userId, nexaPredictorTestUses: { $lt: TESTING_PREDICT_LIMIT } },
+    { $inc: { nexaPredictorTestUses: 1 } },
+    { new: true, select: 'nexaPredictorTestUses' }
+  ).lean();
+
+  if (!updatedUser) return false;
+
+  req.testingAccess.used = updatedUser.nexaPredictorTestUses || 0;
+  req.testingAccess.remaining = Math.max(0, TESTING_PREDICT_LIMIT - req.testingAccess.used);
+  req.testingAccess.rollbackUserId = userId;
+  return true;
+}
+
+async function requirePredictorTestingAccess(req, res, next) {
+  try {
+    const ok = await loadPredictorAccess(req, res);
+    if (!ok) return;
+    next();
+  } catch (e) {
+    next(e);
+  }
+}
+
+async function rollbackTestingUse(req) {
+  if (!req.testingAccess?.enabled) return;
+  try {
+    if (req.testingAccess.rollbackUserId && isMongoConnected()) {
+      await User.findByIdAndUpdate(
+        req.testingAccess.rollbackUserId,
+        { $inc: { nexaPredictorTestUses: -1 } }
+      );
+    } else if (req.testingAccess.rollbackUserMockId && isMockAuthEnabled()) {
+      const mockStore = require('../store/mockStore');
+      const u = mockStore.findById(req.testingAccess.rollbackUserMockId);
+      if (u && (u.nexaPredictorTestUses || 0) > 0) {
+        u.nexaPredictorTestUses -= 1;
+        await u.save();
+      }
+    }
+  } catch (e) {
+    console.error('[Predictor] Failed to rollback testing use:', e.message);
+  }
+}
+
 // ─── Main Prediction ──────────────────────────────────────────────
-router.post('/predict', protect, requirePremium, predictRateLimit, requireMongo, validateFields([
+router.post('/predict', protect, predictRateLimit, requireMongo, validateFields([
   { name: 'expectedMarks', type: 'number', required: true, min: 0, max: 100 },
   { name: 'category', type: 'string', required: true },
-]), async (req, res, next) => {
+]), requirePredictorTestingAccess, async (req, res, next) => {
   const routeStart = Date.now();
   const timingMarks = [];
   try {
@@ -76,15 +231,38 @@ router.post('/predict', protect, requirePremium, predictRateLimit, requireMongo,
       mockAverage = null, preparationLevel = null,
     } = req.body;
 
-    // Check cache (scoped to user — different users never share cache)
+    // Check cache (scoped to user — different users never share cache).
+    // Reads are enabled whenever MongoDB is connected (including mock-auth dev
+    // mode): the cache key covers every prediction input, so identical repeat
+    // predictions short-circuit the ~1-2s engine run.
     const userId = req.user?._id?.toString() || 'anon';
     const cacheKey = `predict:${userId}:${expectedMarks}:${category}:${paper}:${admissionType}:${collegeType}:${preferredState}`;
     const CACHE_TTL_MINUTES = 360;
-    if (isMongoConnected() && !isMockAuthEnabled()) {
+    if (isMongoConnected()) {
       const cached = await PredictionCache.findOne({ cacheKey, expiresAt: { $gt: new Date() } }).lean();
       if (cached) {
         await PredictionCache.updateOne({ _id: cached._id }, { $inc: { hitCount: 1 } });
-        return res.json({ success: true, data: { ...cached.output, cached: true } });
+        return res.json({
+          success: true,
+          data: {
+            ...cached.output,
+            cached: true,
+            ...(req.testingAccess?.enabled ? {
+              testingAccess: true,
+              testingLimit: req.testingAccess.limit,
+              testingUsed: req.testingAccess.used,
+              testingRemaining: req.testingAccess.remaining,
+            } : {}),
+          },
+        });
+      }
+    }
+
+    if (req.testingAccess?.enabled) {
+      const consumed = await consumeTestingUse(req);
+      if (!consumed) {
+        const used = req.testingAccess.used ?? TESTING_PREDICT_LIMIT;
+        return res.status(403).json(testingLimitReachedResponse(used));
       }
     }
 
@@ -126,10 +304,17 @@ router.post('/predict', protect, requirePremium, predictRateLimit, requireMongo,
 
     if (result.error) {
       const statusCode = result.availableCategories ? 404 : 400;
+      await rollbackTestingUse(req);
       return res.status(statusCode).json({
         success: false,
         message: result.error,
         ...(result.availableCategories ? { availableCategories: result.availableCategories } : {}),
+        ...(req.testingAccess?.enabled ? {
+          testingAccess: true,
+          testingLimit: req.testingAccess.limit,
+          testingUsed: req.testingAccess.used - 1,
+          testingRemaining: req.testingAccess.remaining + 1,
+        } : {}),
       });
     }
 
@@ -185,19 +370,12 @@ router.post('/predict', protect, requirePremium, predictRateLimit, requireMongo,
     }
 
     // Map 5-tier college lists → flat opportunities array with collegeBlock tier
-    const ELITE_IITS = ['Indian Institute of Science', 'Indian Institute of Technology Bombay', 'Indian Institute of Technology Delhi', 'Indian Institute of Technology Madras', 'Indian Institute of Technology Kanpur', 'Indian Institute of Technology Kharagpur', 'Indian Institute of Technology Roorkee'];
-
-    function getCollegeBlock(c) {
-      const inst = c.institute || '';
-      if (ELITE_IITS.some(name => inst.includes(name))) return 'dream_elite';
-      if (inst.includes('Indian Institute of Technology') && (c.probability || 0) >= 40) return 'high_chance_iit';
-      if (inst.includes('National Institute of Technology') && (c.probability || 0) >= 70) return 'safe_nit';
-      return 'backup';
-    }
+    // Use centralized institute classification instead of hardcoded list
+    const { getCollegeBlock: getCollegeBlockFromConfig } = require('../config/instituteClassification');
 
     const opportunityFromCollege = (c, path, baseYear) => ({
       college: c.institute, program: c.program, specialization: c.specialization || '',
-      path, collegeType: c.instituteType, tier: c.tier || null, collegeBlock: getCollegeBlock(c), location: c.state || '',
+      path, collegeType: c.instituteType, tier: c.tier || null, collegeBlock: getCollegeBlockFromConfig(c), location: c.state || '',
       closingScore: c.closingScore, openingScore: c.openingScore, year: c.year || baseYear, round: c.round,
       probability: c.probability, admissionConfidence: c.admissionConfidence || null, matchScore: c.matchScore || null, seats: c.seats || null,
       avgPlacement: c.avgPlacement || null, highestPlacement: c.highestPlacement || null,
@@ -271,12 +449,7 @@ router.post('/predict', protect, requirePremium, predictRateLimit, requireMongo,
       totalOther: result.totalOther,
       databaseCoverage: result.databaseCoverage,
       databaseStats: result.databaseStats,
-      datasetInfo: (() => {
-        try {
-          const catPath = path.join(__dirname, '..', '..', 'data', 'dataset_catalogue.json');
-          return JSON.parse(fs.readFileSync(catPath, 'utf-8'));
-        } catch { return null; }
-      })(),
+      datasetInfo: readDatasetCatalogue(),
       eligibleIITs: result.eligibleIITs,
       eligibleNITs: result.eligibleNITs,
       eligibleIIITs: result.eligibleIIITs,
@@ -287,7 +460,7 @@ router.post('/predict', protect, requirePremium, predictRateLimit, requireMongo,
       aiReport,
       recommendations: result.recommendations || [],
       historyId: historyEntry?._id || null,
-      profile: { predictMs: predictTime, totalMs: totalTime },
+      profile: { predictMs: predictTime, totalMs: totalTime, phases: result._debug?.timings || null },
       ...(req.user?.role === 'owner' ? {
         debug: {
           dbRecordsByType: result._debug?.dbRecordsByType || null,
@@ -299,7 +472,13 @@ router.post('/predict', protect, requirePremium, predictRateLimit, requireMongo,
           recommendedCount: result._debug?.recommendedCount || 0,
           recommendedSkipped: result.recommendedSkipped || 0,
         }
-      } : {})
+      } : {}),
+      ...(req.testingAccess?.enabled ? {
+        testingAccess: true,
+        testingLimit: req.testingAccess.limit,
+        testingUsed: req.testingAccess.used,
+        testingRemaining: req.testingAccess.remaining,
+      } : {}),
     };
 
     // Store in cache (non-blocking)
@@ -312,7 +491,7 @@ router.post('/predict', protect, requirePremium, predictRateLimit, requireMongo,
     }
 
     res.json({ success: true, data: responseData });
-  } catch (e) { next(e); }
+  } catch (e) { await rollbackTestingUse(req); next(e); }
 });
 
 // ─── What-If Analysis ─────────────────────────────────────────────
@@ -330,7 +509,7 @@ router.post('/what-if', protect, requirePremium, requireMongo, validateFields([
     const scenario = whatIf(history.output, req.body.marksDelta);
     if (!scenario) return res.status(400).json({ success: false, message: 'Cannot compute what-if.' });
 
-    const ccmtCutoffs = await CcmtCutoff.find({ year: history.year, category: history.input.category || 'General' });
+    const ccmtCutoffs = await CcmtCutoff.find({ year: history.year, category: history.input.category || 'General', dataStatus: { $ne: 'placeholder' } });
     const opportunities = ccmtCutoffs.filter(c => (scenario.adjustedScore || 0) >= (c.closingScore || 0));
 
     res.json({
@@ -345,7 +524,7 @@ router.get('/trends/:institute/:program', protect, requirePremium, requireMongo,
   try {
     const { institute, program } = req.params;
     const { category = 'General' } = req.query;
-    const cutoffs = await CcmtCutoff.find({ institute, program, category }).sort({ year: 1 }).lean();
+    const cutoffs = await CcmtCutoff.find({ institute, program, category, dataStatus: { $ne: 'placeholder' } }).sort({ year: 1 }).lean();
     if (!cutoffs || cutoffs.length === 0) {
       return res.status(404).json({ success: false, message: 'No trend data found.' });
     }
@@ -363,7 +542,7 @@ router.get('/trends/:institute/:program', protect, requirePremium, requireMongo,
 router.get('/ccmt', protect, requirePremium, requireMongo, async (req, res, next) => {
   try {
     const { year, category, instituteType, state, program, round } = req.query;
-    const filter = {};
+    const filter = { dataStatus: { $ne: 'placeholder' } };
     if (year) filter.year = parseInt(year);
     if (category) filter.category = category;
     if (instituteType) filter.instituteType = instituteType;
@@ -372,6 +551,42 @@ router.get('/ccmt', protect, requirePremium, requireMongo, async (req, res, next
     if (round) filter.round = parseInt(round);
     const data = await CcmtCutoff.find(filter).sort({ closingScore: -1 }).limit(500).lean();
     res.json({ success: true, count: data.length, data });
+  } catch (e) { next(e); }
+});
+
+// ─── Insights: Highest Closing Scores (verified source) ───────────
+// Serves the same CcmtCutoff collection the prediction engine reads (non-placeholder
+// rows only) so the insights "Highest Closing Scores" section has ONE source of truth.
+router.get('/insights/top-closing-scores', protect, async (req, res, next) => {
+  try {
+    if (!isMongoConnected()) return res.json({ success: true, count: 0, data: [] });
+    const { category = 'General', year, limit = 20, instituteType = 'IIT' } = req.query;
+    const filter = {
+      dataStatus: { $ne: 'placeholder' },
+      closingScore: { $gt: 0, $lte: 1000 },
+      category,
+    };
+    if (year) filter.year = parseInt(year);
+    if (instituteType && instituteType !== 'Any') filter.instituteType = instituteType;
+    const data = await CcmtCutoff.find(filter).sort({ closingScore: -1 }).limit(Math.min(parseInt(limit) || 20, 100)).lean();
+    res.json({
+      success: true,
+      count: data.length,
+      year: data[0]?.year ?? null,
+      data: data.map(c => ({
+        institute: c.institute,
+        instituteType: c.instituteType,
+        program: c.program,
+        specialization: c.specialization || '',
+        category: c.category,
+        round: c.round,
+        openingScore: c.openingScore,
+        closingScore: c.closingScore,
+        dataStatus: c.dataStatus,
+        source: c.source,
+        year: c.year,
+      })),
+    });
   } catch (e) { next(e); }
 });
 
@@ -663,25 +878,61 @@ router.get('/unlock-status', protect, async (req, res, next) => {
     if (bypassPredictorLimits(req.user)) {
       return res.json({ success: true, data: { isUnlocked: true, referralCount: 0, targetReferrals: 2 } });
     }
+    const userId = req.user?._id?.toString() || '';
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(userId);
     // When mock auth is enabled (MongoDB disconnected for mock users), check the user's in-memory premium status
     if (isMockAuthEnabled()) {
-      const isUnlocked = req.user?.isPremium === true || req.user?.premiumUnlockedViaReferral === true;
-      return res.json({ success: true, data: { isUnlocked, referralCount: 0, targetReferrals: 2 } });
+      const mockStore = require('../store/mockStore');
+      const u = mockStore.findById(userId);
+      const isPremium = req.user?.isPremium === true || req.user?.premiumUnlockedViaReferral === true;
+      const testUses = u?.nexaPredictorTestUses || 0;
+      const testingUnlocked = testUses < TESTING_PREDICT_LIMIT;
+      return res.json({
+        success: true,
+        data: {
+          isUnlocked: isPremium || testingUnlocked,
+          referralCount: 0,
+          targetReferrals: 2,
+          testingAccess: true,
+          testingLimit: TESTING_PREDICT_LIMIT,
+          testingUsed: testUses,
+          testingRemaining: Math.max(0, TESTING_PREDICT_LIMIT - testUses),
+          isPremium,
+        },
+      });
     }
     let isUnlocked = false;
     let referralCount = 0;
-    const userId = req.user?._id?.toString() || '';
-    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(userId);
+    let isPremium = false;
+    let testUses = 0;
     if (isMongoConnected() && isValidObjectId) {
       try {
-        const user = await User.findById(userId).select('isPremium premiumUnlockedViaReferral referralCount').lean();
+        const user = await User.findById(userId).select('isPremium premiumUnlockedViaReferral referralCount nexaPredictorTestUses').lean();
         if (user) {
-          if (user.isPremium || user.premiumUnlockedViaReferral) isUnlocked = true;
+          if (user.isPremium || user.premiumUnlockedViaReferral) {
+            isUnlocked = true;
+            isPremium = true;
+          }
           referralCount = user.referralCount || 0;
+          testUses = user.nexaPredictorTestUses || 0;
+          const testingUnlocked = testUses < TESTING_PREDICT_LIMIT;
+          if (testingUnlocked) isUnlocked = true;
         }
       } catch (dbErr) {}
     }
-    res.json({ success: true, data: { isUnlocked, referralCount, targetReferrals: 2 } });
+    res.json({
+      success: true,
+      data: {
+        isUnlocked,
+        referralCount,
+        targetReferrals: 2,
+        testingAccess: true,
+        testingLimit: TESTING_PREDICT_LIMIT,
+        testingUsed: testUses,
+        testingRemaining: Math.max(0, TESTING_PREDICT_LIMIT - testUses),
+        isPremium,
+      },
+    });
   } catch (e) { next(e); }
 });
 

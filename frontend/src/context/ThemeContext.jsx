@@ -6,6 +6,8 @@ import { safeGet } from '../utils/storage';
 const THEME_MODE_KEY = 'gatenexa_theme_mode';
 const COLOR_PRESET_KEY = 'gatenexa_color_preset';
 const ONBOARDING_KEY = 'gatenexa_onboarding_done';
+const NOTIF_STYLE_KEY = 'gatenexa_notification_style';
+const ANIM_QUALITY_KEY = 'gatenexa_animation_quality';
 
 const ThemeContext = createContext(null);
 
@@ -39,6 +41,14 @@ export const ThemeProvider = ({ children }) => {
     return safeGet(COLOR_PRESET_KEY) || 'violet';
   });
 
+  const [notifStyle, setNotifStyleState] = useState(() => {
+    return safeGet(NOTIF_STYLE_KEY) || 'normal';
+  });
+
+  const [animQuality, setAnimQualityState] = useState(() => {
+    return safeGet(ANIM_QUALITY_KEY) || 'high';
+  });
+
   const [resolvedTheme, setResolvedTheme] = useState('dark');
   const [onboardingDone, setOnboardingDone] = useState(() => {
     return safeGet(ONBOARDING_KEY) === 'true';
@@ -64,8 +74,23 @@ export const ThemeProvider = ({ children }) => {
     return () => mq.removeEventListener('change', handler);
   }, [themeMode]);
 
-  const setThemeMode = useCallback((mode) => setThemeModeState(mode), []);
+  useEffect(() => {
+    localStorage.setItem(NOTIF_STYLE_KEY, notifStyle);
+    document.documentElement.dataset.notifStyle = notifStyle;
+  }, [notifStyle]);
+
+  useEffect(() => {
+    localStorage.setItem(ANIM_QUALITY_KEY, animQuality);
+    document.documentElement.dataset.animQuality = animQuality;
+    const root = document.documentElement;
+    if (animQuality === 'reduced') root.classList.add('anim-reduced');
+    else root.classList.remove('anim-reduced');
+  }, [animQuality]);
+
+const setThemeMode = useCallback((mode) => setThemeModeState(mode), []);
   const setColorPreset = useCallback((id) => setColorPresetState(id), []);
+  const setNotifStyle = useCallback((v) => setNotifStyleState(v), []);
+  const setAnimQuality = useCallback((v) => setAnimQualityState(v), []);
   const toggleTheme = useCallback(() => {
     setThemeModeState((prev) => {
       const resolved = prev === 'system' ? getSystemTheme() : prev;
@@ -92,9 +117,13 @@ export const ThemeProvider = ({ children }) => {
       isDark: resolvedTheme === 'dark',
       colorPreset,
       colorPresets: COLOR_PRESETS,
-      setThemeMode,
+setThemeMode,
       setColorPreset,
       toggleTheme,
+      notifStyle,
+      setNotifStyle,
+      animQuality,
+      setAnimQuality,
       onboardingDone,
       completeOnboarding,
       resetOnboarding,

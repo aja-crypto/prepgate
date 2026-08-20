@@ -110,7 +110,7 @@ I'm your study companion. Ask me about study plans, PYQs, subjects, or motivatio
       setStatusText(phases[phaseIdx]);
     }, 2000);
 
-    const cached = cache.getCached(msg);
+    const cached = null; // online-only: never serve cached AI answers
     if (cached) {
       clearInterval(statusIntervalRef.current);
       conversation.addAssistantMessage(cached.text);

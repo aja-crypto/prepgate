@@ -82,20 +82,22 @@ export default function GateNexaAIPage() {
 
         <HowItWorks />
 
-        <div className="flex gap-1 mb-6 overflow-x-auto pb-2">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
-                activeTab === tab.id
-                  ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                  : 'text-text3 hover:text-text2 hover:bg-white/5'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="mb-6 -mx-4 px-4 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex gap-2 w-max pb-2">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                    : 'text-text3 hover:text-text2 hover:bg-white/5 border border-transparent'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="animate-fade-in">
@@ -106,6 +108,7 @@ export default function GateNexaAIPage() {
           <div style={{ display: activeTab === 'doubt' ? 'block' : 'none' }}><DoubtSolverPage /></div>
         </div>
       </div>
+      <style>{`.overflow-x-auto::-webkit-scrollbar { display: none; }`}</style>
     </div>
   );
 }

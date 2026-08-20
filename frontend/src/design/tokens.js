@@ -41,6 +41,34 @@ export const COLOR_PRESETS = {
     secondary: '#475569',
     accent: '#F59E0B',
   },
+  purple: {
+    id: 'purple',
+    label: 'Royal Purple',
+    primary: '#8B5CF6',
+    secondary: '#A855F7',
+    accent: '#22D3EE',
+  },
+  blue: {
+    id: 'blue',
+    label: 'Aurora Blue',
+    primary: '#3B82F6',
+    secondary: '#06B6D4',
+    accent: '#8B5CF6',
+  },
+  emerald: {
+    id: 'emerald',
+    label: 'Emerald Mint',
+    primary: '#10B981',
+    secondary: '#34D399',
+    accent: '#06B6D4',
+  },
+  pink: {
+    id: 'pink',
+    label: 'Pink Glow',
+    primary: '#EC4899',
+    secondary: '#A855F7',
+    accent: '#F59E0B',
+  },
 };
 
 export const SEMANTIC = {

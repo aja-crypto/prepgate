@@ -46,10 +46,10 @@ function normalizeProgramName(programName) {
  */
 let _instituteMapCache = null;
 let _instituteMapCacheAt = 0;
-const _instituteMapCacheTTL = 5 * 60 * 1000; // 5 minutes
+const _instituteMapCacheTTL = 15 * 60 * 1000; // 15 minutes
 
 /**
- * P0: cache `buildInstituteProgramMap` for 5 minutes
+ * P0: cache `buildInstituteProgramMap` for 15 minutes
  * to avoid full scans of CcmtCutoff/CoapCutoff/SeatMatrix on every prediction.
  * Cache invalidates automatically when TTL expires.
  */
@@ -65,10 +65,10 @@ async function buildInstituteProgramMap() {
   }
 
   const [ccmtCutoffs, coapCutoffs, seatData, collegePrograms] = await Promise.all([
-    CcmtCutoff.find({}).lean(),
-    CoapCutoff.find({}).lean(),
-    SeatMatrix.find({}).lean(),
-    CollegeProgram.find({ isActive: true }).lean(),
+    CcmtCutoff.find({ dataStatus: { $ne: 'placeholder' } }).batchSize(5000).lean(),
+    CoapCutoff.find({ dataStatus: { $ne: 'placeholder' } }).batchSize(5000).lean(),
+    SeatMatrix.find({}).batchSize(5000).lean(),
+    CollegeProgram.find({ isActive: true }).batchSize(5000).lean(),
   ]);
 
   const instituteMap = new Map();
@@ -238,23 +238,10 @@ function calcEnhancedProbability(userScore, closingScore, openingScore, trend, c
   // Apply bonuses
   prob = prob + stabilityBonus + seatBonus + roundBonus + demandMod + trendMod;
 
-  // Cluster-breaking modulation
-  let closingMod = 0;
-  if (closingScore) {
-    closingMod = ((closingScore % 73) / 73 - 0.5) * 5;
-  }
-
   // Soft cap for very high values
   if (prob > 92) {
     prob = 92 + (prob - 92) * 0.5;
   }
-
-  // Per-college unique offset
-  const uniqueHash = ((instituteName || '') + (programName || '') + closingScore)
-    .split('').reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0);
-  const uniqueOffset = ((Math.abs(uniqueHash) % 73) / 73 - 0.5) * 2.5;
-
-  prob = prob + closingMod + uniqueOffset;
 
   const probabilityScore = Math.round(Math.max(1, Math.min(98, prob)));
 
@@ -358,6 +345,8 @@ async function batchAnalyseTrends(filteredCcmt, category, maxYears = 6) {
   const progArr = Array.from(programs);
 
   // Single fetches for all data we need
+  // batchSize: fetch each dataset in 1-2 round trips on remote Atlas (default 101-doc
+  // batches would add ~10x round trips for the 5000-record collections).
   const [allCutoffs, allSeats] = await Promise.all([
     CcmtCutoff.find({
       category,
@@ -366,11 +355,13 @@ async function batchAnalyseTrends(filteredCcmt, category, maxYears = 6) {
     })
       .sort({ year: -1 })
       .limit(maxYears * 1000) // safety cap; real data is bounded
+      .batchSize(6000)
       .lean(),
     SeatMatrix.find({
       institute: { $in: instArr },
       program: { $in: progArr },
     })
+      .batchSize(6000)
       .lean(),
   ]);
 

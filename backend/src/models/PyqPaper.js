@@ -6,6 +6,7 @@ const pyqPaperSchema = new mongoose.Schema({
   title: { type: String, required: true },
   subject: { type: String, default: 'CSE' },
   pdfUrl: { type: String, required: true },
+  pdfFileId: { type: mongoose.Schema.Types.ObjectId, ref: 'MediaFile', default: null }, // MediaFile reference (single source of truth)
   fileName: { type: String },
 }, { timestamps: true });
 

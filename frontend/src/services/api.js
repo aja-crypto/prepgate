@@ -41,21 +41,11 @@ api.interceptors.request.use(
     const hasDefaultAuth = !!api.defaults.headers.common['Authorization'];
 
     if (isGuest) {
-      const isAuthRoute = (config.url || '').startsWith('/auth/');
-      if (import.meta.env.PROD && !isAuthRoute) {
-        // Centralized guard: demo/guest mode is disabled in production, so never
-        // send protected calls as a guest. Skip before the network emits a 401 storm,
-        // and self-heal the leftover flag so the session recovers on next load.
-        localStorage.removeItem('isGuest');
-        console.warn(`[AUTH-DEBUG] GUEST BLOCKED (production) ${config.method?.toUpperCase()} ${config.url}`);
-        return Promise.reject(new Error('Guest mode unavailable in production'));
-      }
       config.headers['X-Demo-User'] = 'true';
     } else if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    console.log(`[AUTH-DEBUG] REQUEST ${config.method?.toUpperCase()} ${config.url} | token=${token ? 'EXISTS(' + token.length + ')' : 'NULL'} | isGuest=${isGuest} | defaultAuth=${hasDefaultAuth} | headerAttached=${!!config.headers.Authorization}`);
     return config;
   },
   (error) => Promise.reject(error)
@@ -85,9 +75,6 @@ const refreshAccessToken = async () => {
 
 api.interceptors.response.use(
   (response) => {
-    if (response.config?.url?.includes('/auth/')) {
-      console.log(`[AUTH-DEBUG] RESPONSE OK ${response.status} ${response.config.url}`);
-    }
     return response;
   },
   async (error) => {
@@ -246,14 +233,14 @@ export const aiService = {
   getRecommendations: (payload) => api.post('/ai/recommendations', payload),
   askCoach: (message, context, sessionId) => api.post('/ai/chat', { message, context, sessionId, conversationId: sessionId }),
   streamCoach: (message, context, sessionId, signal, modePrompt) => {
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' };
     const token = localStorage.getItem('accessToken');
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     } else if (localStorage.getItem('isGuest') === 'true') {
       headers['X-Demo-User'] = 'true';
     }
-    const body = { message, context, sessionId, conversationId: sessionId };
+    const body = { message, context, sessionId, conversationId: sessionId, stream: true };
     if (modePrompt) body.modePrompt = modePrompt;
     return fetch(`${api.defaults.baseURL}/ai/chat`, {
       method: 'POST',
@@ -349,6 +336,23 @@ export const resourceService = {
   getIndex: () => api.get('/resources/index'),
   aiSearch: (query) => api.post('/resources/ai-search', { query }),
   fileUrl: (filePath) => `/api/resources/file/${filePath}`,
+  openFile: async (filePath) => {
+    const win = window.open('', '_blank');
+    try {
+      const res = await api.get(`/resources/file/${filePath}`, { responseType: 'blob' });
+      const blobUrl = URL.createObjectURL(res.data);
+      if (win) {
+        win.document.title = filePath.split('/').pop() || 'PDF';
+        win.location.href = blobUrl;
+      } else {
+        window.open(blobUrl, '_blank');
+      }
+      return blobUrl;
+    } catch (err) {
+      if (win) win.close();
+      throw err;
+    }
+  },
 };
 
 export const liveDataService = {
@@ -439,6 +443,12 @@ export const learningHubVideoService = {
   getById: (id) => api.get(`/learning-hub/videos/${id}`),
 };
 
+// ─── Learning Hub Subject Resources & Editor Picks ──────────────
+export const learningHubDataService = {
+  getSubjectResources: () => api.get('/learning/subject-resources'),
+  getEditorPicks: () => api.get('/learning/editor-picks'),
+};
+
 export const insightsService = {
   list: () => api.get('/insights/topics'),
   getBySlug: (slug) => api.get(`/insights/topics/${slug}`),
@@ -469,6 +479,7 @@ export const predictorService = {
   whatIf: (historyId, marksDelta) => api.post('/predictor/what-if', { historyId, marksDelta }),
   getTrends: (institute, program, category) => api.get(`/predictor/trends/${encodeURIComponent(institute)}/${encodeURIComponent(program)}`, { params: { category } }),
   getCcmt: (params) => api.get('/predictor/ccmt', { params }),
+  getTopClosingScores: (params) => api.get('/predictor/insights/top-closing-scores', { params }),
   getCoap: (params) => api.get('/predictor/coap', { params }),
   getSeats: (params) => api.get('/predictor/seats', { params }),
   validate: (data) => api.post('/predictor/validate', data),

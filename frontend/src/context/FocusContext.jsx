@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useProgress } from './ProgressContext';
-import { useAuth } from './AuthContext';
+import { useAuthData } from './AuthContext';
 
 const FOCUS_STORAGE_KEY = 'gatenexa_focus_session';
 const DAILY_FOCUS_KEY = 'gatenexa_daily_focus';
@@ -124,7 +124,7 @@ const FocusContext = createContext(null);
 
 export function FocusProvider({ children }) {
   const { updateStudyStats, updateProductivity } = useProgress();
-  const { user } = useAuth();
+  const { user } = useAuthData();
 
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);

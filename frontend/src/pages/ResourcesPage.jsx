@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { SUBJECT_RESOURCES } from '../data/subjectResources';
 
 const TYPE_META = {
   youtube: { icon: '\u25B6\uFE0F', label: 'YouTube', color: 'text-red-400' },
@@ -9,6 +10,15 @@ const TYPE_META = {
   gateoverflow: { icon: '\uD83D\uDCAC', label: 'GateOverflow', color: 'text-orange-400' },
   practice: { icon: '\uD83D\uDCDD', label: 'Practice', color: 'text-cyan-400' },
 };
+
+const EDUCATORS_BY_SUBJECT = SUBJECT_RESOURCES.map((r) => ({
+  subject: r.subject,
+  faculty: r.faculty,
+  playlist: 'Watch Playlist',
+  url: r.playlistUrl,
+  altFaculty: r.platform || 'YouTube',
+  altUrl: r.playlistUrl,
+}));
 
 function ResourceCard({ resource, meta }) {
   return (
@@ -33,6 +43,7 @@ export default function ResourcesPage() {
   const [filter, setFilter] = useState('All');
   const [typeFilter, setTypeFilter] = useState('All');
   const [showAll, setShowAll] = useState(false);
+  const [showEducators, setShowEducators] = useState(true);
 
   useEffect(() => {
     fetch('/api/cms/featured-resources?limit=50')
@@ -59,6 +70,42 @@ export default function ResourcesPage() {
         <div className="mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1">Study Resources</h1>
           <p className="text-sm text-slate-400">Curated YouTube playlists, NPTEL courses, textbooks & practice links</p>
+        </div>
+
+        <div className="mb-6">
+          <button type="button" onClick={() => setShowEducators(!showEducators)}
+            className="text-xs text-purple-300 hover:text-purple-200 mb-3 inline-flex items-center gap-1 transition-colors">
+            {showEducators ? '\u25BC Hide' : '\u25B6 Show'} Recommended Educators by Subject
+          </button>
+          {showEducators && (
+            <div className="overflow-hidden rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(139,92,246,0.12)' }}>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(139,92,246,0.12)' }}>
+                    <th className="text-left px-4 py-2 text-[10px] uppercase text-slate-400 font-medium">Subject</th>
+                    <th className="text-left px-4 py-2 text-[10px] uppercase text-slate-400 font-medium">Faculty</th>
+                    <th className="text-left px-4 py-2 text-[10px] uppercase text-slate-400 font-medium">Playlist</th>
+                    <th className="text-left px-4 py-2 text-[10px] uppercase text-slate-400 font-medium">More</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {EDUCATORS_BY_SUBJECT.map((e, i) => (
+                    <tr key={e.subject} className="transition-colors hover:bg-white/5"
+                      style={i % 2 === 0 ? { background: 'rgba(255,255,255,0.02)' } : undefined}>
+                      <td className="px-4 py-3 text-white font-medium">{e.subject}</td>
+                      <td className="px-4 py-3" style={{ color: '#CBD5E1' }}>{e.faculty}</td>
+                      <td className="px-4 py-3">
+                        <a href={e.url} target="_blank" rel="noopener noreferrer" className="text-purple-300 hover:text-purple-200 hover:underline text-sm">{e.playlist}</a>
+                      </td>
+                      <td className="px-4 py-3">
+                        <a href={e.altUrl} target="_blank" rel="noopener noreferrer" className="text-purple-300 hover:text-purple-200 hover:underline text-sm">{e.altFaculty}</a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {loading ? (

@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, lazy } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { weeklyTestService } from '../services/api';
 import { silentCatch } from '../utils/errorHandler';
 import { PageLoading } from '../components/common/GateLoadingScreen';
-import PremiumPdfViewer from '../components/common/PremiumPdfViewer';
+const PremiumPdfViewer = lazy(() => import('../components/common/PremiumPdfViewer'));
 import toast from 'react-hot-toast';
 
 const SUBJECT_META = {

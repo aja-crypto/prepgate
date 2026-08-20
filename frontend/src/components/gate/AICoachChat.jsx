@@ -314,7 +314,7 @@ export default function AICoachChat({ initialPrompt }) {
 
     const progressKey = `${topics?.length || 0}-${pyqs?.length || 0}-${mocks?.length || 0}-${gateFeatures?.streak || 0}`;
     const cacheKey = `${messageText}::${progressKey}`;
-    const cached = cache.getCached(cacheKey);
+    const cached = null; // online-only: never serve cached AI answers
     if (cached) {
       clearInterval(statusIntervalRef.current);
       const reply = cached.text;
@@ -348,12 +348,12 @@ export default function AICoachChat({ initialPrompt }) {
         setSuggestions(result.suggestions?.length > 0 ? result.suggestions : generateSmartSuggestions(messageText, reply));
       } else if (!streaming) {
         const aid = ++msgIdCounter.current;
-        setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', content: "Live AI could not be reached. Here's a general reply while it's unavailable:\n\nI'm here to help! Focus on completing your weak subjects and solving PYQs daily. What specific topic would you like advice on?", source: 'heuristic', thumbs: null }]);
+        setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', content: "AI assistant is temporarily unavailable. Please try again in a moment, or check your dashboard for study recommendations.", source: 'heuristic', thumbs: null }]);
       }
     } catch (error) {
       clearInterval(statusIntervalRef.current);
       console.error('AI Coach Error:', error);
-      let displayMsg = "Live AI could not be reached. Here's a general reply while it's unavailable:\n\nI'm here to help! Focus on completing your weak subjects and solving PYQs daily. What specific topic would you like advice on?";
+      let displayMsg = "AI assistant is temporarily unavailable. Please try again in a moment, or check your dashboard for study recommendations.";
       if (error.message?.includes('rate limit')) {
         displayMsg = "You're asking questions too fast! Live AI is temporarily rate-limited. Please wait a moment and try again.";
       } else if (error.message?.includes('timed out')) {

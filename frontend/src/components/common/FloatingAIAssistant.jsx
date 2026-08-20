@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
-import { useAuth } from '../../context/AuthContext';
+import { useAuthData, useAuthActions } from '../../context/AuthContext';
 import { useProgress } from '../../context/ProgressContext';
 import { useFocus, useFocusTimer } from '../../context/FocusContext';
 import useAiStreaming from '../../hooks/useAiStreaming';
@@ -311,7 +311,8 @@ function ChatMessage({ msg, isLast, streaming, partialText, responseTime, onSend
 
 export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
   const navigate = useNavigate();
-  const { user, aiQuestionsRemaining, setAiQuestionsRemaining, aiQuestionLimit, setAiQuestionLimit: setLimit, setShowReferralModal, isPremium, refreshReferralStatus, refreshAiQuota, decrementAiQuestions } = useAuth();
+  const { user, aiQuestionsRemaining, aiQuestionLimit, isPremium } = useAuthData();
+  const { setAiQuestionsRemaining, setAiQuestionLimit: setLimit, setShowReferralModal, refreshReferralStatus, refreshAiQuota, decrementAiQuestions } = useAuthActions();
   const { topics, pyqs, mocks, studyStats, gateFeatures } = useProgress();
   const { isActive, isPaused, mode, startSession, pauseSession, resumeSession, stopSession, selectDuration, formatTime, DURATIONS } = useFocus();
   const { timeRemaining } = useFocusTimer();
@@ -334,6 +335,8 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
   const msgIdCounter = useRef(0);
   const statusIntervalRef = useRef(null);
   const lastUserMsgRef = useRef('');
+  const activeAssistantIdRef = useRef(null);
+  const placeholderFinalizedRef = useRef(false);
 
   const [popupPos, setPopupPos] = useState(() => {
     try {
@@ -526,27 +529,27 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
   }, []);
 
   const handleSend = useCallback(async (text) => {
-    const msg = text || input;
-    if (!msg.trim() || streaming) return;
+    const userMsg = text || input;
+    if (!userMsg.trim() || streaming) return;
 
     if (user?.role !== 'admin' && !isPremium && aiQuestionsRemaining !== null && aiQuestionsRemaining <= 0) {
       setShowReferralModal(true);
       setInput('');
       const id = ++msgIdCounter.current;
-      setMessages(prev => [...prev, { id: `u-${id}`, role: 'user', text: msg }]);
+      setMessages(prev => [...prev, { id: `u-${id}`, role: 'user', text: userMsg }]);
       const aid = ++msgIdCounter.current;
       setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: "You have reached today's AI question limit. Upgrade to continue learning with AI.", source: 'quota', cached: false, thumbs: null }]);
       return;
     }
-    lastUserMsgRef.current = msg;
+    lastUserMsgRef.current = userMsg;
     setInput('');
     setSuggestions(null);
     setResponseTime(null);
     streamStartRef.current = performance.now();
 
     const id = ++msgIdCounter.current;
-    conversation.addUserMessage(msg);
-    setMessages(prev => [...prev, { id: `u-${id}`, role: 'user', text: msg }]);
+    conversation.addUserMessage(userMsg);
+    setMessages(prev => [...prev, { id: `u-${id}`, role: 'user', text: userMsg }]);
 
     const ctx = buildContext();
     ctx.modePrompt = buildModePrompt(aiMode, ctx);
@@ -559,29 +562,46 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
       setStatusText(phases[phaseIdx]);
     }, 2000);
 
-    const cached = cache.getCached(msg, aiMode);
+    const cached = cache.getCached(userMsg, aiMode);
     if (cached) {
       clearInterval(statusIntervalRef.current);
       conversation.addAssistantMessage(cached.text);
       const aid = ++msgIdCounter.current;
       setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: cached.text, source: 'cache', cached: true, thumbs: null }]);
       if (streamStartRef.current) setResponseTime(((performance.now() - streamStartRef.current) / 1000).toFixed(1));
-      setSuggestions(cached.suggestions?.length > 0 ? cached.suggestions : generateSmartSuggestions(msg, cached.text));
+      setSuggestions(cached.suggestions?.length > 0 ? cached.suggestions : generateSmartSuggestions(userMsg, cached.text));
       setStatusText('Thinking');
       return;
     }
 
-    const result = await startStream(msg, ctx, conversation.sessionId);
+    // ── Add placeholder assistant message immediately so streaming UI has something to render ──
+    const aid = ++msgIdCounter.current;
+    const placeholderId = `a-${aid}`;
+    activeAssistantIdRef.current = placeholderId;
+    placeholderFinalizedRef.current = false;
+    setMessages(prev => [...prev, { id: placeholderId, role: 'assistant', text: '', source: 'thinking', cached: false, thumbs: null }]);
+
+    const result = await startStream(userMsg, ctx, conversation.sessionId);
+
     clearInterval(statusIntervalRef.current);
     if (streamStartRef.current) setResponseTime(((performance.now() - streamStartRef.current) / 1000).toFixed(1));
+
+    if (placeholderFinalizedRef.current) {
+      activeAssistantIdRef.current = null;
+      setStatusText('Thinking');
+      return;
+    }
+
     if (result?.quotaExceeded) {
-      clearInterval(statusIntervalRef.current);
-      if (streamStartRef.current) setResponseTime(((performance.now() - streamStartRef.current) / 1000).toFixed(1));
-      const aid = ++msgIdCounter.current;
-      const msg = !isPremium ? "You have reached today's AI question limit. Upgrade to continue learning with AI." : "You have reached today's AI question limit. Your limit resets tomorrow.";
-      setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: msg, source: 'quota', cached: false, thumbs: null }]);
+      const quotaText = !isPremium ? "You have reached today's AI question limit. Upgrade to continue learning with AI." : "You have reached today's AI question limit. Your limit resets tomorrow.";
+      placeholderFinalizedRef.current = true;
+      setMessages(prev => prev.map(m => m.id === placeholderId
+        ? { ...m, text: quotaText, source: 'quota', cached: false, thumbs: null }
+        : m
+      ));
       setSuggestions(null);
       if (!isPremium) setShowReferralModal(true);
+      activeAssistantIdRef.current = null;
       setStatusText('Thinking');
       return;
     }
@@ -596,19 +616,33 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     if (result?.text) {
       const source = result.source || 'provider';
       conversation.addAssistantMessage(result.text);
-      cache.setCached(msg, { text: result.text, suggestions: result.suggestions }, undefined, aiMode);
-      const aid = ++msgIdCounter.current;
-      setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: result.text, source, provider: result.provider, offlineInfo: result.offlineInfo, cached: false, thumbs: null }]);
-      setSuggestions(result.suggestions?.length > 0 ? result.suggestions : generateSmartSuggestions(msg, result.text));
-    } else if (!streaming && !result) {
-      clearInterval(statusIntervalRef.current);
-      if (streamStartRef.current) setResponseTime(((performance.now() - streamStartRef.current) / 1000).toFixed(1));
-      const aid = ++msgIdCounter.current;
+      cache.setCached(userMsg, { text: result.text, suggestions: result.suggestions }, undefined, aiMode);
+      placeholderFinalizedRef.current = true;
+      setMessages(prev => prev.map(m => m.id === placeholderId
+        ? { ...m, text: result.text, source, provider: result.provider, offlineInfo: result.offlineInfo, cached: false, thumbs: null }
+        : m
+      ));
+      setSuggestions(result.suggestions?.length > 0 ? result.suggestions : generateSmartSuggestions(userMsg, result.text));
+    } else if (result?.error) {
+      const errText = typeof result.error === 'string' && result.error.trim() ? result.error : "AI service is temporarily unavailable. Please try again.";
+      placeholderFinalizedRef.current = true;
+      setMessages(prev => prev.map(m => m.id === placeholderId
+        ? { ...m, text: errText, source: 'error', provider: null, offlineInfo: null, cached: false, thumbs: null }
+        : m
+      ));
+      setSuggestions(null);
+      refreshAiQuota();
+    } else if (!result?.text) {
       const fallbackText = "Live AI could not be reached, so I'm replying from the offline knowledge base. Ask me to explain any core GATE topic (CPU scheduling, deadlock, DBMS normalization, Dijkstra, TCP, binary search…) and I'll go deep.";
-      setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: fallbackText, source: 'heuristic', provider: null, offlineInfo: { provider: null, model: null, status: null, reason: 'Live AI could not be reached.', detail: null, ts: new Date().toISOString() }, cached: false, thumbs: null }]);
+      placeholderFinalizedRef.current = true;
+      setMessages(prev => prev.map(m => m.id === placeholderId
+        ? { ...m, text: fallbackText, source: 'heuristic', provider: null, offlineInfo: { provider: null, model: null, status: null, reason: 'Live AI could not be reached.', detail: null, ts: new Date().toISOString() }, cached: false, thumbs: null }
+        : m
+      ));
       setSuggestions(["What should I study today?", "Am I on track?", "Which subject should I prioritize?"]);
       refreshAiQuota();
     }
+    activeAssistantIdRef.current = null;
     setStatusText('Thinking');
   }, [input, streaming, conversation, buildContext, cache, startStream, generateSmartSuggestions, aiQuestionsRemaining, setShowReferralModal, isPremium, refreshAiQuota, decrementAiQuestions, setAiQuestionsRemaining, setLimit, aiMode]);
 
@@ -616,7 +650,17 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     stopStream();
     clearInterval(statusIntervalRef.current);
     setStatusText('Thinking');
-    if (partialText) {
+    const placeholderId = activeAssistantIdRef.current;
+    if (partialText && placeholderId && !placeholderFinalizedRef.current) {
+      conversation.addAssistantMessage(partialText);
+      cache.setCached(lastUserMsgRef.current, { text: partialText, suggestions: null }, undefined, aiMode);
+      placeholderFinalizedRef.current = true;
+      setMessages(prev => prev.map(m => m.id === placeholderId
+        ? { ...m, text: partialText, source: 'aborted', cached: false, thumbs: null }
+        : m
+      ));
+      activeAssistantIdRef.current = null;
+    } else if (partialText && !placeholderId) {
       conversation.addAssistantMessage(partialText);
       const aid = ++msgIdCounter.current;
       setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: partialText, source: 'aborted', thumbs: null }]);
@@ -887,7 +931,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
                       onThumbs={handleThumbs}
                     />
                   ))}
-                  {streaming && !partialText && messages[messages.length - 1]?.role === 'user' && (
+                  {streaming && !partialText && (messages[messages.length - 1]?.role === 'user' || messages[messages.length - 1]?.source === 'thinking') && (
                     <div className="flex justify-start">
                       <TypingIndicator statusText={statusText} />
                     </div>

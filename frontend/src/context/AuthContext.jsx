@@ -5,7 +5,10 @@ import toast from 'react-hot-toast';
 import { safeGet, safeRemove } from '../utils/storage';
 import { STORAGE_KEYS } from './AccountState';
 
-const AuthContext = createContext(null);
+// Split contexts to prevent cascading re-renders
+const AuthDataContext = createContext(null);
+const AuthActionsContext = createContext(null);
+const AuthContext = createContext(null); // deprecated - use useAuthData/useAuthActions
 const progressKey = (userId) => `gatenexa_progress_${userId}`;
 
 export const AuthProvider = ({ children }) => {
@@ -80,13 +83,6 @@ export const AuthProvider = ({ children }) => {
 
     const token = safeGet('accessToken');
     let isGuest = safeGet('isGuest') === 'true';
-    if (isGuest && import.meta.env.PROD) {
-      // Demo/guest mode is unsupported in production. Purge any leftover 'isGuest'
-      // flag persisted by pre-fix demo sessions so returning users aren't stuck in
-      // guest mode (which the prod backend rejects with 401 on every protected call).
-      localStorage.removeItem('isGuest');
-      isGuest = false;
-    }
     const genAtInit = authGenRef.current;
     console.log('[AUTH-DEBUG] INIT: token=', token ? 'EXISTS(' + token.length + ')' : 'NULL', 'isGuest=', isGuest);
 
@@ -123,15 +119,37 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
       });
     } else if (isGuest) {
-      clearTimeout(timeoutId);
-      setUser({
-        id: 'demo_user_id',
-        name: 'GATE Aspirant (Demo)',
-        email: 'demo@gate2027.in',
-        role: 'user',
-        isGuest: true
+      // Try to get a real token from backend demo endpoint
+      api.post('/auth/demo').then((res) => {
+        if (genAtInit !== authGenRef.current) return;
+        if (res.data?.success && res.data?.data) {
+          const { user: userData, accessToken, refreshToken } = res.data.data;
+          localStorage.setItem('accessToken', accessToken);
+          if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+          api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+          setUser({ ...userData, isGuest: true });
+        } else {
+          setUser({
+            id: 'demo_user_id',
+            name: 'GATE Aspirant (Demo)',
+            email: 'demo@gate2027.in',
+            role: 'user',
+            isGuest: true
+          });
+        }
+      }).catch(() => {
+        if (genAtInit !== authGenRef.current) return;
+        setUser({
+          id: 'demo_user_id',
+          name: 'GATE Aspirant (Demo)',
+          email: 'demo@gate2027.in',
+          role: 'user',
+          isGuest: true
+        });
+      }).finally(() => {
+        clearTimeout(timeoutId);
+        setLoading(false);
       });
-      setLoading(false);
     } else {
       clearTimeout(timeoutId);
       delete api.defaults.headers.common['Authorization'];
@@ -195,12 +213,30 @@ export const AuthProvider = ({ children }) => {
     return u;
   }, [storeSession, refreshReferralStatus]);
 
-  const loginAsGuest = useCallback(() => {
+  const loginAsGuest = useCallback(async () => {
     authGenRef.current += 1;
     clearApiCache();
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     delete api.defaults.headers.common['Authorization'];
+    
+    try {
+      const res = await api.post('/auth/demo');
+      if (res.data?.success && res.data?.data) {
+        const { user: userData, accessToken, refreshToken } = res.data.data;
+        localStorage.setItem('accessToken', accessToken);
+        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+        api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        setUser({ ...userData, isGuest: true });
+        localStorage.setItem('isGuest', 'true');
+        localStorage.setItem('gatenexa_onboarding_done', 'true');
+        toast.success('Welcome to Demo Mode! Loading sample data...');
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend demo login failed, using local fallback:', err.message);
+    }
+    
     const guestUser = {
       id: 'demo_user_id',
       name: 'GATE Aspirant (Demo)',
@@ -211,7 +247,7 @@ export const AuthProvider = ({ children }) => {
     setUser(guestUser);
     localStorage.setItem('isGuest', 'true');
     localStorage.setItem('gatenexa_onboarding_done', 'true');
-    toast.success('Welcome to Demo Mode! Loading sample data... 🚀');
+    toast.success('Welcome to Demo Mode! (Offline)');
   }, []);
 
   const logout = useCallback(() => {
@@ -243,27 +279,55 @@ export const AuthProvider = ({ children }) => {
     toast.success('Account deleted. Data recoverable for 30 days.');
   }, [user, logout]);
 
-  const ctxValue = useMemo(() => ({
-    user, loading, login, register, googleLogin, loginAsGuest, logout, deleteAccount, setUser,
+  const dataValue = useMemo(() => ({
+    user, loading,
     isPremium, referralCode, referralCount, referralProgress,
-    aiQuestionsRemaining, setAiQuestionsRemaining, aiQuestionLimit, setAiQuestionLimit, showReferralModal, setShowReferralModal,
-    showCelebration, setShowCelebration,
+    aiQuestionsRemaining, aiQuestionLimit,
+    showReferralModal, showCelebration,
+  }), [user, loading, isPremium, referralCode, referralCount, referralProgress,
+    aiQuestionsRemaining, aiQuestionLimit, showReferralModal, showCelebration]);
+
+  const actionsValue = useMemo(() => ({
+    login, register, googleLogin, loginAsGuest, logout, deleteAccount, setUser,
+    setAiQuestionsRemaining, setAiQuestionLimit, setShowReferralModal, setShowCelebration,
     refreshReferralStatus, refreshPremiumStatus, refreshAiQuota, decrementAiQuestions,
-  }), [user, loading, login, register, googleLogin, loginAsGuest, logout, deleteAccount, setUser,
-    isPremium, referralCode, referralCount, referralProgress,
-    aiQuestionsRemaining, setAiQuestionsRemaining, aiQuestionLimit, setAiQuestionLimit, showReferralModal, setShowReferralModal,
-    showCelebration, setShowCelebration,
+  }), [login, register, googleLogin, loginAsGuest, logout, deleteAccount, setUser,
+    setAiQuestionsRemaining, setAiQuestionLimit, setShowReferralModal, setShowCelebration,
     refreshReferralStatus, refreshPremiumStatus, refreshAiQuota, decrementAiQuestions]);
 
+  // Backward compatible combined value
+  const compatValue = useMemo(() => ({
+    ...dataValue,
+    ...actionsValue,
+  }), [dataValue, actionsValue]);
+
   return (
-    <AuthContext.Provider value={ctxValue}>
-      {children}
-    </AuthContext.Provider>
+    <AuthDataContext.Provider value={dataValue}>
+      <AuthActionsContext.Provider value={actionsValue}>
+        <AuthContext.Provider value={compatValue}>
+          {children}
+        </AuthContext.Provider>
+      </AuthActionsContext.Provider>
+    </AuthDataContext.Provider>
   );
 };
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+};
+
+// Subscribe only to data — re-renders only when data changes
+export const useAuthData = () => {
+  const ctx = useContext(AuthDataContext);
+  if (!ctx) throw new Error('useAuthData must be used within AuthProvider');
+  return ctx;
+};
+
+// Subscribe only to actions — NEVER re-renders when data changes
+export const useAuthActions = () => {
+  const ctx = useContext(AuthActionsContext);
+  if (!ctx) throw new Error('useAuthActions must be used within AuthProvider');
   return ctx;
 };

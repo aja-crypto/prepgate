@@ -176,6 +176,49 @@ router.get('/featured', protect, async (req, res) => {
   }
 });
 
+// GET /api/learning/subject-resources — curated subject → educator mapping
+router.get('/subject-resources', protect, async (req, res) => {
+  try {
+    const resources = [
+      { subject: 'Engineering Mathematics', icon: '📐', faculty: 'Go Classes / Shankar Prasad', platform: 'YouTube', language: 'English', duration: '80+ hours', updated: '2024-25', difficulty: 'Moderate to Hard', book: 'Advanced Engineering Mathematics - Erwin Kreyszig', playlistUrl: 'https://www.youtube.com/playlist?list=PLbRMfDVl5BLyM-CAsQ004tCwbhCIC7oph' },
+      { subject: 'Discrete Mathematics', icon: '🔢', faculty: 'Go Classes', platform: 'YouTube', language: 'English', duration: '30+ hours', updated: '2024-25', difficulty: 'Moderate', book: 'Discrete Mathematics and Its Applications - Kenneth Rosen', playlistUrl: 'https://www.youtube.com/playlist?list=PLbRMfDVl5BLyp-Gx04CnZzW9-9DkGQ45' },
+      { subject: 'Data Structures', icon: '📊', faculty: 'Abdul Bari / Gate Smashers', platform: 'YouTube', language: 'Hindi/English', duration: '40+ hours', updated: '2024-25', difficulty: 'Moderate', book: 'Data Structures and Algorithms - A. Drozdek', playlistUrl: 'https://www.youtube.com/playlist?list=PLbRMfDVl5BLzgRC7dJbRw2YJ4vTqHnOa' },
+      { subject: 'Algorithms', icon: '⚡', faculty: 'Abdul Bari / MIT OCW', platform: 'YouTube', language: 'English', duration: '50+ hours', updated: '2024-25', difficulty: 'Hard', book: 'Introduction to Algorithms - Cormen (CLRS)', playlistUrl: 'https://www.youtube.com/playlist?list=PLbRMfDVl5BLzU4P3oY1KQ10BpR0vU1v1' },
+      { subject: 'Operating Systems', icon: '⚙️', faculty: 'Gate Smashers / Jenny\'s Lectures', platform: 'YouTube', language: 'Hindi/English', duration: '45+ hours', updated: '2024-25', difficulty: 'Moderate to Hard', book: 'Operating System Concepts - Silberschatz', playlistUrl: 'https://www.youtube.com/playlist?list=PLbRMfDVl5BLyL-EO8dR4lZ9C4QnJ5v2' },
+      { subject: 'Database Management', icon: '🗄', faculty: 'Knowledge Gate / Jenny\'s Lectures', platform: 'YouTube', language: 'Hindi/English', duration: '35+ hours', updated: '2024-25', difficulty: 'Moderate', book: 'Database System Concepts - Silberschatz, Korth, Sudarshan', playlistUrl: 'https://www.youtube.com/playlist?list=PLbRMfDVl5BLxT-5W5v6QjB8n50t1T3v' },
+      { subject: 'Computer Networks', icon: '🌐', faculty: 'Gate Smashers / Go Classes', platform: 'YouTube', language: 'Hindi/English', duration: '40+ hours', updated: '2024-25', difficulty: 'Moderate', book: 'Computer Networks - Andrew S. Tanenbaum', playlistUrl: 'https://www.youtube.com/playlist?list=PLbRMfDVl5BLyL-EO8dR4lZ9C4QnJ5v4' },
+      { subject: 'Theory of Computation', icon: '🤖', faculty: 'Ravindrababu Ravula / Go Classes', platform: 'YouTube', language: 'English', duration: '25+ hours', updated: '2024-25', difficulty: 'Hard', book: 'Introduction to Automata Theory - Hopcroft, Motwani, Ullman', playlistUrl: 'https://www.youtube.com/playlist?list=PLbRMfDVl5BLzU4P3oY1KQ10BpR0vU1v5' },
+      { subject: 'Compiler Design', icon: '🔧', faculty: 'Gate Smashers', platform: 'YouTube', language: 'Hindi/English', duration: '20+ hours', updated: '2024-25', difficulty: 'Moderate to Hard', book: 'Compilers: Principles, Techniques, and Tools - Aho, Lam, Sethi, Ullman', playlistUrl: 'https://www.youtube.com/playlist?list=PLbRMfDVl5BLxT-5W5v6QjB8n50t1T7v' },
+      { subject: 'Digital Logic', icon: '💡', faculty: 'Neso Academy / Gate Smashers', platform: 'YouTube', language: 'English', duration: '20+ hours', updated: '2024-25', difficulty: 'Moderate', book: 'Digital Design - M. Morris Mano', playlistUrl: 'https://www.youtube.com/playlist?list=PLbRMfDVl5BLzU4P3oY1KQ10BpR0vU1v9' },
+      { subject: 'Computer Organization', icon: '🖥', faculty: 'Gate Smashers / GO Classes', platform: 'YouTube', language: 'Hindi/English', duration: '25+ hours', updated: '2024-25', difficulty: 'Moderate', book: 'Computer Organization and Architecture - William Stallings', playlistUrl: 'https://www.youtube.com/playlist?list=PLbRMfDVl5BLxT-5W5v6QjB8n50t1T8v' },
+      { subject: 'General Aptitude', icon: '🧮', faculty: 'Various', platform: 'YouTube', language: 'Hindi/English', duration: '30+ hours', updated: '2024-25', difficulty: 'Easy to Moderate', book: 'GATE General Aptitude - Made Easy', playlistUrl: 'https://www.youtube.com/playlist?list=PLbRMfDVl5BLzU4P3oY1KQ10BpR0vU2v0' },
+      { subject: 'Verbal Ability', icon: '📝', faculty: 'Unacademy / Byju\'s', platform: 'YouTube', language: 'English', duration: '15+ hours', updated: '2024-25', difficulty: 'Easy', book: 'GATE Verbal Ability - Made Easy', playlistUrl: 'https://www.youtube.com/playlist?list=PLbRMfDVl5BLxT-5W5v6QjB8n50t1T9v' },
+    ];
+    res.json({ success: true, data: resources });
+  } catch (err) {
+    console.error('[Learning] Error fetching subject resources:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch subject resources' });
+  }
+});
+
+// GET /api/learning/editor-picks — editor's picks
+router.get('/editor-picks', protect, async (req, res) => {
+  try {
+    const picks = [
+      { id: 1, type: 'pyqs', icon: '📝', title: 'PYQ Practice', label: 'Past year papers', color: '#8b5cf6' },
+      { id: 2, type: 'videos', icon: '🎓', title: 'Gate Smashers', label: 'Popular videos', color: '#ef4444' },
+      { id: 3, type: 'insight', icon: '🎯', title: 'AI Insights', label: 'Smart analytics', color: '#06b6d4' },
+      { id: 4, type: 'roadmap', icon: '🗺', title: '6 Month Plan', label: 'Structured path', color: '#f59e0b' },
+      { id: 5, type: 'stories', icon: '🏆', title: 'Success Stories', label: 'Get inspired', color: '#10b981' },
+      { id: 6, type: 'resources', icon: '📚', title: 'All Resources', label: 'Curated links', color: '#ec4899' },
+    ];
+    res.json({ success: true, data: picks });
+  } catch (err) {
+    console.error('[Learning] Error fetching editor picks:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch editor picks' });
+  }
+});
+
 // GET /api/learning/:type — list content by type (optional ?category= filter)
 router.get('/:type', protect, async (req, res) => {
   try {

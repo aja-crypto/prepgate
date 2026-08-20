@@ -447,19 +447,33 @@ app.use('*', (req, res) => {
 });
 
 // --- Seed default dev admin & owner ──────────────────────---
-// In production these manage the owner/admin accounts. Do NOT hard-fail
-// startup if they are missing — warn instead so the server can still start;
-// existing accounts keep their passwords and only the auto-manage step is skipped.
-const crypto = require('crypto');
-const secureFallbackPassword = () => 'GN_' + crypto.randomBytes(12).toString('hex');
-if (process.env.NODE_ENV === 'production') {
-  if (!process.env.OWNER_PASSWORD) console.warn('[STARTUP] OWNER_PASSWORD not set — owner password will not be auto-managed. Set it in env to update the owner password.');
-  if (!process.env.ADMIN_PASSWORD) console.warn('[STARTUP] ADMIN_PASSWORD not set — admin password will not be auto-managed. Set it in env to update the admin password.');
-}
-const OWNER_PASSWORD = process.env.OWNER_PASSWORD || null;
-const DEV_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || null;
+// Admin/Owner account password management.
+// Production (NODE_ENV=production):
+//   ADMIN_PASSWORD MUST be set in the environment. If missing, the server
+//   refuses to start with a clear configuration error. We never silently
+//   generate a random production admin password — that would lock admins out.
+// Development (any other NODE_ENV):
+//   If ADMIN_PASSWORD is not provided we fall back to a known DEV-only value
+//   ("admin123"). This is for local test only. It is printed once to the
+//   console as a dev reminder, never to logs in production, never to APIs.
+const DEV_FALLBACK_ADMIN_PASSWORD = 'admin123';
+const isProduction = process.env.NODE_ENV === 'production';
 
-if (!isMongoConnected() && process.env.NODE_ENV !== 'production') {
+if (isProduction && !process.env.ADMIN_PASSWORD) {
+  console.error('[FATAL STARTUP] ADMIN_PASSWORD environment variable is required in production.');
+  console.error('[FATAL STARTUP] Set ADMIN_PASSWORD (and OWNER_PASSWORD) in the hosting dashboard (Render/Vercel) and restart.');
+  process.exit(1);
+}
+if (isProduction && !process.env.OWNER_PASSWORD) {
+  console.error('[FATAL STARTUP] OWNER_PASSWORD environment variable is required in production.');
+  console.error('[FATAL STARTUP] Set OWNER_PASSWORD in the hosting dashboard and restart.');
+  process.exit(1);
+}
+
+const OWNER_PASSWORD = process.env.OWNER_PASSWORD || (isProduction ? null : 'owner123');
+const DEV_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || (isProduction ? null : DEV_FALLBACK_ADMIN_PASSWORD);
+
+if (!isMongoConnected() && !isProduction) {
   try {
     const localAdminStore = require('./src/store/localAdminStore');
     if (!localAdminStore.findAdminByEmail('admin@gatenexa.dev')) {
@@ -468,7 +482,7 @@ if (!isMongoConnected() && process.env.NODE_ENV !== 'production') {
         email: 'admin@gatenexa.dev',
         password: DEV_ADMIN_PASSWORD,
         role: 'super_admin',
-      }).then(() => console.log('?? Dev admin seeded: admin@gatenexa.dev / admin123'))
+      }).then(() => console.log('[DEV] Local dev admin seeded: admin@gatenexa.dev (password from ADMIN_PASSWORD env, or dev fallback "admin123" in non-production).'))
       .catch((e) => console.error('Admin seed failed:', e.message));
     }
     if (!localAdminStore.findAdminByEmail('purruajaykumar@gmail.com')) {
@@ -476,8 +490,8 @@ if (!isMongoConnected() && process.env.NODE_ENV !== 'production') {
         name: 'Owner',
         email: 'purruajaykumar@gmail.com',
         password: OWNER_PASSWORD,
-        role: 'owner',
-      }).then(() => console.log('?? Owner seeded: purruajaykumar@gmail.com'))
+        role: 'super_admin',
+      }).then(() => console.log('[DEV] Local owner seeded: purruajaykumar@gmail.com (password from OWNER_PASSWORD env, or dev fallback "owner123" in non-production).'))
       .catch((e) => console.error('Owner seed failed:', e.message));
     }
   } catch (e) {
@@ -514,15 +528,16 @@ connectDB().then(async () => {
         await Admin.create({
           name: 'Dev Admin',
           email: 'admin@gatenexa.dev',
-          passwordHash: DEV_ADMIN_PASSWORD || secureFallbackPassword(),
+          passwordHash: DEV_ADMIN_PASSWORD,
           role: 'super_admin',
           isActive: true,
         });
-        console.log('Dev admin seeded in MongoDB: admin@gatenexa.dev');
+        if (!isProduction) console.log('[DEV] Dev admin seeded in MongoDB: admin@gatenexa.dev (password from ADMIN_PASSWORD env, or dev fallback "admin123" in non-production).');
+        else console.log('Dev admin seeded in MongoDB: admin@gatenexa.dev');
       } else if (DEV_ADMIN_PASSWORD) {
         existing.passwordHash = DEV_ADMIN_PASSWORD;
         await existing.save();
-        console.log('Dev admin password updated');
+        console.log('Dev admin password updated from ADMIN_PASSWORD env.');
       }
     } catch (e) {
       console.error('Admin MongoDB seed error:', e.message);
@@ -537,14 +552,14 @@ connectDB().then(async () => {
       if (!existing) {
         await Admin.create({
           name: 'Owner', email: ownerEmail,
-          passwordHash: OWNER_PASSWORD || secureFallbackPassword(), role: 'owner', isActive: true,
+          passwordHash: OWNER_PASSWORD, role: 'super_admin', isActive: true,
         });
-        console.log('?? Owner created in Admin model');
+        console.log('Owner created in Admin model (password from OWNER_PASSWORD env).');
       } else if (OWNER_PASSWORD) {
         existing.passwordHash = OWNER_PASSWORD;
-        existing.role = 'owner';
+        existing.role = 'super_admin';
         await existing.save();
-        console.log('?? Owner password updated in Admin model');
+        console.log('Owner password updated in Admin model from OWNER_PASSWORD env.');
       }
       // Also seed owner in User model so they can login via /api/auth/login
       let ownerUser = await User.findOne({ email: ownerEmail }).select('+password');
@@ -552,16 +567,16 @@ connectDB().then(async () => {
         await User.create({
           name: 'Owner',
           email: ownerEmail,
-          password: OWNER_PASSWORD || secureFallbackPassword(),
+          password: OWNER_PASSWORD,
           role: 'owner',
           isPremium: true,
         });
-        console.log('?? Owner User created');
+        console.log('Owner User created (password from OWNER_PASSWORD env).');
       } else if (OWNER_PASSWORD) {
         ownerUser.password = OWNER_PASSWORD;
         ownerUser.role = 'owner';
         await ownerUser.save({ validateBeforeSave: false });
-        console.log('?? Owner User password updated');
+        console.log('Owner User password updated from OWNER_PASSWORD env.');
       }
     } catch (e) {
       console.error('Owner seed error:', e.message);

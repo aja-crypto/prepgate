@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, CheckCheck, Bookmark, BookmarkX, Trash2, ArrowLeft, Filter, Settings, Sparkles } from 'lucide-react';
-import { useNotifications } from '../context/NotificationContext';
+import { useNotificationData, useNotificationActions } from '../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 
 const TYPE_EMOJIS = {
@@ -87,7 +87,8 @@ function matchesCategory(n, cat) {
 }
 
 export default function NotificationsPage() {
-  const { notifications = [], fetchNotifications, markRead, markAllRead, toggleBookmark, delete: deleteNotif, prefs, updatePrefs } = useNotifications();
+  const { notifications = [], prefs } = useNotificationData();
+  const { fetchNotifications, markRead, markAllRead, toggleBookmark, delete: deleteNotif, updatePrefs } = useNotificationActions();
   const nav = useNavigate();
   const [filter, setFilter] = useState('all');
   const [showPrefs, setShowPrefs] = useState(false);

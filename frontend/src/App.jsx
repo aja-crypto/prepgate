@@ -2,7 +2,7 @@
 import React, { Suspense, lazy, useState, useCallback, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
+import { useAuthData, useAuthActions } from './context/AuthContext';
 import { useAdminAuth } from './context/AdminAuthContext';
 import Layout from './components/common/Layout';
 import DiagnosticsModal from './components/common/DiagnosticsModal';
@@ -113,7 +113,7 @@ const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage'));
 
 // Protected route wrapper
 const PrivateRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuthData();
   if (loading) return (
     <div className="flex items-center justify-center h-screen bg-bg mesh-bg">
       <div className="text-center animate-fade-in">
@@ -158,9 +158,22 @@ const AdminPublicRoute = ({ children }) => {
   return admin ? <Navigate to="/admin/dashboard" replace /> : children;
 };
 
+// Fallback for unmatched /admin/* subroutes — keeps the admin shell mounted instead of a silent blank main area
+function AdminNoMatch() {
+  return (
+    <div className="p-4 lg:p-6 flex items-center justify-center min-h-[60vh]">
+      <div className="text-center">
+        <div className="text-4xl mb-3">🗺️</div>
+        <h1 className="text-lg font-bold text-text">Admin section not found</h1>
+        <p className="text-sm text-text3 mt-1">This admin area does not exist. Use the sidebar to navigate.</p>
+      </div>
+    </div>
+  );
+}
+
 // Floating widgets — mounted outside Suspense to prevent DOM reconciliation errors
 function AppFloatingWidgets() {
-  const { user, showReferralModal, showCelebration } = useAuth();
+  const { user, showReferralModal, showCelebration } = useAuthData();
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [aiIntroOpen, setAiIntroOpen] = useState(false);
   const [brandIntroOpen, setBrandIntroOpen] = useState(false);
@@ -192,6 +205,7 @@ function AppFloatingWidgets() {
   if (!user) return null;
   // Don't show on landing page, public auth pages, or focused flow pages
   const hideOn = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/feedback', '/about', '/help'];
+  const hideOnAi = path === '/mentor' || path === '/ai-coach';
   const hideFloatingWidgets = path.startsWith('/legal/');
   if (hideOn.includes(path) || hideFloatingWidgets) {
     // Still allow brand intro to show
@@ -202,7 +216,7 @@ function AppFloatingWidgets() {
       {aiIntroOpen && <AiIntroModal onComplete={handleAiIntroComplete} />}
       <BrandIntroModal open={brandIntroOpen} onClose={() => setBrandIntroOpen(false)} />
       <AmbientBackground />
-      {localStorage.getItem('gatenexa_ai_fab') !== 'false' && (
+      {localStorage.getItem('gatenexa_ai_fab') !== 'false' && !hideOnAi && (
         <FloatingAIAssistant open={aiPanelOpen} setOpen={setAiPanelOpen} />
       )}
       {showGate && <PremiumGateDialog />}
@@ -217,24 +231,16 @@ const HomePageWrapper = () => {
   return <LandingPage />;
 };
 
-// Route prefetching - preload critical routes on idle for instant navigation
+// Route prefetching - preload ONLY the top 5 most critical routes on idle for instant navigation
 function RoutePrefetcher() {
   useEffect(() => {
     if ('requestIdleCallback' in window) {
       requestIdleCallback(() => {
         import('./pages/DashboardPage');
         import('./pages/SubjectsPage');
-        import('./pages/TopicsPage');
         import('./pages/AIMentorPage');
-        import('./pages/PYQPage');
-        import('./pages/NotesPage');
-        import('./pages/SettingsPage');
-        import('./pages/MocksPage');
-        import('./pages/AnalyticsPage');
-        import('./pages/AirPredictorPage');
-        import('./pages/LearningHubPage');
         import('./pages/OpportunityPredictorPage');
-        import('./pages/StudyPlannerPage');
+        import('./pages/LearningHubPage');
       }, { timeout: 3000 });
     }
   }, []);
@@ -333,6 +339,7 @@ export default function App() {
         <Route path="video-lectures" element={<VideoLecturesPage />} />
         <Route path="roadmap" element={<PersonalizedRoadmapPage />} />
         <Route path="opportunity-predictor" element={<OpportunityPredictorPage />} />
+        <Route path="predictor" element={<OpportunityPredictorPage />} />
         <Route path="report" element={<ReportPage />} />
         <Route path="premium" element={<PremiumPage />} />
         <Route path="referral" element={<ReferralDashboardPage />} />

@@ -14,6 +14,7 @@ const flashcardSchema = new mongoose.Schema({
   fileType: { type: String, default: '' },
   fileName: { type: String, default: '' },
   fileUrl: { type: String, default: '' },
+  fileId: { type: mongoose.Schema.Types.ObjectId, ref: 'MediaFile', default: null }, // MediaFile reference (single source of truth)
   fileSize: { type: Number, default: 0 },
   tags: [String],
   createdAt: { type: Date, default: Date.now },

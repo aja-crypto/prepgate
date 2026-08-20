@@ -2,6 +2,71 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import INSIGHT_TOPICS, { getTopicBySlug, TOPIC_ACCENTS } from '../data/insightTopics';
 import InsightPage from '../components/insights/InsightPage';
+import { predictorService } from '../services/api';
+
+const UI_CATEGORY_TO_DB = { 'General': 'General', 'OBC': 'OBC-NCL', 'EWS': 'EWS', 'SC': 'SC', 'ST': 'ST', 'PwD': 'PwD' };
+
+function shortInstitute(name = '') {
+  return name
+    .replace('Indian Institute of Technology', 'IIT')
+    .replace('National Institute of Technology', 'NIT')
+    .replace('Indian Institute of Science', 'IISc')
+    .replace(/^Indian Institute of Information Technology/, 'IIIT');
+}
+
+// Build the "Highest Closing Scores" topic entirely from the live verified CCMT source.
+// If no verified data is available, returns a topic with fabricated sections removed and
+// a clear non-fabricated notice instead of invented numbers.
+function buildHighestClosingTopic(base, rows, categoryUi, isLoading) {
+  const topic = { ...base };
+  if (!rows || rows.length === 0) {
+    return {
+      ...topic,
+      stat_cards: [],
+      rankings: [],
+      visual_cards: [],
+      charts: [],
+      tier_scores: [],
+      dataNotice: isLoading
+        ? 'Loading verified closing-score data…'
+        : 'Verified closing-score data is currently unavailable. Use the Opportunity Predictor for live, DB-backed estimates.',
+    };
+  }
+  const top = rows.slice(0, 10);
+  const ranked = top.map((r, i) => ({
+    rank: i + 1,
+    institute: shortInstitute(r.institute),
+    programme: r.program,
+    closing_score_est: r.closingScore,
+    closing_score_confidence: r.dataStatus === 'verified' ? 'official' : 'estimated',
+    category: r.category,
+    year: r.year,
+    round: r.round,
+  }));
+  const statCards = [
+    { id: 'live_highest', label: 'Highest verified closing', value: top[0].closingScore, unit: 'score', confidence: top[0].dataStatus === 'verified' ? 'official' : 'estimated' },
+    { id: 'live_count', label: 'Verified programmes shown', value: rows.length, unit: 'rows', confidence: 'official' },
+    { id: 'live_year', label: 'Data year', value: top[0].year || '—', unit: '', confidence: 'official' },
+    { id: 'qualifying_general', label: 'Qualifying mark (General)', value: 30, unit: 'score', confidence: 'official' },
+  ];
+  return {
+    ...topic,
+    stat_cards: statCards,
+    rankings: ranked,
+    visual_cards: top.slice(0, 5).map((r, i) => ({
+      rank: i + 1,
+      institute: shortInstitute(r.institute),
+      expected_score: `${r.closingScore}+`,
+      difficulty: r.closingScore > 800 ? 'extreme' : r.closingScore > 700 ? 'high' : 'moderate',
+      competition_stars: r.closingScore > 800 ? 5 : r.closingScore > 700 ? 4 : 3,
+    })),
+    tier_scores: top.map(r => ({ label: shortInstitute(r.institute), high: r.closingScore })),
+    charts: [
+      { type: 'horizontal_bar', id: 'live_tier_comparison', reason: `Verified closing scores (${categoryUi}) — top IIT programmes`, data_ref: 'tier_scores' },
+    ],
+    dataNotice: null,
+  };
+}
 
 function DesktopSidebar({ topics, activeId, onSelect, userScore, setUserScore, userCategory, setUserCategory }) {
   return (
@@ -121,9 +186,37 @@ export default function InsightsHub() {
   const [userScore, setUserScore] = useState(0);
   const [userCategory, setUserCategory] = useState('General');
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
-  const [categories, setCategories] = useState(INSIGHT_TOPICS);
+  const [categories] = useState(INSIGHT_TOPICS);
+  const [liveCutoffs, setLiveCutoffs] = useState(null);
+  const [cutoffLoading, setCutoffLoading] = useState(false);
 
-  const activeTopic = getTopicBySlug(activeId);
+  const dbCategory = UI_CATEGORY_TO_DB[userCategory] || 'General';
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setCutoffLoading(true);
+      try {
+        const res = await predictorService.getTopClosingScores({ category: dbCategory, instituteType: 'IIT', limit: 15 });
+        if (!cancelled) setLiveCutoffs(res?.data?.data || null);
+      } catch {
+        if (!cancelled) setLiveCutoffs(null);
+      } finally {
+        if (!cancelled) setCutoffLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [dbCategory]);
+
+  const activeTopic = (() => {
+    const base = getTopicBySlug(activeId);
+    if (!base) return null;
+    if (base.topic_id === 'highest-closing-scores') {
+      return buildHighestClosingTopic(base, cutoffLoading ? null : liveCutoffs, userCategory, cutoffLoading);
+    }
+    return base;
+  })();
   const accent = activeTopic?.accent || '#8B5CF6';
 
   return (

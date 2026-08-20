@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
+import { useAuthData } from '../context/AuthContext';
 import { predictorService, referralService } from '../services/api';
 import toast from 'react-hot-toast';
 import GuestGate from '../components/common/GuestGate';
@@ -20,7 +20,7 @@ import GateScoreGuide from '../components/predictor/GateScoreGuide';
 
 const CATEGORIES = ['General', 'EWS', 'OBC-NCL', 'SC', 'ST', 'PwD'];
 const ADMISSION_TYPES = ['M.Tech', 'MS Research', 'PhD', 'PSU', 'No Preference'];
-const COLLEGE_TYPES = ['Any', 'IIT', 'NIT', 'IIIT', 'GFTI'];
+const COLLEGE_TYPES = ['Any', 'IIT / IISc', 'NIT', 'IIIT', 'GFTI'];
 const INDIAN_STATES = ['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu & Kashmir', 'Ladakh', 'Chandigarh', 'Puducherry'];
 
 const INSTITUTE_DISPLAY_ORDER = ['IISc', 'IIT', 'NIT', 'IIIT', 'IIEST', 'GFTI', 'Other'];
@@ -68,13 +68,13 @@ const BLOCK_CONFIG = {
 };
 
 const LOADING_STEPS = [
-  { text: 'Validating input parameters...', icon: CheckCircle2, duration: 150 },
-  { text: 'Loading official GATE datasets...', icon: BookOpen, duration: 200 },
-  { text: 'Calculating estimated score (official formula)...', icon: TrendingUp, duration: 250 },
-  { text: 'Predicting All India Rank from historical data...', icon: BarChart3, duration: 300 },
-  { text: `Matching programmes against CCMT cutoffs...`, icon: Building2, duration: 350 },
-  { text: 'Ranking opportunities by confidence score...', icon: Target, duration: 200 },
-  { text: 'Prediction Ready', icon: CheckCircle2, duration: 200 },
+  { text: 'Validating input parameters...', icon: CheckCircle2, duration: 90 },
+  { text: 'Loading official GATE datasets...', icon: BookOpen, duration: 120 },
+  { text: 'Calculating estimated score (official formula)...', icon: TrendingUp, duration: 150 },
+  { text: 'Predicting All India Rank from historical data...', icon: BarChart3, duration: 180 },
+  { text: `Matching programmes against CCMT cutoffs...`, icon: Building2, duration: 210 },
+  { text: 'Ranking opportunities by confidence score...', icon: Target, duration: 120 },
+  { text: 'Prediction Ready', icon: CheckCircle2, duration: 120 },
 ];
 
 function GlassSelect({ label, value, onChange, options, icon: Icon, disabled }) {
@@ -258,7 +258,7 @@ function RadialGauge({ value = 0, max = 100, label, color = '#8B5CF6', size = 14
   );
 }
 
-function PredictionForm({ onSubmit, loading }) {
+function PredictionForm({ onSubmit, loading, disabled = false }) {
   const [form, setForm] = useState({
     name: '', expectedMarks: '', category: 'General', paper: 'CS',
     admissionType: 'M.Tech', preferredState: '', collegeType: 'Any',
@@ -267,6 +267,7 @@ function PredictionForm({ onSubmit, loading }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (disabled) return;
     if (!form.expectedMarks || form.expectedMarks < 0 || form.expectedMarks > 100) {
       toast.error('Enter valid marks (0-100)');
       return;
@@ -341,7 +342,7 @@ function PredictionForm({ onSubmit, loading }) {
 
       <motion.button
         type="submit"
-        disabled={loading}
+        disabled={loading || disabled}
         whileHover={{ scale: 1.02, boxShadow: '0 0 40px rgba(139,92,246,0.5)' }}
         whileTap={{ scale: 0.98 }}
         className="w-full py-4 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 relative overflow-hidden group"
@@ -455,6 +456,10 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
   const [showChoiceOrder, setShowChoiceOrder] = useState(false);
   const navigate = useNavigate();
   const [choiceOrderResult, setChoiceOrderResult] = useState(null);
+  // Display limits: track how many items to show per block/type
+  const [blockLimits, setBlockLimits] = useState({});
+  const INITIAL_BLOCK_LIMIT = 10;
+  const LOAD_MORE_INCREMENT = 10;
 
   const tabs = [
     { id: 'performance', label: 'Performance', icon: BarChart3 },
@@ -478,7 +483,14 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
   const filteredOpps = useMemo(() => {
     return (result.opportunities || []).filter(o => {
       if (filterPath !== 'All' && o.path !== filterPath) return false;
-      if (filterType !== 'All' && o.collegeType !== filterType) return false;
+      // Handle "IIT / IISc" filter — match both IIT and IISc
+      if (filterType !== 'All') {
+        if (filterType === 'IIT / IISc') {
+          if (o.collegeType !== 'IIT' && o.collegeType !== 'IISc') return false;
+        } else {
+          if (o.collegeType !== filterType) return false;
+        }
+      }
       return true;
     }).sort((a, b) => {
       const typeOrder = instituteSortKey(a.collegeType) - instituteSortKey(b.collegeType);
@@ -667,37 +679,62 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
               })}
             </div>
 
-            {/* Path filters */}
-            <div className="flex gap-2 mb-4 flex-wrap items-center">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Filter:</span>
-              {['All', 'Very High Chance', 'High Chance', 'Good Chance', 'Competitive', 'Dream'].map(p => {
-                const cfg = PATH_CONFIG[p];
-                return (
-                  <button key={p} onClick={() => setFilterPath(p)}
-                    className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${filterPath === p ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'text-slate-500 border border-white/5 hover:text-white'}`}>
-                    {p === 'All' ? 'All' : `${cfg?.icon || ''} ${cfg?.label || p}`}
+            {/* Path filters - horizontally scrollable on mobile */}
+            <div className="mb-4">
+              <div className="flex gap-2 overflow-x-auto overscroll-x-contain pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold flex-shrink-0 self-center">Filter:</span>
+                {['All', 'Very High Chance', 'High Chance', 'Good Chance', 'Competitive', 'Dream'].map(p => {
+                  const cfg = PATH_CONFIG[p];
+                  return (
+                    <button key={p} onClick={() => setFilterPath(p)}
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${filterPath === p ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'text-slate-500 border border-white/5 hover:text-white'}`}>
+                      {p === 'All' ? 'All' : `${cfg?.icon || ''} ${cfg?.label || p}`}
+                    </button>
+                  );
+                })}
+              </div>
+              <style>{`.filter-scroll::-webkit-scrollbar { display: none; }`}</style>
+            </div>
+            
+            {/* Institute filters - horizontally scrollable on mobile */}
+            <div className="mb-4">
+              <div className="flex gap-2 overflow-x-auto overscroll-x-contain pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {['All', 'IIT / IISc', 'NIT', 'IIIT', 'GFTI'].map(t => (
+                  <button key={t} onClick={() => setFilterType(t)}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${filterType === t ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-slate-500 border border-white/5 hover:text-white'}`}>
+                    {t}
                   </button>
-                );
-              })}
-              <span className="w-px h-5 bg-white/10 mx-1" />
-                {['All', 'IIT', 'NIT', 'IIIT', 'GFTI'].map(t => (
-                <button key={t} onClick={() => setFilterType(t)}
-                  className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${filterType === t ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-slate-500 border border-white/5 hover:text-white'}`}>
-                  {t}
-                </button>
-              ))}
-              <span className="w-px h-5 bg-white/10 mx-1" />
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Sort:</span>
-              {['match','confidence','package','fees','roi','tier'].map(k => (
-                <button key={k} onClick={() => setSortBy(k)}
-                  className={`px-2 py-1.5 rounded text-[10px] font-medium ${sortBy===k ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'text-slate-500 border border-white/5 hover:text-white'}`}>
-                  {k==='match'?'Best Match':k==='confidence'?'Admission':k==='package'?'Pkg':k==='fees'?'Low Fee':k==='roi'?'ROI':'Tier'}
-                </button>
-              ))}
+                ))}
+              </div>
+            </div>
+            
+            {/* Sort filters - horizontally scrollable on mobile */}
+            <div className="mb-4">
+              <div className="flex gap-2 overflow-x-auto overscroll-x-contain pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold flex-shrink-0 self-center">Sort:</span>
+                {['match','confidence','package','fees','roi','tier'].map(k => (
+                  <button key={k} onClick={() => setSortBy(k)}
+                    className={`flex-shrink-0 px-2 py-1.5 rounded text-[10px] font-medium ${sortBy===k ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'text-slate-500 border border-white/5 hover:text-white'}`}>
+                    {k==='match'?'Best Match':k==='confidence'?'Admission':k==='package'?'Pkg':k==='fees'?'Low Fee':k==='roi'?'ROI':'Tier'}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="flex items-center justify-between mb-3">
-              <div className="text-[11px] text-slate-500">{filteredOpps.length} opportunities found</div>
+              <div className="text-[11px] text-slate-500">
+                {(() => {
+                  const types = INSTITUTE_DISPLAY_ORDER.filter(type => filteredOpps.some(o => (o.collegeType || 'Other') === type));
+                  let visibleTotal = 0;
+                  types.forEach(type => {
+                    const opps = filteredOpps.filter(o => (o.collegeType || 'Other') === type);
+                    const limitKey = `all_${type}`;
+                    const limit = blockLimits[limitKey] ?? INITIAL_BLOCK_LIMIT;
+                    visibleTotal += Math.min(opps.length, limit);
+                  });
+                  return `Showing ${visibleTotal} of ${filteredOpps.length} opportunities`;
+                })()}
+              </div>
               <div className="flex gap-2">
                 {compareList.length > 0 && (
                   <button onClick={() => setShowCompare(true)} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 transition-all">
@@ -721,10 +758,21 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
                   if (!rawBlock || rawBlock.length === 0) return null;
                   const block = rawBlock.filter(o => {
                     if (filterPath !== 'All' && o.path !== filterPath) return false;
-                    if (filterType !== 'All' && o.collegeType !== filterType) return false;
+                    // Handle "IIT / IISc" filter — match both IIT and IISc
+                    if (filterType !== 'All') {
+                      if (filterType === 'IIT / IISc') {
+                        if (o.collegeType !== 'IIT' && o.collegeType !== 'IISc') return false;
+                      } else {
+                        if (o.collegeType !== filterType) return false;
+                      }
+                    }
                     return true;
                   });
                   if (block.length === 0) return null;
+                  const limit = blockLimits[blockKey] ?? INITIAL_BLOCK_LIMIT;
+                  const hasMore = block.length > limit;
+                  const showLoadMore = () => setBlockLimits(prev => ({ ...prev, [blockKey]: (prev[blockKey] ?? INITIAL_BLOCK_LIMIT) + LOAD_MORE_INCREMENT }));
+                  const showAll = () => setBlockLimits(prev => ({ ...prev, [blockKey]: block.length }));
                   return (
                     <div key={blockKey}>
                       <div className="flex items-center gap-2 mb-2">
@@ -734,13 +782,20 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
                       </div>
                       <p className="text-[9px] text-slate-600 mb-3 ml-0.5 leading-relaxed">{cfg.description}</p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {block.slice(0, 20).map((opp, idx) => (
+                        {block.slice(0, limit).map((opp, idx) => (
                           <EnhancedCollegeCard key={idx} opportunity={opp} onCompare={handleToggleCompare} inCompareList={compareList.some(c => c.college === opp.college && c.program === opp.program)} />
                         ))}
-                        {block.length > 20 && (
-                          <div className="text-[10px] text-slate-600 mt-1 text-center">+ {block.length - 20} more in this block</div>
-                        )}
                       </div>
+                      {hasMore && (
+                        <div className="flex items-center justify-center gap-3 mt-3">
+                          <button onClick={showLoadMore} className="text-[10px] px-3 py-1.5 rounded-lg font-medium text-slate-400 border border-white/10 hover:text-white hover:border-white/20 transition-all">
+                            Load More ({limit} of {block.length})
+                          </button>
+                          <button onClick={showAll} className="text-[10px] px-3 py-1.5 rounded-lg font-medium text-purple-400 border border-purple-500/20 hover:bg-purple-500/10 transition-all">
+                            View All ({block.length})
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -779,32 +834,47 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
                         <span className="text-[10px] text-slate-600">({opps.length})</span>
                       </div>
                       <div className="text-[9px] text-slate-600 mb-3 ml-0.5 leading-relaxed">{cfg?.description}</div>
-                      {hasSubGroups ? INSTITUTE_DISPLAY_ORDER.filter(t => groupedByType[t]?.length).map(type => (
+                      {hasSubGroups ? INSTITUTE_DISPLAY_ORDER.filter(t => groupedByType[t]?.length).map(type => {
+                        const subLimitKey = `sub_${path}_${type}`;
+                        const subLimit = blockLimits[subLimitKey] ?? INITIAL_BLOCK_LIMIT;
+                        const subHasMore = groupedByType[type].length > subLimit;
+                        const showSubLoadMore = () => setBlockLimits(prev => ({ ...prev, [subLimitKey]: (prev[subLimitKey] ?? INITIAL_BLOCK_LIMIT) + LOAD_MORE_INCREMENT }));
+                        const showSubAll = () => setBlockLimits(prev => ({ ...prev, [subLimitKey]: groupedByType[type].length }));
+                        return (
   <div key={path + type} className="mb-4">
     <div className="flex items-center gap-2 mb-2 ml-2">
       <span className="text-xs font-semibold text-slate-300">{INSTITUTE_SECTION_CONFIG[type]?.icon || ''} {cfg?.label} {type}{type !== 'Other' ? 's' : ''}</span>
       <span className="text-[10px] text-slate-600">({groupedByType[type].length})</span>
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-      {groupedByType[type].slice(0, 50).map((opp, idx) => (
+      {groupedByType[type].slice(0, subLimit).map((opp, idx) => (
         <EnhancedCollegeCard key={idx} opportunity={opp} onCompare={handleToggleCompare} inCompareList={compareList.some(c => c.college === opp.college && c.program === opp.program)} />
       ))}
-      {groupedByType[type].length > 50 && (
-      <div className="text-[10px] text-slate-600 mt-1 mb-2 text-center">+ {groupedByType[type].length - 50} more {cfg?.label} {type} options</div>
-    )}
     </div>
+    {subHasMore && (
+      <div className="flex items-center justify-center gap-3 mt-2">
+        <button onClick={showSubLoadMore} className="text-[10px] px-3 py-1.5 rounded-lg font-medium text-slate-400 border border-white/10 hover:text-white hover:border-white/20 transition-all">
+          Load More ({subLimit} of {groupedByType[type].length})
+        </button>
+        <button onClick={showSubAll} className="text-[10px] px-3 py-1.5 rounded-lg font-medium text-purple-400 border border-purple-500/20 hover:bg-purple-500/10 transition-all">
+          View All ({groupedByType[type].length})
+        </button>
+      </div>
+    )}
   </div>
-)
-) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {opps.slice(0, 12).map((opp, idx) => (
-                            <EnhancedCollegeCard key={idx} opportunity={opp} onCompare={handleToggleCompare} inCompareList={compareList.some(c => c.college === opp.college && c.program === opp.program)} />
-                          ))}
-                        </div>
-                      )}
-                      {!hasSubGroups && opps.length > 12 && (
-                        <div className="text-[10px] text-slate-600 mt-2 text-center">+ {opps.length - 12} more {cfg?.label} options</div>
-                      )}
+);
+})
+: (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    {(() => {
+      const nonSubLimitKey = `nonSub_${path}`;
+      const nonSubLimit = blockLimits[nonSubLimitKey] ?? INITIAL_BLOCK_LIMIT;
+      return opps.slice(0, nonSubLimit).map((opp, idx) => (
+        <EnhancedCollegeCard key={idx} opportunity={opp} onCompare={handleToggleCompare} inCompareList={compareList.some(c => c.college === opp.college && c.program === opp.program)} />
+      ));
+    })()}
+  </div>
+)}
                     </div>
                   );
                 })}
@@ -838,35 +908,60 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
 
         {activeTab === 'colleges' && (
           <motion.div key="col" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-            <div className="flex gap-2 mb-4 flex-wrap items-center">
-              {['All', 'Very High Chance', 'High Chance', 'Good Chance', 'Competitive', 'Dream'].map(p => {
-                const cfg = PATH_CONFIG[p];
-                return (
-                  <button key={p} onClick={() => setFilterPath(p)}
-                    className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${filterPath === p ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'text-slate-500 border border-white/5 hover:text-white'}`}>
-                    {p === 'All' ? 'All' : `${cfg?.icon || ''} ${cfg?.label || p}`}
+            {/* Path filters - horizontally scrollable on mobile */}
+            <div className="mb-4">
+              <div className="flex gap-2 overflow-x-auto overscroll-x-contain pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {['All', 'Very High Chance', 'High Chance', 'Good Chance', 'Competitive', 'Dream'].map(p => {
+                  const cfg = PATH_CONFIG[p];
+                  return (
+                    <button key={p} onClick={() => setFilterPath(p)}
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${filterPath === p ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'text-slate-500 border border-white/5 hover:text-white'}`}>
+                      {p === 'All' ? 'All' : `${cfg?.icon || ''} ${cfg?.label || p}`}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            
+            {/* Institute filters - horizontally scrollable on mobile */}
+            <div className="mb-4">
+              <div className="flex gap-2 overflow-x-auto overscroll-x-contain pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {['All', 'IIT / IISc', 'NIT', 'IIIT', 'GFTI'].map(t => (
+                  <button key={t} onClick={() => setFilterType(t)}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${filterType === t ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-slate-500 border border-white/5 hover:text-white'}`}>
+                    {t}
                   </button>
-                );
-              })}
-              <span className="w-px h-5 bg-white/10 mx-1" />
-                {['All', 'IIT', 'NIT', 'IIIT', 'GFTI'].map(t => (
-                <button key={t} onClick={() => setFilterType(t)}
-                  className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${filterType === t ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-slate-500 border border-white/5 hover:text-white'}`}>
-                  {t}
-                </button>
-              ))}
-              <span className="w-px h-5 bg-white/10 mx-1" />
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Sort:</span>
-              {['match','confidence','package','fees','roi','tier'].map(k => (
-                <button key={k} onClick={() => setSortBy(k)}
-                  className={`px-2 py-1.5 rounded text-[10px] font-medium ${sortBy===k ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'text-slate-500 border border-white/5 hover:text-white'}`}>
-                  {k==='match'?'Best Match':k==='confidence'?'Admission':k==='package'?'Pkg':k==='fees'?'Low Fee':k==='roi'?'ROI':'Tier'}
-                </button>
-              ))}
+                ))}
+              </div>
+            </div>
+            
+            {/* Sort filters - horizontally scrollable on mobile */}
+            <div className="mb-4">
+              <div className="flex gap-2 overflow-x-auto overscroll-x-contain pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold flex-shrink-0 self-center">Sort:</span>
+                {['match','confidence','package','fees','roi','tier'].map(k => (
+                  <button key={k} onClick={() => setSortBy(k)}
+                    className={`flex-shrink-0 px-2 py-1.5 rounded text-[10px] font-medium ${sortBy===k ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'text-slate-500 border border-white/5 hover:text-white'}`}>
+                    {k==='match'?'Best Match':k==='confidence'?'Admission':k==='package'?'Pkg':k==='fees'?'Low Fee':k==='roi'?'ROI':'Tier'}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="flex items-center justify-between mb-3">
-              <div className="text-[11px] text-slate-500">{filteredOpps.length} opportunities found</div>
+              <div className="text-[11px] text-slate-500">
+                {(() => {
+                  const types = INSTITUTE_DISPLAY_ORDER.filter(type => filteredOpps.some(o => (o.collegeType || 'Other') === type));
+                  let visibleTotal = 0;
+                  types.forEach(type => {
+                    const opps = filteredOpps.filter(o => (o.collegeType || 'Other') === type);
+                    const limitKey = `all_${type}`;
+                    const limit = blockLimits[limitKey] ?? INITIAL_BLOCK_LIMIT;
+                    visibleTotal += Math.min(opps.length, limit);
+                  });
+                  return `Showing ${visibleTotal} of ${filteredOpps.length} opportunities`;
+                })()}
+              </div>
               <div className="flex gap-2">
                 {compareList.length > 0 && (
                   <button onClick={() => setShowCompare(true)} className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 transition-all">
@@ -896,6 +991,11 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
               INSTITUTE_DISPLAY_ORDER.filter(type => filteredOpps.some(o => (o.collegeType || 'Other') === type)).map(type => {
                 const opps = filteredOpps.filter(o => (o.collegeType || 'Other') === type);
                 const cfg = INSTITUTE_SECTION_CONFIG[type] || { icon: '🏛️', title: type, subtitle: '' };
+                const limitKey = `all_${type}`;
+                const limit = blockLimits[limitKey] ?? INITIAL_BLOCK_LIMIT;
+                const hasMore = opps.length > limit;
+                const showLoadMore = () => setBlockLimits(prev => ({ ...prev, [limitKey]: (prev[limitKey] ?? INITIAL_BLOCK_LIMIT) + LOAD_MORE_INCREMENT }));
+                const showAll = () => setBlockLimits(prev => ({ ...prev, [limitKey]: opps.length }));
                 return (
                   <div key={type} className="mb-6">
                     <div className="flex items-center gap-2 mb-1">
@@ -905,14 +1005,21 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
                     </div>
                     <p className="text-[10px] text-slate-500 mb-3 ml-1">{cfg.subtitle}</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {opps.slice(0, 10).map((opp, idx) => (
+                      {opps.slice(0, limit).map((opp, idx) => (
                         <EnhancedCollegeCard key={idx} opportunity={opp} onCompare={handleToggleCompare} inCompareList={compareList.some(c => c.college === opp.college && c.program === opp.program)} />
                       ))}
-                      {opps.length > 10 && (
-                      <div className="text-[10px] text-slate-600 mt-1 text-center">+ {opps.length - 10} more {type} options</div>
+                    </div>
+                    {hasMore && (
+                      <div className="flex items-center justify-center gap-3 mt-3">
+                        <button onClick={showLoadMore} className="text-[10px] px-3 py-1.5 rounded-lg font-medium text-slate-400 border border-white/10 hover:text-white hover:border-white/20 transition-all">
+                          Load More ({limit} of {opps.length})
+                        </button>
+                        <button onClick={showAll} className="text-[10px] px-3 py-1.5 rounded-lg font-medium text-purple-400 border border-purple-500/20 hover:bg-purple-500/10 transition-all">
+                          View All ({opps.length})
+                        </button>
+                      </div>
                     )}
                   </div>
-                </div>
                 );
               })
             )}
@@ -1362,16 +1469,31 @@ function FloatingParticles() {
 }
 
 export default function OpportunityPredictorPage() {
-  const { user, isPremium, referralCode, referralProgress, referralCount } = useAuth();
+  const { user, isPremium, referralCode, referralProgress, referralCount } = useAuthData();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
   const [predictorUnlocked, setPredictorUnlocked] = useState(false);
+  const [testingUsed, setTestingUsed] = useState(0);
+  const [testingRemaining, setTestingRemaining] = useState(10);
+  const [testingLimit, setTestingLimit] = useState(10);
+  const [testingActive, setTestingActive] = useState(false);
 
   useEffect(() => {
     if (user && !user.isGuest) {
-      predictorService.getUnlockStatus().then(r => setPredictorUnlocked(r.data.data.isUnlocked)).catch(() => {});
+      predictorService.getUnlockStatus().then(r => {
+        const d = r.data.data;
+        setPredictorUnlocked(d.isUnlocked);
+        if (d.testingAccess && !d.isPremium) {
+          setTestingUsed(d.testingUsed || 0);
+          setTestingRemaining(d.testingRemaining ?? 10);
+          setTestingLimit(d.testingLimit || 10);
+          setTestingActive(true);
+        } else {
+          setTestingActive(false);
+        }
+      }).catch(() => {});
     }
   }, [user, isPremium]);
   const [showHistory, setShowHistory] = useState(false);
@@ -1389,16 +1511,31 @@ export default function OpportunityPredictorPage() {
   const handlePredict = async (input) => {
     setLoading(true);
     setShowLoading(true);
-    const minLoadTime = new Promise(r => setTimeout(r, 1800)); // ensure pipeline completes
+    const minLoadTime = new Promise(r => setTimeout(r, 1100)); // keep pipeline animation smooth without artificial delay
     try {
       const res = await predictorService.predict(input);
-      setResult(res.data.data);
+      const data = res.data.data;
+      setResult(data);
+      if (data?.testingAccess) {
+        setTestingUsed(data.testingUsed || 0);
+        setTestingRemaining(data.testingRemaining ?? 10);
+        setTestingLimit(data.testingLimit || 10);
+      }
       toast.success('Prediction generated!');
       fetchHistory();
     } catch (e) {
       const status = e.response?.status;
       const serverMsg = e.response?.data?.message;
-      if (status === 400) toast.error(serverMsg || 'Invalid input. Check marks (0-100) and category.');
+      const errorCode = e.response?.data?.code;
+      const errData = e.response?.data;
+      if (errorCode === 'PREDICTOR_TEST_LIMIT_REACHED') {
+        setTestingUsed(errData?.testingUsed ?? 10);
+        setTestingRemaining(errData?.testingRemaining ?? 0);
+        setTestingLimit(errData?.testingLimit ?? 10);
+        toast.error(serverMsg || "You've used all 10 free testing predictions.");
+      } else if (status === 403 && errorCode === 'PREMIUM_REQUIRED') {
+        toast.error('Premium feature. Upgrade your account to access this.');
+      } else if (status === 400) toast.error(serverMsg || 'Invalid input. Check marks (0-100) and category.');
       else if (status === 503) toast.error(serverMsg || 'Prediction service unavailable. Database may be disconnected.');
       else if (status === 401) toast.error('Session expired. Please login again.');
       else if (status === 500) toast.error(serverMsg || 'Server error. Try again later.');
@@ -1452,7 +1589,7 @@ export default function OpportunityPredictorPage() {
             <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
               Predict Your <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">GATE Rank</span>
             </h1>
-            <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="flex items-center justify-center gap-2 mb-2 flex-wrap">
               {isPremium ? (
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20">
                   ⭐ PREMIUM
@@ -1462,6 +1599,17 @@ export default function OpportunityPredictorPage() {
                   BASIC
                 </span>
               )}
+              {testingActive && !isPremium && (
+                testingRemaining > 0 ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                  🧪 Testing Access · {testingRemaining} / {testingLimit}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-400 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">
+                  Testing limit reached — you've used all {testingLimit} predictions
+                </span>
+              )
+            )}
             </div>
             <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto leading-relaxed mb-4">
               AIR, college chances, cutoff trends — based on verified GATE data.
@@ -1499,7 +1647,27 @@ export default function OpportunityPredictorPage() {
       {/* Prediction Form */}
       {!result && !showLoading && (
         <div className="mb-6">
-          <PredictionForm onSubmit={handlePredict} loading={loading} />
+          {testingActive && !isPremium && testingRemaining <= 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-4xl mx-auto mb-4 rounded-xl p-4 text-center"
+              style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
+            >
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <AlertCircle size={16} className="text-red-400" />
+                <span className="text-sm font-semibold text-red-300">Testing limit reached</span>
+              </div>
+              <p className="text-[11px] text-red-300/70">
+                You've used all 10 free testing predictions. Upgrade to Premium for unlimited access.
+              </p>
+            </motion.div>
+          )}
+          <PredictionForm
+            onSubmit={handlePredict}
+            loading={loading}
+            disabled={testingActive && !isPremium && testingRemaining <= 0}
+          />
         </div>
       )}
 
@@ -1553,7 +1721,7 @@ export default function OpportunityPredictorPage() {
           result={result}
           onReset={() => setResult(null)}
           form={result.input || {}}
-          blurred={!predictorUnlocked}
+          blurred={!predictorUnlocked && !result?.testingAccess}
           referralCode={referralCode}
           referralProgress={referralProgress}
           referralCount={referralCount}

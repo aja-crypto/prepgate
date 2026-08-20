@@ -1,7 +1,22 @@
 node_modules/
+nodejs/
 .env
 .env.local
 backend/.env
+# Secrets: never commit environment files that may hold real credentials.
+# Only *.example files (placeholders only) are allowed in Git.
+.env.development
+.env.production
+.env.vercel
+backend/.env.development
+backend/.env.production
+backend/.env.local
+frontend/.env.local
+frontend/.env.vercel
+*.env.local
+*.env.production
+*.env.development
+*.env.vercel
 dist/
 .next/
 *.log

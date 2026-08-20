@@ -12,7 +12,7 @@ const mongoose = require('mongoose');
 const base = path.join(__dirname, '..', '..', 'resources', 'weekly-tests');
 
 async function main() {
-  const uri = 'mongodb://gate2027:l2M2shH2nRfQVLFA@ac-pmpdzxm-shard-00-00.sa6kujd.mongodb.net:27017,ac-pmpdzxm-shard-00-01.sa6kujd.mongodb.net:27017,ac-pmpdzxm-shard-00-02.sa6kujd.mongodb.net:27017/gate2027?ssl=true&replicaSet=atlas-l9vk3z-shard-0&authSource=admin&retryWrites=true&w=majority';
+  const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/gate2027';
   
   console.log('Connecting to MongoDB...');
   await mongoose.connect(uri);

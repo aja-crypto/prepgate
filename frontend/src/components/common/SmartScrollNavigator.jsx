@@ -252,11 +252,16 @@ export default function SmartScrollNavigator() {
   if (isMobile) {
     return (
       <>
-        {/* Mobile trigger */}
+        {/* Mobile trigger — tiny round dot above bottom nav, hidden at top, never looks like a scrollbar */}
         {!mobileOpen && (
           <button onClick={() => setMobileOpen(true)}
-            className="fixed right-2 top-1/2 -translate-y-1/2 z-[9999] w-1.5 h-24 rounded-full transition-opacity"
-            style={{ background: 'linear-gradient(180deg, #8B5CF6, #22D3EE)', boxShadow: '0 0 12px rgba(139,92,246,0.3)', opacity: 0.6 }}
+            className="smart-scroll-trigger fixed right-3 bottom-24 z-[9999] rounded-full transition-opacity duration-300"
+            style={{
+              background: 'linear-gradient(135deg, #8B5CF6, #22D3EE)',
+              opacity: scrollPct > 0.05 ? 0.5 : 0,
+              boxShadow: '0 0 8px rgba(139,92,246,0.25)',
+              pointerEvents: scrollPct > 0.05 ? 'auto' : 'none',
+            }}
             aria-label="Open scroll navigator" />
         )}
 

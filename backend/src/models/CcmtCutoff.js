@@ -10,14 +10,33 @@ const ccmtCutoffSchema = new mongoose.Schema({
   category: { type: String, enum: ['General', 'EWS', 'OBC-NCL', 'SC', 'ST', 'PwD'], required: true },
   round: { type: Number, required: true },
   totalRounds: { type: Number, default: 7 },
-  openingScore: { type: Number, default: null },
-  closingScore: { type: Number, required: true },
+  openingScore: {
+    type: Number,
+    default: null,
+    min: [0, 'openingScore must be >= 0'],
+    max: [1000, 'openingScore must be <= 1000'],
+    validate: {
+      validator: function (v) {
+        if (v == null) return true;
+        if (this.closingScore == null) return true;
+        return v >= this.closingScore;
+      },
+      message: 'openingScore must be >= closingScore when both are present',
+    },
+  },
+  closingScore: {
+    type: Number,
+    required: true,
+    min: [0, 'closingScore must be >= 0'],
+    max: [1000, 'closingScore must be <= 1000'],
+  },
   openingRank: { type: Number, default: null },
   closingRank: { type: Number, default: null },
   seats: { type: Number, default: null },
   quota: { type: String, enum: ['AI', 'Home State', 'Other State', 'OS', 'HS', null], default: 'AI' },
   state: { type: String, default: '' },
   source: { type: String, enum: ['official', 'ccmt', 'coap', 'admin'], default: 'ccmt' },
+  dataStatus: { type: String, enum: ['verified', 'fallback', 'placeholder', 'estimated'], default: 'fallback' },
   verified: { type: Boolean, default: false },
   verifiedAt: { type: Date, default: null },
   verifiedBy: { type: String, default: '' },

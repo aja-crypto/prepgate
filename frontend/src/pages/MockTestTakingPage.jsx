@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { mockTestService, getApiErrorMessage } from '../services/api';
 import { MockExamLoading } from '../components/common/GateLoadingScreen';
-import { useAuth } from '../context/AuthContext';
+import { useAuthData } from '../context/AuthContext';
 import { useProgress } from '../context/ProgressContext';
 import GlassCard from '../components/ui/GlassCard';
 import Icon from '../components/ui/Icon';
@@ -54,7 +54,7 @@ function clearSavedState(testId) {
 export default function MockTestTakingPage() {
   const { testId: id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useAuthData();
   const { updateMocks } = useProgress();
 
   const [test, setTest] = useState(null);

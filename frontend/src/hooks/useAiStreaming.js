@@ -16,13 +16,25 @@ export default function useAiStreaming() {
 
     const controller = new AbortController();
     abortRef.current = controller;
-    const timeoutId = setTimeout(() => controller.abort(), 150000);
+
+    // Two safety nets so a request can NEVER hang the UI: a hard total cap and
+    // an idle watchdog that aborts a stream that stops producing data.
+    const totalTimer = setTimeout(() => controller.abort(), 150000);
+    let idleTimer = null;
+    const clearTimers = () => {
+      clearTimeout(totalTimer);
+      if (idleTimer) clearTimeout(idleTimer);
+    };
+    const armIdle = () => {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => controller.abort(), 90000);
+    };
 
     try {
       const modePrompt = context?.modePrompt || null;
       const res = await aiService.streamCoach(message, context, sessionId, controller.signal, modePrompt);
-      clearTimeout(timeoutId);
       if (!res.ok) {
+        clearTimers();
         if (res.status === 429) {
           const errorData = await res.json().catch(() => null);
           setStreaming(false);
@@ -44,12 +56,14 @@ export default function useAiStreaming() {
         const source = data?.data?.source || 'heuristic';
         const provider = data?.data?.provider || null;
         const offlineInfo = data?.data?.offlineInfo || null;
+        clearTimers();
         setStreaming(false);
         abortRef.current = null;
         return { text, suggestions, source, provider, offlineInfo };
       }
 
       if (!res.body) {
+        clearTimers();
         setStreaming(false);
         abortRef.current = null;
         return null;
@@ -64,10 +78,13 @@ export default function useAiStreaming() {
       let provider = null;
       let offlineInfo = null;
       let remaining = null;
+      let streamError = null;
 
+      armIdle();
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+        armIdle();
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
@@ -98,16 +115,22 @@ export default function useAiStreaming() {
               provider = parsed.provider || null;
               offlineInfo = parsed.offlineInfo || null;
               remaining = parsed.remaining;
+            } else if (parsed.type === 'error') {
+              streamError = parsed.content || 'AI service is temporarily unavailable. Please try again.';
             }
           } catch {}
         }
       }
 
+      clearTimers();
       setStreaming(false);
       abortRef.current = null;
+      if (streamError && !fullText) {
+        return { text: null, suggestions: null, source: 'error', error: streamError };
+      }
       return { text: fullText, suggestions, source, provider, offlineInfo, remaining };
     } catch (err) {
-      clearTimeout(timeoutId);
+      clearTimers();
       if (err.name === 'AbortError' || controller.signal.aborted) {
         setStreaming(false);
         const pt = partialRef.current;

@@ -1,11 +1,14 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { notificationService } from '../services/api';
-import { useAuth } from './AuthContext';
+import { useAuthData } from './AuthContext';
 
-const NotificationContext = createContext(null);
+// Split contexts to prevent cascading re-renders
+const NotificationDataContext = createContext(null);
+const NotificationActionsContext = createContext(null);
+const NotificationContext = createContext(null); // deprecated
 
 export function NotificationProvider({ children }) {
-  const { user } = useAuth();
+  const { user } = useAuthData();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [prefs, setPrefs] = useState(null);
@@ -104,23 +107,50 @@ export function NotificationProvider({ children }) {
     } catch {}
   }, []);
 
-  const val = useMemo(() => ({
+  const dataValue = useMemo(() => ({
     notifications: notifications || [],
     unreadCount: unreadCount || 0, prefs, loading,
+  }), [notifications, unreadCount, prefs, loading]);
+
+  const actionsValue = useMemo(() => ({
     fetchNotifications, fetchPrefs, generateDaily,
     markRead, markAllRead, toggleBookmark, delete: deleteNotif, clearAll, updatePrefs,
-  }), [notifications, unreadCount, prefs, loading, fetchNotifications, fetchPrefs, generateDaily,
+  }), [fetchNotifications, fetchPrefs, generateDaily,
     markRead, markAllRead, toggleBookmark, deleteNotif, clearAll, updatePrefs]);
 
+  // Backward compatible combined value
+  const compatValue = useMemo(() => ({
+    ...dataValue,
+    ...actionsValue,
+  }), [dataValue, actionsValue]);
+
   return (
-    <NotificationContext.Provider value={val}>
-      {children}
-    </NotificationContext.Provider>
+    <NotificationDataContext.Provider value={dataValue}>
+      <NotificationActionsContext.Provider value={actionsValue}>
+        <NotificationContext.Provider value={compatValue}>
+          {children}
+        </NotificationContext.Provider>
+      </NotificationActionsContext.Provider>
+    </NotificationDataContext.Provider>
   );
 }
 
 export const useNotifications = () => {
   const ctx = useContext(NotificationContext);
   if (!ctx) throw new Error('useNotifications must be used within NotificationProvider');
+  return ctx;
+};
+
+// Subscribe only to data — re-renders only when data changes
+export const useNotificationData = () => {
+  const ctx = useContext(NotificationDataContext);
+  if (!ctx) throw new Error('useNotificationData must be used within NotificationProvider');
+  return ctx;
+};
+
+// Subscribe only to actions — NEVER re-renders when data changes
+export const useNotificationActions = () => {
+  const ctx = useContext(NotificationActionsContext);
+  if (!ctx) throw new Error('useNotificationActions must be used within NotificationProvider');
   return ctx;
 };

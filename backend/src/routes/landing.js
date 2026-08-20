@@ -180,24 +180,42 @@ router.get('/stats', asyncHandler(async (req, res) => {
   if (!isMongoConnected()) {
     return res.json({
       success: true,
-      data: FALLBACK_STATS,
+      data: {
+        subjects: 15,
+        topics: 500,
+        pyqs: 2300,
+        mockTests: 52,
+        videos: 120,
+        formulaSheets: 60,
+        roadmaps: 12,
+        resources: 500,
+        learners: 2500,
+      },
     });
   }
 
-  // In a real implementation, aggregate from actual collections
-  const [notesCount, pyqsCount, mocksCount, usersCount] = await Promise.all([
-    mongoose.model('Note').countDocuments(),
-    mongoose.model('PYQ').countDocuments(),
-    mongoose.model('MockTest').countDocuments(),
-    mongoose.model('User').countDocuments(),
+  const [subjectsCount, topicsCount, pyqsCount, mocksCount, videosCount, formulaCount, resourcesCount, usersCount] = await Promise.all([
+    mongoose.model('Subject').countDocuments().catch(() => 0),
+    mongoose.model('Topic').countDocuments().catch(() => 0),
+    mongoose.model('PYQ').countDocuments().catch(() => 0),
+    mongoose.model('MockTest').countDocuments().catch(() => 0),
+    mongoose.model('LearningHubVideo').countDocuments().catch(() => 0),
+    mongoose.model('FormulaSheet').countDocuments().catch(() => 0),
+    mongoose.model('LearningContent').countDocuments({ type: 'resource' }).catch(() => 0),
+    mongoose.model('User').countDocuments().catch(() => 0),
   ]);
 
   res.json({
     success: true,
     data: {
-      resources: notesCount || 500,
-      pyqs: pyqsCount || 3500,
-      mocks: mocksCount || 55,
+      subjects: subjectsCount || 15,
+      topics: topicsCount || 500,
+      pyqs: pyqsCount || 2300,
+      mockTests: mocksCount || 52,
+      videos: videosCount || 120,
+      formulaSheets: formulaCount || 60,
+      roadmaps: 12,
+      resources: resourcesCount || 500,
       learners: usersCount || 2500,
     },
   });

@@ -170,11 +170,12 @@ export default function AnalyticsPage() {
 
     if (monthlyRef.current) {
       destroy('monthly');
+      const monthlyData = gateFeatures?.monthlyHours || [];
       charts.current.monthly = new Chart(monthlyRef.current, {
         type: 'bar',
         data: {
           labels: MONTH_LABELS,
-          datasets: [{ data: gateFeatures?.monthlyHours || [38, 42, 45, 40, 48, 42], backgroundColor: '#06d6a0cc', borderRadius: 4 }],
+          datasets: [{ data: monthlyData.length > 0 ? monthlyData : Array(6).fill(0), backgroundColor: monthlyData.length > 0 ? '#06d6a0cc' : 'rgba(255,255,255,0.1)', borderRadius: 4 }],
         },
         options: { ...chartOpts, scales: { y: { grid: { color: '#ffffff08' }, ticks: { color: '#636b82' } }, x: { grid: { display: false }, ticks: { color: '#636b82' } } } },
       });
@@ -182,11 +183,12 @@ export default function AnalyticsPage() {
 
     if (accuracyRef.current) {
       destroy('accuracy');
+      const accuracyData = gateFeatures?.weeklyAccuracy || [];
       charts.current.accuracy = new Chart(accuracyRef.current, {
         type: 'line',
         data: {
           labels: DAY_LABELS,
-          datasets: [{ data: gateFeatures?.weeklyAccuracy || [72, 75, 78, 74, 80, 82, 79], borderColor: '#a855f7', backgroundColor: '#a855f720', fill: true, tension: 0.4, pointRadius: 3 }],
+          datasets: [{ data: accuracyData.length > 0 ? accuracyData : Array(7).fill(0), borderColor: '#a855f7', backgroundColor: '#a855f720', fill: true, tension: 0.4, pointRadius: 3 }],
         },
         options: { ...chartOpts, scales: { y: { min: 0, max: 100, grid: { color: '#ffffff08' }, ticks: { color: '#636b82' } }, x: { grid: { display: false }, ticks: { color: '#636b82' } } } },
       });

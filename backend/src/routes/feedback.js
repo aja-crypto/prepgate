@@ -8,6 +8,18 @@ function getStore() {
   return require('../store/localDataStore');
 }
 
+// Map the FeedbackPage category ids to the FeedbackTicket enum
+const TICKET_CATEGORY_MAP = {
+  bug: 'bug_report',
+  feature: 'feature_request',
+  uiux: 'suggestion',
+  performance: 'complaint',
+  ai: 'suggestion',
+  content: 'suggestion',
+  mobile: 'suggestion',
+  general: 'suggestion',
+};
+
 // GET /api/feedback – Get current user's feedback
 router.get('/', protect, async (req, res, next) => {
   try {
@@ -26,8 +38,9 @@ router.post('/', protect, async (req, res, next) => {
   try {
     const { anonymous, ratings, featureRequests, bugReports, preparation, recommendation, polls } = req.body;
 
+    let feedback = null;
     if (isMongoConnected() && !isMockAuthEnabled()) {
-      let feedback = await Feedback.findOne({ user: req.user._id });
+      feedback = await Feedback.findOne({ user: req.user._id });
       if (feedback) {
         Object.assign(feedback, {
           anonymous: anonymous ?? feedback.anonymous,
@@ -51,20 +64,43 @@ router.post('/', protect, async (req, res, next) => {
         });
       }
       await feedback.save();
-      return res.json({ success: true, data: feedback, message: 'Feedback submitted successfully.' });
+    } else {
+      const store = getStore();
+      feedback = store.saveLocalFeedback(req.user._id, {
+        anonymous: anonymous ?? false,
+        ratings: ratings ?? {},
+        featureRequests: featureRequests ?? [],
+        bugReports: bugReports ?? [],
+        preparation: preparation ?? {},
+        recommendation: recommendation ?? {},
+        polls: polls ?? [],
+      });
     }
 
-    const store = getStore();
-    const doc = store.saveLocalFeedback(req.user._id, {
-      anonymous: anonymous ?? false,
-      ratings: ratings ?? {},
-      featureRequests: featureRequests ?? [],
-      bugReports: bugReports ?? [],
-      preparation: preparation ?? {},
-      recommendation: recommendation ?? {},
-      polls: polls ?? [],
-    });
-    res.json({ success: true, data: doc, message: 'Feedback submitted (local).' });
+    // Surface the submission in the admin Feedback Center whenever Mongo is
+    // connected. The admin panel reads the FeedbackTicket collection, so create
+    // one ticket per user submission (single authoritative record for admins).
+    if (isMongoConnected()) {
+      const mongoose = require('mongoose');
+      const description = (req.body.description || req.body.message || '').trim();
+      const category = TICKET_CATEGORY_MAP[req.body.category] || 'suggestion';
+      const rawUserId = req.user?._id || req.user?.id;
+      const userId = rawUserId && mongoose.isValidObjectId(rawUserId) ? rawUserId : null;
+      const FeedbackTicket = require('../models/FeedbackTicket');
+      await FeedbackTicket.create({
+        user: userId,
+        userName: req.user?.name || 'Anonymous',
+        userEmail: req.user?.email || '',
+        category,
+        subject: req.body.category || category,
+        title: (req.body.title || description || 'New feedback').slice(0, 200),
+        message: description || (ratings?.overall ? `Rating: ${ratings.overall}/5` : 'No message provided.'),
+        priority: 'medium',
+        deviceInfo: req.body.deviceInfo || {},
+      });
+    }
+
+    res.json({ success: true, data: feedback, message: 'Feedback submitted successfully.' });
   } catch (e) { next(e); }
 });
 

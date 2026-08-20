@@ -42,10 +42,10 @@ function loadUsersFromDisk() {
           this.streak.lastStudyDate = new Date();
         };
         u.save = async function () { saveUsersToDisk(); return this; };
+        if (u.nexaPredictorTestUses === undefined) u.nexaPredictorTestUses = 0;
         usersByEmail.set(u.email, u);
         usersById.set(u._id, u);
       });
-      // Loaded silently
     }
   } catch (err) {
     console.error('Failed to load mock users:', err.message);
@@ -68,6 +68,7 @@ const formatUser = (user) => ({
   studyGoalHours: user.studyGoalHours,
   isVerified: user.isVerified ?? false,
   authProvider: user.authProvider || 'local',
+  nexaPredictorTestUses: user.nexaPredictorTestUses || 0,
 });
 
 const createMockUser = async ({ name, email, password, role = 'user' }) => {
@@ -89,6 +90,7 @@ const createMockUser = async ({ name, email, password, role = 'user' }) => {
     studyGoalHours: 8,
     progressBackup: { data: emptyData, updatedAt: new Date() },
     fcmToken: null,
+    nexaPredictorTestUses: 0,
     comparePassword: async (entered) => bcrypt.compare(entered, hashed),
     updateStreak() {
       const today = new Date().setHours(0, 0, 0, 0);
@@ -129,6 +131,7 @@ async function seedDemoUser() {
       authProvider: 'local', isVerified: true, googleId: null,
       streak: { current: 0, longest: 0, lastStudyDate: null }, preferences: { theme: 'dark', notifications: true },
       targetYear: 2027, studyGoalHours: 8, progressBackup: { data: d, updatedAt: new Date() }, fcmToken: null,
+      nexaPredictorTestUses: 0,
       comparePassword: async (entered) => bcrypt.compare(entered, pwHash),
       updateStreak() { this.streak.current++; this.streak.lastStudyDate = new Date(); return this; },
       save: async function () { saveUsersToDisk(); return this; },
@@ -152,7 +155,7 @@ async function seedDemoUser() {
       user.isPremium = false;
       user.role = 'user';
     }
-    // Don't strip role/isPremium from test accounts — they are loaded from disk with correct values
+    if (user.nexaPredictorTestUses === undefined) user.nexaPredictorTestUses = 0;
   }
 
   // Create seed accounts if missing

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuthData } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -104,7 +104,7 @@ function PlanCard({ plan, index, isAnnual, onSelect }) {
 }
 
 export default function PremiumPage() {
-  const { isPremium, referralProgress, referralCount } = useAuth();
+  const { isPremium, referralProgress, referralCount } = useAuthData();
   const navigate = useNavigate();
   const [billing, setBilling] = useState(null); // null = show both, 'monthly' = show yearly as monthly price
 

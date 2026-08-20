@@ -47,6 +47,14 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 2027,
   },
+  targetExam: {
+    type: String,
+    default: null,
+  },
+  prepLevel: {
+    type: String,
+    default: null,
+  },
   studyGoalHours: {
     type: Number,
     default: 8, // daily target hours
@@ -93,6 +101,8 @@ const userSchema = new mongoose.Schema({
   lastDailyWelcome: { type: String, default: '' },
   // Token version — incremented on password reset to invalidate all outstanding JWTs
   tokenVersion: { type: Number, default: 0 },
+  // Nexa Predictor testing access — per-user 10-use limit (testing model)
+  nexaPredictorTestUses: { type: Number, default: 0 },
 }, {
   timestamps: true,
 });

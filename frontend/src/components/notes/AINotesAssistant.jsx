@@ -254,7 +254,7 @@ function ResourceSection({ title, icon, notes, onSelect, color }) {
         {notes.slice(0, 4).map((note) => (
           <button
             key={note.id}
-            onClick={() => window.open(resourceService.fileUrl(note.filePath), '_blank')}
+            onClick={() => resourceService.openFile(note.filePath).catch(e => console.error('Failed to open resource:', e))}
             className="w-full flex items-center gap-2 text-left px-3 py-2 rounded-lg transition-all hover:scale-[1.01]"
             style={{ background: `${color}08`, border: `1px solid ${color}12` }}
           >

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense, memo } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { throttle } from '../../utils/perf';
-import { useAuth } from '../../context/AuthContext';
+import { useAuthData, useAuthActions } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useProgress } from '../../context/ProgressContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,6 +11,7 @@ import GlobalSearch, { useGlobalSearchShortcut } from './GlobalSearch';
 import Icon from '../ui/Icon';
 import BrandText from '../ui/BrandText';
 import OnboardingFlow from '../onboarding/OnboardingFlow';
+import QuickActions from '../onboarding/QuickActions';
 import VirtualCalculator from './VirtualCalculator';
 import NotificationPanel from '../notifications/NotificationPanel';
 import SmartScrollNavigator from './SmartScrollNavigator';
@@ -40,7 +41,8 @@ function BackToTop() {
 }
 
 const Layout = memo(function Layout() {
-  const { user, logout, isPremium, referralProgress } = useAuth();
+  const { user, isPremium, referralProgress } = useAuthData();
+  const { logout } = useAuthActions();
   const { themeMode, toggleTheme, isDark, onboardingDone } = useTheme();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -106,7 +108,12 @@ const Layout = memo(function Layout() {
 
   return (
     <div className="flex h-screen bg-bg overflow-hidden relative">
-      {!onboardingDone && <OnboardingFlow />}
+      {!onboardingDone && (
+        <div className="fixed inset-0 z-[9999] backdrop-blur-[15px] bg-black/40">
+          <OnboardingFlow />
+        </div>
+      )}
+      {onboardingDone && <QuickActions />}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
       <VirtualCalculator isOpen={calcOpen} onClose={() => setCalcOpen(false)} />
 
@@ -174,7 +181,7 @@ const Layout = memo(function Layout() {
             id="mobile-hamburger"
             onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(true), 150); }}
             aria-label="Open navigation menu"
-            className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl text-text2 hover:text-text hover:bg-white/5 active:scale-95 transition-all shrink-0 min-w-[44px] min-h-[44px]"
+            className="mobile-header-btn md:hidden flex items-center justify-center rounded-xl text-text2 hover:text-text hover:bg-white/10 active:scale-95 transition-all shrink-0"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-5 h-5">
               <path d="M3 12h18M3 6h18M3 18h18" strokeLinecap="round" />
@@ -184,7 +191,7 @@ const Layout = memo(function Layout() {
           {/* Left: GateNexa AI Emblem - clickable for brand intro */}
           <button
             onClick={() => window.dispatchEvent(new Event('open-brand-intro'))}
-            className="flex-shrink-0 hidden sm:block cursor-pointer transition-transform hover:scale-105 active:scale-95"
+            className="flex-shrink-0 hidden md:block cursor-pointer transition-transform hover:scale-105 active:scale-95"
             aria-label="About GateNexa"
           >
             <svg 
@@ -315,8 +322,8 @@ const Layout = memo(function Layout() {
 
           {/* Right Side: Controls */}
           <div className="flex items-center gap-2 md:gap-3 ml-auto">
-            {/* Profile Dropdown */}
-            <div className="relative profile-dropdown">
+            {/* Profile Dropdown - hidden on mobile, bottom nav handles it */}
+            <div className="relative profile-dropdown hidden md:block">
               <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                 aria-label="Open profile menu"

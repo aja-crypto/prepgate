@@ -46,10 +46,6 @@ export default defineConfig({
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
       },
-      '/resources': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-      },
     },
   },
   build: {

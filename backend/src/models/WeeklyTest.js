@@ -12,6 +12,11 @@ const weeklyTestSchema = new mongoose.Schema({
   difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
   topics: [String],
   pdfUrl: { type: String, default: '' },
+  pdfFileId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'MediaFile',
+    default: null,
+  },
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 

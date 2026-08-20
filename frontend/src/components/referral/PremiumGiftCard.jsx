@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuthData } from '../../context/AuthContext';
 
 function ParticleCanvas() {
   const ref = useRef(null);
@@ -32,7 +32,7 @@ function ParticleCanvas() {
 }
 
 export default function PremiumGiftCard({ compact = false }) {
-  const { isPremium } = useAuth();
+  const { isPremium } = useAuthData();
   const navigate = useNavigate();
   const [hover, setHover] = useState(false);
 
@@ -43,30 +43,30 @@ export default function PremiumGiftCard({ compact = false }) {
         animate={{ opacity: 1, x: 0 }}
         className="rounded-2xl p-4 max-w-[280px]"
         style={{
-          background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(99,102,241,0.08))',
-          border: '1px solid rgba(139,92,246,0.2)',
+          background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(99,102,241,0.06))',
+          border: '1px solid rgba(139,92,246,0.18)',
           backdropFilter: 'blur(16px)',
         }}
       >
         <div className="flex items-center gap-3 mb-3">
           <motion.span className="text-2xl" animate={{ rotate: [0, -6, 6, -6, 0] }} transition={{ duration: 2, repeat: Infinity }}>🎁</motion.span>
           <div>
-            <div className="text-sm font-bold text-white">Welcome Gift</div>
-            <div className="text-[10px] text-purple-300">Invite 2 friends → Premium</div>
+            <div className="text-sm font-bold text-white">Premium Rewards</div>
+            <div className="text-[10px] text-purple-300/70">Invite friends · Unlock AI features</div>
           </div>
         </div>
-        <div className="w-full h-1.5 rounded-full bg-slate-700/50 mb-2 overflow-hidden">
+        <div className="w-full h-1.5 rounded-full mb-2 overflow-hidden" style={{ background: 'rgba(139,92,246,0.1)' }}>
           <motion.div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, #8B5CF6, #A855F7)' }}
             initial={{ width: 0 }} animate={{ width: '0%' }} transition={{ duration: 1 }} />
         </div>
-        <div className="flex items-center justify-between text-[10px] text-slate-500 mb-3">
-          <span>0 / 2 friends</span>
+        <div className="flex items-center justify-between text-[10px] mb-3" style={{ color: 'rgba(196,181,253,0.5)' }}>
+          <span>0 / 2 Friends</span>
           <span>0%</span>
         </div>
         <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
           onClick={() => navigate('/register')}
           className="w-full text-[11px] font-semibold text-white py-2 rounded-xl transition-all"
-          style={{ background: 'linear-gradient(135deg, #8B5CF6, #6C4DFF)' }}
+          style={{ background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' }}
         >
           🎁 View Rewards
         </motion.button>
@@ -87,10 +87,10 @@ export default function PremiumGiftCard({ compact = false }) {
       <motion.div
         className="relative z-10 rounded-3xl p-6 overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(99,102,241,0.06))',
-          border: '1px solid rgba(139,92,246,0.2)',
+          background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(99,102,241,0.05))',
+          border: '1px solid rgba(139,92,246,0.18)',
           backdropFilter: 'blur(20px)',
-          boxShadow: hover ? '0 0 60px rgba(139,92,246,0.25)' : '0 0 30px rgba(139,92,246,0.1)',
+          boxShadow: hover ? '0 0 60px rgba(139,92,246,0.2)' : '0 0 30px rgba(139,92,246,0.08)',
         }}
         animate={{
           y: [0, -4, 0],
@@ -99,8 +99,8 @@ export default function PremiumGiftCard({ compact = false }) {
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
       >
         {/* Glow orbs */}
-        <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-30" style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.3), transparent)', filter: 'blur(40px)' }} />
-        <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.3), transparent)', filter: 'blur(40px)' }} />
+        <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-25" style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.3), transparent)', filter: 'blur(40px)' }} />
+        <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.3), transparent)', filter: 'blur(40px)' }} />
 
         <div className="relative z-10">
           {/* Gift Icon */}
@@ -120,20 +120,42 @@ export default function PremiumGiftCard({ compact = false }) {
 
           {/* Title */}
           <h3 className="text-lg font-bold text-white text-center mb-1">
-            Premium Gift Awaits
+            Premium Rewards
           </h3>
-          <p className="text-center text-xs text-purple-300/70 mb-4">
-            Invite 2 Friends · Unlock FREE
+          <p className="text-center text-xs mb-5" style={{ color: 'rgba(196,181,253,0.5)' }}>
+            Invite friends. Unlock AI Features.
           </p>
+
+          {/* Progress */}
+          <div className="mb-5">
+            <div className="flex items-center justify-between text-[10px] mb-2" style={{ color: 'rgba(196,181,253,0.5)' }}>
+              <span className="font-medium">Reward Progress</span>
+              <span>0 / 2 Friends</span>
+            </div>
+            <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'rgba(139,92,246,0.1)' }}>
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: 'linear-gradient(90deg, #8B5CF6, #A855F7)' }}
+                initial={{ width: 0 }}
+                animate={{ width: '0%' }}
+                transition={{ duration: 1.2, ease: 'easeOut' }}
+              />
+            </div>
+            <div className="flex items-center justify-between mt-1.5">
+              <span className="text-[8px] font-medium" style={{ color: 'rgba(196,181,253,0.35)' }}>0% Complete</span>
+              <span className="text-[8px] font-medium" style={{ color: 'rgba(196,181,253,0.35)' }}>2 Friends = Premium</span>
+            </div>
+          </div>
 
           {/* Features */}
           <div className="space-y-2 mb-5">
             {[
-              'AI NEXA Predictor (Premium)',
-              'AI Assistant (100 Qs / Day)',
-              'Complete College Prediction',
-              'AI Reports & Insights',
-              'Future Premium Features',
+              'Premium Nexa Predictor access',
+              'AI Assistant: 100 questions/day',
+              'Learning Hub premium resources',
+              'Mock tests + advanced practice',
+              'Downloadable AI reports & insights',
+              'Early access to future premium features',
             ].map((f, i) => (
               <motion.div key={f}
                 initial={{ opacity: 0, x: -10 }}
@@ -141,7 +163,7 @@ export default function PremiumGiftCard({ compact = false }) {
                 transition={{ delay: 0.3 + i * 0.08 }}
                 className="flex items-center gap-2 text-[11px]"
               >
-                <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-purple-400 shrink-0">
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 shrink-0" style={{ color: '#8B5CF6' }}>
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 <span className="text-slate-300">{f}</span>
@@ -156,8 +178,8 @@ export default function PremiumGiftCard({ compact = false }) {
             onClick={() => navigate(isPremium ? '/referral' : '/register')}
             className="w-full py-3 rounded-xl text-sm font-bold text-white relative overflow-hidden group"
             style={{
-              background: 'linear-gradient(135deg, #8B5CF6, #6C4DFF)',
-              boxShadow: '0 4px 20px rgba(139,92,246,0.4)',
+              background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)',
+              boxShadow: '0 4px 20px rgba(139,92,246,0.35)',
             }}
           >
             <motion.div

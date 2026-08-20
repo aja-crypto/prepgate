@@ -8,10 +8,14 @@ const { generateTokens } = require('../middleware/auth');
 const { add: blacklistToken, has: isTokenBlacklisted, blacklistAllForUser } = require('../middleware/tokenBlacklist');
 const { sendEmail, isSmtpConfigured } = require('../utils/email');
 const { isMockAuthEnabled } = require('../config/devMode');
+const { isDemoUser } = require('../utils/permissions');
 const { getEmptyProgressData } = require('../utils/emptyProgress');
 const mockStore = require('../store/mockStore');
 
-const mockUserResponse = (user) => ({
+const mockUserResponse = (user) => {
+  const testUses = user.nexaPredictorTestUses || 0;
+  const hasPremium = user.isPremium || user.premiumUnlockedViaReferral;
+  return {
   id: user._id,
   name: user.name,
   email: user.email,
@@ -22,11 +26,20 @@ const mockUserResponse = (user) => ({
   studyGoalHours: user.studyGoalHours,
   isVerified: user.isVerified ?? false,
   authProvider: user.authProvider || 'local',
+  isGuest: isDemoUser(user),
   isPremium: user.isPremium || false,
   plan: user.isPremium ? 'premium' : 'basic',
   avatar: user.avatar,
   badges: user.badges || [],
-});
+  nexaPredictorTestUses: testUses,
+  ...(!hasPremium ? {
+    testingAccess: true,
+    testingLimit: 10,
+    testingUsed: testUses,
+    testingRemaining: Math.max(0, 10 - testUses),
+  } : {}),
+};
+};
 
 async function verifyGoogleToken(idToken) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -916,21 +929,28 @@ exports.resetPassword = async (req, res, next) => {
 
 exports.completeOnboarding = async (req, res, next) => {
   try {
+    const { skipped, targetExam, prepLevel, studyGoalHours } = req.body;
     if (isMockAuthEnabled()) {
       const mockStore = require('../store/mockStore');
       const user = mockStore.findById(req.user._id);
       if (user) {
         user.hasCompletedOnboarding = true;
-        user.onboardingSkipped = req.body.skipped || false;
+        user.onboardingSkipped = skipped || false;
         if (!user.firstLoginAt) user.firstLoginAt = new Date();
+        if (targetExam) user.targetExam = String(targetExam);
+        if (prepLevel) user.prepLevel = String(prepLevel);
+        if (typeof studyGoalHours === 'number') user.studyGoalHours = studyGoalHours;
         await user.save();
       }
       return res.json({ success: true, message: 'Onboarding completed.' });
     }
     const user = req.user;
     user.hasCompletedOnboarding = true;
-    user.onboardingSkipped = req.body.skipped || false;
+    user.onboardingSkipped = skipped || false;
     if (!user.firstLoginAt) user.firstLoginAt = new Date();
+    if (targetExam) user.targetExam = String(targetExam);
+    if (prepLevel) user.prepLevel = String(prepLevel);
+    if (typeof studyGoalHours === 'number') user.studyGoalHours = studyGoalHours;
     await user.save({ validateBeforeSave: false });
     res.json({ success: true, message: 'Onboarding completed.' });
   } catch (e) { next(e); }

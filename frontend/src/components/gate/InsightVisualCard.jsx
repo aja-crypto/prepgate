@@ -157,20 +157,13 @@ const INSIGHT_VISUALS = {
     icon: '📈',
     accent: '#FBBF24',
     render: (data) => {
-      const scores = [
-        { rank: 1, label: 'IIT Bombay', value: 870, unit: '', color: '#FBBF24' },
-        { rank: 2, label: 'IIT Madras', value: 850, unit: '', color: '#FBBF24' },
-        { rank: 3, label: 'IIT Delhi', value: 830, unit: '', color: '#FBBF24' },
-        { rank: 4, label: 'IIT Kanpur', value: 810, unit: '', color: '#F59E0B' },
-        { rank: 5, label: 'IIT Kharagpur', value: 790, unit: '', color: '#F59E0B' },
-        { rank: 6, label: 'IIT Roorkee', value: 770, unit: '', color: '#F59E0B' },
-        { rank: 7, label: 'IIT Guwahati', value: 750, unit: '', color: '#10B981' },
-        { rank: 8, label: 'IIT BHU', value: 730, unit: '', color: '#10B981' },
-      ].map(s => ({ ...s, value: Math.round((s.value / 900) * 100) }));
       return (
         <div className="space-y-2">
-          <div className="text-[9px] text-text3/50 mb-2">GATE Score (out of 900)</div>
-          {scores.map(s => <RankingBar key={s.label} {...s} />)}
+          <div className="text-[9px] text-text3/50 mb-2">Data sourced from verified predictor database</div>
+          <div className="text-[11px] text-text3/60 p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+            Closing scores are category-dependent and vary by institute, programme, and round.
+            Use the Opportunity Predictor for live, DB-backed verified figures.
+          </div>
         </div>
       );
     }

@@ -1,8 +1,29 @@
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import ErrorBoundary from '../common/ErrorBoundary';
 import Icon from '../ui/Icon';
 import BrandText from '../ui/BrandText';
+
+function AdminSectionFallback() {
+  return (
+    <div className="p-4 lg:p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="h-6 w-40 bg-bg-3 rounded animate-pulse mb-1" />
+          <div className="h-3 w-56 bg-bg-3 rounded animate-pulse" />
+        </div>
+        <div className="h-8 w-24 bg-bg-3 rounded-lg animate-pulse" />
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="h-20 bg-bg-3 rounded-xl animate-pulse" />
+        ))}
+      </div>
+      <div className="h-40 bg-bg-3 rounded-xl animate-pulse" />
+    </div>
+  );
+}
 
 const NAV_ITEMS = [
   { path: '/admin/dashboard', label: 'Dashboard', icon: 'grid' },
@@ -40,15 +61,18 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen bg-bg flex">
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="flex items-center gap-3 px-5 h-16 border-b border-border">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <svg viewBox="0 0 32 32" fill="none" className="w-5 h-5"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </div>
           <span className="font-bold text-text"><BrandText /> Admin</span>
+          <button onClick={() => setSidebarOpen(false)} className="md:hidden ml-auto p-2 text-text3 hover:text-text" aria-label="Close sidebar">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+          </button>
         </div>
 
         <nav className="p-3 space-y-1">
@@ -98,7 +122,7 @@ export default function AdminLayout() {
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className="sticky top-0 z-30 h-16 border-b border-border bg-surface/80 backdrop-blur-xl flex items-center gap-3 px-4 lg:px-6">
-          <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-text3 hover:text-text -ml-2">
+          <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 text-text3 hover:text-text -ml-2">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
           </button>
           <div className="flex-1" />
@@ -108,7 +132,11 @@ export default function AdminLayout() {
         </header>
 
         <main className="flex-1 overflow-y-auto px-2 sm:px-4 md:px-6 pt-4 sm:pt-6 pb-6">
-          <Outlet />
+          <ErrorBoundary name="AdminSection">
+            <Suspense fallback={<AdminSectionFallback />}>
+              <Outlet />
+            </Suspense>
+          </ErrorBoundary>
         </main>
       </div>
     </div>

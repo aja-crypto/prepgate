@@ -1,5 +1,12 @@
 // Centralized permission helpers — single source of truth for role checks
 
+// Demo/testing identity (mirrors the account used by /auth/demo)
+const DEMO_EMAIL = 'demo@gate2027.in';
+
+function isGuestUser(user) {
+  return !!(user && (user.isGuest === true || user.email === DEMO_EMAIL));
+}
+
 const ROLES = {
   owner: 999,
   super_admin: 100,
@@ -45,6 +52,10 @@ function canAccessPremium(user) {
   return isOwner(user) || user?.isPremium === true || user?.premiumUnlockedViaReferral === true;
 }
 
+function isDemoUser(user) {
+  return isGuestUser(user);
+}
+
 function bypassReferralRequirement(user) {
   return isOwner(user) || isAdmin(user);
 }
@@ -71,6 +82,7 @@ module.exports = {
   hasUnlimitedAI,
   hasUnlimitedPredictions,
   canAccessPremium,
+  isDemoUser,
   bypassReferralRequirement,
   bypassAiLimits,
   bypassPredictorLimits,

@@ -137,14 +137,26 @@ export function AccountProvider({ children }) {
         })
         .catch(() => setLoading(false));
     } else if (isGuest) {
-      setAcct(mergeAccount(null, {
-        id: 'guest',
-        name: 'GATE Aspirant (Demo)',
-        email: 'demo@gate2027.in',
-        role: 'user',
-        isGuest: true,
-      }));
-      setLoading(false);
+      // Try to get a real token from backend demo endpoint
+      api.post('/auth/demo').then((res) => {
+        if (res.data?.success && res.data?.data) {
+          const { user: userData, accessToken, refreshToken } = res.data.data;
+          safeSet(STORAGE_KEYS.TOKEN, accessToken);
+          if (refreshToken) safeSet(STORAGE_KEYS.REFRESH, refreshToken);
+          api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+          setAcct(mergeAccount(userData, { isGuest: true }));
+        } else {
+          setAcct(mergeAccount(null, {
+            id: 'guest', name: 'GATE Aspirant (Demo)', email: 'demo@gate2027.in',
+            role: 'user', isGuest: true,
+          }));
+        }
+      }).catch(() => {
+        setAcct(mergeAccount(null, {
+          id: 'guest', name: 'GATE Aspirant (Demo)', email: 'demo@gate2027.in',
+          role: 'user', isGuest: true,
+        }));
+      }).finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
@@ -222,13 +234,29 @@ export function AccountProvider({ children }) {
     return u;
   }, []);
 
-  const loginAsGuest = useCallback(() => {
+  const loginAsGuest = useCallback(async () => {
     safeRemove(STORAGE_KEYS.TOKEN);
     safeRemove(STORAGE_KEYS.REFRESH);
     safeSet(STORAGE_KEYS.GUEST, 'true');
     safeSet(STORAGE_KEYS.ONBOARDING, 'true');
-    api.defaults.headers.common['X-Demo-User'] = 'true';
     delete api.defaults.headers.common['Authorization'];
+    
+    try {
+      const res = await api.post('/auth/demo');
+      if (res.data?.success && res.data?.data) {
+        const { user: userData, accessToken, refreshToken } = res.data.data;
+        safeSet(STORAGE_KEYS.TOKEN, accessToken);
+        if (refreshToken) safeSet(STORAGE_KEYS.REFRESH, refreshToken);
+        api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        setAcct(mergeAccount(null, { ...userData, isGuest: true }));
+        setLastTransition(TRANSITIONS.LOGIN);
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend demo login failed, using local fallback:', err.message);
+    }
+    
+    api.defaults.headers.common['X-Demo-User'] = 'true';
     setAcct(mergeAccount(null, {
       id: 'guest', name: 'GATE Aspirant (Demo)', email: 'demo@gate2027.in',
       role: 'user', isGuest: true,

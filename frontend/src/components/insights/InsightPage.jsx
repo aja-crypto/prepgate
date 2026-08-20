@@ -294,7 +294,13 @@ export default function InsightPage({ topic, userScore, accent }) {
   return (
     <div className="space-y-4">
       <InsightHero hero={topic.hero} accent={accent} />
-      <QuickStatsRow cards={topic.stat_cards} />
+      {topic.dataNotice && (
+        <div className="rounded-xl p-4 text-[12px] text-text3/70"
+          style={{ background: '#1A1A19', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+          <span className="mr-1">ℹ️</span>{topic.dataNotice}
+        </div>
+      )}
+      <QuickStatsRow cards={topic.stat_cards || []} />
 
       {topic.charts?.length > 0 && (
         <div className="rounded-xl p-4" style={{ background: '#1A1A19', border: '0.5px solid rgba(255,255,255,0.06)' }}>

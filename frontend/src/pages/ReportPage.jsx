@@ -3,7 +3,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { FileText, Download, ArrowLeft, Loader2, ArrowRight } from 'lucide-react';
 import { sampleReportData, downloadPdf, GateNexaReport as GateNexaReportComponent } from '../lib/gatenexa-report/generate';
 import { adaptPredictionResult } from '../lib/gatenexa-report/adapter';
-import { useAuth } from '../context/AuthContext';
+import { useAuthData } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 function PdfViewer({ data }) {
@@ -28,7 +28,7 @@ function PdfViewer({ data }) {
 export default function ReportPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useAuthData();
   const rawResult = location.state?.result;
   const compareList = location.state?.compareList;
   const choiceOrder = location.state?.choiceOrder;

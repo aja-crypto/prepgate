@@ -1,6 +1,6 @@
 // Google Sign-In — uses renderButton() with timeout + retry
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuthActions } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -15,7 +15,7 @@ const LOADING_TIMEOUT = 15000;
 const RETRY_COOLDOWN = 5000;
 
 export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_with' }) {
-  const { loginAsGuest } = useAuth();
+  const { loginAsGuest } = useAuthActions();
   const navigate = useNavigate();
   const btnRef = useRef(null);
   const scriptLoaded = useRef(false);
@@ -27,8 +27,8 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
   const [error, setError] = useState('');
   const timeoutRef = useRef(null);
 
-  const handleDemoMode = () => {
-    loginAsGuest();
+  const handleDemoMode = async () => {
+    await loginAsGuest();
     navigate('/dashboard');
   };
 
@@ -169,11 +169,10 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
     return (
       <button
         type="button"
-        disabled={import.meta.env.PROD}
-        onClick={import.meta.env.PROD ? undefined : handleDemoMode}
-        aria-label="Google Sign-In disabled"
-        className="w-full group text-[11px] text-text3 text-center py-4 px-4 border border-dashed border-border rounded-xl bg-bg-3/30 transition-all disabled:cursor-not-allowed"
-        style={import.meta.env.PROD ? { cursor: 'not-allowed', opacity: 0.6 } : { cursor: 'pointer' }}
+        onClick={handleDemoMode}
+        aria-label="Enter Demo Mode"
+        className="w-full group text-[11px] text-text3 text-center py-4 px-4 border border-dashed border-border rounded-xl bg-bg-3/30 transition-all"
+        style={{ cursor: 'pointer' }}
       >
         <p className="font-bold text-text mb-1 italic">Google Sign-In Unavailable</p>
         <p className="mb-2 opacity-70">
@@ -181,11 +180,9 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
             ? 'Please sign in with email & password or Sign up.'
             : 'Set VITE_GOOGLE_CLIENT_ID in .env'}
         </p>
-        {!import.meta.env.PROD && (
-          <div className="text-primary font-bold uppercase tracking-widest text-[10px] bg-primary/10 py-1.5 rounded-xl border border-primary/20">
-            Enter Demo Mode instead →
-          </div>
-        )}
+        <div className="text-primary font-bold uppercase tracking-widest text-[10px] bg-primary/10 py-1.5 rounded-xl border border-primary/20">
+          Enter Demo Mode instead →
+        </div>
       </button>
     );
   }

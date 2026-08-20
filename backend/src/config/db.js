@@ -121,6 +121,17 @@ const connectDB = async () => {
       const { seedMongoMockData } = require('../utils/seedMockTests');
       await seedMongoMockData();
       console.log('📦 Local fallback data seeded (available if MongoDB disconnects)');
+
+      // Phase 1 boot hook: ensure MediaFile indexes (additive, idempotent, guarded).
+      try {
+        const mediaFile = require('../models/MediaFile');
+        if (mediaFile && typeof mediaFile.ensureMediaFileIndexes === 'function') {
+          mediaFile.ensureMediaFileIndexes();
+        }
+      } catch (e) {
+        console.warn('[MediaFile] index boot hook skipped:', e.message);
+      }
+
       return true;
     } catch (error) {
       console.error(`❌ MongoDB connection failed: ${error.message}`);

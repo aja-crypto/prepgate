@@ -252,15 +252,17 @@ async function predict(input) {
   const scoreRankData = [];  // no longer needed; calculator provides AIR
 
   // Step 5: Fetch CCMT / COAP / Seat / College Metadata
+  // Atlas note: default cursor batch size (101) forces many network round trips on remote
+  // clusters. Large batchSize fetches each dataset in 1-2 round trips instead of ~10.
   const [ccmtCutoffs, coapCutoffs, seatData, branchStats, psuData, psuRecruitments, statistics, collegePrograms] = await Promise.all([
-    CcmtCutoff.find({ year: baseYear }).sort({ closingScore: -1 }).lean(),
-    CoapCutoff.find({ year: baseYear }).sort({ closingScore: -1 }).lean(),
-    SeatMatrix.find({ year: baseYear }).lean(),
-    BranchStatistics.find({ year: baseYear }).lean(),
+    CcmtCutoff.find({ year: baseYear, dataStatus: { $ne: 'placeholder' } }).sort({ closingScore: -1 }).batchSize(5000).lean(),
+    CoapCutoff.find({ year: baseYear, dataStatus: { $ne: 'placeholder' } }).sort({ closingScore: -1 }).batchSize(5000).lean(),
+    SeatMatrix.find({ year: baseYear }).batchSize(5000).lean(),
+    BranchStatistics.find({ year: baseYear }).batchSize(5000).lean(),
     PsuRequirement.find({ year: baseYear, paper, category: dbCategory }).lean(),
     PsuRecruitment.find({ year: baseYear, status: { $ne: 'Closed' } }).lean(),
     GateStatistics.findOne({ year: baseYear, paper }).lean(),
-    CollegeProgram.find({ isActive: true }).lean(),
+    CollegeProgram.find({ isActive: true }).batchSize(5000).lean(),
   ]);
 
   timings.mainQueries = Date.now() - startTime;
@@ -347,12 +349,15 @@ async function predict(input) {
 
   // P0 fix: Batch-fetch ALL trends once instead of N+1 queries in the hot loop
   const trendMap = await batchAnalyseTrends(filteredCcmt, category);
+  timings.trends = Date.now() - startTime;
 
   // Helper: binary-search the score needed for a target probability
   function estimateScoreForTargetProbability(targetProb, closingScore, openingScore, trendInfo, competition, popularity, yr, instName, progName) {
     let lo = Math.max(0, normalizedScore - 50);
     let hi = normalizedScore + 100;
-    for (let i = 0; i < 30; i++) {
+    // 15 iterations converge to <0.01 precision on a ~150pt range (150 / 2^15 ≈ 0.0046) —
+    // identical rounding as 30 iterations but roughly half the CPU cost in the hot loop.
+    for (let i = 0; i < 15; i++) {
       const mid = (lo + hi) / 2;
       const p = calcEnhancedProbability(mid, closingScore, openingScore, trendInfo, competition, popularity, yr, undefined, instName, progName).score;
       if (p >= targetProb) hi = mid; else lo = mid;
@@ -551,10 +556,19 @@ async function predict(input) {
     if (!databaseCoverageByType[ct]) databaseCoverageByType[ct] = 0;
     databaseCoverageByType[ct]++;
 
-    // Only skip colleges where the score gap is extremely far (more than 300 points below closing)
-    // For moderate gaps, keep them as Dream/Ambitious so users see all options
-    const scoreGap = normalizedScore - (cc.closingScore || 0);
-    if (scoreGap < -300) {
+    // Do NOT skip colleges based on score gap.
+    // Instead, let the probability calculation naturally produce very low probabilities
+    // for colleges that are far out of reach. Users should see aspirational options
+    // with clear "Dream" / "Very Difficult" labels, not have them silently removed.
+    //
+    // The probability system already handles this:
+    //   - scoreGap > 0 → high probability (score above cutoff)
+    //   - scoreGap ≈ 0 → moderate probability
+    //   - scoreGap < 0 → low probability (score below cutoff)
+    //   - scoreGap << 0 → very low probability (aspirational/dream)
+    //
+    // Only skip if the closing score is completely invalid (0 or negative)
+    if (!cc.closingScore || cc.closingScore <= 0) {
       recommendedSkipped++;
       continue;
     }
@@ -580,6 +594,7 @@ async function predict(input) {
   likelyColleges.sort(sortByRecommendationPriority);
   competitiveColleges.sort(sortByRecommendationPriority);
   dreamTierColleges.sort(sortByRecommendationPriority);
+  timings.hotLoop = Date.now() - startTime;
 
   // Cross-tier deduplication: keep only the highest-probability entry per institute+program
   // This prevents the same college from appearing in multiple tiers (e.g., different rounds)
@@ -630,14 +645,18 @@ async function predict(input) {
   backupColleges.sort(sortByRecommendationPriority);
 
   // Populate availableCategories on each college card from groupMap
-  for (const [key, groupInfo] of groupMap) {
-    const allCards = [...guaranteedColleges, ...veryHighColleges, ...likelyColleges, ...competitiveColleges, ...dreamTierColleges,
-                      ...safeColleges, ...targetColleges, ...dreamColleges, ...backupColleges];
-    for (const card of allCards) {
-      if (card.institute === groupInfo.collegeData.institute && card.program === groupInfo.collegeData.program) {
-        card.availableCategories = Array.from(groupInfo.categories);
-      }
-    }
+  // (Map-based: O(cards + groups) instead of O(groups × cards))
+  const catByInstProg = new Map();
+  for (const groupInfo of groupMap.values()) {
+    const key = `${groupInfo.collegeData.institute}|${groupInfo.collegeData.program}`;
+    if (!catByInstProg.has(key)) catByInstProg.set(key, new Set());
+    for (const cat of groupInfo.categories) catByInstProg.get(key).add(cat);
+  }
+  const allCards = [...guaranteedColleges, ...veryHighColleges, ...likelyColleges, ...competitiveColleges, ...dreamTierColleges,
+                    ...safeColleges, ...targetColleges, ...dreamColleges, ...backupColleges];
+  for (const card of allCards) {
+    const cats = catByInstProg.get(`${card.institute}|${card.program}`);
+    if (cats) card.availableCategories = Array.from(cats);
   }
 
   // Step 7: Career counts (using UNSLICED arrays for accurate totals)
@@ -826,6 +845,7 @@ async function predict(input) {
   // Compute analytics
   const allColleges = [...safeColleges, ...targetColleges, ...dreamColleges, ...backupColleges];
   const analytics = await computeAnalytics(allColleges, instituteMap, programMap);
+  timings.analytics = Date.now() - startTime;
 
   timings.total = Date.now() - startTime;
 
@@ -935,6 +955,7 @@ async function predict(input) {
       databaseCoverageByType,
       recommendedSkipped,
       recommendedCount: guaranteedColleges.length + veryHighColleges.length + likelyColleges.length + competitiveColleges.length + dreamTierColleges.length,
+      timings,
     },
     analytics,
     // Low marks guidance

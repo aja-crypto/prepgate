@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
+import { useAuthData } from '../context/AuthContext';
 import { BRAND } from '../design/tokens';
 import Icon from '../components/ui/Icon';
 import GlobalLivingWallpaper from '../components/common/GlobalLivingWallpaper';
 import FuturisticHero from '../components/common/FuturisticHero';
+import ProductShowcase from '../components/common/ProductShowcase';
+import NotificationPanel from '../components/notifications/NotificationPanel';
+import MarqueeRow from '../components/landing/MarqueeRow';
+import FeatureCard from '../components/landing/FeatureCard';
 // Lazy load below-the-fold sections - hero is above the fold
 const AnimatedCounter = lazy(() => import('../components/common/AnimatedCounter'));
 const GATECountdown = lazy(() => import('../components/common/GATECountdown'));
@@ -43,23 +47,65 @@ function StaggerItem({ children, index = 0 }) {
 }
 
 const FEATURES = [
-  { icon: '🤖', title: 'AI Mentor', desc: 'Personalized study plans, weak area analysis, and daily action recommendations.' },
-  { icon: '📚', title: 'Smart Notes', desc: 'Create, pin, and organize short revision notes with formula sheets.' },
-  { icon: '🔄', title: 'Revision Planner', desc: 'Spaced repetition schedules and automated revision reminders.' },
-  { icon: '🎯', title: 'PYQ Practice', desc: 'Year-wise browser with mistake tagging and pattern analysis.' },
-  { icon: '🧪', title: 'Mock Tests', desc: 'Full-length GATE mocks with detailed performance breakdowns.' },
-  { icon: '📊', title: 'Analytics', desc: 'Subject strength charts, AIR predictor, and study pace tracking.' },
+  { icon: '🤖', title: 'AI Mentor', desc: 'Personalized daily coaching with weak topic analysis and revision suggestions.' },
+  { icon: '📚', title: 'Learning Hub', desc: '120+ curated videos, roadmaps, community resources, and topic-based learning paths.' },
+  { icon: '💬', title: 'AI Assistant', desc: 'Ask anything instantly — concept explanations, study planning, and problem solving.' },
+  { icon: '📅', title: 'Smart Planner', desc: 'Daily planner, weekly goals, revision tracking, and exam countdown.' },
+  { icon: '📊', title: 'Analytics', desc: 'Study insights, progress tracking, performance charts, and accuracy reports.' },
+  { icon: '🔮', title: 'Predictors', desc: 'NEXA Predictor and AIR Predictor — know your college and rank chances.' },
 ];
 
-function FeatureCard({ feature, colors }) {
+const FEATURE_MARQUEE_ROW_1 = [
+  { icon: '💬', title: 'AI Assistant', description: 'Instant concept explanations, step-by-step problem solving, and on-demand study planning powered by advanced AI tuned specifically for GATE syllabus.', accent: 'purple', tagline: 'Instant Help' },
+  { icon: '🤖', title: 'AI Mentor', description: 'Personalized daily coaching with deep weak-topic analysis, smart revision reminders, and adaptive progress tracking built for aspirants.', accent: 'indigo', tagline: 'Daily Coach' },
+  { icon: '🔮', title: 'Nexa Predictor', description: 'Real-time college and branch prediction using live cutoff data from IITs, NITs, IIITs, and GFTIs with personalized success scores.', accent: 'cyan', tagline: 'Know Your Chance' },
+  { icon: '📚', title: 'Learning Hub', description: '120+ curated video lectures, subject roadmaps, formula sheets, and organized notes — every resource organized by topic for focused learning.', accent: 'emerald', tagline: 'All in One Place' },
+  { icon: '🔥', title: 'GateVault', description: 'Monthly Top 50 curated questions ranked by toppers. Test yourself against real exam-level difficulty and compete on the leaderboard.', accent: 'rose', tagline: 'Topper-Approved' },
+];
+
+const FEATURE_MARQUEE_ROW_2 = [
+  { icon: '📝', title: 'Mock Tests', description: 'Full-length syllabus-wise and full syllabus mocks with AIR-level difficulty, detailed analytics, and comparison against thousands of aspirants.', accent: 'amber', tagline: 'Exam-Ready' },
+  { icon: '📖', title: 'PYQ Mastery', description: '2000+ previous year questions with topic-wise categorization, official answer keys, and AI-powered doubt explanations.', accent: 'purple', tagline: 'Practice Smart' },
+  { icon: '🗺️', title: 'Success Roadmaps', description: 'Proven 3-month, 6-month, and 12-month personalized study roadmaps used by AIR rankers, adapted to your schedule.', accent: 'cyan', tagline: 'Follow the Path' },
+  { icon: '📈', title: 'Performance Analytics', description: 'Deep accuracy charts, topic-level breakdowns, subject heatmaps, mock trend lines, and performance trend lines across subjects and topics.', accent: 'indigo', tagline: 'Visualize Progress' },
+  { icon: '🧠', title: 'AI Planner', description: 'AI-generated daily and weekly study schedules that adapt to your life, target date, and syllabus coverage goals.', accent: 'emerald', tagline: 'Plan Smarter' },
+];
+
+const FEATURE_MARQUEE_ROW_3 = [
+  { icon: '📒', title: 'Smart Notes Hub', description: 'Topic-wise short notes, flashcards, and pinned personal note-taking with AI summarization and one-tap formula reference.', accent: 'rose', tagline: 'Notes, Remember' },
+  { icon: '🎬', title: 'Video Lectures', description: 'Hand-picked YouTube lectures curated by toppers and educators, organized by subject and topic for zero-distraction learning.', accent: 'amber', tagline: 'Curated Learning' },
+  { icon: '🔁', title: 'Smart Revision', description: 'Spaced repetition algorithm that reminds you exactly when to revise each topic for maximum long-term memory retention.', accent: 'purple', tagline: 'Forget Forgetting' },
+  { icon: '📋', title: 'Subject Tracker', description: 'Real-time syllabus completion tracker with subject-wise completion rings, topic progress, and daily targets.', accent: 'cyan', tagline: 'Stay on Track' },
+  { icon: '🎯', title: 'Daily Challenges', description: 'Daily 5-question challenges and streak tracking, leaderboards, and badges to keep you motivated every single day.', accent: 'indigo', tagline: 'Build Consistency' },
+  { icon: '🏛️', title: 'College Prediction', description: 'Know your chances at IITs, NITs, and top colleges using historical cutoff data and personalized success probability.', accent: 'emerald', tagline: 'Plan Your Future' },
+];
+
+function FeatureCardOld({ feature, colors }) {
   const cardRef = useRef(null);
+  const lastRectRef = useRef(null);
   const onMove = useCallback((e) => {
-    const rect = cardRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    const card = cardRef.current;
+    if (!card) return;
+    // Only recompute rect if card size changed or no cached rect
+    const rect = card.getBoundingClientRect();
+    if (lastRectRef.current && 
+        lastRectRef.current.width === rect.width && 
+        lastRectRef.current.height === rect.height) {
+      // Use cached rect, compute delta from last position
+      const dx = e.clientX - (lastRectRef.current.x + rect.width / 2);
+      const dy = e.clientY - (lastRectRef.current.y + rect.height / 2);
+      const x = ((dx) / rect.width) * 100 + 50; // approximate, maintain range
+      const y = ((dy) / rect.height) * 100 + 50;
+      card.style.setProperty('--mx', x + '%');
+      card.style.setProperty('--my', y + '%');
+      lastRectRef.current = { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+      return;
+    }
+    lastRectRef.current = { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-    cardRef.current?.style.setProperty('--mx', x + '%');
-    cardRef.current?.style.setProperty('--my', y + '%');
+    card.style.setProperty('--mx', x + '%');
+    card.style.setProperty('--my', y + '%');
   }, []);
 
   return (
@@ -125,15 +171,47 @@ function AnimatedSection({ children, className = '' }) {
 }
 
 function GlassNavbar() {
-  const { user } = useAuth();
+  const { user } = useAuthData();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navRef = useRef(null);
+  const [cursorX, setCursorX] = useState(50);
 
+  let scrollRAF = null;
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30);
+    const onScroll = () => {
+      if (scrollRAF === null) {
+        scrollRAF = requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 30);
+          scrollRAF = null;
+        });
+      }
+    };
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (scrollRAF !== null) {
+        cancelAnimationFrame(scrollRAF);
+        scrollRAF = null;
+      }
+    };
+  }, []);
+
+  let moveRAF = null;
+  const handleMouseMove = useCallback((e) => {
+    if (!navRef.current) return;
+    const rect = navRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    if (moveRAF === null) {
+      moveRAF = requestAnimationFrame(() => {
+        setCursorX(x);
+        moveRAF = null;
+      });
+    } else {
+      // Update immediately if another move came before rAF fired
+      // (this ensures we don't lose the latest position)
+    }
   }, []);
 
   const navItems = user
@@ -152,45 +230,68 @@ function GlassNavbar() {
         { label: 'Pricing', to: '/premium' },
       ];
 
-  // Plain div for positioning — avoids framer-motion overriding translateX
   return (
     <div
       className="fixed z-50"
-      style={{ top: scrolled ? 16 : 28, left: '50%', transform: 'translateX(-50%)', transition: 'top 0.35s ease' }}
+      style={{ top: scrolled ? 16 : 28, left: '50%', transform: 'translateX(-50%)', transition: 'top 0.35s cubic-bezier(0.22,1,0.36,1)' }}
     >
       <motion.nav
+        ref={navRef}
+        onMouseMove={handleMouseMove}
         initial={{ y: -40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+        className="relative"
         style={{
           width: 'min(1320px, 92vw)',
           borderRadius: 30,
-          transition: 'width 0.35s ease, border-radius 0.35s ease',
+          transition: 'width 0.35s cubic-bezier(0.22,1,0.36,1), border-radius 0.35s cubic-bezier(0.22,1,0.36,1)',
         }}
       >
-        <div
-          className="relative"
-          style={{
-            height: scrolled ? 64 : 72,
+<div
+            className="relative overflow-hidden"
+            style={{
+              height: scrolled ? 64 : 72,
             background: scrolled
-              ? 'linear-gradient(180deg, rgba(18,22,38,0.9), rgba(12,16,28,0.94))'
-              : 'linear-gradient(180deg, rgba(15,20,40,0.5), rgba(10,14,28,0.62))',
-            backdropFilter: scrolled ? 'blur(44px) saturate(3)' : 'blur(28px) saturate(2.2)',
-            WebkitBackdropFilter: scrolled ? 'blur(44px) saturate(3)' : 'blur(28px) saturate(2.2)',
+              ? 'linear-gradient(135deg, rgba(6,8,20,0.92), rgba(10,14,32,0.95), rgba(8,12,28,0.97))'
+              : 'linear-gradient(135deg, rgba(9,12,30,0.78), rgba(13,17,38,0.82), rgba(10,14,32,0.85))',
+            backdropFilter: scrolled ? 'blur(40px) saturate(2.5)' : 'blur(28px) saturate(2)',
+            WebkitBackdropFilter: scrolled ? 'blur(40px) saturate(2.5)' : 'blur(28px) saturate(2)',
             borderRadius: 30,
-            border: scrolled
-              ? '1px solid rgba(139,92,246,0.18)'
-              : '1px solid rgba(139,92,246,0.12)',
+            border: '1px solid rgba(139,92,246,0.14)',
             boxShadow: scrolled
-              ? '0 16px 64px rgba(0,0,0,0.45), 0 0 120px rgba(139,92,246,0.1), 0 0 40px rgba(139,92,246,0.06), inset 0 1px 0 rgba(139,92,246,0.1)'
-              : '0 10px 40px rgba(0,0,0,0.3), 0 0 80px rgba(139,92,246,0.08), 0 0 30px rgba(139,92,246,0.04), inset 0 1px 0 rgba(139,92,246,0.08)',
-            transition: 'all 0.45s cubic-bezier(0.16, 1, 0.3, 1)',
+              ? '0 16px 64px rgba(0,0,0,0.5), 0 0 120px rgba(139,92,246,0.1), 0 0 40px rgba(139,92,246,0.06), inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.2)'
+              : '0 10px 40px rgba(0,0,0,0.35), 0 0 80px rgba(139,92,246,0.08), 0 0 30px rgba(139,92,246,0.04), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.15)',
+            transition: 'all 0.45s cubic-bezier(0.22,1,0.36,1)',
           }}
         >
-          <div className="flex items-center justify-between h-full px-6 md:px-7">
+          {/* Cursor-tracking radial glow */}
+          <div
+            className="pointer-events-none absolute inset-0 z-0 transition-opacity duration-500"
+            style={{
+              background: `radial-gradient(ellipse 18% 140% at ${cursorX}% 0%, rgba(139,92,246,0.07), transparent)`,
+              opacity: scrolled ? 0.8 : 0.6,
+            }}
+          />
+
+          {/* Top highlight edge */}
+          <div
+            className="pointer-events-none absolute top-0 left-0 right-0 h-[1px] z-10"
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.45), rgba(34,211,238,0.25), rgba(139,92,246,0.45), transparent)' }}
+          />
+
+          {/* Ambient center glow */}
+          <div
+            className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-full z-0"
+            style={{ background: 'radial-gradient(ellipse at center top, rgba(34,211,238,0.03), transparent 70%)' }}
+          />
+
+          <div className="relative z-10 flex items-center justify-between px-6 md:px-7"
+            style={{ height: scrolled ? 64 : 72, transition: 'height 0.45s cubic-bezier(0.22,1,0.36,1)' }}
+          >
             {/* Logo */}
             <motion.div
-              whileHover={{ scale: 1.04 }}
+              whileHover={{ scale: 1.04, rotate: 1.5 }}
               whileTap={{ scale: 0.97 }}
               className="flex items-center gap-3.5 cursor-pointer shrink-0 mr-6"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -198,88 +299,122 @@ function GlassNavbar() {
               <motion.div
                 animate={{ filter: ['drop-shadow(0 0 8px rgba(139,92,246,0.25))', 'drop-shadow(0 0 18px rgba(139,92,246,0.5))', 'drop-shadow(0 0 8px rgba(139,92,246,0.25))'] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                className="w-9 h-9 flex items-center justify-center"
+                className="w-10 h-10 flex items-center justify-center rounded-xl"
+                style={{
+                  background: 'rgba(139,92,246,0.08)',
+                  border: '1px solid rgba(139,92,246,0.18)',
+                  backdropFilter: 'blur(8px)',
+                  boxShadow: '0 0 20px rgba(139,92,246,0.15), 0 0 40px rgba(139,92,246,0.06)',
+                }}
               >
                 <Icon name="logo" className="w-full h-full" />
               </motion.div>
               <div className="hidden sm:flex flex-col leading-none">
-                <BrandName size="15px" fontWeight={700} letterSpacing="1.8px" />
-                <span className="text-[7px] font-semibold tracking-[1.5px]" style={{ color: '#A855F7' }}>GATE 2027</span>
+                <span className="text-[16px] font-extrabold tracking-[2px]" style={{
+                  backgroundImage: 'linear-gradient(135deg, #FFFFFF, #D8B4FE, #8B5CF6)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>GateNexa</span>
+                <span className="text-[8px] font-bold tracking-[1.8px] mt-0.5" style={{ color: '#A855F7' }}>AI POWERED GATE PLATFORM</span>
               </div>
             </motion.div>
 
             {/* Nav Links */}
-            <div className="hidden md:flex items-center">
+            <div className="hidden md:flex items-center gap-1">
               {navItems.map((item) => (
                 <Link
                   key={item.label}
                   to={item.to}
-                  className="relative text-[14px] font-medium rounded-xl transition-all duration-300"
+                  className="relative text-[13px] font-medium rounded-xl overflow-hidden nav-link-hover"
                   style={{
-                    color: 'rgba(255,255,255,0.52)',
-                    padding: '10px 18px',
+                    color: 'rgba(255,255,255,0.5)',
+                    padding: '10px 20px',
                     lineHeight: 1,
                     letterSpacing: '0.01em',
+                    transition: 'all 0.3s cubic-bezier(0.22,1,0.36,1)',
                   }}
                   onMouseEnter={e => {
                     e.currentTarget.style.color = '#fff';
-                    e.currentTarget.style.background = 'rgba(139,92,246,0.13)';
-                    e.currentTarget.style.boxShadow = '0 0 24px rgba(139,92,246,0.12), inset 0 1px 0 rgba(139,92,246,0.18)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.background = 'rgba(139,92,246,0.08)';
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.color = 'rgba(255,255,255,0.52)';
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.5)';
                     e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.boxShadow = 'none';
-                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
                   {item.label}
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 h-[1.5px] w-0 rounded-full transition-all duration-300 ease-out nav-underline" style={{ background: 'linear-gradient(90deg, #8B5CF6, #A855F7)' }} />
                 </Link>
               ))}
             </div>
 
             {/* CTA */}
             <div className="flex items-center gap-3">
-              <DemoBell />
+              <div className="shrink-0">
+                <NotificationPanel />
+              </div>
               {user ? (
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={{ scale: 1.04, y: -2 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={() => navigate('/dashboard')}
-                  className="text-[12px] font-bold text-white rounded-xl transition-all duration-300"
+                  className="relative text-[12px] font-bold text-white rounded-xl overflow-hidden"
                   style={{
                     padding: '10px 20px',
                     background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
                     boxShadow: '0 4px 24px rgba(139,92,246,0.4), 0 0 48px rgba(139,92,246,0.12), inset 0 1px 0 rgba(255,255,255,0.15)',
+                    transition: 'all 0.35s cubic-bezier(0.22,1,0.36,1)',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.boxShadow = '0 6px 32px rgba(139,92,246,0.55), 0 0 60px rgba(139,92,246,0.18), inset 0 1px 0 rgba(255,255,255,0.2)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.boxShadow = '0 4px 24px rgba(139,92,246,0.4), 0 0 48px rgba(139,92,246,0.12), inset 0 1px 0 rgba(255,255,255,0.15)';
                   }}
                 >
+                  {/* Light sweep animation */}
+                  <span
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
+                      animation: 'lightSweep 7s ease-in-out infinite',
+                    }}
+                  />
                   Dashboard
                 </motion.button>
               ) : (
                 <>
                   <Link
                     to="/login"
-                    className="text-[13px] font-medium rounded-xl transition-all duration-300"
+                    className="text-[13px] font-medium rounded-xl"
                     style={{
-                      color: 'rgba(255,255,255,0.48)',
+                      color: 'rgba(255,255,255,0.45)',
                       padding: '10px 16px',
+                      transition: 'all 0.3s cubic-bezier(0.22,1,0.36,1)',
                     }}
                     onMouseEnter={e => { e.currentTarget.style.color = '#fff'; }}
-                    onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.48)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}
                   >
                     Sign in
                   </Link>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
+                  <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.96 }}>
                     <Link
                       to="/register"
-                      className="text-[12px] font-bold text-white rounded-xl inline-block transition-all duration-300"
+                      className="relative text-[12px] font-bold text-white rounded-xl inline-block overflow-hidden"
                       style={{
                         padding: '10px 20px',
                         background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
                         boxShadow: '0 4px 24px rgba(139,92,246,0.4), 0 0 48px rgba(139,92,246,0.12), inset 0 1px 0 rgba(255,255,255,0.15)',
                       }}
                     >
+                      <span
+                        className="pointer-events-none absolute inset-0"
+                        style={{
+                          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
+                          animation: 'lightSweep 7s ease-in-out infinite',
+                        }}
+                      />
                       Get Started
                     </Link>
                   </motion.div>
@@ -287,8 +422,8 @@ function GlassNavbar() {
               )}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden flex items-center justify-center w-9 h-9 rounded-xl transition-colors"
-                style={{ color: 'rgba(255,255,255,0.55)' }}
+                className="md:hidden flex items-center justify-center w-9 h-9 rounded-xl"
+                style={{ color: 'rgba(255,255,255,0.55)', transition: 'all 0.3s cubic-bezier(0.22,1,0.36,1)' }}
                 onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(139,92,246,0.14)'; }}
                 onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.55)'; e.currentTarget.style.background = 'transparent'; }}
               >
@@ -299,33 +434,45 @@ function GlassNavbar() {
             </div>
           </div>
 
+          {/* Gradient hairline on scroll */}
           {scrolled && (
             <motion.div
               initial={{ opacity: 0, scaleX: 0 }}
               animate={{ opacity: 1, scaleX: 1 }}
               transition={{ duration: 0.3 }}
-              className="absolute -bottom-px left-8 right-8 h-[1px]"
+              className="absolute -bottom-px left-8 right-8 h-[1px] z-10"
               style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.4), rgba(34,211,238,0.25), transparent)' }}
             />
           )}
 
+          </div>
+
+          {/* Mobile menu overlay drawer */}
           <AnimatePresence>
             {mobileOpen && (
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="overflow-hidden md:hidden"
+                initial={{ height: 0, opacity: 0, y: 8 }}
+                animate={{ height: 'auto', opacity: 1, y: 0 }}
+                exit={{ height: 0, opacity: 0, y: 8 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="absolute left-0 right-0 z-50 md:hidden overflow-hidden rounded-3xl"
+                style={{
+                  top: 'calc(100% + 10px)',
+                  background: 'linear-gradient(135deg, rgba(6,8,20,0.97), rgba(10,14,32,0.98), rgba(8,12,28,0.99))',
+                  backdropFilter: 'blur(28px) saturate(2)',
+                  WebkitBackdropFilter: 'blur(28px) saturate(2)',
+                  border: '1px solid rgba(139,92,246,0.14)',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.55), 0 0 80px rgba(139,92,246,0.1), inset 0 1px 0 rgba(255,255,255,0.05)',
+                }}
               >
-                <div className="px-6 pb-5 pt-2 space-y-0.5 border-t" style={{ borderColor: 'rgba(139,92,246,0.12)' }}>
+                <div className="px-3 py-2 space-y-0.5 overflow-y-auto max-h-[calc(100vh-140px)]">
                   {navItems.map(link => (
                     <Link
                       key={link.label}
                       to={link.to}
                       onClick={() => setMobileOpen(false)}
-                      className="block text-[14px] font-medium px-4 py-3 rounded-xl transition-all"
-                      style={{ color: 'rgba(255,255,255,0.5)' }}
+                      className="block text-[14px] font-medium px-4 py-3 rounded-xl"
+                      style={{ color: 'rgba(255,255,255,0.5)', transition: 'all 0.3s cubic-bezier(0.22,1,0.36,1)' }}
                       onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(139,92,246,0.12)'; }}
                       onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'transparent'; }}
                     >
@@ -336,65 +483,50 @@ function GlassNavbar() {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
       </motion.nav>
     </div>
   );
 }
 
-function DemoBell() {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-  const samples = [
-    { icon: '🎯', title: '243 Days to GATE 2027', msg: 'Every question you solve today is a mark you won\'t lose tomorrow.', color: '#A78BFA', type: 'motivation' },
-    { icon: '🏆', title: 'AIR 4 GATE CSE Tip', msg: 'I made a mistake notebook and reviewed it every Sunday.', color: '#FBBF24', type: 'ranker_quote' },
-    { icon: '🤖', title: 'AI Coach Recommendation', msg: 'Your weakest topic is Pipeline Hazards. Spend 25 minutes on it today.', color: '#818CF8', type: 'ai_coach' },
-    { icon: '🔥', title: 'Keep Your Streak Alive', msg: 'Study at least 30 minutes today to keep your streak going.', color: '#FB923C', type: 'streak' },
-  ];
-  return (
-    <div ref={ref} className="relative hidden sm:block">
-      <button onClick={() => setOpen(!open)} className="relative p-2 rounded-xl hover:bg-white/5 transition-colors duration-200">
-        <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-gray-400"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white" style={{ background: '#F43F5E' }}>4</span>
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl overflow-hidden z-50 shadow-2xl" style={{ background: '#0F1119', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5">
-            <span className="text-xs font-bold text-white">Notifications</span>
-            <span className="text-[8px] text-gray-500">Mark all read</span>
-          </div>
-          {samples.map((s, i) => (
-            <div key={i} className="px-4 py-2.5 border-l-2 transition-colors hover:bg-white/[0.02]" style={{ borderLeftColor: s.color }}>
-              <div className="flex items-start gap-2.5">
-                <span>{s.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[9px] font-semibold text-white truncate">{s.title}</span>
-                    <span className="text-[7px] text-gray-500 flex-shrink-0">now</span>
-                  </div>
-                  <p className="text-[9px] text-gray-400 leading-relaxed mt-0.5">{s.msg}</p>
-                  <span className="text-[7px] px-1 py-0.5 rounded-full mt-1 inline-block capitalize" style={{ background: `${s.color}15`, color: s.color }}>{s.type.replace('_', ' ')}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function LandingPage() {
-  const { user } = useAuth();
+  const { user } = useAuthData();
   const navigate = useNavigate();
   const creatorRef = useRef(null);
+  const [stats, setStats] = useState({
+    subjects: 15,
+    topics: 500,
+    pyqs: 2000,
+    mockTests: 50,
+    videos: 100,
+    formulaSheets: 50,
+    roadmaps: 12,
+    resources: 500,
+    learners: 2000,
+  });
 
   useEffect(() => {
+    const apiBase = import.meta.env.VITE_API_URL || 'https://gatenexa-api.onrender.com/api';
+    fetch(`${apiBase}/landing/stats`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.data) {
+          const stats = {
+            subjects: d.data.subjects || 15,
+            topics: d.data.topics || 500,
+            pyqs: d.data.pyqs || d.data.resources || 2000,
+            mockTests: d.data.mockTests || d.data.mocks || 50,
+            videos: d.data.videos || 100,
+            formulaSheets: d.data.formulaSheets || 50,
+            roadmaps: d.data.roadmaps || 12,
+            resources: d.data.resources || 500,
+            learners: d.data.learners || 2000,
+          };
+          setStats(stats);
+          // Cache for other components (e.g., AnimatedStatistics widget)
+          window.__landingStats = stats;
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -404,12 +536,15 @@ export default function LandingPage() {
         @keyframes float { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
         @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 25px rgba(139,92,246,0.2), 0 0 50px rgba(139,92,246,0.05); } 50% { box-shadow: 0 0 35px rgba(139,92,246,0.3), 0 0 70px rgba(139,92,246,0.1), 0 0 120px rgba(34,211,238,0.05); } }
         @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes lightSweep { 0% { transform: translateX(-100%); } 50% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        @keyframes notifBadgePulse { 0%,100% { transform: scale(1); box-shadow: 0 2px 8px rgba(244,63,94,0.5); } 50% { transform: scale(1.08); box-shadow: 0 2px 14px rgba(244,63,94,0.7); } }
         .animate-float { animation: float 5s ease-in-out infinite; }
         .animate-pulse-glow { animation: pulse-glow 4s ease-in-out infinite; }
         .animate-gradient { animation: gradient-shift 8s ease infinite; background-size: 200% 200%; }
         .glass-creator { background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(109,40,217,0.06), rgba(245,158,11,0.02)); backdrop-filter: blur(24px); border: 1px solid rgba(139,92,246,0.15); transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
         .glass-creator:hover { border-color: rgba(139,92,246,0.35); box-shadow: 0 0 30px rgba(139,92,246,0.12), 0 0 60px rgba(109,40,217,0.08), 0 0 100px rgba(34,211,238,0.04); transform: translateY(-3px); }
         .timeline-line { background: linear-gradient(180deg, #8B5CF6, #6D28D9, #F59E0B); }
+        .nav-link-hover:hover .nav-underline { width: 60%; }
       `}</style>
 
       <GlobalLivingWallpaper />
@@ -481,10 +616,10 @@ export default function LandingPage() {
       <section className="relative z-10 px-6 py-16 max-w-4xl mx-auto">
         <AnimatedSection>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-            <Suspense fallback={<div className="h-20 rounded-xl bg-white/[0.02]" />}><AnimatedCounter end={15} suffix="+" label="Subjects" /></Suspense>
-            <Suspense fallback={<div className="h-20 rounded-xl bg-white/[0.02]" />}><AnimatedCounter end={500} suffix="+" label="Topics" duration={2500} /></Suspense>
-            <Suspense fallback={<div className="h-20 rounded-xl bg-white/[0.02]" />}><AnimatedCounter end={2000} suffix="+" label="PYQs" duration={3000} /></Suspense>
-            <Suspense fallback={<div className="h-20 rounded-xl bg-white/[0.02]" />}><AnimatedCounter end={50} suffix="+" label="Mock Tests" /></Suspense>
+            <Suspense fallback={<div className="h-20 rounded-xl bg-white/[0.02]" />}><AnimatedCounter end={stats.subjects} suffix="+" label="Subjects" /></Suspense>
+            <Suspense fallback={<div className="h-20 rounded-xl bg-white/[0.02]" />}><AnimatedCounter end={stats.topics} suffix="+" label="Topics" duration={2500} /></Suspense>
+            <Suspense fallback={<div className="h-20 rounded-xl bg-white/[0.02]" />}><AnimatedCounter end={stats.pyqs} suffix="+" label="PYQs" duration={3000} /></Suspense>
+            <Suspense fallback={<div className="h-20 rounded-xl bg-white/[0.02]" />}><AnimatedCounter end={stats.mockTests} suffix="+" label="Mock Tests" /></Suspense>
           </div>
         </AnimatedSection>
       </section>
@@ -565,34 +700,34 @@ export default function LandingPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
               {
-                icon: '📚',
-                title: 'Organized Library',
-                desc: 'All notes, PYQs, and resources in one place — no more searching.'
+                icon: '🤖',
+                title: 'AI-Powered Coaching',
+                desc: 'Personalized study plan based on your progress, weaknesses, and learning style.'
               },
               {
-                icon: '🧠',
-                title: 'AI-Powered Plan',
-                desc: 'Personalized study plan based on your progress and weaknesses.'
+                icon: '📚',
+                title: 'Unified Learning Hub',
+                desc: 'All notes, PYQs, videos, and resources in one organized platform.'
               },
               {
                 icon: '🔄',
-                title: 'Smart Revision',
-                desc: 'Spaced repetition algorithm that reminds you when to revise.'
+                title: 'Smart Revision System',
+                desc: 'Spaced repetition algorithm that reminds you when to revise each topic.'
               },
               {
                 icon: '📊',
-                title: 'Detailed Analytics',
-                desc: 'Track every mistake and learn from your mock tests.'
+                title: 'Deep Analytics',
+                desc: 'Track every mistake, visualize progress, and learn from your mock tests.'
               },
               {
-                icon: '⚡',
-                title: 'Focus Mode',
-                desc: 'Built-in productivity tools to avoid burnout and stay focused.'
+                icon: '📅',
+                title: 'Intelligent Planning',
+                desc: 'AI-generated daily and weekly plans that adapt to your schedule.'
               },
               {
                 icon: '🎯',
-                title: 'Personalized Coaching',
-                desc: 'AI mentor that adapts to your learning style and goals.'
+                title: 'College Prediction',
+                desc: 'NEXA Predictor shows your chances at IITs, NITs, and top colleges.'
               },
             ].map((item, i) => (
               <StaggerItem key={item.title} index={i}>
@@ -608,11 +743,6 @@ export default function LandingPage() {
       </section>
 
 
-
-      {/* Gradient Divider */}
-      <div className="relative z-10 max-w-4xl mx-auto px-6">
-        <div className="h-[1px] w-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.3), rgba(34,211,238,0.3), transparent)' }} />
-      </div>
 
       {/* GATE Countdown */}
       <section className="relative z-10 px-6 py-16 max-w-4xl mx-auto">
@@ -655,12 +785,78 @@ export default function LandingPage() {
               const c = colors[i];
               return (
                 <StaggerItem key={f.title} index={i}>
-                  <FeatureCard feature={f} colors={c} />
+                  <FeatureCardOld feature={f} colors={c} />
                 </StaggerItem>
               );
             })}
           </div>
         </StaggerChildren>
+        </div>
+      </section>
+
+      {/* Everything You Need — Premium Marquee Showcase */}
+      <section className="relative z-10 py-20 sm:py-28 overflow-hidden">
+        <AnimatedSection>
+          <div className="text-center mb-14 px-6">
+            <div
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-medium mb-4"
+              style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.22)', color: '#A78BFA' }}
+            >
+              <svg viewBox="0 0 16 16" fill="none" className="w-3 h-3"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" /><path d="M8 4v4l3 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+              Everything You Need In One Place
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3 tracking-tight leading-tight">
+              Everything required for GATE preparation,
+              <br />
+              organized into one{' '}
+              <span
+                className="text-transparent bg-clip-text"
+                style={{ backgroundImage: 'linear-gradient(135deg, #C4B5FD, #67E8F9)' }}
+              >
+                intelligent platform.
+              </span>
+            </h2>
+          </div>
+        </AnimatedSection>
+
+        <ProductShowcase />
+
+        <div className="space-y-4 sm:space-y-5 mt-10">
+          <MarqueeRow
+            direction="left"
+            speed={42}
+            gap={20}
+            ariaLabel="Premium features row one"
+          >
+            {FEATURE_MARQUEE_ROW_1.map((f, i) => (
+              <FeatureCard
+                key={`r1-${i}-${f.title}`}
+                icon={f.icon}
+                title={f.title}
+                description={f.description}
+                accent={f.accent}
+                tagline={f.tagline}
+              />
+            ))}
+          </MarqueeRow>
+
+          <MarqueeRow
+            direction="right"
+            speed={38}
+            gap={20}
+            ariaLabel="Premium features row two"
+          >
+            {[...FEATURE_MARQUEE_ROW_2, ...FEATURE_MARQUEE_ROW_3].map((f, i) => (
+              <FeatureCard
+                key={`r2-${i}-${f.title}`}
+                icon={f.icon}
+                title={f.title}
+                description={f.description}
+                accent={f.accent}
+                tagline={f.tagline}
+              />
+            ))}
+          </MarqueeRow>
         </div>
       </section>
 
@@ -729,47 +925,6 @@ export default function LandingPage() {
             ))}
           </div>
         </StaggerChildren>
-      </section>
-
-      {/* AI Mentor Preview */}
-      <section className="relative z-10 px-6 py-16 max-w-4xl mx-auto">
-        <AnimatedSection>
-          <div className="rounded-2xl p-8 sm:p-10 text-center" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06), rgba(34,211,238,0.04))', border: '1px solid rgba(139,92,246,0.12)' }}>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-medium mb-4" style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', color: '#A78BFA' }}>
-              🤖 AI Mentor
-            </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3">Ask Anything About GATE</h3>
-            <p className="text-sm text-gray-400 mb-6 max-w-md mx-auto">
-              "How should I prepare DBMS?" "What are my weak topics?" 
-              "Create a study plan for this week."
-            </p>
-            <div
-              className="max-w-lg mx-auto rounded-xl p-4 text-left mb-5"
-              style={{ background: 'rgba(139,92,246,0.03)', border: '1px solid rgba(139,92,246,0.08)' }}
-            >
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs flex-shrink-0" style={{ background: 'rgba(139,92,246,0.2)' }}>
-                  🤖
-                </div>
-                <div>
-                  <p className="text-xs text-gray-300 leading-relaxed">
-                    Based on your recent progress, I recommend focusing on <span className="text-white font-semibold">Operating Systems</span> this week. 
-                    Your OS completion is at 42% and your PYQ accuracy dropped from 82% to 65%. 
-                    Solve 20 OS PYQs and revise the process synchronization chapter.
-                  </p>
-                  <span className="text-[9px] text-gray-600 mt-2 block">AI Mentor · Just now</span>
-                </div>
-              </div>
-            </div>
-            <Link
-              to={user ? '/mentor' : '/register'}
-              className="inline-flex items-center gap-2 text-xs font-medium px-5 py-2.5 rounded-xl transition-all hover:-translate-y-0.5"
-              style={{ background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)', color: 'white' }}
-            >
-              {user ? 'Open AI Mentor' : 'Try AI Mentor Free'} →
-            </Link>
-          </div>
-        </AnimatedSection>
       </section>
 
       {/* Content Hub — Browse All Insights */}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuthData } from '../../context/AuthContext';
 import { BRAND } from '../../design/tokens';
 import PremiumGiftCard from '../referral/PremiumGiftCard';
 
@@ -95,14 +95,61 @@ function GradientText({ children, gradient }) {
 }
 
 export default function FuturisticHero() {
-  const { user } = useAuth();
+  const { user } = useAuthData();
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
+  const [loadBrain, setLoadBrain] = useState(false);
   const sectionRef = useRef(null);
   const [heroOpacity, setHeroOpacity] = useState(1);
   const prefersReducedMotion = useRef(
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
+  const brainLoadedRef = useRef(false);
+
+  // Load brain scene when user scrolls near the hero section or interacts
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !brainLoadedRef.current) {
+          brainLoadedRef.current = true;
+          setLoadBrain(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px', threshold: 0.01 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Load brain scene ONLY on actual user interaction (click, scroll, keydown, touch)
+// NOT on page load or intersection observer (hero is visible on load)
+  useEffect(() => {
+    let loaded = false;
+    const loadOnInteraction = () => {
+      if (loaded) return;
+      loaded = true;
+      setLoadBrain(true);
+      // Remove all listeners after first interaction
+      document.removeEventListener('click', loadOnInteraction);
+      document.removeEventListener('keydown', loadOnInteraction);
+      document.removeEventListener('touchstart', loadOnInteraction);
+      document.removeEventListener('wheel', loadOnInteraction);
+    };
+    // Only load on explicit user interaction
+    document.addEventListener('click', loadOnInteraction, { once: true, passive: true });
+    document.addEventListener('keydown', loadOnInteraction, { once: true, passive: true });
+    document.addEventListener('touchstart', loadOnInteraction, { once: true, passive: true });
+    document.addEventListener('wheel', loadOnInteraction, { once: true, passive: true });
+    return () => {
+      document.removeEventListener('click', loadOnInteraction);
+      document.removeEventListener('keydown', loadOnInteraction);
+      document.removeEventListener('touchstart', loadOnInteraction);
+      document.removeEventListener('wheel', loadOnInteraction);
+    };
+  }, []);
 
   // Show content immediately, skip animation if reduced motion preferred
   useEffect(() => {
@@ -114,6 +161,7 @@ export default function FuturisticHero() {
   }, []);
 
   useEffect(() => {
+    if (window.innerWidth < 640) return;
     const el = sectionRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
@@ -136,8 +184,8 @@ export default function FuturisticHero() {
           50% { transform: translateY(-3px); }
         }
         @keyframes statusPulse {
-          0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
-          50% { opacity: 0.7; transform: scale(1.3); box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+          0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(16,185,129,0.0); }
+          50% { opacity: 0.9; transform: scale(1.1); box-shadow: 0 0 0 3px rgba(16,185,129,0); }
         }
         @keyframes badgeGlowPulse {
           0%, 100% { box-shadow: 0 0 24px rgba(139,92,246,0.08), 0 0 48px rgba(139,92,246,0.04); }
@@ -145,13 +193,20 @@ export default function FuturisticHero() {
         }
         .badge-float { animation: badgeFloat 7s ease-in-out infinite; }
         .badge-glow { animation: badgeGlowPulse 4s ease-in-out infinite; }
-        .status-dot { animation: statusPulse 2.5s ease-in-out infinite; }
+        .status-dot { animation: statusPulse 3.5s ease-in-out infinite; }
+        @media (max-width: 767px) {
+          section.min-h-0 h1 { font-size: 2rem !important; line-height: 1.15 !important; }
+          .text-[32px] { font-size: 32px !important; }
+          .text-lg { font-size: 1.1rem !important; line-height: 1.4 !important; }
+        }
       `}</style>
       {/* ΓòÉΓòÉΓòÉ FULL-SCREEN NEURAL BRAIN BACKGROUND (dimmed) ΓòÉΓòÉΓòÉ */}
       <div className={`absolute inset-0 z-0 transition-opacity duration-300 ${visible ? 'opacity-25' : 'opacity-0'}`}>
-        <Suspense fallback={null}>
-          <AIBrainScene />
-        </Suspense>
+        {loadBrain && (
+          <Suspense fallback={null}>
+            <AIBrainScene />
+          </Suspense>
+        )}
       </div>
 
       {/* ΓòÉΓòÉΓòÉ PURPLE GLOW BEHIND TEXT ΓòÉΓòÉΓòÉ */}
@@ -163,34 +218,21 @@ export default function FuturisticHero() {
       <div className="relative z-10 flex flex-col items-center w-full px-4 pb-6 sm:pb-16"
         style={{ paddingTop: 'var(--navbar-offset, 130px)' }}>
 
-        {/* Premium glass badge */}
-        <div className="badge-float badge-glow">
+        {/* AI-Powered GATE 2027 Preparation Platform */}
+        <div className="flex justify-center mb-6 transition-all duration-500" style={{ animationDelay: '200ms' }}>
           <div
-            className={`inline-flex items-center gap-2.5 px-5 py-2 rounded-full transition-all duration-500 cursor-default ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
+            className="inline-flex items-center gap-2.5 pl-3 pr-4 py-1.5 rounded-full"
             style={{
-              background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(109,40,217,0.06), rgba(34,211,238,0.02))',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(139,92,246,0.18)',
-              boxShadow: '0 0 24px rgba(139,92,246,0.08), 0 0 48px rgba(139,92,246,0.04), inset 0 1px 0 rgba(139,92,246,0.12)',
-              marginBottom: '24px',
-              transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.transform = 'scale(1.02) translateY(-1px)';
-              e.currentTarget.style.borderColor = 'rgba(139,92,246,0.4)';
-              e.currentTarget.style.boxShadow = '0 0 40px rgba(139,92,246,0.18), 0 0 80px rgba(139,92,246,0.08), inset 0 1px 0 rgba(139,92,246,0.16)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.transform = '';
-              e.currentTarget.style.borderColor = 'rgba(139,92,246,0.18)';
-              e.currentTarget.style.boxShadow = '0 0 24px rgba(139,92,246,0.08), 0 0 48px rgba(139,92,246,0.04), inset 0 1px 0 rgba(139,92,246,0.12)';
+              background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(17,17,24,0.55), rgba(34,211,238,0.05))',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
+              border: '1px solid rgba(139,92,246,0.22)',
+              boxShadow: '0 0 20px rgba(139,92,246,0.10), 0 0 40px rgba(139,92,246,0.04), inset 0 1px 0 rgba(139,92,246,0.10)',
             }}
           >
-            {/* Animated green status dot */}
             <span
-              className="status-dot block w-2 h-2 rounded-full shrink-0"
-              style={{ background: '#10B981', boxShadow: '0 0 6px rgba(16,185,129,0.5)' }}
+              className="status-dot block w-1.5 h-1.5 rounded-full shrink-0"
+              style={{ background: '#10B981', boxShadow: '0 0 5px rgba(16,185,129,0.55)' }}
             />
             <span
               className="text-[11px] sm:text-xs font-semibold tracking-[0.05em]"
@@ -213,14 +255,14 @@ export default function FuturisticHero() {
             {[
               { rank: 'AIR 27', sub: 'Your target', color: '#22D3EE', glow: 'rgba(34,211,238,0.15)' },
               { rank: 'AIR 108', sub: 'Achievable', color: '#8B5CF6', glow: 'rgba(139,92,246,0.15)' },
-              { rank: 'AIR 412', sub: 'Your first goal', color: '#F59E0B', glow: 'rgba(245,158,11,0.15)' },
+              { rank: 'AIR 1000', sub: 'Your first goal', color: '#F59E0B', glow: 'rgba(245,158,11,0.15)' },
             ].map((item, i) => (
-              <div
-                key={item.rank}
-                className="text-center animate-float"
-                style={{ animationDelay: `${i * 0.3}s`, animationDuration: '4s' }}
-              >
-                <div className="text-base sm:text-2xl md:text-3xl font-black font-mono tracking-tight transition-all duration-300 hover:scale-110"
+<div
+                  key={item.rank}
+                  className="text-center"
+                  style={{ animationDelay: `${i * 0.3}s`, animationDuration: '4s' }}
+                >
+                <div className="text-lg sm:text-2xl md:text-3xl font-black font-mono tracking-tight transition-all duration-300 hover:scale-110"
                   style={{
                     color: item.color,
                     textShadow: `0 0 30px ${item.glow}, 0 0 60px ${item.glow}`,
@@ -240,21 +282,21 @@ export default function FuturisticHero() {
 
         {/* Headline */}
         <div className={`text-center mb-6 transition-all duration-250 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-6'}`}>
-          <h1 className="text-2xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-tight" style={{ textShadow: '0 0 40px rgba(139,92,246,0.15), 0 0 80px rgba(139,92,246,0.06), 0 0 120px rgba(34,211,238,0.03)' }}>
+          <h1 className="text-[32px] sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-[1.15]" style={{ textShadow: '0 0 40px rgba(139,92,246,0.15), 0 0 80px rgba(139,92,246,0.06), 0 0 120px rgba(34,211,238,0.03)' }}>
             <span className="text-[#F8FAFC]">Build Your </span>
             <GradientText gradient="linear-gradient(135deg, #F0E8FF, #C4B5FD, #8B5CF6, #22D3EE)">
               AIR
             </GradientText>
           </h1>
-          <h1 className="text-2xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-tight mt-1" style={{ color: '#F8FAFC', textShadow: '0 0 40px rgba(139,92,246,0.15), 0 0 80px rgba(139,92,246,0.06), 0 0 120px rgba(34,211,238,0.03)' }}>
+          <h1 className="text-[32px] sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-[1.15] mt-1" style={{ color: '#F8FAFC', textShadow: '0 0 40px rgba(139,92,246,0.15), 0 0 80px rgba(139,92,246,0.06), 0 0 120px rgba(34,211,238,0.03)' }}>
             with an Adaptive
           </h1>
-          <h1 className="text-2xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-tight mt-1">
+          <h1 className="text-[32px] sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-[1.15] mt-1">
             <GradientText gradient="linear-gradient(135deg, #A78BFA, #8B5CF6, #6D28D9, #22D3EE)">
               AI Mentor
             </GradientText>
           </h1>
-          <p className="text-sm sm:text-base mt-4 max-w-md mx-auto font-medium" style={{ color: 'rgba(248,250,252,0.7)', textShadow: '0 2px 16px rgba(0,0,0,0.95), 0 0 30px rgba(139,92,246,0.08)' }}>
+          <p className="text-[17px] sm:text-base mt-3 max-w-md mx-auto font-medium" style={{ color: 'rgba(248,250,252,0.7)', textShadow: '0 2px 16px rgba(0,0,0,0.95), 0 0 30px rgba(139,92,246,0.08)' }}>
             Track. Practice. Revise. Predict. Conquer GATE 2027.
           </p>
         </div>

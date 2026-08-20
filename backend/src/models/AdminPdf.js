@@ -10,6 +10,7 @@ const adminPdfSchema = new mongoose.Schema({
   year: { type: Number },
   fileUrl: { type: String, required: true },
   publicId: { type: String, required: true },
+  fileId: { type: mongoose.Schema.Types.ObjectId, ref: 'MediaFile', default: null }, // MediaFile reference (single source of truth)
   fileSize: { type: Number },
   mimeType: { type: String, default: 'application/pdf' },
   isPublished: { type: Boolean, default: true },

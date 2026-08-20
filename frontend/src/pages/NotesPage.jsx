@@ -145,7 +145,7 @@ export default function NotesPage() {
               </div>
               <div className="grid md:grid-cols-2 gap-3">
                 {(grouped[expandedSubject] || []).map(r => (
-                  <button key={r.id} onClick={() => window.open(resourceService.fileUrl(r.filePath), '_blank')}
+                  <button key={r.id} onClick={() => resourceService.openFile(r.filePath).catch(e => console.error('Failed to open resource:', e))}
                     className="flex items-center gap-4 p-4 rounded-2xl text-left transition-all hover:scale-[1.01] group"
                     style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
                   >

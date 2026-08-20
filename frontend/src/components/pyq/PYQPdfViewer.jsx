@@ -1,4 +1,5 @@
-import PremiumPdfViewer from '../common/PremiumPdfViewer';
+import { lazy } from 'react';
+const PremiumPdfViewer = lazy(() => import('../common/PremiumPdfViewer'));
 
 export default function PYQPdfViewer({ subject, pdfUrl, startPage, endPage, onBack }) {
   return (

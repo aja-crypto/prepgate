@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuthData } from './AuthContext';
 
 const PROFILE_KEY = 'gatenexa_ai_profile';
 
@@ -54,7 +54,7 @@ function saveProfile(userId, profile) {
 }
 
 export function AiMentorProvider({ children }) {
-  const { user } = useAuth();
+  const { user } = useAuthData();
   const userId = user?.id || user?._id || 'guest';
   const [profile, setProfileState] = useState(() => loadProfile(userId));
   const [aiState, setAiState] = useState(DEFAULT_AI_STATE);

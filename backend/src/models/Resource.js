@@ -11,6 +11,7 @@ const ResourceSchema = new mongoose.Schema({
     required: true 
   },
   fileUrl: { type: String }, // Path to uploaded file
+  fileId: { type: mongoose.Schema.Types.ObjectId, ref: 'MediaFile', default: null }, // MediaFile reference (single source of truth)
   fileType: { type: String }, // mime-type
   fileSize: { type: Number },
   isPinned: { type: Boolean, default: false },

@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, lazy } from 'react';
 import { shortNoteService } from '../services/api';
 import { silentCatch } from '../utils/errorHandler';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { PageLoading } from '../components/common/GateLoadingScreen';
-import PremiumPdfViewer from '../components/common/PremiumPdfViewer';
+const PremiumPdfViewer = lazy(() => import('../components/common/PremiumPdfViewer'));
 
 export default function ShortNotesPage() {
   const [subjects, setSubjects] = useState([]);

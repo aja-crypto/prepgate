@@ -47,20 +47,34 @@ router.get('/', protect, async (req, res, next) => {
   try {
     if (requireMongo(res)) return;
     const mongoUserId = await resolveMongoUserId(req.user);
-    if (!mongoUserId) return res.json({ success: true, data: { notifications: [], total: 0, unreadCount: 0, page: 1, pages: 0 } });
+    if (!mongoUserId) return res.json({ success: true, data: { notifications: [], total: 0, unreadCount: 0, page: 1, pages: 0, prefs: null } });
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
     const skip = (page - 1) * limit;
-    const { unreadOnly, type } = req.query;
+    const { unreadOnly, type, includePrefs } = req.query;
     const filter = { user: mongoUserId };
     if (unreadOnly === 'true') filter.isRead = false;
     if (type) filter.type = type;
-    const [notifications, total, unreadCount] = await Promise.all([
-      Notification.find(filter).sort({ scheduledAt: -1 }).skip(skip).limit(limit).lean(),
+
+    // Single query with proper index usage - fetch notifications with pagination
+    const notifications = await Notification.find(filter)
+      .sort({ scheduledAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    // Parallel counts using the compound index
+    const [total, unreadCount] = await Promise.all([
       Notification.countDocuments(filter),
       Notification.countDocuments({ user: mongoUserId, isRead: false }),
     ]);
+
+    // Optionally include prefs to avoid separate API call
+    let prefs = null;
+    if (includePrefs === 'true') {
+      prefs = await ensurePrefs(mongoUserId);
+    }
 
     // If a user has no notifications at all AND has never been seeded, create default onboarding notifications
     if (total === 0) {
@@ -73,14 +87,14 @@ router.get('/', protect, async (req, res, next) => {
             Notification.countDocuments(filter),
             Notification.countDocuments({ user: mongoUserId, isRead: false }),
           ]);
-          return res.json({ success: true, data: { notifications: fresh, total: freshTotal, unreadCount: freshUnread, page, pages: Math.ceil(freshTotal / limit) } });
+          return res.json({ success: true, data: { notifications: fresh, total: freshTotal, unreadCount: freshUnread, page, pages: Math.ceil(freshTotal / limit), prefs } });
         } catch (e) {
           // If seeding fails, fall back to the empty result
         }
       }
     }
 
-    res.json({ success: true, data: { notifications, total, unreadCount, page, pages: Math.ceil(total / limit) } });
+    res.json({ success: true, data: { notifications, total, unreadCount, page, pages: Math.ceil(total / limit), prefs } });
   } catch (e) { next(e); }
 });
 

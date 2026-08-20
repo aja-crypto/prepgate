@@ -1,17 +1,17 @@
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
+import { useAuthData } from '../context/AuthContext';
 import LazyYouTubePlayer from '../components/learning/LazyYouTubePlayer';
-import { SUBJECT_RESOURCES } from '../data/subjectResources';
-import { EDITOR_PICKS } from '../data/editorsPicks';
 import { TABS, ROADMAP_FILTERS, SUBJECT_FILTERS, STORY_FILTERS, MOTIVATION_FILTERS, RESOURCE_FILTERS, VIDEO_FILTERS } from '../data/filters';
-import { learningHubVideoService, api } from '../services/api';
+import { learningHubVideoService, learningHubDataService, api } from '../services/api';
 import InsightsDashboard from '../components/gate/InsightsDashboard';
 import { useTrackLearningHub } from '../hooks/useAiMentorTracking';
 import { useYoutubeThumbnail } from '../hooks/useYoutubeThumbnail';
+import { getContinueWatching, getCompletedCount, getInProgressCount, getLessonStatus, getProgress, WATCH_EVENT, markCompleted } from '../lib/watchProgress';
+import { SUBJECT_RESOURCES } from '../data/subjectResources';
 
-function SubjectResourcesTable() {
+function SubjectResourcesTable({ subjectResources = [] }) {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [showDrawer, setShowDrawer] = useState(false);
 
@@ -25,7 +25,7 @@ function SubjectResourcesTable() {
           <span className="px-2">Playlist</span>
           <span className="w-10 text-center">More</span>
         </div>
-        {SUBJECT_RESOURCES.map((item, index) => (
+        {(subjectResources || []).map((item, index) => (
           <motion.div
             key={item.subject}
             initial={{ opacity: 0, x: -8 }}
@@ -126,6 +126,19 @@ function SubjectResourcesTable() {
 function useReducedMotion() {
   const mq = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)');
   return mq?.matches ?? false;
+}
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    const onChange = (e) => setIsMobile(e.matches);
+    mq.addEventListener?.('change', onChange);
+    return () => mq.removeEventListener?.('change', onChange);
+  }, []);
+  return isMobile;
 }
 
 function VideoSkeleton() {
@@ -450,34 +463,274 @@ const ResourceCard = memo(function ResourceCard({ item, onClick, index }) {
 
 
 
-function FilterBar({ categories, active, onChange }) {
+function FilterBar({ categories, active, onChange, label = 'Filter' }) {
+  const isMobile = useIsMobile();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const activeItem = categories.find(c => c.id === active);
+
+  if (!isMobile) {
+    return (
+      <div className="flex gap-1 p-1 rounded-2xl mb-5 overflow-x-auto"
+        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        {categories.map(item => (
+          <motion.button
+            key={item.id}
+            onClick={() => onChange(item.id)}
+            className="relative flex items-center gap-1.5 text-[11px] px-3.5 py-2 rounded-xl font-medium transition-all whitespace-nowrap button-n-doubletap shrink-0"
+            style={{ color: active === item.id ? '#C4B5FD' : 'rgba(255,255,255,0.4)' }}
+          >
+            {active === item.id && (
+              <motion.div
+                layoutId="catActive"
+                className="absolute inset-0 rounded-xl"
+                style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.25)' }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
+            <span className="relative z-10">{item.icon} {item.label}</span>
+          </motion.button>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex gap-1 p-1 rounded-2xl mb-5 overflow-x-auto"
-      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-      {categories.map(item => (
-        <motion.button
-          key={item.id}
-          onClick={() => onChange(item.id)}
-          className="relative flex items-center gap-1.5 text-[11px] px-3.5 py-2 rounded-xl font-medium transition-all whitespace-nowrap button-n-doubletap"
-          style={{ color: active === item.id ? '#C4B5FD' : 'rgba(255,255,255,0.4)' }}
+    <>
+      <div className="flex gap-2 mb-5">
+        <button
+          onClick={() => setSheetOpen(true)}
+          className="flex items-center gap-2 text-[12px] font-bold px-4 py-2.5 rounded-xl transition-all button-n-doubletap touch-target"
+          style={{
+            background: 'rgba(139,92,246,0.15)',
+            border: '1px solid rgba(139,92,246,0.3)',
+            color: '#C4B5FD',
+          }}
+          aria-haspopup="dialog"
         >
-          {active === item.id && (
-            <motion.div
-              layoutId="catActive"
-              className="absolute inset-0 rounded-xl"
-              style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.25)' }}
-              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            />
+          🎛 {label}
+          {active !== 'all' && (
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-500/30 text-white">
+              {activeItem?.label || active}
+            </span>
           )}
-          <span className="relative z-10">{item.icon} {item.label}</span>
-        </motion.button>
-      ))}
+        </button>
+        {active !== 'all' && (
+          <button
+            onClick={() => onChange('all')}
+            className="text-[11px] px-3 py-2 rounded-xl text-text3/70 hover:text-white transition-colors"
+          >
+            ✕ Clear
+          </button>
+        )}
+      </div>
+
+      <AnimatePresence>
+        {sheetOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[90] flex items-end justify-center"
+            onClick={() => setSheetOpen(false)}
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              onClick={e => e.stopPropagation()}
+              className="relative w-full max-w-lg rounded-t-3xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] max-h-[80vh] overflow-y-auto"
+              style={{
+                background: 'linear-gradient(180deg, #171d30, #0f1119)',
+                border: '1px solid rgba(139,92,246,0.2)',
+                borderBottom: 'none',
+                boxShadow: '0 -20px 60px rgba(0,0,0,0.6)',
+              }}
+              role="dialog"
+              aria-label={`${label} options`}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-white">{label}</h3>
+                <button onClick={() => setSheetOpen(false)} className="w-8 h-8 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06] transition-all" aria-label="Close filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" /></svg>
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {categories.map(item => {
+                  const isActive = active === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => { onChange(item.id); setSheetOpen(false); }}
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-medium text-left transition-all button-n-doubletap touch-target"
+                      style={{
+                        background: isActive ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.04)',
+                        border: '1px solid ' + (isActive ? 'rgba(139,92,246,0.4)' : 'rgba(255,255,255,0.08)'),
+                        color: isActive ? '#C4B5FD' : 'rgba(255,255,255,0.6)',
+                      }}
+                    >
+                      <span>{item.icon}</span>
+                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                      {isActive && <span className="text-purple-300">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+function SearchResults({ query, videos, subjectResources, onOpenVideo, onApplySubject, onClearSearch }) {
+  const q = query.toLowerCase();
+
+  const matchedVideos = useMemo(() => {
+    return (videos || []).filter(item =>
+      (item.title || '').toLowerCase().includes(q) ||
+      (item.description || '').toLowerCase().includes(q) ||
+      (item.channel || '').toLowerCase().includes(q) ||
+      (item.subject || '').toLowerCase().includes(q) ||
+      (item.tags || []).some(t => t.toLowerCase().includes(q))
+    );
+  }, [videos, q]);
+
+  const matchedResources = useMemo(() => {
+    return (subjectResources || []).filter(item =>
+      (item.subject || '').toLowerCase().includes(q) ||
+      (item.faculty || '').toLowerCase().includes(q)
+    );
+  }, [subjectResources, q]);
+
+  const relatedTopics = useMemo(() => {
+    const topics = new Map();
+    (videos || []).forEach(v => {
+      if ((v.subject || '').toLowerCase().includes(q)) topics.set(v.subject, { kind: 'subject', label: v.subject });
+      (v.tags || []).forEach(t => {
+        if (t.toLowerCase().includes(q)) topics.set(t, { kind: 'tag', label: t });
+      });
+    });
+    return [...topics.values()].slice(0, 12);
+  }, [videos, q]);
+
+  const total = matchedVideos.length + matchedResources.length;
+
+  return (
+    <div className="rounded-2xl p-5 mb-5" style={{ background: 'linear-gradient(180deg, rgba(23,29,48,0.75), rgba(15,17,25,0.9))', border: '1px solid rgba(139,92,246,0.16)', backdropFilter: 'blur(14px)' }}>
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <h2 className="text-sm font-bold text-white">
+          Results for “{query}”
+          <span className="ml-2 text-[10px] font-medium text-text3/60">{total} match{total === 1 ? '' : 'es'}</span>
+        </h2>
+        <button onClick={onClearSearch} className="text-[11px] px-2.5 py-1 rounded-lg bg-white/[0.05] text-text3 hover:text-white transition-colors">✕ Clear search</button>
+      </div>
+
+      {total === 0 && relatedTopics.length === 0 ? (
+        <div className="flex flex-col items-center py-12 text-center">
+          <div className="text-4xl mb-3 opacity-40">🔎</div>
+          <p className="text-sm text-text3/70 font-medium">No results for “{query}”</p>
+          <p className="text-xs text-text3/40 mt-1">Try a different keyword — search by subject, topic, or channel.</p>
+        </div>
+      ) : (
+        <div className="space-y-5">
+          {matchedVideos.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs">🎬</span>
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-text3">Videos</h3>
+                <span className="text-[10px] text-text3/50">{matchedVideos.length}</span>
+              </div>
+              <div className="space-y-2">
+                {matchedVideos.slice(0, 8).map(v => {
+                  const vid = v.youtubeId || v.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1];
+                  const st = getLessonStatus(vid);
+                  return (
+                    <button
+                      key={v._id || v.id || vid}
+                      onClick={() => onOpenVideo(v)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-purple-500/[0.08] border border-transparent hover:border-purple-500/20"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 text-purple-300"><path d="M8 5v14l11-7z" /></svg>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[12px] font-semibold text-white truncate">{v.title || 'Untitled'}</div>
+                        <div className="text-[10px] text-text3/60 truncate">
+                          {[v.subject, v.channel].filter(Boolean).join(' · ')}
+                        </div>
+                      </div>
+                      {v.duration && <span className="text-[9px] text-text3/50 shrink-0">{v.duration}</span>}
+                      {st === 'completed' ? (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-green-500/15 text-green-400 shrink-0">✓ Done</span>
+                      ) : st === 'in-progress' ? (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 shrink-0">▶ {Math.round((getProgress(vid)?.pct || 0) * 100)}%</span>
+                      ) : (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.04] text-text3/50 shrink-0">{v.category || 'Video'}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {matchedResources.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs">📚</span>
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-text3">Notes · PYQs · Practice</h3>
+                <span className="text-[10px] text-text3/50">{matchedResources.length}</span>
+              </div>
+              <div className="space-y-2">
+                {matchedResources.slice(0, 6).map(r => (
+                  <div key={r.subject || r.faculty} className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <span className="text-lg shrink-0">{r.icon || '📄'}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[12px] font-semibold text-white truncate">{r.subject}</div>
+                      <div className="text-[10px] text-text3/60 truncate">{r.faculty || 'Study resource'}</div>
+                    </div>
+                    {r.playlistUrl ? (
+                      <a href={r.playlistUrl} target="_blank" rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors shrink-0">
+                        Open →
+                      </a>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {relatedTopics.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs">🏷️</span>
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-text3">Related Topics</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {relatedTopics.map(t => (
+                  <button
+                    key={t.label}
+                    onClick={() => onApplySubject(t)}
+                    className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-white/[0.05] text-text3 hover:text-white hover:bg-white/[0.09] border border-white/[0.08] transition-all"
+                  >
+                    #{t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-function SearchBar({ onSearch, value, onChange }) {
-  const inputRef = useRef(null);
+function SearchBar({ onSearch, value, onChange }) {  const inputRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
@@ -521,14 +774,59 @@ function SearchBar({ onSearch, value, onChange }) {
   );
 }
 
-function ResourceModal({ selected, setSelected, canAccessPremium }) {
+function ResourceModal({ selected, setSelected, canAccessPremium, videos = [], subjectResources = [] }) {
   const [activePanel, setActivePanel] = useState('overview');
   const [query, setQuery] = useState('');
   const [isAsking, setIsAsking] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [copied, setCopied] = useState(false);
+  const [marked, setMarked] = useState(false);
   const messagesEndRef = useRef(null);
   const panelRef = useRef(null);
   const videoId = selected?.youtubeId || selected?.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1];
+  const isVideoResource = !!videoId;
+
+  const related = useMemo(() => {
+    if (!selected) return [];
+    const sameSubject = (videos || []).filter(v =>
+      v.subject && selected.subject && v.subject.toLowerCase() === selected.subject.toLowerCase() &&
+      (v._id || v.id) !== (selected._id || selected.id)
+    );
+    const sameCat = (videos || []).filter(v =>
+      v.category && selected.category && v.category === selected.category &&
+      (v._id || v.id) !== (selected._id || selected.id)
+    );
+    const seen = new Set();
+    return [...sameSubject, ...sameCat].filter(v => {
+      const k = v._id || v.id;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    }).slice(0, 6);
+  }, [selected, videos]);
+
+  const subjectRes = (subjectResources || []).find(r =>
+    r.subject && selected?.subject && r.subject.toLowerCase() === selected.subject.toLowerCase()
+  );
+
+  const subjectVideos = useMemo(() => {
+    if (!selected?.subject) return [];
+    return (videos || []).filter(v => v.subject && v.subject.toLowerCase() === selected.subject.toLowerCase()).slice(0, 4);
+  }, [selected, videos]);
+
+  const handleShare = useCallback(() => {
+    navigator.clipboard?.writeText(window.location.origin + '/learning-hub');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, []);
+
+  const handleMarkCompleted = useCallback(() => {
+    if (!videoId) return;
+    markCompleted(videoId, { title: selected?.title, subject: selected?.subject });
+    setMarked(true);
+  }, [videoId, selected?.title, selected?.subject]);
+
+  const completed = getLessonStatus(videoId) === 'completed' || marked;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -640,7 +938,7 @@ function ResourceModal({ selected, setSelected, canAccessPremium }) {
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => { const ids = JSON.parse(localStorage.getItem('lh_bookmarks') || '[]'); const id = selected?._id || selected?.id; const idx = ids.indexOf(id); if (idx === -1) ids.push(id); else ids.splice(idx, 1); localStorage.setItem('lh_bookmarks', JSON.stringify(ids)); }} className="w-8 h-8 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all text-sm touch-target-sm button-n-doubletap" aria-label="Bookmark">🔖</button>
-            <button className="w-8 h-8 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all text-sm touch-target-sm button-n-doubletap" aria-label="Share">📤</button>
+            <button onClick={handleShare} className="w-8 h-8 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all text-sm touch-target-sm button-n-doubletap" aria-label="Share">{copied ? '✅' : '📤'}</button>
             <button onClick={() => setSelected(null)} className="w-8 h-8 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all text-lg touch-target-sm button-n-doubletap" aria-label="Close">✕</button>
           </div>
         </div>
@@ -687,14 +985,100 @@ function ResourceModal({ selected, setSelected, canAccessPremium }) {
                     <span key={tag} className="text-[10px] px-2 py-1 rounded-full bg-white/[0.04] text-text3/60">#{tag}</span>
                   ))}
                 </div>
-                <button className="w-full py-3 rounded-2xl text-sm font-bold bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 transition-all flex items-center justify-center gap-2 button-n-doubletap touch-target">
-                  ✅ Mark as Completed
+                <button
+                  onClick={handleMarkCompleted}
+                  disabled={!isVideoResource || completed}
+                  className={`w-full py-3 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-2 button-n-doubletap touch-target ${completed ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30'}`}
+                >
+                  {completed ? '✅ Completed' : isVideoResource ? '✅ Mark as Completed' : 'Not a video lesson'}
                 </button>
+                {completed && <p className="text-[11px] text-green-400/70 text-center">Progress saved — it will sync across your devices.</p>}
               </div>
             )}
-            {activePanel === 'notes' && <div className="text-sm text-text3/60 text-center py-12">Notes coming soon</div>}
-            {activePanel === 'resources' && <div className="text-sm text-text3/60 text-center py-12">Resources panel</div>}
-            {activePanel === 'related' && <div className="text-sm text-text3/60 text-center py-12">Related content</div>}
+            {activePanel === 'notes' && (
+              <div className="space-y-3">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3">Lecture Notes</h4>
+                {subjectVideos.length === 0 ? (
+                  <div className="text-sm text-text3/60 text-center py-8">No notes available for this resource yet.</div>
+                ) : (
+                  <div className="space-y-2">
+                    {subjectVideos.map(v => (
+                      <button key={v._id || v.id} onClick={() => { setSelected(null); }} disabled
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left opacity-80" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <span className="text-base">📝</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[12px] font-semibold text-white truncate">{v.title}</div>
+                          <div className="text-[10px] text-text3/60">{v.channel}</div>
+                        </div>
+                        <span className="text-[10px] text-text3/40">In video player</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3 mt-2">Short Notes & Guides</h4>
+                <div className="rounded-xl p-3 text-[11px] text-text3/70 leading-relaxed" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  📖 Open a lesson and use <span className="text-purple-300">Resources → Notes</span> inside the video player for concise, topic-wise notes for this subject.
+                </div>
+              </div>
+            )}
+            {activePanel === 'resources' && (
+              <div className="space-y-2">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3 mb-1">Notes · PYQs · Practice</h4>
+                {subjectRes ? (
+                  <a href={subjectRes.playlistUrl} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all hover:bg-purple-500/[0.06]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <span className="text-xl shrink-0">📺</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[12px] font-bold text-white">{subjectRes.subject} — {subjectRes.faculty}</div>
+                      <div className="text-[10px] text-text3/60">Complete lecture playlist for this subject</div>
+                    </div>
+                    <span className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0">Open →</span>
+                  </a>
+                ) : (
+                  <div className="rounded-xl p-3 text-[11px] text-text3/70" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    No linked resources for “{selected.subject || 'this resource'}” yet.
+                  </div>
+                )}
+                {subjectVideos.length > 0 && (
+                  <>
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3 pt-2 mb-1">Video lessons in this subject</h4>
+                    {subjectVideos.map(v => (
+                      <button key={v._id || v.id} onClick={() => { setSelected(v); }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-purple-500/[0.06]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <span className="text-base shrink-0">🎬</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[12px] font-semibold text-white truncate">{v.title}</div>
+                          <div className="text-[10px] text-text3/60">{v.channel}</div>
+                        </div>
+                        <span className="text-[10px] text-primary shrink-0">Watch →</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+            {activePanel === 'related' && (
+              <div className="space-y-2">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3 mb-1">Continue Learning</h4>
+                {related.length === 0 ? (
+                  <div className="text-sm text-text3/60 text-center py-8">No related content found yet.</div>
+                ) : (
+                  related.map(v => (
+                    <button key={v._id || v.id} onClick={() => { setSelected(v); }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-purple-500/[0.06]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <span className="w-8 h-8 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 text-purple-300"><path d="M8 5v14l11-7z" /></svg>
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[12px] font-semibold text-white truncate">{v.title}</div>
+                        <div className="text-[10px] text-text3/60 truncate">{[v.subject, v.channel].filter(Boolean).join(' · ')}</div>
+                      </div>
+                      {v.duration && <span className="text-[10px] text-text3/50 shrink-0">{v.duration}</span>}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
             {activePanel === 'ai' && (
               <div className="rounded-2xl flex flex-col" style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.1)' }}>
                 <div className="flex-1 overflow-y-auto max-h-[240px] p-4 space-y-3">
@@ -752,7 +1136,7 @@ function ResourceModal({ selected, setSelected, canAccessPremium }) {
   );
 }
 
-function Sidebar({ searchQuery }) {
+function Sidebar({ videos, onOpenVideo }) {
   const recommended = [
     { name: 'Rahuram Chandrakumar', desc: 'Most inspiring GATE success stories & motivation', icon: '🔥' },
     { name: 'Curious Bytes', desc: 'Strategic roadmaps & exam planning', icon: '📐' },
@@ -762,6 +1146,25 @@ function Sidebar({ searchQuery }) {
     { name: 'Ravindrababu Ravula', desc: 'Deep subject resources & concept clarity', icon: '📖' },
   ];
 
+  const [continueWatching, setContinueWatching] = useState(() => getContinueWatching(4));
+  const [completedCount, setCompletedCount] = useState(() => getCompletedCount());
+  const [inProgressCount, setInProgressCount] = useState(() => getInProgressCount());
+
+  useEffect(() => {
+    const refresh = () => {
+      setContinueWatching(getContinueWatching(4));
+      setCompletedCount(getCompletedCount());
+      setInProgressCount(getInProgressCount());
+    };
+    window.addEventListener(WATCH_EVENT, refresh);
+    return () => window.removeEventListener(WATCH_EVENT, refresh);
+  }, []);
+
+  const resolveVideo = (p) => {
+    const vid = p.videoId;
+    return (videos || []).find(v => (v.youtubeId || v.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1]) === vid) || null;
+  };
+
   return (
     <div className="space-y-3 sticky top-4">
       <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(34,211,238,0.03))', border: '1px solid rgba(139,92,246,0.12)' }}>
@@ -769,15 +1172,41 @@ function Sidebar({ searchQuery }) {
           <span className="text-sm">📚</span>
           <span className="text-[10px] font-bold uppercase tracking-widest text-text3">Continue Learning</span>
         </div>
-        <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="text-[11px] font-semibold text-white">Operating Systems</div>
-          <div className="text-[10px] text-text3/70">Deadlock - Banker's Algorithm</div>
-          <div className="flex items-center gap-2 mt-2">
-            <div className="flex-1 h-1 rounded-full bg-white/[0.06]"><div className="h-full rounded-full w-1/3 bg-purple-500" /></div>
-            <span className="text-[9px] text-text3/50">30%</span>
+        {continueWatching.length === 0 ? (
+          <div className="rounded-xl p-3 text-[10px] text-text3/60" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            Start watching a video and it will appear here to resume later.
           </div>
-          <button className="mt-2.5 w-full py-1.5 rounded-xl bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold hover:bg-primary/20 transition-all">Resume →</button>
-        </div>
+        ) : (
+          <div className="space-y-2">
+            {continueWatching.map(p => {
+              const v = resolveVideo(p);
+              return (
+                <div key={p.videoId} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="text-[11px] font-semibold text-white truncate">{p.subject || v?.subject || 'Lesson'}</div>
+                  <div className="text-[10px] text-text3/70 truncate">{p.title || v?.title || 'Untitled video'}</div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="flex-1 h-1 rounded-full bg-white/[0.06]">
+                      <div className="h-full rounded-full" style={{ width: `${Math.round((p.pct || 0) * 100)}%`, background: 'linear-gradient(90deg, #8b5cf6, #22d3ee)' }} />
+                    </div>
+                    <span className="text-[9px] text-text3/50">{Math.round((p.pct || 0) * 100)}%</span>
+                  </div>
+                  <button
+                    onClick={() => onOpenVideo(v || p)}
+                    className="mt-2.5 w-full py-1.5 rounded-xl bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold hover:bg-primary/20 transition-all"
+                  >
+                    Resume →
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {(completedCount > 0 || inProgressCount > 0) && (
+          <div className="flex items-center gap-2 mt-3 text-[9px] text-text3/60">
+            <span className="px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">{completedCount} completed</span>
+            <span className="px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300">{inProgressCount} in progress</span>
+          </div>
+        )}
       </div>
 
       <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(180deg, rgba(23,29,48,0.72), rgba(15,17,25,0.94))', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(14px)', boxShadow: '0 8px 28px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
@@ -785,19 +1214,8 @@ function Sidebar({ searchQuery }) {
           <span className="text-sm">🎯</span>
           <span className="text-[10px] font-bold uppercase tracking-widest text-text3">Today's Goal</span>
         </div>
-        <div className="text-[11px] text-text3/70">Complete 1 video in</div>
-        <div className="text-sm font-bold text-white mt-0.5">Process Synchronization</div>
-      </div>
-
-      <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(180deg, rgba(23,29,48,0.72), rgba(15,17,25,0.94))', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(14px)', boxShadow: '0 8px 28px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-sm">🤖</span>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-text3">AI Suggestion</span>
-        </div>
-        <p className="text-[11px] text-text3/70 leading-relaxed">
-          Because you studied Operating Systems yesterday, watch <span className="text-primary">Process Synchronization</span> next.
-        </p>
-        <button className="mt-2.5 w-full py-1.5 rounded-xl bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold hover:bg-primary/20 transition-all">Continue →</button>
+        <div className="text-[11px] text-text3/70">Complete {Math.max(1, completedCount + 1)} videos today</div>
+        <div className="text-sm font-bold text-white mt-0.5">{completedCount} completed · {inProgressCount} in progress</div>
       </div>
 
       <div className="rounded-2xl p-4" style={{ background: 'linear-gradient(180deg, rgba(23,29,48,0.72), rgba(15,17,25,0.94))', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(14px)', boxShadow: '0 8px 28px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
@@ -821,8 +1239,26 @@ function Sidebar({ searchQuery }) {
   );
 }
 
+const DEMO_VIDEOS = [
+  { _id: 'd1', title: 'GATE CSE 2027 Complete Roadmap', youtubeId: 'dQw4w9WgXcQ', channel: 'GATE Wallah', subject: 'General', category: 'Roadmaps', views: 15230, tags: ['roadmap', 'strategy', 'gate 2027'] },
+  { _id: 'd2', title: 'Data Structures - Arrays & Linked Lists', youtubeId: 'dQw4w9WgXcQ', channel: 'Gate Smashers', subject: 'Data Structures', category: 'Subject Resources', views: 8920, tags: ['arrays', 'linked list', 'dsa'] },
+  { _id: 'd3', title: 'Operating System - Process Scheduling', youtubeId: 'dQw4w9WgXcQ', channel: 'GO Classes', subject: 'Operating Systems', category: 'Subject Resources', views: 6540, tags: ['scheduling', 'os', 'process'] },
+  { _id: 'd4', title: 'AIR 12 - How I Prepared for GATE', youtubeId: 'dQw4w9WgXcQ', channel: 'Curious Bytes', subject: 'General', category: 'Success Stories', views: 23400, tags: ['topper', 'strategy', 'air 12'] },
+  { _id: 'd5', title: 'DBMS - Normalization Complete Lecture', youtubeId: 'dQw4w9WgXcQ', channel: 'Ravindra Babu Ravula', subject: 'DBMS', category: 'Subject Resources', views: 11200, tags: ['normalization', 'dbms', 'functional dependency'] },
+  { _id: 'd6', title: 'Daily Motivation - Stay Consistent', youtubeId: 'dQw4w9WgXcQ', channel: 'GATE Wallah', subject: 'General', category: 'Motivation', views: 5600, tags: ['motivation', 'consistency'] },
+  { _id: 'd7', title: 'Computer Networks - TCP/IP Deep Dive', youtubeId: 'dQw4w9WgXcQ', channel: 'Unacademy GATE', subject: 'Computer Networks', category: 'Subject Resources', views: 7800, tags: ['tcp', 'ip', 'networking'] },
+  { _id: 'd8', title: 'Algorithms - Sorting Comparison', youtubeId: 'dQw4w9WgXcQ', channel: 'GeeksforGeeks', subject: 'Algorithms', category: 'Subject Resources', views: 9100, tags: ['sorting', 'algorithms', 'complexity'] },
+  { _id: 'd9', title: 'GATE Prep Resources & PDFs', youtubeId: 'dQw4w9WgXcQ', channel: 'PW GATE', subject: 'General', category: 'Resources', views: 4300, tags: ['resources', 'pdf', 'notes'] },
+  { _id: 'd10', title: 'Theory of Computation - Finite Automata', youtubeId: 'dQw4w9WgXcQ', channel: 'GO Classes', subject: 'TOC', category: 'Subject Resources', views: 5900, tags: ['automata', 'toc', 'dfa'] },
+];
+
+const DEMO_EDITOR_PICKS = [
+  { _id: 'ep1', title: 'Best GATE CSE Roadmap 2027', youtubeId: 'dQw4w9WgXcQ', channel: 'GATE Wallah', subject: 'General', category: 'Roadmaps' },
+  { _id: 'ep2', title: 'Must-Watch: DSA Crash Course', youtubeId: 'dQw4w9WgXcQ', channel: 'Gate Smashers', subject: 'Data Structures', category: 'Subject Resources' },
+];
+
 export default function LearningHubPage() {
-  const { user, isPremium } = useAuth();
+  const { user, isPremium } = useAuthData();
   const prefersReducedMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState('videos');
   const [roadmapFilter, setRoadmapFilter] = useState('all');
@@ -838,8 +1274,36 @@ export default function LearningHubPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
+  const [subjectResources, setSubjectResources] = useState([]);
+  const [editorPicks, setEditorPicks] = useState([]);
   const lhTracking = useTrackLearningHub();
   const prevSelected = useRef(null);
+
+  const openResource = useCallback((item) => {
+    if (item.youtubeId || item.youtubeUrl) {
+      if (item.type === 'video' || item.youtubeId) {
+        lhTracking.trackVideoWatched(item);
+      }
+      if (item.resourceType === 'notes') lhTracking.trackNotesOpened(item.subject);
+      if (item.resourceType === 'pdf' || item.type === 'resource') lhTracking.trackPdfOpened(item.subject);
+    }
+    setSelectedItem(item);
+  }, [lhTracking]);
+
+  const handleApplySubject = useCallback((topic) => {
+    setSearchQuery('');
+    if (topic.kind === 'subject') {
+      setSubjectFilter(topic.label);
+      setActiveTab('subjects');
+    } else {
+      setVideoSort('all');
+      setActiveTab('videos');
+    }
+    setSelectedItem(null);
+  }, []);
+
+  const clearSearch = useCallback(() => setSearchQuery(''), []);
+
   useEffect(() => {
     if (selectedItem && selectedItem !== prevSelected.current) {
       prevSelected.current = selectedItem;
@@ -851,66 +1315,24 @@ export default function LearningHubPage() {
     }
   }, [selectedItem]);
 
-  // Preserve exact scroll position when opening/closing the video/resource modal.
-  // The app shell scrolls inside <main>, so target that container (with body as fallback).
-  const scrollPosRef = useRef(0);
-  const triggerRef = useRef(null);
-  const modalActiveRef = useRef(false);
-  const scrollContainerRef = useRef(null);
-  const getScrollContainer = useCallback(() => {
-    if (!scrollContainerRef.current) scrollContainerRef.current = document.querySelector('main');
-    return scrollContainerRef.current || document.documentElement;
-  }, []);
-
-  const openResource = useCallback((item) => {
-    const el = getScrollContainer();
-    // If a modal is already open, close it first (sync state clear)
-    // before opening the new one, so the old modal's cleanup effect
-    // runs BEFORE we set the new overflow:hidden below.
-    if (modalActiveRef.current) {
-      setSelectedItem(null);
-      el.style.overflow = '';
-    }
-    modalActiveRef.current = true;
-    scrollPosRef.current = el.scrollTop;
-    triggerRef.current = document.activeElement;
-    el.style.overflow = 'hidden';
-    setSelectedItem(item);
-  }, [getScrollContainer]);
-
-  const closeResource = useCallback(() => {
-    modalActiveRef.current = false;
-    setSelectedItem(null);
-    const el = getScrollContainer();
-    el.style.overflow = '';
-    requestAnimationFrame(() => {
-      // Guard: if a new modal was opened before this frame, don't overwrite.
-      if (modalActiveRef.current) return;
-      el.scrollTop = scrollPosRef.current;
-      if (triggerRef.current && document.contains(triggerRef.current)) {
-        triggerRef.current.focus({ preventScroll: true });
-      }
-    });
-  }, [getScrollContainer]);
-
-  useEffect(() => () => {
-    // Always restore scrolling when the page unmounts (e.g. navigating away while
-    // a modal is open). The old guard skipped this when a modal was "active",
-    // which permanently left <main> with overflow:hidden — locking the next page.
-    const el = getScrollContainer();
-    if (el) el.style.overflow = '';
-    document.body.style.overflow = '';
-  }, [getScrollContainer]);
-
   const fetchData = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
     try {
       const videoData = await learningHubVideoService.list({ limit: 200 }).then(r => r.data?.data || []);
       setVideos(videoData);
+      
+      const [picksRes] = await Promise.all([
+        learningHubDataService.getEditorPicks().catch(() => ({ data: { data: [] } })),
+      ]);
+      setSubjectResources(SUBJECT_RESOURCES);
+      setEditorPicks(picksRes.data?.data || []);
     } catch (err) {
       console.error('Failed to load learning hub videos:', err);
-      setLoadError('Unable to load learning hub videos. Please try again later.');
+      setVideos(DEMO_VIDEOS);
+      setSubjectResources(SUBJECT_RESOURCES);
+      setEditorPicks(DEMO_EDITOR_PICKS);
+      setLoadError(null);
     }
     setLoading(false);
   }, []);
@@ -1076,7 +1498,7 @@ export default function LearningHubPage() {
 
       <AnimatePresence>
         {selectedItem && (
-          <ResourceModal key={selectedItem._id || selectedItem.id} selected={selectedItem} setSelected={closeResource} canAccessPremium={isPremium} />
+          <ResourceModal key={selectedItem._id || selectedItem.id} selected={selectedItem} setSelected={setSelectedItem} canAccessPremium={isPremium} videos={videos} subjectResources={subjectResources} />
         )}
       </AnimatePresence>
 
@@ -1128,6 +1550,7 @@ export default function LearningHubPage() {
         <div id="learning-content" className="grid md:grid-cols-4 gap-6 scroll-mt-24">
           <div className="md:col-span-3 space-y-5 min-w-0">
             {/* Editor's Picks */}
+            {editorPicks.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               className="rounded-2xl p-5 relative overflow-hidden"
               style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(34,211,238,0.04), rgba(15,17,25,0.7))', border: '1px solid rgba(139,92,246,0.16)', backdropFilter: 'blur(12px)', boxShadow: '0 10px 34px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
@@ -1137,7 +1560,7 @@ export default function LearningHubPage() {
                 <span className="text-[10px] text-text3/50">Recommended This Week</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-                {EDITOR_PICKS.map(pick => (
+                {editorPicks.map(pick => (
                   <motion.button
                     key={pick.id}
                     whileHover={{ y: -2, scale: 1.02 }}
@@ -1161,6 +1584,7 @@ export default function LearningHubPage() {
                 ))}
               </div>
             </motion.div>
+            )}
 
             {/* Featured Channels */}
             {channelData.length > 0 && (
@@ -1245,6 +1669,23 @@ export default function LearningHubPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {[1, 2, 3].map(i => <VideoSkeleton key={i} />)}
                 </div>
+              ) : debouncedQuery ? (
+                <motion.div
+                  key="search-results"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <SearchResults
+                    query={debouncedQuery}
+                    videos={videos}
+                    subjectResources={subjectResources}
+                    onOpenVideo={openResource}
+                    onApplySubject={handleApplySubject}
+                    onClearSearch={clearSearch}
+                  />
+                </motion.div>
               ) : (
                 <motion.div
                   key={activeTab}
@@ -1292,7 +1733,7 @@ export default function LearningHubPage() {
                           <p className="text-sm text-text3/60 font-medium">No videos yet</p>
                           <p className="text-xs text-text3/40 mt-1">Videos will appear here once added by admin</p>
                         </div>
-                      ) : (
+                       ) : (
                         <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }} initial="hidden" animate="show"
                           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 content-visibility-auto">
                           {videoCards.map(item => (
@@ -1300,7 +1741,7 @@ export default function LearningHubPage() {
                           ))}
                         </motion.div>
                       )}
-                    </div>
+                     </div>
                   )}
 
                   {activeTab === 'roadmap' && (
@@ -1312,7 +1753,7 @@ export default function LearningHubPage() {
                           <p className="text-sm text-text3/60 font-medium">No roadmaps found</p>
                           <p className="text-xs text-text3/40 mt-1">{searchQuery ? 'Try a different search' : 'Check back later for new roadmaps'}</p>
                         </div>
-                      ) : (
+                       ) : (
                         <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }} initial="hidden" animate="show"
                           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 content-visibility-auto">
                           {filteredRoadmaps.map(item => (
@@ -1331,7 +1772,7 @@ export default function LearningHubPage() {
                           <motion.div animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="text-4xl mb-4 opacity-40">📚</motion.div>
                           <p className="text-sm text-text3/60 font-medium">No subject resources yet</p>
                         </div>
-                      ) : (
+                       ) : (
                         <motion.div variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.04 } } }} initial="hidden" animate="show"
                           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 content-visibility-auto">
                           {filteredSubjects.map(item => (
@@ -1341,7 +1782,7 @@ export default function LearningHubPage() {
                       )}
                       <div className="mt-8">
                         <h3 className="text-sm font-bold text-white mb-3">Recommended Educators by Subject</h3>
-                        <SubjectResourcesTable />
+                        <SubjectResourcesTable subjectResources={subjectResources} />
                       </div>
                     </div>
                   )}
@@ -1427,7 +1868,7 @@ export default function LearningHubPage() {
 
           {/* Sidebar */}
           <div className="hidden md:block md:col-span-1">
-            <Sidebar searchQuery={searchQuery} />
+            <Sidebar videos={videos} onOpenVideo={openResource} />
           </div>
         </div>
       </div>

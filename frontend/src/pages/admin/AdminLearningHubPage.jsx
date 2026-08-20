@@ -329,7 +329,7 @@ export default function AdminLearningHubPage() {
     setLoading(true);
     try {
       const params = filterType ? `?type=${filterType}` : '';
-      const res = await adminApi.get(`/learning${params}`);
+      const res = await adminApi.get(`/admin/learning${params}`);
       setItems(res.data.data || []);
     } catch {
       toast.error('Failed to load content');

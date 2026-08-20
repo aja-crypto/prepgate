@@ -38,14 +38,24 @@ function calcProbabilityByScore(candidateScore, openingScore, closingScore) {
     const margin = (candidateScore - closingScore) / closingScore;
     return Math.min(100, Math.round(70 + margin * 30));
   }
-  // If score between opening and closing
-  if (candidateScore >= openingScore) {
-    const ratio = (candidateScore - openingScore) / (closingScore - openingScore);
+  // If opening is available and score between opening and closing
+  if (openingScore != null && candidateScore >= openingScore) {
+    const range = closingScore - openingScore;
+    if (range <= 0) return Math.round(50);
+    const ratio = (candidateScore - openingScore) / range;
     return Math.round(Math.max(15, ratio * 55));
   }
-  // Below opening, still possible but low
-  const deficit = (openingScore - candidateScore) / openingScore;
-  return Math.round(Math.max(0, 15 - deficit * 30));
+  // Below opening or opening unknown — still possible but low
+  if (openingScore != null && openingScore > 0) {
+    const deficit = (openingScore - candidateScore) / openingScore;
+    return Math.round(Math.max(0, 15 - deficit * 30));
+  }
+  // Opening unknown: use a conservative estimate based on distance from closing
+  const gap = closingScore - candidateScore;
+  const range = 80;
+  if (gap <= range * 0.3) return Math.round(45);
+  if (gap <= range * 0.6) return Math.round(25);
+  return Math.round(Math.max(0, 15 - (gap / range) * 15));
 }
 
 function getCollegeBlock(collegeName, probability, collegeType) {
@@ -117,7 +127,7 @@ function localPredict(input) {
       if (!catData) continue;
 
       const closingScore = catData.closing;
-      const openingScore = catData.opening || 1;
+      const openingScore = catData.opening != null ? catData.opening : null;
 
       const probability = calcProbabilityByScore(gateScore, openingScore, closingScore);
       if (probability <= 0) continue;

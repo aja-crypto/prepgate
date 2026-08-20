@@ -1,3 +1,15 @@
+/**
+ * !! WARNING: This script contains FABRICATED cutoff data generated from random formulas.
+ * !! DO NOT use this data for production predictions or user-facing displays.
+ * !! Both openingScore and closingScore are generated algorithmically, NOT from verified sources.
+ * !!
+ * !! This script is LEGACY and should not be run in production.
+ * !! The authoritative data lives in the MongoDB CcmtCutoff collection
+ * !! populated by verified CCMT/COAP data sources.
+ * !!
+ * !! If a real source does not provide openingScore, set it to null.
+ * !! NEVER fabricate openingScore from closingScore.
+ */
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
@@ -154,7 +166,9 @@ async function seed() {
             const catOffset = CAT_OFFSETS[cat] || 0;
             const baseClose = inst.baseClosing * progFactor * randomFactor - yearVariation;
             const closingScore = Math.round(baseClose + catOffset * 5);
-            const openingScore = Math.round(closingScore + 15 + rand() * 30);
+            // NEVER fabricate openingScore from closingScore.
+            // If a real source does not provide openingScore, set it to null.
+            const openingScore = null;
 
             if (closingScore < 100) continue;
 
@@ -173,6 +187,7 @@ async function seed() {
               state: inst.state,
               quota: 'AI',
               source: 'admin',
+              dataStatus: 'placeholder',
             });
           }
         }

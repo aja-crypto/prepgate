@@ -191,45 +191,121 @@ function httpsPostJson(urlStr, payload, headers, timeoutMs) {
 }
 
 /**
- * Generic AI API caller supporting OpenAI and DashScope (Aliyun)
+ * Streaming POST for OpenAI-compatible chat/completions endpoints that support
+ * SSE (`data: {...}` lines terminated by `data: [DONE]`). Forwards each content
+ * delta to `onDelta` as it arrives so time-to-first-token reaches the browser.
  */
-async function callAiApi(messages, options = {}) {
-  const apiKey = process.env.OPENROUTER_API_KEY || process.env.DASHSCOPE_API_KEY || process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    console.error('[callAiApi] No API key configured');
-    lastAiError = 'No API key configured';
-    lastAiMeta = { provider: null, model: null, status: null, reason: 'No API key configured', detail: 'No OPENROUTER_API_KEY / DASHSCOPE_API_KEY / OPENAI_API_KEY is set in the backend environment.', ts: new Date().toISOString() };
-    return null;
+function httpsPostStream(urlStr, payload, headers, timeoutMs, onDelta) {
+  return new Promise((resolve, reject) => {
+    let u;
+    try { u = new URL(urlStr); } catch (e) { return reject(new Error('Invalid endpoint URL')); }
+    const lib = u.protocol === 'https:' ? https : http;
+    const body = JSON.stringify(payload);
+    let collected = '';
+    const req = lib.request(u, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+        'Accept': 'text/event-stream',
+        ...headers,
+      },
+    }, (res) => {
+      const disposed = { done: false };
+      const flushLines = (chunk) => {
+        collected += chunk;
+        let idx;
+        while ((idx = collected.indexOf('\n')) !== -1) {
+          const line = collected.slice(0, idx).trim();
+          collected = collected.slice(idx + 1);
+          handleLine(line, disposed);
+        }
+      };
+      res.on('data', flushLines);
+      res.on('end', () => {
+        if (collected.trim()) handleLine(collected.trim(), disposed);
+        clearTimeout(hardTimer);
+        resolve({ status: res.statusCode, headers: res.headers });
+      });
+      res.on('error', (err) => { clearTimeout(hardTimer); reject(err); });
+    });
+    function handleLine(line, disposed) {
+      if (disposed.done) return;
+      if (!line.startsWith('data:')) return;
+      const data = line.slice(5).trim();
+      if (data === '[DONE]') { disposed.done = true; return; }
+      if (!data) return;
+      try {
+        const parsed = JSON.parse(data);
+        const delta = parsed?.choices?.[0]?.delta?.content;
+        if (typeof delta === 'string' && delta) onDelta(delta);
+      } catch (e) { /* ignore malformed SSE line */ }
+    }
+    const hardTimer = setTimeout(() => req.destroy(new Error('timeout')), timeoutMs || 60000);
+    req.on('error', (err) => { clearTimeout(hardTimer); reject(err); });
+    req.write(body);
+    req.end();
+  });
+}
+
+/**
+ * Builds the ordered provider chain (all online — no offline/local source).
+ * OpenAI is always preferred per product requirement (the AI assistant answers
+ * from OpenAI online); OpenRouter and DashScope act as ONLINE fallbacks when a
+ * higher-priority provider is unavailable/rate-limited, so real answers always
+ * reach the user. Skips providers whose key is absent.
+ */
+function buildProviderChain() {
+  const chain = [];
+  if (process.env.OPENAI_API_KEY) {
+    chain.push({
+      name: 'OpenAI',
+      key: process.env.OPENAI_API_KEY,
+      endpoint: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1/chat/completions',
+      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+      extraHeaders: {},
+      isOpenRouter: false,
+    });
   }
-
-  const isOpenRouter = !!process.env.OPENROUTER_API_KEY;
-  const isDashScope = !isOpenRouter && apiKey.startsWith('al-');
-  let endpoint, model;
-
-  if (isOpenRouter) {
-    endpoint = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1/chat/completions';
-    model = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
-  } else if (isDashScope) {
-    endpoint = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-    model = process.env.DASHSCOPE_MODEL || 'qwen-plus';
-  } else {
-    endpoint = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1/chat/completions';
-    model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  if (process.env.OPENROUTER_API_KEY) {
+    chain.push({
+      name: 'OpenRouter',
+      key: process.env.OPENROUTER_API_KEY,
+      endpoint: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1/chat/completions',
+      model: process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini',
+      extraHeaders: { 'HTTP-Referer': 'https://GateNexa.app', 'X-Title': 'GateNexa' },
+      isOpenRouter: true,
+    });
   }
+  if (process.env.DASHSCOPE_API_KEY) {
+    chain.push({
+      name: 'DashScope',
+      key: process.env.DASHSCOPE_API_KEY,
+      endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+      model: process.env.DASHSCOPE_MODEL || 'qwen-plus',
+      extraHeaders: {},
+      isOpenRouter: false,
+    });
+  }
+  return chain;
+}
 
-  console.log(`[callAiApi] Calling ${model} via ${isOpenRouter ? 'OpenRouter' : isDashScope ? 'DashScope' : 'OpenAI'}`);
+/** Per-provider AI call (single provider config) — used by callAiApi's chain. */
+async function callAiApiSingle(providerCfg, messages, options = {}) {
+  const { name: providerName, key: apiKey, endpoint, model, isOpenRouter, extraHeaders } = providerCfg;
+
+  console.log(`[callAiApi] Calling ${model} via ${providerName}`);
 
   const maxRetries = 1;
 
   // Fallback chain: if the configured model is rate-limited/unavailable (429/404),
-  // try other free models so the AI keeps working during peak load.
-  const isOpenRouterModelChain = process.env.OPENROUTER_API_KEY && !(options.noFallback);
+  // try other OpenAI models on OpenRouter so answers stay from OpenAI online.
+  const isOpenRouterModelChain = isOpenRouter && !(options.noFallback);
   const modelChain = isOpenRouterModelChain
-    ? [model, 'inclusionai/ling-3.0-flash:free', 'nvidia/nemotron-3-ultra-550b-a55b:free', 'google/gemma-4-26b-a4b-it:free']
+    ? [model, 'openai/gpt-4o-mini', 'openai/gpt-3.5-turbo', 'openai/gpt-4o']
     : [model];
 
   // ── Telemetry for this whole call ──
-  const providerName = isOpenRouter ? 'OpenRouter' : isDashScope ? 'DashScope' : 'OpenAI';
   const inputText = (messages || []).map(m => m.content || '').join(' ');
   const inputChars = inputText.length;
   const estInputTokens = estimateTokens(inputText);
@@ -281,7 +357,10 @@ async function callAiApi(messages, options = {}) {
 
         if (status === 429) {
           console.error(`[callAiApi] Rate limited (429) on ${activeModel}: ${errorDetail}`);
-          if (attempt < maxRetries) {
+          // Quota/auth-limited keys (e.g. insufficient_quota) cannot recover on
+          // retry — fail fast so the online provider chain moves to the next key.
+          const isQuotaExhausted = /quota|billing|insufficient|free.limit/i.test(errorDetail);
+          if (attempt < maxRetries && !isQuotaExhausted) {
             const retryAfter = parseInt(respHeaders?.['retry-after'] || '2', 10);
             console.log(`[callAiApi] Waiting ${retryAfter}s before retry...`);
             await new Promise(r => setTimeout(r, retryAfter * 1000));
@@ -395,6 +474,131 @@ async function callAiApi(messages, options = {}) {
     ok: false,
     fallbackReason: lastAiError || 'unknown_provider_error',
   });
+  return null;
+}
+
+/**
+ * Generic AI API caller supporting OpenAI / OpenRouter / DashScope (all online).
+ * Walks the provider chain (buildProviderChain) so a quota-limiting/invalid
+ * primary provider never blocks the answer — the next online provider is used.
+ * Returns the first successful text, or null if every provider failed.
+ */
+async function callAiApi(messages, options = {}) {
+  const chain = buildProviderChain();
+  if (!chain.length) {
+    console.error('[callAiApi] No API key configured');
+    lastAiError = 'No API key configured';
+    lastAiMeta = { provider: null, model: null, status: null, reason: 'No API key configured', detail: 'No OPENROUTER_API_KEY / DASHSCOPE_API_KEY / OPENAI_API_KEY is set in the backend environment.', ts: new Date().toISOString() };
+    return null;
+  }
+
+  for (let i = 0; i < chain.length; i++) {
+    const cfg = chain[i];
+    const text = await callAiApiSingle(cfg, messages, options);
+    if (text) {
+      lastProviderUsed = cfg.name;
+      return text;
+    }
+    if (i < chain.length - 1) {
+      console.log(`[callAiApi] ${cfg.name} failed, falling back to ${chain[i + 1].name} (online)`);
+    }
+  }
+  console.error('[callAiApi] All online providers failed');
+  return null;
+}
+
+/**
+ * Streaming AI chat caller. Walks the online provider chain (buildProviderChain):
+ * OpenAI is PRIMARY (product requirement), falling back to OpenRouter / DashScope
+ * when a higher-priority provider is rate-limited or unavailable. All providers
+ * are online — there is never an offline/local/cached answer source here.
+ *
+ * @returns {Promise<{text:string, provider:string, model:string}|null>} full text or null on failure.
+ */
+async function streamAiApi(messages, options = {}, onDelta) {
+  const chain = buildProviderChain();
+  if (!chain.length) {
+    lastAiError = 'No API key configured';
+    lastAiMeta = { provider: null, model: null, status: null, reason: 'No API key configured', detail: 'No OPENAI_API_KEY / OPENROUTER_API_KEY / DASHSCOPE_API_KEY is set in the backend environment.', ts: new Date().toISOString() };
+    return null;
+  }
+
+  const inputText = (messages || []).map(m => m.content || '').join(' ');
+  const callStartTs = Date.now();
+  const opts = options;
+
+  let lastError = null;
+  for (let i = 0; i < chain.length; i++) {
+    const { name: providerName, key: apiKey, endpoint, model, extraHeaders } = chain[i];
+    console.log(`[streamAiApi] Calling ${model} via ${providerName} (streaming)`);
+
+    const headers = {
+      'Authorization': `Bearer ${apiKey}`,
+      ...extraHeaders,
+    };
+
+    let fullText = '';
+    try {
+      const result = await httpsPostStream(
+        endpoint,
+        {
+          model,
+          messages,
+          temperature: opts.temperature || 0.7,
+          max_tokens: opts.max_tokens || 1500,
+          response_format: opts.response_format || { type: 'text' },
+          stream: true,
+        },
+        headers,
+        opts.timeoutMs || 60000,
+        (delta) => { fullText += delta; if (onDelta) onDelta(delta); }
+      );
+
+      if (!result || result.status < 200 || result.status >= 300) {
+        const detail = `HTTP ${result?.status}`;
+        console.error(`[streamAiApi] ${providerName} failed: ${detail}`);
+        lastError = `AI request failed (HTTP ${result?.status}). Please try again.`;
+        lastAiError = lastError;
+        lastAiMeta = { provider: providerName, model, status: result?.status, reason: lastError, ts: new Date().toISOString() };
+        // quota/timeout/auth on primary → try next online provider in the chain
+        continue;
+      }
+
+      if (!fullText) {
+        lastError = 'AI returned an empty streamed response.';
+        lastAiError = lastError;
+        lastAiMeta = { provider: providerName, model, status: result.status, reason: lastError, ts: new Date().toISOString() };
+        continue;
+      }
+
+      lastAiError = null;
+      lastAiMeta = null;
+      lastProviderUsed = providerName;
+      aiRequestLog.record({
+        provider: providerName,
+        model,
+        inputChars: inputText.length,
+        estInputTokens: estimateTokens(inputText),
+        outputChars: fullText.length,
+        estOutputTokens: estimateTokens(fullText),
+        latencyMs: Date.now() - callStartTs,
+        retries: i,
+        ok: true,
+        streamed: true,
+        fallbackReason: i > 0 ? `provider_fallback_from_${chain[0].name}` : null,
+      });
+      return { text: fullText, provider: providerName, model };
+    } catch (err) {
+      console.error(`[streamAiApi] Streaming error from ${providerName}:`, err.message);
+      lastError = `AI request failed: ${err.message}`;
+      lastAiError = lastError;
+      lastAiMeta = { provider: providerName, model, status: null, reason: 'AI request failed', detail: err.message, ts: new Date().toISOString() };
+      // network hiccup → try next online provider
+      continue;
+    }
+  }
+
+  console.error('[streamAiApi] All online providers failed');
   return null;
 }
 
@@ -931,9 +1135,74 @@ router.post('/chat', validateFields([
       }));
     }
 
-    // Thread conversationId into context so the offline fallback can keep
-    // per-conversation state (follow-ups must reference the previous answer).
+    // Thread conversationId into context so follow-ups reference the same conversation.
     context.conversationId = conversationId || context.conversationId || null;
+
+    // Streaming is requested by the assistant clients (Accept: text/event-stream
+    // or explicit stream flag). JSON path preserved for existing askCoach consumers.
+    const wantsStream = req.body.stream === true || /text\/event-stream/i.test(req.headers.accept || '');
+
+    if (wantsStream) {
+      res.status(200);
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache, no-transform');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no');
+      if (res.flushHeaders) res.flushHeaders();
+      const send = (obj) => {
+        if (!res.writableEnded) res.write(`data: ${JSON.stringify(obj)}\n\n`);
+      };
+
+      let response = null;
+      try {
+        response = await getAiCoachResponse(message, context, req.user, modePrompt, (delta) => {
+          send({ type: 'delta', content: delta });
+        });
+      } catch (err) {
+        console.error('[AI Coach] SSE unhandled error:', err.message);
+        response = { text: null, source: 'error', offlineError: 'AI chat error. Please try again.' };
+      }
+
+      if (response?.text) {
+        if (userId && conv) {
+          await Message.create({
+            conversation: conv._id,
+            role: 'assistant',
+            content: response.text,
+            metadata: { source: response.source || 'ai' },
+          });
+          conv.messageCount = (conv.messageCount || 0) + 1;
+          conv.lastMessageAt = new Date();
+          if (conv.messageCount <= 2) {
+            const aiTitle = response.text.slice(0, 100).replace(/\*+/g, '').trim();
+            conv.title = aiTitle.length > 10 ? aiTitle : 'AI Chat';
+          }
+          await conv.save();
+        }
+        let remaining = null;
+        if (!isAdmin) {
+          const quotaCheck = await checkAiQuota(userId);
+          remaining = { remaining: quotaCheck.remaining, limit: quotaCheck.limit, isPremium: quotaCheck.isPremium };
+        }
+        aiUsage.increment(true, Date.now() - chatStart);
+        await incrementAiUsage(req.user?._id?.toString());
+        send({
+          type: 'done',
+          content: response.text,
+          suggestions: response.suggestions?.length ? response.suggestions : ["What should I study today?", "Am I on track?", "Which subject should I prioritize?"],
+          source: response.source || 'ai',
+          provider: response.provider || lastProviderUsed || 'OpenAI',
+          remaining,
+        });
+      } else {
+        aiUsage.increment(false, Date.now() - chatStart);
+        send({
+          type: 'error',
+          content: response?.offlineError || lastAiError || 'AI service is temporarily unavailable. Please try again in a moment.',
+        });
+      }
+      return res.end();
+    }
 
     const response = await getAiCoachResponse(message, context, req.user, modePrompt);
     response.conversationId = conv?._id?.toString() || null;
@@ -968,11 +1237,19 @@ router.post('/chat', validateFields([
     aiUsage.increment(false, Date.now() - chatStart);
     console.error('[AI Coach] Unhandled error:', e.message);
     console.error('[AI Coach] Stack:', e.stack);
+    if (res.headersSent) {
+      try {
+        if (!res.writableEnded) {
+          res.write(`data: ${JSON.stringify({ type: 'error', content: 'AI chat error' })}\n\n`);
+        }
+      } catch (_) {}
+      return res.end();
+    }
     res.status(500).json({
       success: false,
       message: 'AI chat error',
       data: {
-        text: "I'm here to help! Based on your preparation data, focus on completing your weak subjects and solving PYQs daily. What specific topic would you like advice on?",
+        text: '',
         suggestions: ["What should I study today?", "Show my weak topics", "How to improve accuracy?"],
         conversationId: conv?._id?.toString() || null,
       },
@@ -1709,28 +1986,25 @@ function buildLocalFallback(message, context, mode = 'auto', fallbackReason = nu
   return autoResp;
 }
 
-async function getAiCoachResponse(message, context, user, modePrompt) {
+async function getAiCoachResponse(message, context, user, modePrompt, onToken) {
   console.log('[AI Coach] Starting getAiCoachResponse');
   console.log('[AI Coach] User message:', message);
-  console.log('[AI Coach] Context:', JSON.stringify(context, null, 2));
   context = context || {};
 
   // Active mode must be available to both the API path and the local fallback.
   const activeMode = context?.mode || 'auto';
 
   // Log API key presence (not the actual key!)
+  console.log('[AI Coach] OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);
   console.log('[AI Coach] OPENROUTER_API_KEY present:', !!process.env.OPENROUTER_API_KEY);
   console.log('[AI Coach] DASHSCOPE_API_KEY present:', !!process.env.DASHSCOPE_API_KEY);
-  console.log('[AI Coach] OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);
 
 try {
     lastAiError = null; // Clear stale errors at start of each request
     lastAiMeta = null;
-    const apiKey = process.env.OPENROUTER_API_KEY || process.env.DASHSCOPE_API_KEY || process.env.OPENAI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY || process.env.DASHSCOPE_API_KEY;
     if (apiKey) {
-      console.log('[AI Coach] API key found, calling callAiApi...');
-      const mdl = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
-      console.log('[AI Coach DEBUG] Provider:', 'OpenRouter', 'Model:', mdl);
+      console.log('[AI Coach] API key found, calling AI...');
       lastAiError = null;
       lastAiMeta = null;
       // Use frontend-provided modePrompt if available, otherwise fall back to a
@@ -1812,65 +2086,58 @@ COACHING RULES:
         { role: 'user', content: message },
       ];
 
-      const text = await callAiApi(messages, { max_tokens: 900, temperature: 0.7 });
+      const opts = { max_tokens: 900, temperature: 0.7 };
+      let streamedText = null;
+      let provider = null;
+      if (typeof onToken === 'function') {
+        const res = await streamAiApi(messages, opts, onToken);
+        streamedText = res?.text ?? null;
+        provider = res?.provider ?? null;
+      } else {
+        const text = await callAiApi(messages, opts);
+        streamedText = text;
+        provider = lastProviderUsed || null;
+      }
 
-      console.log('[AI Coach] callAiApi returned:', text?.substring(0, 100));
+      console.log('[AI Coach] AI returned:', streamedText?.substring(0, 100));
 
-      if (text) {
-        const lower = text.toLowerCase();
+      if (streamedText) {
+        const lower = streamedText.toLowerCase();
         const generic = ['i am an ai', 'i cannot', "i don't have access", 'as an ai', 'i apologize'];
         if (!generic.some(g => lower.includes(g))) {
           console.log('[AI Coach] Returning real AI response');
           lastAiError = null;
-          return { text, suggestions: ["What should I study today?", "Am I on track?", "Which subject should I prioritize?"], source: 'ai', provider: lastProviderUsed || 'AI' };
+          return { text: streamedText, suggestions: ["What should I study today?", "Am I on track?", "Which subject should I prioritize?"], source: 'ai', provider: provider || lastProviderUsed || 'AI' };
         } else {
-          console.log('[AI Coach] AI response contained generic phrases, falling back');
+          console.log('[AI Coach] AI response contained generic phrases');
           lastAiError = 'AI returned generic response';
         }
       } else {
-        console.log('[AI Coach] callAiApi returned null/empty, keep lastAiError set by callAiApi');
+        console.log('[AI Coach] AI returned null/empty, keep lastAiError set by AI caller');
       }
     } else {
-      console.log('[AI Coach] No API key found, falling back');
-      lastAiError = 'No OpenRouter API key configured';
+      console.log('[AI Coach] No API key found');
+      lastAiError = 'No OpenAI API key configured';
     }
   } catch (e) {
-    console.error('[AI Coach] API call failed, using local fallback:', e.message);
+    console.error('[AI Coach] API call failed:', e.message);
     if (!lastAiError) {
       lastAiError = 'The AI service is temporarily unavailable. Please try again later.';
     }
   }
 
-  // If the external AI failed, fall back to the local heuristic coach instead of
-  // surfacing an error to the student (AI service may be out of credits / rate limited)
-  if (lastAiError) {
-    console.log('[AI Coach] External AI unavailable:', lastAiError, '— using local coach fallback');
-    try {
-      const fallback = buildLocalFallback(message, context, activeMode, lastAiError);
-      return fallback;
-    } catch (e) {
-      console.error('[AI Coach] localCoachResponse threw:', e.message);
-      return {
-        text: "I can help with your GATE preparation! Focus on core subjects: DSA, OS, DBMS, and CN. Solve PYQs daily and revise regularly. What would you like to know?",
-        suggestions: ["What should I study today?", "Am I on track?", "Show my weak topics"],
-        source: 'heuristic',
-      };
-    }
-  }
-
-  // Fallback to local heuristic coach
-  try {
-    console.log('[AI Coach] Using localCoachResponse');
-    const localText = buildLocalFallback(message, context, activeMode, lastAiError);
-    return localText;
-  } catch (e) {
-    console.error('[AI Coach] localCoachResponse threw:', e.message);
-    return { 
-      text: "I can help with your GATE preparation! Focus on core subjects: DSA, OS, DBMS, and CN. Solve PYQs daily and revise regularly. What would you like to know?",
-      suggestions: ["What should I study today?", "Am I on track?", "Show my weak topics"],
-      source: 'heuristic',
-    };
-  }
+  // STRICT online-only: never answer from a local heuristic / offline fallback.
+  // If the external AI failed, surface an error so the UI shows a real failure
+  // instead of a fabricated offline answer (product requirement).
+  console.log('[AI Coach] External AI unavailable:', lastAiError, '— returning explicit error (no offline fallback)');
+  return {
+    text: null,
+    offlineError: lastAiError,
+    suggestions: ["What should I study today?", "Am I on track?", "Which subject should I prioritize?"],
+    source: 'error',
+    provider: lastProviderUsed || null,
+    offlineInfo: lastAiMeta || null,
+  };
 }
 
 async function buildGptAnalysis(data) {

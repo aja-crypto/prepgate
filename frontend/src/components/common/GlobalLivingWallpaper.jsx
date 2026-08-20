@@ -34,7 +34,8 @@ export default function GlobalLivingWallpaper() {
   const stateRef = useRef({
     nodes: [], scrollY: 0, mouseX: 0, mouseY: 0,
     width: 0, height: 0, raf: 0, startTime: 0,
-    reducedMotion: false,
+    reducedMotion: false, showcaseEngaged: false, showcaseOpacityTarget: 1, showcaseOpacityCurrent: 1,
+    ready: false,
   });
   const [ready, setReady] = useState(false);
 
@@ -80,8 +81,18 @@ export default function GlobalLivingWallpaper() {
     // ─── EVENT HANDLERS ─────────────────────────────────────────
     function onScroll() { s.scrollY = window.scrollY; }
     function onMouse(e) { s.mouseX = e.clientX; s.mouseY = e.clientY; }
+    function onShowcase(e) {
+      if (e && e.detail && e.detail.engaged) {
+        s.showcaseEngaged = true;
+        s.showcaseOpacityTarget = 0.35;
+      } else {
+        s.showcaseEngaged = false;
+        s.showcaseOpacityTarget = 1;
+      }
+    }
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('mousemove', onMouse, { passive: true });
+    window.addEventListener('gatenexa:showcase', onShowcase, { passive: true });
     onScroll();
 
     // ─── ANIMATION LOOP ─────────────────────────────────────────
@@ -92,6 +103,9 @@ export default function GlobalLivingWallpaper() {
       const scrollPct = maxScroll > 0 ? scrollY / maxScroll : 0;
       const parallax = scrollY * 0.04;
       const slow = s.reducedMotion ? 0.1 : 1;
+
+      s.showcaseOpacityCurrent = lerp(s.showcaseOpacityCurrent, s.showcaseOpacityTarget, 0.05);
+      canvas.style.opacity = String(s.ready ? (0.45 + 0.55 * s.showcaseOpacityCurrent) : 0);
 
       ctx.clearRect(0, 0, W, H);
 
@@ -284,6 +298,7 @@ export default function GlobalLivingWallpaper() {
       s.raf = requestAnimationFrame(animate);
     }
 
+    s.ready = true;
     s.raf = requestAnimationFrame(animate);
     setReady(true);
 
@@ -292,6 +307,7 @@ export default function GlobalLivingWallpaper() {
       window.removeEventListener('resize', resize);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('mousemove', onMouse);
+      window.removeEventListener('gatenexa:showcase', onShowcase);
     };
   }, []);
 
@@ -306,8 +322,9 @@ export default function GlobalLivingWallpaper() {
         height: '100vh',
         zIndex: 0,
         pointerEvents: 'none',
-        opacity: ready ? 1 : 0,
-        transition: 'opacity 1s ease-in',
+        opacity: 0,
+        willChange: 'opacity',
+        transform: 'translate3d(0,0,0)',
       }}
     />
   );

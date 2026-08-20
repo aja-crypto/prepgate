@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuthData } from '../context/AuthContext';
 import { useProgress } from '../context/ProgressContext';
 import { aiService } from '../services/api';
 import NeuralBackground from '../components/common/NeuralBackground';
@@ -25,7 +25,7 @@ const DAILY_TIPS = [
 ];
 
 export default function DailyCoachPage() {
-  const { user } = useAuth();
+  const { user } = useAuthData();
   const { topics, pyqs, mocks, gateFeatures } = useProgress();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
