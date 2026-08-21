@@ -209,20 +209,20 @@ app.use('/uploads', express.static(uploadsDir));
 // Cloudinary-aware resource serving: redirect to Cloudinary URL if available, else local fallback
 const MediaFile = require('./src/models/MediaFile');
 const resourcesDir = path.join(__dirname, '..', 'resources');
+const resourcesStatic = express.static(resourcesDir);
 
-app.use('/resources', async (req, res, next) => {
-  // Try Cloudinary redirect first
+app.use('/resources', (req, res, next) => {
   if (isMongoConnected()) {
-    try {
-      const legacyPath = `/resources${req.path}`;
-      const doc = await MediaFile.findOne({ legacy_path: legacyPath });
-      if (doc && doc.secure_url) {
-        return res.redirect(doc.secure_url);
-      }
-    } catch (e) { /* fall through to static */ }
+    const legacyPath = `/resources${req.path}`;
+    MediaFile.findOne({ legacy_path: legacyPath })
+      .then(doc => {
+        if (doc && doc.secure_url) return res.redirect(doc.secure_url);
+        resourcesStatic(req, res, next);
+      })
+      .catch(() => resourcesStatic(req, res, next));
+  } else {
+    resourcesStatic(req, res, next);
   }
-  // Local filesystem fallback
-  express.static(resourcesDir)(req, res, next);
 });
 
 // --- Correlation ID + Structured Logging ---
