@@ -285,7 +285,7 @@ function buildProviderChain() {
       name: 'Gemini',
       key: process.env.GEMINI_API_KEY,
       endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-      model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+      model: process.env.GEMINI_MODEL || 'gemini-flash-lite-latest',
       extraHeaders: {},
       isOpenRouter: false,
     });
