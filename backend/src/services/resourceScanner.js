@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { EMBEDDED_RESOURCES } = require('./embeddedResources');
 
 const RESOURCES_DIR = path.join(__dirname, '../..', 'resources');
 const INDEX_CACHE_PATH = path.join(__dirname, '../..', 'data', 'resource-index.json');
@@ -143,6 +144,12 @@ function buildIndex() {
   }
 
   resourceIndex = scanDirectory(RESOURCES_DIR);
+  
+  // Fallback to embedded data when filesystem is empty (e.g. Render ephemeral disk)
+  if (resourceIndex.length === 0 && EMBEDDED_RESOURCES.length > 0) {
+    console.log('[ResourceScanner] Filesystem empty, using embedded resource index');
+    resourceIndex = [...EMBEDDED_RESOURCES];
+  }
   
   // Sort by subject then title
   resourceIndex.sort((a, b) => a.subject.localeCompare(b.subject) || a.title.localeCompare(b.title));
