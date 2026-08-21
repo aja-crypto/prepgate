@@ -200,3 +200,5 @@ const EMBEDDED_RESOURCES = [
   {"id":"weekly-tests_CN_Test-08","title":"Test 08","subject":"Weekly-Tests","folder":"CN","topic":"Test 08","filePath":"weekly-tests/CN/Test-08.pdf","type":"pdf","size":283457,"updatedAt":"2026-06-08T16:28:42.639Z"},
   {"id":"weekly-tests_CN_Test-09","title":"Test 09","subject":"Weekly-Tests","folder":"CN","topic":"Test 09","filePath":"weekly-tests/CN/Test-09.pdf","type":"pdf","size":272916,"updatedAt":"2026-06-08T16:28:42.657Z"}
 ];
+
+module.exports = { EMBEDDED_RESOURCES };
