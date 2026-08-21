@@ -254,7 +254,12 @@ function httpsPostStream(urlStr, payload, headers, timeoutMs, onDelta) {
         if (typeof delta === 'string' && delta) onDelta(delta);
       } catch (e) { /* ignore malformed SSE line */ }
     }
-    const hardTimer = setTimeout(() => req.destroy(new Error('timeout')), timeoutMs || 60000);
+    const hardTimer = setTimeout(() => {
+      req.destroy(new Error('timeout'));
+    }, timeoutMs || 20000);
+    req.setTimeout(timeoutMs || 20000, () => {
+      req.destroy(new Error('socket timeout'));
+    });
     req.on('error', (err) => { clearTimeout(hardTimer); reject(err); });
     req.write(body);
     req.end();
