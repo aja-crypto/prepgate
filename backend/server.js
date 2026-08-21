@@ -208,7 +208,6 @@ app.use('/uploads', express.static(uploadsDir));
 
 // Cloudinary-aware resource serving: redirect to Cloudinary URL if available, else local fallback
 const MediaFile = require('./src/models/MediaFile');
-const { isMongoConnected } = require('./src/config/db');
 const resourcesDir = path.join(__dirname, '..', 'resources');
 
 app.use('/resources', async (req, res, next) => {
