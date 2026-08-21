@@ -337,21 +337,9 @@ export const resourceService = {
   aiSearch: (query) => api.post('/resources/ai-search', { query }),
   fileUrl: (filePath) => `/api/resources/file/${filePath}`,
   openFile: async (filePath) => {
-    const win = window.open('', '_blank');
-    try {
-      const res = await api.get(`/resources/file/${filePath}`, { responseType: 'blob' });
-      const blobUrl = URL.createObjectURL(res.data);
-      if (win) {
-        win.document.title = filePath.split('/').pop() || 'PDF';
-        win.location.href = blobUrl;
-      } else {
-        window.open(blobUrl, '_blank');
-      }
-      return blobUrl;
-    } catch (err) {
-      if (win) win.close();
-      throw err;
-    }
+    const url = `${api.defaults.baseURL}/resources/file/${encodeURIComponent(filePath)}`;
+    window.open(url, '_blank');
+    return url;
   },
 };
 
