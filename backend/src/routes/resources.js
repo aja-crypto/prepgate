@@ -5,19 +5,35 @@ const path = require('path');
 const fs = require('fs');
 const { protect } = require('../middleware/auth');
 const { searchResources, getSubjects, getBySubject, getIndex } = require('../services/resourceScanner');
+const MediaFile = require('../models/MediaFile');
+const { isMongoConnected } = require('../config/db');
 
 const RESOURCES_DIR = path.join(__dirname, '../..', 'resources');
 
-// Serve PDF files from /resources folder
-router.get('/file/:path(*)', protect, (req, res) => {
-  const filePath = path.join(RESOURCES_DIR, req.params.path);
+// Serve PDF files — Cloudinary redirect with local fallback
+router.get('/file/:path(*)', protect, async (req, res) => {
+  const relPath = req.params.path;
+  
+  // Try Cloudinary first via MediaFile lookup
+  if (isMongoConnected()) {
+    try {
+      const doc = await MediaFile.findOne({ legacy_path: `/resources/${relPath}`, category: 'resources' });
+      if (doc && doc.secure_url) {
+        return res.redirect(doc.secure_url);
+      }
+    } catch (e) { /* fall through to local */ }
+  }
+  
+  // Local filesystem fallback
+  const filePath = path.join(RESOURCES_DIR, relPath);
   if (!filePath.startsWith(RESOURCES_DIR)) {
     return res.status(403).json({ success: false, message: 'Access denied' });
   }
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ success: false, message: 'File not found' });
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
   }
-  res.sendFile(filePath);
+  
+  res.status(404).json({ success: false, message: 'File not found' });
 });
 
 // List all subjects

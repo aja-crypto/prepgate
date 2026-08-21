@@ -1,6 +1,8 @@
 const router = require('express').Router();
 const path = require('path');
 const fs = require('fs');
+const MediaFile = require('../models/MediaFile');
+const { isMongoConnected } = require('../config/db');
 
 const PAPERS_DIR = path.join(__dirname, '../../uploads/gate-papers');
 const MANIFEST_PATH = path.join(PAPERS_DIR, 'manifest.json');
@@ -50,9 +52,21 @@ router.get('/', (req, res) => {
   res.json({ success: true, count: filtered.length, years, data: filtered });
 });
 
-// GET /api/gate-papers/download/:filename — serve PDF (public)
-router.get('/download/:filename', (req, res) => {
+// GET /api/gate-papers/download/:filename — serve PDF (public), Cloudinary redirect with local fallback
+router.get('/download/:filename', async (req, res) => {
   const filename = path.basename(req.params.filename);
+  
+  // Try Cloudinary first
+  if (isMongoConnected()) {
+    try {
+      const doc = await MediaFile.findOne({ 'meta.filename': filename, category: 'gate-papers' });
+      if (doc && doc.secure_url) {
+        return res.redirect(doc.secure_url);
+      }
+    } catch (e) { /* fall through to local */ }
+  }
+  
+  // Local filesystem fallback
   const filePath = path.join(PAPERS_DIR, filename);
   if (!fs.existsSync(filePath)) {
     return res.status(404).json({ success: false, message: 'Paper not found' });

@@ -205,7 +205,26 @@ if (!require('fs').existsSync(uploadsDir)) require('fs').mkdirSync(uploadsDir, {
 if (!require('fs').existsSync(uploadsNotesDir)) require('fs').mkdirSync(uploadsNotesDir, { recursive: true });
 
 app.use('/uploads', express.static(uploadsDir));
-app.use('/resources', express.static(path.join(__dirname, '..', 'resources')));
+
+// Cloudinary-aware resource serving: redirect to Cloudinary URL if available, else local fallback
+const MediaFile = require('./src/models/MediaFile');
+const { isMongoConnected } = require('./src/config/db');
+const resourcesDir = path.join(__dirname, '..', 'resources');
+
+app.use('/resources', async (req, res, next) => {
+  // Try Cloudinary redirect first
+  if (isMongoConnected()) {
+    try {
+      const legacyPath = `/resources${req.path}`;
+      const doc = await MediaFile.findOne({ legacy_path: legacyPath });
+      if (doc && doc.secure_url) {
+        return res.redirect(doc.secure_url);
+      }
+    } catch (e) { /* fall through to static */ }
+  }
+  // Local filesystem fallback
+  express.static(resourcesDir)(req, res, next);
+});
 
 // --- Correlation ID + Structured Logging ---
 const { correlationId } = require('./src/middleware/correlationId');

@@ -5,6 +5,8 @@ const fs = require('fs');
 const mkdirp = require('mkdirp');
 const multer = require('multer');
 const { protect } = require('../middleware/auth');
+const MediaFile = require('../models/MediaFile');
+const { isMongoConnected } = require('../config/db');
 
 const NOTES_DIR = path.join(__dirname, '../../../resources/short-notes');
 
@@ -79,12 +81,15 @@ function scanNotesDir() {
     const folderPath = path.join(NOTES_DIR, folderName);
     const files = fs.readdirSync(folderPath)
       .filter(f => ALLOWED_EXTENSIONS.includes(path.extname(f).toLowerCase()))
-      .map(f => ({
-        name: f,
-        fileUrl: `/resources/short-notes/${folderName}/${f}`,
-        type: path.extname(f).toLowerCase() === '.pdf' ? 'pdf' : 'image',
-        size: fs.statSync(path.join(folderPath, f)).size,
-      }))
+      .map(f => {
+        const legacyPath = `/resources/short-notes/${folderName}/${f}`;
+        return {
+          name: f,
+          fileUrl: legacyPath,
+          type: path.extname(f).toLowerCase() === '.pdf' ? 'pdf' : 'image',
+          size: fs.statSync(path.join(folderPath, f)).size,
+        };
+      })
       .sort((a, b) => a.name.localeCompare(b.name));
     if (files.length) {
       subjects.push({
