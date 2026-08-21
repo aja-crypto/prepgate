@@ -8,6 +8,20 @@ const { protect } = require('../middleware/auth');
 
 const NOTES_DIR = path.join(__dirname, '../../../resources/short-notes');
 
+const EMBEDDED_SHORT_NOTES = [
+  { folder: 'OS', code: 'OS', name: 'Operating Systems', icon: '⚙️', color: '#a855f7', files: [{ name: 'os-notes.pdf', fileUrl: '/resources/short-notes/OS/os-notes.pdf', type: 'pdf', size: 12 }], count: 1, lastModified: Date.now() },
+  { folder: 'DBMS', code: 'DB', name: 'DBMS', icon: '🗄', color: '#06b6d4', files: [], count: 0, lastModified: Date.now() },
+  { folder: 'CN', code: 'CN', name: 'Computer Networks', icon: '🌐', color: '#ffd166', files: [], count: 0, lastModified: Date.now() },
+  { folder: 'Algorithms', code: 'AL', name: 'Algorithms', icon: '⚡', color: '#ff6b6b', files: [], count: 0, lastModified: Date.now() },
+  { folder: 'COA', code: 'CO', name: 'Computer Organization (COA)', icon: '🖥', color: '#06d6a0', files: [], count: 0, lastModified: Date.now() },
+  { folder: 'Compiler', code: 'CD', name: 'Compiler Design', icon: '🔧', color: '#4cc9f0', files: [], count: 0, lastModified: Date.now() },
+  { folder: 'Mathematics', code: 'EM', name: 'Engineering Mathematics', icon: '🔢', color: '#4f8dff', files: [], count: 0, lastModified: Date.now() },
+  { folder: 'TOC', code: 'TOC', name: 'Theory of Computation', icon: '🤖', color: '#f72585', files: [], count: 0, lastModified: Date.now() },
+  { folder: 'DS', code: 'DS', name: 'Programming & Data Structures', icon: '🐍', color: '#ff9f43', files: [], count: 0, lastModified: Date.now() },
+  { folder: 'DL', code: 'DL', name: 'Digital Logic', icon: '💻', color: '#7c5cfc', files: [], count: 0, lastModified: Date.now() },
+  { folder: 'Aptitude', code: 'APT', name: 'General Aptitude', icon: '🧮', color: '#43aa8b', files: [], count: 0, lastModified: Date.now() },
+];
+
 const FOLDER_TO_SUBJECT = {
   DBMS: { code: 'DB', name: 'DBMS', icon: '🗄', color: '#06b6d4' },
   OS: { code: 'OS', name: 'Operating Systems', icon: '⚙️', color: '#a855f7' },
@@ -55,7 +69,7 @@ function isSafeFolder(folderName) {
 }
 
 function scanNotesDir() {
-  if (!fs.existsSync(NOTES_DIR)) return [];
+  if (!fs.existsSync(NOTES_DIR)) return EMBEDDED_SHORT_NOTES;
   const subjects = [];
   const entries = fs.readdirSync(NOTES_DIR, { withFileTypes: true });
   entries.forEach(entry => {
@@ -82,7 +96,7 @@ function scanNotesDir() {
       });
     }
   });
-  return subjects.sort((a, b) => a.name.localeCompare(b.name));
+  return subjects.length ? subjects.sort((a, b) => a.name.localeCompare(b.name)) : EMBEDDED_SHORT_NOTES;
 }
 
 // GET /api/short-notes — list all subjects with their note files

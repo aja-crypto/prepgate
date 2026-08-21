@@ -13,6 +13,7 @@ const { aiQuota, FREE_DAILY_LIMIT, PREMIUM_DAILY_LIMIT } = require('../middlewar
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const { isMongoConnected } = require('../config/db');
+const { DEMO_EMAIL, isDemoUser } = require('../utils/permissions');
 
 let lastAiError = null;
 let lastAiMeta = null;      // { provider, model, status, reason, detail, ts } — for the offline details panel
@@ -107,7 +108,7 @@ router.get('/quota', protect, async (req, res) => {
   const quota = await checkAiQuota(userId);
   res.json({
     success: true,
-    data: { remaining: quota.remaining, limit: quota.limit, isPremium: quota.isPremium },
+    data: { remaining: quota.remaining, limit: quota.limit, isPremium: quota.isPremium, isGuest: quota.isGuest || false },
   });
 });
 
@@ -133,6 +134,12 @@ async function incrementAiUsage(userId) {
       const mockStore = require('../store/mockStore');
       const user = mockStore.findById(userId);
       if (!user) return;
+      const guest = isDemoUser(user);
+      if (guest) {
+        user.aiQuestionsUsed = (user.aiQuestionsUsed || 0) + 1;
+        await user.save();
+        return;
+      }
       const today = new Date().toISOString().slice(0, 10);
       const lastDate = user.aiQuestionsDate ? new Date(user.aiQuestionsDate).toISOString().slice(0, 10) : null;
       user.aiQuestionsUsed = lastDate === today ? (user.aiQuestionsUsed || 0) + 1 : 1;
@@ -141,6 +148,12 @@ async function incrementAiUsage(userId) {
       return;
     }
     const User = require('../models/User');
+    const user = await User.findById(userId).select('email');
+    const guest = user && isDemoUser(user);
+    if (guest) {
+      await User.updateOne({ _id: userId }, { $inc: { aiQuestionsUsed: 1 } });
+      return;
+    }
     await User.updateOne(
       { _id: userId },
       { $inc: { aiQuestionsUsed: 1 }, $setOnInsert: { aiQuestionsDate: new Date() } }
@@ -1004,7 +1017,7 @@ router.post('/recommendations', validateFields([
   }
 });
 
-// ── Daily quota check ──
+// ── Quota check ── Demo users: 5 LIFETIME uses (never reset). Free: 30/day. Premium: 200/day.
 async function checkAiQuota(userId) {
   if (!userId) return { allowed: true, remaining: 5, limit: 5, isGuest: true };
   try {
@@ -1013,6 +1026,12 @@ async function checkAiQuota(userId) {
       const mockStore = require('../store/mockStore');
       const user = mockStore.findById(userId);
       if (!user) return { allowed: true, remaining: 5, limit: 5, isGuest: true };
+      const guest = isDemoUser(user);
+      if (guest) {
+        const limit = 5;
+        const remaining = Math.max(0, limit - (user.aiQuestionsUsed || 0));
+        return { allowed: (user.aiQuestionsUsed || 0) < limit, remaining, limit, isPremium: false, isGuest: true };
+      }
       const today = new Date().toISOString().slice(0, 10);
       const lastDate = user.aiQuestionsDate ? new Date(user.aiQuestionsDate).toISOString().slice(0, 10) : null;
       if (lastDate !== today) {
@@ -1020,25 +1039,32 @@ async function checkAiQuota(userId) {
         user.aiQuestionsDate = new Date();
         await user.save();
       }
-      const limit = user.isPremium ? 100 : 5;
+      const limit = user.isPremium ? 200 : 30;
       const remaining = Math.max(0, limit - (user.aiQuestionsUsed || 0));
       return { allowed: (user.aiQuestionsUsed || 0) < limit, remaining, limit, isPremium: user.isPremium || false };
     }
     const User = require('../models/User');
-    const user = await User.findById(userId).select('aiQuestionsUsed aiQuestionsDate isPremium');
+    const user = await User.findById(userId).select('aiQuestionsUsed aiQuestionsDate isPremium email');
     if (!user) return { allowed: true, remaining: 5, limit: 5, isGuest: true };
+
+    const guest = isDemoUser(user);
+    if (guest) {
+      const limit = 5;
+      const remaining = Math.max(0, limit - (user.aiQuestionsUsed || 0));
+      return { allowed: user.aiQuestionsUsed < limit, remaining, limit, isPremium: false, isGuest: true };
+    }
 
     const today = new Date().toISOString().slice(0, 10);
     const lastDate = user.aiQuestionsDate ? user.aiQuestionsDate.toISOString().slice(0, 10) : null;
 
-    // Reset if new day
+    // Reset if new day (non-demo users only)
     if (lastDate !== today) {
       user.aiQuestionsUsed = 0;
       user.aiQuestionsDate = new Date();
       await user.save();
     }
 
-    const limit = user.isPremium ? 100 : 5;
+    const limit = user.isPremium ? 200 : 30;
     const remaining = Math.max(0, limit - user.aiQuestionsUsed);
     return { allowed: user.aiQuestionsUsed < limit, remaining, limit, isPremium: user.isPremium };
   } catch { return { allowed: true, remaining: 5, limit: 5, isGuest: true }; }
@@ -1054,17 +1080,20 @@ router.post('/chat', validateFields([
       return res.status(400).json({ success: false, message: 'Message cannot be empty.' });
     }
 
-    // Enforce daily quota
+    // Enforce quota
     const userId = req.user?._id;
   const isAdmin = req.user?.role === 'admin';
     if (!isAdmin) {
       const quota = await checkAiQuota(userId);
-      if (!quota.allowed && !quota.isGuest) {
+      if (!quota.allowed) {
         aiUsage.increment(false, Date.now() - chatStart);
+        const msg = quota.isGuest
+          ? "You have used all 5 free AI questions. Sign up for unlimited access."
+          : "You have reached your AI question limit. Upgrade to continue learning with AI.";
         return res.status(429).json({
           success: false,
-          message: "You have reached today's AI question limit.",
-          data: { remaining: 0, limit: quota.limit, resetAt: new Date().toISOString().slice(0, 10) },
+          message: msg,
+          data: { remaining: 0, limit: quota.limit, isPremium: quota.isPremium, isGuest: quota.isGuest || false },
         });
       }
     }

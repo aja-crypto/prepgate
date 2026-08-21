@@ -103,7 +103,16 @@ export default function OnboardingPanel({ colors, onComplete, fullWidth }) {
   var totalSteps = 12;
 
   useEffect(function() {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    var el = endRef.current;
+    if (!el) return;
+    var isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      setTimeout(function() {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+    } else {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages, isTyping, inputType]);
 
   useEffect(function() {
@@ -495,8 +504,9 @@ export default function OnboardingPanel({ colors, onComplete, fullWidth }) {
           <div style={{ display: 'flex', gap: 8 }}>
             <input value={inputVal} onChange={function(e) { setInputVal(e.target.value); }}
               placeholder={inputProps.placeholder || 'Type here...'} autoFocus
+              inputMode="text" autoComplete="off"
               style={{
-                flex: 1, padding: '12px 16px', borderRadius: 14, fontSize: 13,
+                flex: 1, padding: '12px 16px', borderRadius: 14, fontSize: 16,
                 background: 'rgba(255,255,255,0.04)', border: '1px solid ' + colors.border,
                 color: colors.text, outline: 'none', fontFamily: 'inherit',
               }} />
@@ -505,6 +515,7 @@ export default function OnboardingPanel({ colors, onComplete, fullWidth }) {
                 padding: '12px 20px', borderRadius: 14, fontSize: 13, fontWeight: 600,
                 background: 'linear-gradient(135deg, #7C3AED, #8B5CF6)',
                 border: 'none', color: 'white', cursor: 'pointer', whiteSpace: 'nowrap',
+                minHeight: 44, minWidth: 60,
               }}>
               Send
             </motion.button>
