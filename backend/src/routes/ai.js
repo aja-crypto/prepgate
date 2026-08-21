@@ -280,6 +280,16 @@ function buildProviderChain() {
       isOpenRouter: false,
     });
   }
+  if (process.env.GEMINI_API_KEY) {
+    chain.push({
+      name: 'Gemini',
+      key: process.env.GEMINI_API_KEY,
+      endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+      model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+      extraHeaders: {},
+      isOpenRouter: false,
+    });
+  }
   if (process.env.OPENROUTER_API_KEY) {
     chain.push({
       name: 'OpenRouter',
@@ -501,7 +511,7 @@ async function callAiApi(messages, options = {}) {
   if (!chain.length) {
     console.error('[callAiApi] No API key configured');
     lastAiError = 'No API key configured';
-    lastAiMeta = { provider: null, model: null, status: null, reason: 'No API key configured', detail: 'No OPENROUTER_API_KEY / DASHSCOPE_API_KEY / OPENAI_API_KEY is set in the backend environment.', ts: new Date().toISOString() };
+    lastAiMeta = { provider: null, model: null, status: null, reason: 'No API key configured', detail: 'No OPENAI_API_KEY / GEMINI_API_KEY / OPENROUTER_API_KEY / DASHSCOPE_API_KEY is set in the backend environment.', ts: new Date().toISOString() };
     return null;
   }
 
@@ -532,7 +542,7 @@ async function streamAiApi(messages, options = {}, onDelta) {
   const chain = buildProviderChain();
   if (!chain.length) {
     lastAiError = 'No API key configured';
-    lastAiMeta = { provider: null, model: null, status: null, reason: 'No API key configured', detail: 'No OPENAI_API_KEY / OPENROUTER_API_KEY / DASHSCOPE_API_KEY is set in the backend environment.', ts: new Date().toISOString() };
+    lastAiMeta = { provider: null, model: null, status: null, reason: 'No API key configured', detail: 'No OPENAI_API_KEY / GEMINI_API_KEY / OPENROUTER_API_KEY / DASHSCOPE_API_KEY is set in the backend environment.', ts: new Date().toISOString() };
     return null;
   }
 
@@ -781,7 +791,7 @@ router.post('/planner', validateFields([
     let aiError = null;
 
     try {
-      const apiKey = process.env.OPENROUTER_API_KEY || process.env.DASHSCOPE_API_KEY || process.env.OPENAI_API_KEY;
+      const apiKey = process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENROUTER_API_KEY || process.env.DASHSCOPE_API_KEY;
       if (!apiKey) {
         aiError = 'No AI API key configured. Set OPENROUTER_API_KEY in .env';
       } else {
@@ -986,7 +996,7 @@ router.post('/recommendations', validateFields([
     let aiError = null;
 
     try {
-      const apiKey = process.env.OPENROUTER_API_KEY || process.env.DASHSCOPE_API_KEY || process.env.OPENAI_API_KEY;
+      const apiKey = process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENROUTER_API_KEY || process.env.DASHSCOPE_API_KEY;
       if (!apiKey) {
         aiError = 'No AI API key configured. Using smart analysis instead.';
       } else {
@@ -2025,13 +2035,14 @@ async function getAiCoachResponse(message, context, user, modePrompt, onToken) {
 
   // Log API key presence (not the actual key!)
   console.log('[AI Coach] OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);
+  console.log('[AI Coach] GEMINI_API_KEY present:', !!process.env.GEMINI_API_KEY);
   console.log('[AI Coach] OPENROUTER_API_KEY present:', !!process.env.OPENROUTER_API_KEY);
   console.log('[AI Coach] DASHSCOPE_API_KEY present:', !!process.env.DASHSCOPE_API_KEY);
 
 try {
     lastAiError = null; // Clear stale errors at start of each request
     lastAiMeta = null;
-    const apiKey = process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY || process.env.DASHSCOPE_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENROUTER_API_KEY || process.env.DASHSCOPE_API_KEY;
     if (apiKey) {
       console.log('[AI Coach] API key found, calling AI...');
       lastAiError = null;
