@@ -126,17 +126,6 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       console.error('[AUTH-DEBUG] IS_INVALID_TOKEN: attempting refresh for', originalRequest.url);
 
-      if (originalRequest.method?.toUpperCase() === 'POST') {
-        console.error('[AUTH-DEBUG] CLEARING TOKENS: POST request with invalid token');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        delete api.defaults.headers.common['Authorization'];
-        if (window.location.pathname !== '/login') {
-          window.dispatchEvent(new CustomEvent('auth:expired'));
-        }
-        return Promise.reject(error);
-      }
-
       if (isRefreshing) {
         try {
           const token = await new Promise((resolve, reject) => {
