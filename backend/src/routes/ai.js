@@ -193,10 +193,12 @@ function httpsPostJson(urlStr, payload, headers, timeoutMs) {
         resolve({ status: res.statusCode, json, raw, headers: res.headers });
       });
     });
-    // Hard total-deadline timeout (fires even if data is trickling slowly)
     const hardTimer = setTimeout(() => {
       req.destroy(new Error('timeout'));
-    }, timeoutMs);
+    }, timeoutMs || 8000);
+    req.setTimeout(timeoutMs || 8000, () => {
+      req.destroy(new Error('socket timeout'));
+    });
     req.on('error', (err) => { clearTimeout(hardTimer); reject(err); });
     req.write(body);
     req.end();
@@ -256,8 +258,8 @@ function httpsPostStream(urlStr, payload, headers, timeoutMs, onDelta) {
     }
     const hardTimer = setTimeout(() => {
       req.destroy(new Error('timeout'));
-    }, timeoutMs || 20000);
-    req.setTimeout(timeoutMs || 20000, () => {
+    }, timeoutMs || 10000);
+    req.setTimeout(timeoutMs || 10000, () => {
       req.destroy(new Error('socket timeout'));
     });
     req.on('error', (err) => { clearTimeout(hardTimer); reject(err); });
@@ -324,7 +326,7 @@ async function callAiApiSingle(providerCfg, messages, options = {}) {
 
   console.log(`[callAiApi] Calling ${model} via ${providerName}`);
 
-  const maxRetries = 1;
+  const maxRetries = 0;
 
   // Fallback chain: if the configured model is rate-limited/unavailable (429/404),
   // try other OpenAI models on OpenRouter so answers stay from OpenAI online.
@@ -350,7 +352,7 @@ async function callAiApiSingle(providerCfg, messages, options = {}) {
     if (attempt > 0) { console.log(`[callAiApi] Retry attempt ${attempt}/${maxRetries}`); totalRetries++; }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s attempt — fail fast to next model / offline fallback
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     const reqStartTs = Date.now();
 
     const requestPayload = {
@@ -367,7 +369,7 @@ async function callAiApiSingle(providerCfg, messages, options = {}) {
         'Authorization': `Bearer ${apiKey}`,
         ...(isOpenRouter ? { 'HTTP-Referer': 'https://GateNexa.app', 'X-Title': 'GateNexa' } : {}),
       };
-      const { status, json: jsonBody, raw, headers: respHeaders } = await httpsPostJson(endpoint, requestPayload, headers, 15000);
+      const { status, json: jsonBody, raw, headers: respHeaders } = await httpsPostJson(endpoint, requestPayload, headers, 8000);
 
       clearTimeout(timeoutId);
 
