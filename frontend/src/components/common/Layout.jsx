@@ -177,7 +177,7 @@ const Layout = memo(function Layout() {
         <header className="sticky top-0 z-30 flex items-center gap-1.5 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-4 py-2 md:py-3 glass-header relative">
           <div className="header-hairline" />
           {/* ═══ MOBILE HEADER (grid, hidden on md+) ═══ */}
-          <div className="md:hidden absolute inset-0 z-10" style={{ display: 'grid', gridTemplateColumns: '48px 1fr 48px', alignItems: 'center', gap: '10px', padding: '10px 14px' }}>
+          <div className="mobile-top-header md:hidden absolute inset-0 z-10">
             <button
               id="mobile-hamburger"
               onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(true), 150); }}
