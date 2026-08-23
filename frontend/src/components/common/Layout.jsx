@@ -174,21 +174,43 @@ const Layout = memo(function Layout() {
       </aside>
 
       <main className="flex-1 overflow-y-auto flex flex-col min-w-0 relative z-10 transition-all duration-300 page-enter">
-        <header className="sticky top-0 z-30 grid items-center px-3 py-2 md:flex md:items-center md:gap-3 md:px-4 md:py-3 glass-header relative" style={{ gridTemplateColumns: 'auto 1fr auto', gridTemplateAreas: '"hamburger search notification"' }}>
-          <div className="header-hairline absolute inset-x-0 bottom-0 h-px" />
-          {/* Mobile sidebar toggle — fixed left */}
-          <button
-            id="mobile-hamburger"
-            onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(true), 150); }}
-            aria-label="Open navigation menu"
-            className="mobile-header-btn md:hidden flex items-center justify-center rounded-xl text-text2 hover:text-text hover:bg-white/10 active:scale-95 transition-all shrink-0"
-            style={{ gridArea: 'hamburger' }}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-5 h-5">
-              <path d="M3 12h18M3 6h18M3 18h18" strokeLinecap="round" />
-            </svg>
-          </button>
+        <header className="sticky top-0 z-30 relative glass-header md:flex md:items-center md:gap-3 md:px-4 md:py-3">
+          <div className="header-hairline" />
+          {/* ── Mobile layout: absolute-positioned sides + centered search ── */}
+          <div className="md:hidden flex items-center gap-2 px-3 py-2">
+            {/* Hamburger — absolute left */}
+            <button
+              id="mobile-hamburger"
+              onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(true), 150); }}
+              aria-label="Open navigation menu"
+              className="mobile-header-btn flex items-center justify-center rounded-xl text-text2 hover:text-text hover:bg-white/10 active:scale-95 transition-all shrink-0"
+              style={{ position: 'absolute', left: '12px', top: '8px', zIndex: 10 }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-5 h-5">
+                <path d="M3 12h18M3 6h18M3 18h18" strokeLinecap="round" />
+              </svg>
+            </button>
 
+            {/* Search — centered, with padding to avoid hamburger/notification */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              aria-label="Open search"
+              className="search-bar-glass flex-1 min-w-0 flex items-center gap-1.5 rounded-xl px-3 py-2 min-h-[44px] text-left ml-[52px] mr-[52px]"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="search-icon w-4 h-4 text-text3 shrink-0">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
+              </svg>
+              <span className="text-[11px] text-text3 truncate">Search...</span>
+            </button>
+
+            {/* Notification — absolute right */}
+            <div style={{ position: 'absolute', right: '12px', top: '8px', zIndex: 10 }}>
+              <NotificationPanel />
+            </div>
+          </div>
+
+          {/* ── Desktop layout: emblem + nav links ── */}
           {/* Left: GateNexa AI Emblem - clickable for brand intro */}
           <button
             onClick={() => window.dispatchEvent(new Event('open-brand-intro'))}
@@ -225,24 +247,22 @@ const Layout = memo(function Layout() {
             </svg>
           </button>
 
-          {/* Search Bar - flexible center, takes remaining space */}
+          {/* Desktop Search Bar */}
           <button
             onClick={() => setSearchOpen(true)}
             aria-label="Open search"
-            className="search-bar-glass md:flex-1 min-w-0 flex items-center gap-1.5 sm:gap-2 rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2 md:py-2.5 min-h-[44px] text-left"
-            style={{ gridArea: 'search' }}
+            className="hidden md:flex search-bar-glass flex-1 min-w-0 items-center gap-2 rounded-xl px-4 py-2.5 min-h-[44px] text-left"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="search-icon w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 text-text3 shrink-0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="search-icon w-5 h-5 text-text3 shrink-0">
               <circle cx="11" cy="11" r="7" />
               <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
             </svg>
-            <span className="text-[11px] sm:text-xs md:text-[13px] text-text3 truncate hidden sm:inline">Search topics, notes, PYQs...</span>
-            <span className="text-[11px] sm:text-xs md:text-[13px] text-text3 truncate sm:hidden">Search...</span>
+            <span className="text-[13px] text-text3 truncate">Search topics, notes, PYQs...</span>
             <kbd className="hidden lg:inline text-[11px] text-text3 bg-white/[0.04] border border-white/[0.08] px-2 py-0.5 rounded-md font-mono">⌘K</kbd>
           </button>
 
-          {/* Notification — fixed right */}
-          <div className="shrink-0" style={{ gridArea: 'notification' }}>
+          {/* Desktop Notification */}
+          <div className="hidden md:block shrink-0">
             <NotificationPanel />
           </div>
 
