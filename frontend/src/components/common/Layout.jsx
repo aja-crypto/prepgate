@@ -177,7 +177,7 @@ const Layout = memo(function Layout() {
         <header className="sticky top-0 z-30 flex items-center gap-1.5 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-4 py-2 md:py-3 glass-header relative">
           <div className="header-hairline" />
           {/* ═══ MOBILE HEADER (grid, hidden on md+) ═══ */}
-          <div className="mobile-top-header md:hidden absolute inset-0 z-10">
+          <div className="mobile-top-header md:hidden absolute inset-0 z-50 bg-[rgba(10,15,44,0.95)]">
             <button
               id="mobile-hamburger"
               onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(true), 150); }}
@@ -256,17 +256,19 @@ const Layout = memo(function Layout() {
           <button
             onClick={() => setSearchOpen(true)}
             aria-label="Open search"
-            className="search-bar-glass flex-1 min-w-0 max-w-[150px] sm:max-w-[210px] md:max-w-sm flex items-center gap-1.5 sm:gap-2 rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2 md:py-2.5 min-h-[44px] text-left"
+            className="hidden md:flex search-bar-glass flex-1 min-w-0 items-center gap-2 rounded-xl px-4 py-2.5 min-h-[44px] text-left"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="search-icon w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 text-text3 shrink-0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="search-icon w-5 h-5 text-text3 shrink-0">
               <circle cx="11" cy="11" r="7" />
               <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
             </svg>
-            <span className="text-[11px] sm:text-xs md:text-[13px] text-text3 truncate">Search topics, notes, PYQs...</span>
+            <span className="text-[13px] text-text3 truncate">Search topics, notes, PYQs...</span>
             <kbd className="hidden lg:inline text-[11px] text-text3 bg-white/[0.04] border border-white/[0.08] px-2 py-0.5 rounded-md font-mono">⌘K</kbd>
           </button>
 
-          <NotificationPanel />
+          <div className="hidden md:block shrink-0">
+            <NotificationPanel />
+          </div>
 
           {/* Main Navigation Icons with Labels */}
           <nav className="hidden xl:flex items-center gap-1.5">
