@@ -163,8 +163,51 @@
       display: grid;
       grid-template-columns: 48px 1fr 48px;
       align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
+      gap: 12px;
+      padding: 10px 16px;
+      min-height: 56px;
+    }
+    .mobile-top-navbar__menu {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.7);
+      transition: all 180ms ease;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+    }
+    .mobile-top-navbar__menu:active {
+      transform: scale(0.95);
+      background: rgba(139,92,246,0.15);
+    }
+    .mobile-top-navbar__search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      height: 44px;
+      padding: 0 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.45);
+      font-size: 13px;
+      transition: all 180ms ease;
+      -webkit-tap-highlight-color: transparent;
+      cursor: pointer;
+    }
+    .mobile-top-navbar__search:active {
+      border-color: rgba(139,92,246,0.4);
+      background: rgba(255,255,255,0.08);
+    }
+    .mobile-top-navbar__notification {
+      display: flex;
+      justify-content: flex-end;
     }
 
     .custom-scrollbar, .scrollbar-thin, [class*="overflow-y"] {
