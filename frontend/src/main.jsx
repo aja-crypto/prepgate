@@ -84,6 +84,7 @@ import { AiMentorProvider } from './context/AiMentorContext';
 import AiMentorTracker from './components/ai-mentor/AiMentorTracker';
 import { FocusProvider } from './context/FocusContext';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { checkReminders } from './utils/reminderUtils';
 import { initFirebasePush, isFirebaseConfigured } from './utils/firebase';
 import { silentCatch } from './utils/errorHandler';
@@ -145,7 +146,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </NotificationProvider>
             </DiagnosticsProvider>
             <Toaster position="top-right" />
-            {import.meta.env.PROD && window.location.hostname === 'gatenexa.vercel.app' && <Analytics />}
+            {import.meta.env.PROD && window.location.hostname === 'gatenexa.vercel.app' && (
+  <>
+    <Analytics />
+    <SpeedInsights />
+  </>
+)}
           </AdminAuthProvider>
         </BrowserRouter>
       </AuthProvider>
