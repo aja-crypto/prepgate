@@ -174,14 +174,15 @@ const Layout = memo(function Layout() {
       </aside>
 
       <main className="flex-1 overflow-y-auto flex flex-col min-w-0 relative z-10 transition-all duration-300 page-enter">
-        <header className="sticky top-0 z-30 grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2 md:flex md:items-center md:gap-3 md:px-4 md:py-3 glass-header relative">
-          <div className="header-hairline" />
+        <header className="sticky top-0 z-30 grid items-center px-3 py-2 md:flex md:items-center md:gap-3 md:px-4 md:py-3 glass-header relative" style={{ gridTemplateColumns: 'auto 1fr auto', gridTemplateAreas: '"hamburger search notification"' }}>
+          <div className="header-hairline absolute inset-x-0 bottom-0 h-px" />
           {/* Mobile sidebar toggle — fixed left */}
           <button
             id="mobile-hamburger"
             onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(true), 150); }}
             aria-label="Open navigation menu"
             className="mobile-header-btn md:hidden flex items-center justify-center rounded-xl text-text2 hover:text-text hover:bg-white/10 active:scale-95 transition-all shrink-0"
+            style={{ gridArea: 'hamburger' }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-5 h-5">
               <path d="M3 12h18M3 6h18M3 18h18" strokeLinecap="round" />
@@ -228,7 +229,8 @@ const Layout = memo(function Layout() {
           <button
             onClick={() => setSearchOpen(true)}
             aria-label="Open search"
-            className="search-bar-glass flex-1 min-w-0 flex items-center gap-1.5 sm:gap-2 rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2 md:py-2.5 min-h-[44px] text-left"
+            className="search-bar-glass md:flex-1 min-w-0 flex items-center gap-1.5 sm:gap-2 rounded-xl px-2.5 sm:px-3 md:px-4 py-2 sm:py-2 md:py-2.5 min-h-[44px] text-left"
+            style={{ gridArea: 'search' }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="search-icon w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 text-text3 shrink-0">
               <circle cx="11" cy="11" r="7" />
@@ -240,7 +242,7 @@ const Layout = memo(function Layout() {
           </button>
 
           {/* Notification — fixed right */}
-          <div className="shrink-0">
+          <div className="shrink-0" style={{ gridArea: 'notification' }}>
             <NotificationPanel />
           </div>
 
