@@ -190,14 +190,6 @@ const Layout = memo(function Layout() {
             </button>
 
             <button
-              onClick={() => window.dispatchEvent(new Event('open-brand-intro'))}
-              className="flex items-center gap-1.5 shrink-0"
-              aria-label="About GateNexa"
-            >
-              <img src="/icons/WORDMARK.jpeg" alt="GateNexa" className="h-7 w-auto rounded" />
-            </button>
-
-            <button
               onClick={() => setSearchOpen(true)}
               aria-label="Open search"
               className="search-bar-glass flex items-center gap-2 rounded-xl px-3 h-[40px] text-left overflow-hidden min-w-0"
