@@ -326,10 +326,17 @@ export const resourceService = {
   aiSearch: (query) => api.post('/resources/ai-search', { query }),
   fileUrl: (filePath) => `/api/resources/file/${filePath}`,
   openFile: async (filePath) => {
-    const response = await api.get(`/resources/file/${encodeURIComponent(filePath)}`, {
-      responseType: 'blob',
+    const token = localStorage.getItem('accessToken');
+    const url = `/api/resources/file/${encodeURIComponent(filePath)}`;
+    const response = await fetch(url, {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      redirect: 'follow',
     });
-    const blob = new Blob([response.data], { type: response.headers['content-type'] || 'application/pdf' });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || `Failed to open file (${response.status})`);
+    }
+    const blob = await response.blob();
     const blobUrl = URL.createObjectURL(blob);
     window.open(blobUrl, '_blank');
     return blobUrl;
