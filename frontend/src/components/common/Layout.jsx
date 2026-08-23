@@ -174,7 +174,7 @@ const Layout = memo(function Layout() {
       </aside>
 
       <main className="flex-1 overflow-y-auto flex flex-col min-w-0 relative z-10 transition-all duration-300 page-enter">
-        <header className="sticky top-0 z-30 flex items-center gap-1.5 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-4 py-2 md:py-3 glass-header relative">
+        <header className="sticky top-0 z-30 grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2 md:flex md:items-center md:gap-3 md:px-4 md:py-3 glass-header relative">
           <div className="header-hairline" />
           {/* Mobile sidebar toggle — fixed left */}
           <button
