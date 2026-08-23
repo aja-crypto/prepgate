@@ -22,11 +22,11 @@ function ProfileSheet({ onClose }) {
   const go = (fn) => { fn(); onClose(); };
 
   const items = [
-    { label: 'Free Premium', icon: '🎁', onClick: () => go(() => navigate('/referral')), right: !isPremium ? `${Math.min(100, Math.round(referralProgress))}%` : '⭐ Active' },
-    { label: 'Settings', icon: 'settings', onClick: () => go(() => navigate('/settings')) },
-    { label: 'Feedback', icon: 'feedback', onClick: () => go(() => navigate('/feedback')) },
-    { label: 'Help & Support', icon: 'help', onClick: () => go(() => navigate('/help')) },
-    { label: isDark ? 'Light Mode' : 'Dark Mode', icon: isDark ? 'sun' : 'moon', onClick: () => go(toggleTheme) },
+    { label: 'Free Premium', iconType: 'emoji', icon: '🎁', onClick: () => go(() => navigate('/referral')), right: !isPremium ? `${Math.min(100, Math.round(referralProgress))}%` : '⭐ Active' },
+    { label: 'Settings', iconType: 'component', icon: 'settings', onClick: () => go(() => navigate('/settings')) },
+    { label: 'Feedback', iconType: 'component', icon: 'feedback', onClick: () => go(() => navigate('/feedback')) },
+    { label: 'Help & Support', iconType: 'component', icon: 'help', onClick: () => go(() => navigate('/help')) },
+    { label: isDark ? 'Light Mode' : 'Dark Mode', iconType: 'component', icon: isDark ? 'sun' : 'moon', onClick: () => go(toggleTheme) },
   ];
 
   return (
@@ -63,7 +63,13 @@ function ProfileSheet({ onClose }) {
               onClick={item.onClick}
               className="w-full flex items-center gap-3.5 px-5 py-3.5 text-sm text-white/70 hover:text-white hover:bg-white/[0.04] transition-colors duration-150 min-h-[48px]"
             >
-              <span className="w-5 text-center text-base">{item.icon}</span>
+              <span className="w-5 h-5 flex items-center justify-center shrink-0">
+                {item.iconType === 'emoji' ? (
+                  <span className="text-base leading-none">{item.icon}</span>
+                ) : (
+                  <Icon name={item.icon} className="w-5 h-5 text-white/50" />
+                )}
+              </span>
               <span className="flex-1 text-left">{item.label}</span>
               {item.right && <span className="text-[11px] font-semibold text-purple-300/80">{item.right}</span>}
             </button>

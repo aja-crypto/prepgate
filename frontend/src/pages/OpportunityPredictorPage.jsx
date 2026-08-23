@@ -578,16 +578,20 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
       {/* Transparency Panel */}
       <TransparencyPanel result={result} />
 
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.35 }} className="flex gap-2 overflow-x-auto pb-1">
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.35 }}
+        className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scroll-smooth"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+      >
+        <style>{`.overflow-x-auto::-webkit-scrollbar { display: none; }`}</style>
         {tabs.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${activeTab === tab.id ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'text-slate-500 hover:text-slate-300 border border-transparent'}`}>
-            <tab.icon size={14} /> {tab.label}
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-medium whitespace-nowrap transition-all shrink-0 ${activeTab === tab.id ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'text-slate-500 hover:text-slate-300 border border-transparent'}`}>
+            <tab.icon size={14} className="shrink-0" /> <span className="truncate">{tab.label}</span>
           </button>
         ))}
         <button onClick={onReset}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-300 border border-transparent ml-auto">
-          <Target size={14} /> New Prediction
+          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-medium text-slate-500 hover:text-slate-300 border border-transparent ml-auto shrink-0">
+          <Target size={14} className="shrink-0" /> New Prediction
         </button>
       </motion.div>
 
