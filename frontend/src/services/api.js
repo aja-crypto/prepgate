@@ -34,16 +34,26 @@ export function getApiErrorMessage(error, fallback = 'Something went wrong') {
 }
 
 // ΓöÇΓöÇΓöÇ Request interceptor ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+const NO_CACHE_PATTERNS = ['/auth/me', '/auth/refresh', '/auth/demo', '/ai/quota', '/notifications', '/progress/sync', '/admin/', '/gate-vault/progress', '/gate-vault/stats', '/notes', '/live/dashboard', '/ai/context', '/notes/pinned'];
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
     const isGuest = localStorage.getItem('isGuest') === 'true';
-    const hasDefaultAuth = !!api.defaults.headers.common['Authorization'];
 
     if (isGuest) {
       config.headers['X-Demo-User'] = 'true';
     } else if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Auto-cache GET requests (skip auth/dynamic endpoints)
+    if (config.method === 'get' && !NO_CACHE_PATTERNS.some(p => config.url?.includes(p))) {
+      const cacheKey = `get:${config.url}`;
+      const cached = getCached(cacheKey);
+      if (cached) {
+        config.adapter = () => Promise.resolve({ data: cached, status: 200, statusText: 'OK', headers: {}, config });
+      }
     }
 
     return config;
@@ -75,6 +85,11 @@ const refreshAccessToken = async () => {
 
 api.interceptors.response.use(
   (response) => {
+    // Cache successful GET responses (skip auth/dynamic endpoints)
+    if (response.config?.method === 'get' && !NO_CACHE_PATTERNS.some(p => response.config?.url?.includes(p))) {
+      const cacheKey = `get:${response.config.url}`;
+      setCache(cacheKey, response.data);
+    }
     return response;
   },
   async (error) => {
@@ -327,19 +342,9 @@ export const resourceService = {
   fileUrl: (filePath) => `/api/resources/file/${filePath}`,
   openFile: async (filePath) => {
     const token = localStorage.getItem('accessToken');
-    const url = `/api/resources/file/${encodeURIComponent(filePath)}`;
-    const response = await fetch(url, {
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      redirect: 'follow',
-    });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.message || `Failed to open file (${response.status})`);
-    }
-    const blob = await response.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
-    return blobUrl;
+    const baseUrl = `/api/resources/file/${encodeURIComponent(filePath)}`;
+    const url = token ? `${baseUrl}?token=${encodeURIComponent(token)}` : baseUrl;
+    window.open(url, '_blank');
   },
 };
 

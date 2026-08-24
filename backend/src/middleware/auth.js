@@ -17,6 +17,11 @@ exports.protect = async (req, res, next) => {
     token = req.headers.authorization.split(' ')[1];
   }
 
+  // Fallback: accept token from query string (for window.open navigations)
+  if (!token && req.query.token) {
+    token = req.query.token;
+  }
+
   if (!token) {
     // Demo bypass is ONLY available in non-production environments
     const isDemoRequest = req.headers['x-demo-user'] === 'true';

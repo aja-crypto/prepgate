@@ -333,7 +333,7 @@
     /* Background optimization - mobile FPS */
     body::before { opacity: 0.008 !important; }
     body { background-image: radial-gradient(ellipse 100% 60% at 50% -30%, rgba(139,92,246,0.04), transparent) !important; }
-    canvas { opacity: 0.35 !important; }
+    canvas { opacity: 0.35; }
     [class*="glass"] { backdrop-filter: blur(6px) saturate(1.2) !important; -webkit-backdrop-filter: blur(6px) saturate(1.2) !important; }
     [style*="textShadow"] { text-shadow: 0 2px 8px rgba(0,0,0,0.5) !important; }
     [class*="glow"], [style*="boxShadow"] { box-shadow: none !important; }
