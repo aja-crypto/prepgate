@@ -343,8 +343,10 @@ export const resourceService = {
   openFile: async (filePath) => {
     const token = localStorage.getItem('accessToken');
     const baseUrl = `/api/resources/file/${encodeURIComponent(filePath)}`;
-    const url = token ? `${baseUrl}?token=${encodeURIComponent(token)}` : baseUrl;
-    window.open(url, '_blank');
+    const params = new URLSearchParams();
+    params.set('inline', 'true');
+    if (token) params.set('token', token);
+    window.open(`${baseUrl}?${params.toString()}`, '_blank');
   },
 };
 
@@ -360,6 +362,7 @@ export const liveDataService = {
 export const gatePaperService = {
   getAll: (year) => api.get('/gate-papers', { params: year ? { year } : {} }),
   downloadUrl: (filename) => `/api/gate-papers/download/${encodeURIComponent(filename)}`,
+  previewUrl: (filename) => `/api/gate-papers/download/${encodeURIComponent(filename)}?inline=true`,
 };
 
 export const shortNoteService = {

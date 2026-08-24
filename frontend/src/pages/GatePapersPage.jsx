@@ -131,7 +131,7 @@ export default function GatePapersPage() {
             </div>
             <div className="flex-1 min-h-0 p-2">
               <iframe
-                src={gatePaperService.downloadUrl(previewFile.filename)}
+                src={gatePaperService.previewUrl(previewFile.filename)}
                 className="w-full h-full rounded"
                 title={previewFile.title}
                 style={{ minHeight: '75vh' }}

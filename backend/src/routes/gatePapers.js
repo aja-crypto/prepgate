@@ -55,13 +55,17 @@ router.get('/', (req, res) => {
 // GET /api/gate-papers/download/:filename — serve PDF (public), Cloudinary redirect with local fallback
 router.get('/download/:filename', async (req, res) => {
   const filename = path.basename(req.params.filename);
+  const wantInline = req.query.inline === 'true';
   
   // Try Cloudinary first
   if (isMongoConnected()) {
     try {
       const doc = await MediaFile.findOne({ 'meta.filename': filename, category: 'gate-papers' });
       if (doc && doc.secure_url) {
-        return res.redirect(doc.secure_url);
+        const url = wantInline
+          ? doc.secure_url.replace('/upload/', '/upload/fl_attachment:false/')
+          : doc.secure_url;
+        return res.redirect(url);
       }
     } catch (e) { /* fall through to local */ }
   }
