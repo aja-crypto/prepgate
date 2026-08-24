@@ -253,6 +253,7 @@ export default function AICoachChat({ initialPrompt }) {
   const { mode, setMode, current: currentMode } = useAiMode();
   const cache = useAiCache();
   const conversation = useConversation('coach');
+  const { addUserMessage: convAddUser, addAssistantMessage: convAddAssistant, getHistoryForContext: convGetHistory, sessionId: convSessionId, updateSessionId: convUpdateSessionId } = conversation;
 
   useEffect(() => {
     if (loadedFromHistory.current && messages.length > 0) {
@@ -302,7 +303,7 @@ export default function AICoachChat({ initialPrompt }) {
     setResponseTime(null);
     streamStartRef.current = performance.now();
 
-    conversation.addUserMessage(messageText);
+    convAddUser(messageText);
     setStatusText('Thinking');
 
     let phaseIdx = 0;
@@ -318,7 +319,7 @@ export default function AICoachChat({ initialPrompt }) {
     if (cached) {
       clearInterval(statusIntervalRef.current);
       const reply = cached.text;
-      conversation.addAssistantMessage(reply);
+      convAddAssistant(reply);
       const aid = ++msgIdCounter.current;
       setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', content: reply, source: 'cache', thumbs: null }]);
       setSuggestions(cached.suggestions?.length > 0 ? cached.suggestions : generateSmartSuggestions(messageText, reply));
@@ -331,17 +332,19 @@ export default function AICoachChat({ initialPrompt }) {
 
     try {
       const ctx = buildAiContext({ topics, pyqs, mocks, gateFeatures, studyStats });
-      ctx.history = conversation.getHistoryForContext();
+      ctx.history = convGetHistory();
       ctx.mode = mode;
       ctx.modePrompt = buildModePrompt(mode, ctx);
 
-      const result = await startStream(messageText, ctx, conversation.sessionId);
+      const result = await startStream(messageText, ctx, convSessionId);
       clearInterval(statusIntervalRef.current);
       if (streamStartRef.current) setResponseTime(((performance.now() - streamStartRef.current) / 1000).toFixed(1));
 
+      if (result?.conversationId) convUpdateSessionId(result.conversationId);
+
       if (result?.text) {
         const reply = result.text;
-        conversation.addAssistantMessage(reply);
+        convAddAssistant(reply);
         cache.setCached(cacheKey, { text: reply, suggestions: result.suggestions });
         const aid = ++msgIdCounter.current;
         setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', content: reply, source: result.source || 'provider', thumbs: null }]);
@@ -367,20 +370,20 @@ export default function AICoachChat({ initialPrompt }) {
       setLoading(false);
       setStatusText('Thinking');
     }
-  }, [input, streaming, topics, pyqs, mocks, gateFeatures, studyStats, conversation, startStream, cache]);
+  }, [input, streaming, topics, pyqs, mocks, gateFeatures, studyStats, convAddUser, convAddAssistant, convGetHistory, convSessionId, convUpdateSessionId, startStream, cache]);
 
   const handleStop = useCallback(() => {
     stopStream();
     clearInterval(statusIntervalRef.current);
     setStatusText('Thinking');
     if (partialText) {
-      conversation.addAssistantMessage(partialText);
+      convAddAssistant(partialText);
       const aid = ++msgIdCounter.current;
       setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', content: partialText, source: 'aborted', thumbs: null }]);
     }
     loadingRef.current = false;
     setLoading(false);
-  }, [stopStream, partialText, conversation]);
+  }, [stopStream, partialText, convAddAssistant]);
 
   const handleSuggestion = useCallback((text) => {
     if (streaming || loading) return;

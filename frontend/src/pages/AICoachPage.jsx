@@ -44,6 +44,7 @@ export default function AICoachPage() {
   const { startStream, stopStream, streaming, partialText, error: streamErr } = useAiStreaming();
   const cache = useAiCache();
   const conversation = useConversation('mentor');
+  const { addUserMessage: convAddUser, addAssistantMessage: convAddAssistant, getHistoryForContext: convGetHistory, sessionId: convSessionId, updateSessionId: convUpdateSessionId } = conversation;
   const [statusText, setStatusText] = useState('Thinking');
   const [responseTime, setResponseTime] = useState(null);
   const [thumbs, setThumbs] = useState({});
@@ -100,7 +101,7 @@ I'm your study companion. Ask me about study plans, PYQs, subjects, or motivatio
     setInput('');
     setResponseTime(null);
     streamStartRef.current = performance.now();
-    conversation.addUserMessage(msg);
+    convAddUser(msg);
     setMessages((m) => [...m, { role: 'user', text: msg }]);
 
     let phaseIdx = 0;
@@ -113,37 +114,39 @@ I'm your study companion. Ask me about study plans, PYQs, subjects, or motivatio
     const cached = null; // online-only: never serve cached AI answers
     if (cached) {
       clearInterval(statusIntervalRef.current);
-      conversation.addAssistantMessage(cached.text);
+      convAddAssistant(cached.text);
       setMessages((m) => [...m, { role: 'assistant', text: cached.text, source: 'cache' }]);
       if (streamStartRef.current) setResponseTime(((performance.now() - streamStartRef.current) / 1000).toFixed(1));
       return;
     }
 
     const ctx = buildAiContext({ topics, pyqs, mocks, gateFeatures, studyStats });
-    ctx.history = conversation.getHistoryForContext();
+    ctx.history = convGetHistory();
 
-    const result = await startStream(msg, ctx, conversation.sessionId);
+    const result = await startStream(msg, ctx, convSessionId);
+
+    if (result?.conversationId) convUpdateSessionId(result.conversationId);
     clearInterval(statusIntervalRef.current);
     if (streamStartRef.current) setResponseTime(((performance.now() - streamStartRef.current) / 1000).toFixed(1));
 
     if (result?.text) {
-      conversation.addAssistantMessage(result.text);
+      convAddAssistant(result.text);
       cache.setCached(msg, { text: result.text, suggestions: result.suggestions });
       setMessages((m) => [...m, { role: 'assistant', text: result.text, source: result.source || 'provider' }]);
     } else if (!streaming) {
       const fallback = "I'm here to help! Based on your preparation data, focus on completing your weak subjects and solving PYQs daily. What specific topic would you like advice on?";
       setMessages((m) => [...m, { role: 'assistant', text: fallback, source: 'heuristic' }]);
     }
-  }, [input, streaming, topics, pyqs, mocks, gateFeatures, studyStats, startStream, cache, conversation]);
+  }, [input, streaming, topics, pyqs, mocks, gateFeatures, studyStats, startStream, cache, convAddUser, convAddAssistant, convGetHistory, convSessionId, convUpdateSessionId]);
 
   const handleStop = useCallback(() => {
     stopStream();
     if (partialText) {
-      conversation.addAssistantMessage(partialText);
+      convAddAssistant(partialText);
       cache.setCached(messages[messages.length - 1]?.text, { text: partialText, suggestions: null });
       setMessages((m) => [...m, { role: 'assistant', text: partialText }]);
     }
-  }, [partialText, stopStream, cache, conversation, messages]);
+  }, [partialText, stopStream, cache, convAddAssistant, messages]);
 
   const loading = streaming;
 

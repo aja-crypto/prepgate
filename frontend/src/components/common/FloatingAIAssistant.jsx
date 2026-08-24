@@ -318,7 +318,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
   const { timeRemaining } = useFocusTimer();
   const { startStream, stopStream, streaming, partialText, error: streamError } = useAiStreaming();
   const cache = useAiCache();
-  const conversation = useConversation('floating');
+  const { messages: conversationMessages, addUserMessage, addAssistantMessage, clearHistory, getHistoryForContext, lastTopic, sessionId: conversationSessionId, updateSessionId } = useConversation('floating');
   const { mode: aiMode, setMode: setAiMode, current: currentAiMode } = useAiMode();
 
   const [messages, setMessages] = useState([]);
@@ -449,12 +449,12 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
       dailyTargetHours: gateFeatures?.dailyTarget?.hours || 8,
       studyHoursToday: studyStats?.todayHours || 0,
       studyHoursWeek: studyStats?.weekHours || 0,
-      history: conversation.getHistoryForContext(),
+      history: getHistoryForContext(),
     };
     return {
       ...base,
       mode: aiMode,
-      lastTopic: conversation.lastTopic(),
+      lastTopic: lastTopic(),
     };
   }, [weakSubjects, strongSubjects, weakTopics, avgMock, streak, pyqs, topics, studyStats, gateFeatures, recentAccuracy, conversation, aiMode]);
 
@@ -548,7 +548,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     streamStartRef.current = performance.now();
 
     const id = ++msgIdCounter.current;
-    conversation.addUserMessage(userMsg);
+    addUserMessage(userMsg);
     setMessages(prev => [...prev, { id: `u-${id}`, role: 'user', text: userMsg }]);
 
     const ctx = buildContext();
@@ -565,7 +565,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     const cached = cache.getCached(userMsg, aiMode);
     if (cached) {
       clearInterval(statusIntervalRef.current);
-      conversation.addAssistantMessage(cached.text);
+      addAssistantMessage(cached.text);
       const aid = ++msgIdCounter.current;
       setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: cached.text, source: 'cache', cached: true, thumbs: null }]);
       if (streamStartRef.current) setResponseTime(((performance.now() - streamStartRef.current) / 1000).toFixed(1));
@@ -581,7 +581,9 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     placeholderFinalizedRef.current = false;
     setMessages(prev => [...prev, { id: placeholderId, role: 'assistant', text: '', source: 'thinking', cached: false, thumbs: null }]);
 
-    const result = await startStream(userMsg, ctx, conversation.sessionId);
+    const result = await startStream(userMsg, ctx, conversationSessionId);
+
+    if (result?.conversationId) updateSessionId(result.conversationId);
 
     clearInterval(statusIntervalRef.current);
     if (streamStartRef.current) setResponseTime(((performance.now() - streamStartRef.current) / 1000).toFixed(1));
@@ -615,7 +617,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
 
     if (result?.text) {
       const source = result.source || 'provider';
-      conversation.addAssistantMessage(result.text);
+      addAssistantMessage(result.text);
       cache.setCached(userMsg, { text: result.text, suggestions: result.suggestions }, undefined, aiMode);
       placeholderFinalizedRef.current = true;
       setMessages(prev => prev.map(m => m.id === placeholderId
@@ -652,7 +654,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     setStatusText('Thinking');
     const placeholderId = activeAssistantIdRef.current;
     if (partialText && placeholderId && !placeholderFinalizedRef.current) {
-      conversation.addAssistantMessage(partialText);
+      addAssistantMessage(partialText);
       cache.setCached(lastUserMsgRef.current, { text: partialText, suggestions: null }, undefined, aiMode);
       placeholderFinalizedRef.current = true;
       setMessages(prev => prev.map(m => m.id === placeholderId
@@ -661,7 +663,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
       ));
       activeAssistantIdRef.current = null;
     } else if (partialText && !placeholderId) {
-      conversation.addAssistantMessage(partialText);
+      addAssistantMessage(partialText);
       const aid = ++msgIdCounter.current;
       setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: partialText, source: 'aborted', thumbs: null }]);
       cache.setCached(lastUserMsgRef.current, { text: partialText, suggestions: null }, undefined, aiMode);

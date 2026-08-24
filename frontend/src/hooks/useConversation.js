@@ -20,6 +20,16 @@ export default function useConversation(sessionId = 'default') {
   const [messages, setMessages] = useState([]);
   const sessionIdRef = useRef(getSessionId(sessionId));
 
+  const updateSessionId = useCallback((newId) => {
+    if (newId && newId !== sessionIdRef.current) {
+      sessionIdRef.current = newId;
+      try {
+        const key = `${SESSION_KEY}_${sessionId || 'default'}`;
+        localStorage.setItem(key, newId);
+      } catch {}
+    }
+  }, [sessionId]);
+
   const addMessage = useCallback((role, content, metadata = {}) => {
     setMessages(prev => {
       const updated = [...prev, { role, content, timestamp: Date.now(), ...metadata }];
@@ -67,5 +77,6 @@ export default function useConversation(sessionId = 'default') {
     getHistoryForContext,
     lastTopic,
     sessionId: sessionIdRef.current,
+    updateSessionId,
   };
 }

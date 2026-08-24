@@ -1143,6 +1143,14 @@ router.post('/chat', validateFields([
     const isMockUser = req.user?.isGuest === true || userId === 'demo_user_id' || isMockAuthEnabled();
     const mongoOk = isMongoConnected() && !isMockUser;
 
+    // Validate conversationId is a valid MongoDB ObjectId (24-char hex).
+    // The frontend generates IDs like "floating_<ts>_<rand>" which are NOT valid
+    // ObjectIds — Mongoose 8 hangs indefinitely on findOne({ _id: invalid }).
+    const VALID_OBJECTID = /^[0-9a-fA-F]{24}$/;
+    if (conversationId && !VALID_OBJECTID.test(String(conversationId))) {
+      conversationId = null;
+    }
+
     if (userId && mongoOk) {
       if (conversationId) {
         conv = await Conversation.findOne({ _id: conversationId, user: userId, isArchived: false });
@@ -1239,6 +1247,7 @@ router.post('/chat', validateFields([
           source: response.source || 'ai',
           provider: response.provider || lastProviderUsed || 'OpenAI',
           remaining,
+          conversationId: conv?._id?.toString() || null,
         });
       } else {
         aiUsage.increment(false, Date.now() - chatStart);

@@ -79,6 +79,7 @@ export default function useAiStreaming() {
       let offlineInfo = null;
       let remaining = null;
       let streamError = null;
+      let returnedConversationId = null;
 
       armIdle();
       while (true) {
@@ -107,6 +108,7 @@ export default function useAiStreaming() {
               provider = parsed.provider || null;
               offlineInfo = parsed.offlineInfo || null;
               remaining = parsed.remaining;
+              returnedConversationId = parsed.conversationId || null;
             } else if (parsed.type === 'fallback') {
               fullText = parsed.content || '';
               setPartialText(fullText);
@@ -128,7 +130,7 @@ export default function useAiStreaming() {
       if (streamError && !fullText) {
         return { text: null, suggestions: null, source: 'error', error: streamError };
       }
-      return { text: fullText, suggestions, source, provider, offlineInfo, remaining };
+      return { text: fullText, suggestions, source, provider, offlineInfo, remaining, conversationId: returnedConversationId };
     } catch (err) {
       clearTimers();
       if (err.name === 'AbortError' || controller.signal.aborted) {
