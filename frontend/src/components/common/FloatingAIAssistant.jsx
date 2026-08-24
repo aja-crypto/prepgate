@@ -456,7 +456,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
       mode: aiMode,
       lastTopic: lastTopic(),
     };
-  }, [weakSubjects, strongSubjects, weakTopics, avgMock, streak, pyqs, topics, studyStats, gateFeatures, recentAccuracy, conversation, aiMode]);
+  }, [weakSubjects, strongSubjects, weakTopics, avgMock, streak, pyqs, topics, studyStats, gateFeatures, recentAccuracy, conversationSessionId, aiMode]);
 
   useEffect(() => {
     chatEnd.current?.scrollIntoView({ behavior: 'smooth' });
@@ -646,7 +646,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     }
     activeAssistantIdRef.current = null;
     setStatusText('Thinking');
-  }, [input, streaming, conversation, buildContext, cache, startStream, generateSmartSuggestions, aiQuestionsRemaining, setShowReferralModal, isPremium, refreshAiQuota, decrementAiQuestions, setAiQuestionsRemaining, setLimit, aiMode]);
+  }, [input, streaming, conversationSessionId, buildContext, cache, startStream, generateSmartSuggestions, aiQuestionsRemaining, setShowReferralModal, isPremium, refreshAiQuota, decrementAiQuestions, setAiQuestionsRemaining, setLimit, aiMode]);
 
   const handleStop = useCallback(() => {
     stopStream();
@@ -668,7 +668,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
       setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: partialText, source: 'aborted', thumbs: null }]);
       cache.setCached(lastUserMsgRef.current, { text: partialText, suggestions: null }, undefined, aiMode);
     }
-  }, [stopStream, partialText, conversation, cache, aiMode]);
+  }, [stopStream, partialText, conversationSessionId, cache, aiMode]);
 
   const handleSuggestion = useCallback((text) => {
     if (streaming) return;
