@@ -150,7 +150,7 @@ function MobileBottomNav() {
         className={`sm:hidden fixed bottom-0 left-0 right-0 z-[9000] transition-transform duration-300 ease-out ${visible ? 'translate-y-0' : 'translate-y-full'}`}
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        <div className="mx-2 mb-2 rounded-2xl bg-bg/90 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/40 overflow-hidden">
+        <div className="mx-2 mb-2 rounded-2xl bg-bg-2/90 backdrop-blur-2xl border border-white/[0.08] shadow-[0_-4px_24px_rgba(0,0,0,0.25),0_0_40px_-12px_rgba(139,92,246,0.08)] overflow-hidden">
           <div className="flex items-stretch px-1 py-1.5">
             {TABS.map(tab => {
               const isActive = activeTab(tab);
@@ -162,7 +162,7 @@ function MobileBottomNav() {
                 >
                   <span className={`mnav-ico flex items-center justify-center w-10 h-8 rounded-xl transition-all duration-200 ${
                     isActive
-                      ? 'bg-gradient-to-br from-purple-500/[0.18] to-cyan-500/[0.10] text-purple-200 shadow-[0_0_14px_rgba(139,92,246,0.25)]'
+                      ? 'bg-gradient-to-br from-purple-500/[0.15] to-cyan-500/[0.08] text-purple-200 shadow-[0_0_12px_rgba(139,92,246,0.2)]'
                       : 'text-text3'
                   }`}>
                     <Icon name={tab.icon} />
@@ -171,7 +171,7 @@ function MobileBottomNav() {
                     {tab.label}
                   </span>
                   {isActive && (
-                    <span className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-0.5 rounded-full bg-gradient-to-r from-purple-500 to-cyan-400 shadow-[0_0_8px_rgba(139,92,246,0.7)]" />
+                    <span className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-[2px] rounded-full bg-gradient-to-r from-purple-400 to-cyan-400 shadow-[0_0_6px_rgba(139,92,246,0.45)]" />
                   )}
                 </NavLink>
               );
@@ -186,7 +186,7 @@ function MobileBottomNav() {
             >
               <span className={`mnav-ico flex items-center justify-center w-10 h-8 rounded-xl transition-all duration-200 ${
                 isProfileTabActive
-                  ? 'bg-gradient-to-br from-purple-500/[0.18] to-cyan-500/[0.10] shadow-[0_0_14px_rgba(139,92,246,0.25)]'
+                  ? 'bg-gradient-to-br from-purple-500/[0.15] to-cyan-500/[0.08] shadow-[0_0_12px_rgba(139,92,246,0.2)]'
                   : 'text-text3'
               }`}>
                 <NexaPersona user={user} size={24} />
@@ -195,7 +195,7 @@ function MobileBottomNav() {
                 Profile
               </span>
               {isProfileTabActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-7 h-0.5 rounded-full bg-gradient-to-r from-purple-500 to-cyan-400" />
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-[2px] rounded-full bg-gradient-to-r from-purple-400 to-cyan-400 shadow-[0_0_6px_rgba(139,92,246,0.45)]" />
               )}
             </button>
           </div>
