@@ -29,7 +29,7 @@ const GATE_SYLLABUS = {
   CN: {
     name: 'Computer Networks', code: 'CN',
     topics: ['OSI Model', 'TCP/IP', 'Routing', 'Flow Control', 'Congestion Control', 'IP Addressing'],
-    keywords: ['osi', 'tcp/ip', 'routing', 'flow control', 'congestion control', 'ip address', 'subnet', 'subnetting', 'crc', 'hamming', 'error detection', 'error correction', 'mac', 'ethernet', 'token ring', 'network layer', 'transport layer', 'application layer', 'http', 'ftp', 'smtp', 'dns', 'dhcp', 'sliding window', 'stop and wait', 'go back n', 'selective repeat', 'csma', 'aloha', 'throughput', 'bandwidth', 'latency', 'propagation delay', 'transmission delay'],
+    keywords: ['osi', 'tcp/ip', 'tcp', 'routing', 'flow control', 'congestion control', 'ip address', 'subnet', 'subnetting', 'crc', 'hamming', 'error detection', 'error correction', 'mac', 'ethernet', 'token ring', 'network layer', 'transport layer', 'application layer', 'http', 'ftp', 'smtp', 'dns', 'dhcp', 'sliding window', 'stop and wait', 'go back n', 'selective repeat', 'csma', 'aloha', 'throughput', 'bandwidth', 'latency', 'propagation delay', 'transmission delay'],
   },
   OS: {
     name: 'Operating Systems', code: 'OS',
