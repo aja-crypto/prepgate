@@ -97,8 +97,8 @@ async function getTopicPYQStats(subjectCode, topicName) {
     // Build match filter — PYQ model uses ObjectId refs
     const matchFilter = { subject: subjectDoc._id, isActive: { $ne: false } };
 
-    // Aggregate stats
-    const result = await PYQ.aggregate([
+    // Aggregate stats — with 3s timeout to avoid blocking the AI response
+    const statsQuery = PYQ.aggregate([
       { $match: matchFilter },
       {
         $group: {
@@ -111,7 +111,9 @@ async function getTopicPYQStats(subjectCode, topicName) {
           twoMark: { $sum: { $cond: [{ $eq: ['$marks', 2] }, 1, 0] } },
         },
       },
-    ]);
+    ]).maxTimeMS(3000);
+
+    const result = await statsQuery;
 
     if (!result || result.length === 0) return null;
 
