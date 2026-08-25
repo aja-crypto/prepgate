@@ -8,6 +8,7 @@ const { URL } = require('url');
 const { protect } = require('../middleware/auth');
 const { validateFields } = require('../middleware/validateInput');
 const aiUsage = require('../services/aiUsageTracker');
+const { getGATEContext, formatGATEContextPrompt, generateNextAction, classifyIntent } = require('../services/gateIntelligence');
 const promptGuard = require('../services/promptGuard');
 const { aiQuota, FREE_DAILY_LIMIT, PREMIUM_DAILY_LIMIT } = require('../middleware/aiQuota');
 const Conversation = require('../models/Conversation');
@@ -2088,21 +2089,66 @@ try {
 - Top recommendation: ${context.recommendations?.[0]?.title || 'Master core subjects'}
 - Predicted score: ${context.prediction?.expectedScore ?? 'not yet'} (AIR ~${context.prediction?.air ?? 'n/a'})`;
 
-      const autoPrompt = `You are an intelligent, knowledgeable general-purpose AI assistant (like ChatGPT, Claude, or Gemini). You help the user understand topics thoroughly.
+      // ── GATE Intelligence: detect topic, query PYQ DB, classify intent ──
+      let gateContext = null;
+      let intent = 'ambiguous';
+      try {
+        gateContext = await getGATEContext(message, context);
+        intent = gateContext.intent || 'ambiguous';
+      } catch (e) {
+        console.error('[GATE Intelligence] Context detection failed:', e.message);
+      }
 
-HOW TO ANSWER:
-- Answer the user's question COMPLETELY and deeply before anything else. Do not stop at a shallow summary.
-- Structure long answers with headings, bullet points, definitions, analogies, examples, and comparisons where appropriate.
-- Explain the topic comprehensively from the foundations up (e.g., for "What is OS?" cover: definition, purpose, components, types, how it works, real-world examples, key concepts) — A to Z.
-- Adjust depth to the question: broad questions get broad, thorough coverage; narrow questions get precise, focused depth.
-- Use clear, natural, well-organized prose. Be precise and technically accurate.
-- If the answer is naturally complete, stop there — do not pad it.
+      // ── Adaptive auto mode prompt ──
+      // Style adapts to intent: greeting → short, factual → concise, concept → thorough, GATE → exam-aware
+      const intentStyle = {
+        greeting: 'Respond with a brief, friendly greeting. Ask what they need help with. Do NOT give a GATE report or topic explanation.',
+        simpleFactual: 'Give a clear, concise answer (2-4 sentences). Then stop. Do NOT write a comprehensive essay.',
+        conceptExplanation: 'Give a thorough, well-structured explanation. Use headings, examples, and analogies. Cover the topic from foundations up.',
+        gateQuestion: 'Answer the question with GATE exam awareness. Focus on what GATE specifically asks about this topic.',
+        pyqRequest: 'Provide solved PYQ-style content with reasoning and exam insight.',
+        numericalProblem: 'Solve step-by-step. Show formula, substitution, and answer.',
+        doubtClarification: 'Address the specific confusion directly. Use a clear example to resolve it.',
+        revision: 'Provide a compact, scannable summary. Use bullet points. Key formulas and concepts only.',
+        studyPlanning: 'Give an actionable, time-bound study plan. Be specific.',
+        performance: 'Analyze the data provided and give specific, actionable feedback.',
+        examStrategy: 'Give strategic, exam-focused advice. Prioritize by impact.',
+        ambiguous: 'Answer the question naturally. Do NOT force a GATE report or structured template.',
+      };
 
-STRICT RULES:
-- Do NOT mention the user's study progress, weak topics, roadmap, study plan, mock scores, analytics, or streak.
-- Do NOT give coaching advice or recommend next subjects/topics unless the user explicitly asks for guidance.
-- Do NOT personalize the answer with student data.
-- Do NOT bring up GATE relevance unless the user asks or it is a natural, brief aside AFTER fully answering.`;
+      // Build the verified GATE context block (only for academic questions)
+      const academicIntents = ['conceptExplanation', 'gateQuestion', 'pyqRequest', 'numericalProblem', 'doubtClarification', 'revision'];
+      const gateContextBlock = (gateContext?.hasTopic && academicIntents.includes(intent))
+        ? formatGATEContextPrompt(gateContext)
+        : '';
+
+      const autoPrompt = `You are Nexa AI — an intelligent, trustworthy GATE CSE mentor. You combine deep subject knowledge with verified data from the GateNexa PYQ database.
+
+## CURRENT QUESTION IS AUTHORITATIVE
+The user's current question ALWAYS takes priority over conversation history.
+If conversation history is provided, it is for continuity ONLY — do NOT let a previous topic override or influence the answer to the current question.
+When the current question is unrelated to history, ignore history completely.
+
+## RESPONSE STYLE (adapt to intent)
+${intentStyle[intent] || intentStyle.ambiguous}
+
+## STRUCTURE
+For academic questions:
+1. Answer directly first.
+2. Explain clearly (adapt depth to question complexity).
+3. If GATE-relevant data is provided below, include a brief "GATE relevance" section using ONLY the verified data — never invent statistics.
+4. End with ONE useful next action (not "would you like me to explain more?").
+
+For greetings, planning, or strategy:
+→ Keep it natural and concise. No GATE report.
+
+## CRITICAL RULES
+- NEVER fabricate GATE marks, PYQ frequency, or importance. Use ONLY verified data provided below.
+- When stats say "PYQ frequency data not yet available" — say exactly that. Do not make up numbers.
+- Use clear, natural prose. Be precise and technically accurate.
+- Do NOT pad answers. Stop when naturally complete.
+- Do NOT mention student progress, weak topics, roadmap, mock scores, analytics, or streak in auto mode.
+- Do NOT give coaching advice unless explicitly asked.`;
 
       const learningPrompt = `You are a GATE CSE tutor. Teach the topic the user asks about in a structured educational format.
 
@@ -2134,7 +2180,11 @@ COACHING RULES:
       const modeDefaults = { auto: autoPrompt, learning: learningPrompt, coach: coachPrompt };
       const defaultSystemPrompt = modeDefaults[activeMode] || autoPrompt;
 
-      const systemPrompt = frontendPrompt || defaultSystemPrompt;
+      // For auto mode: backend ALWAYS builds its own prompt (with GATE context + intent-aware style).
+      // Frontend modePrompt is ignored for auto mode to ensure verified stats are included.
+      // For other modes (learning/coach): use frontend prompt if provided.
+      const basePrompt = (activeMode === 'auto') ? defaultSystemPrompt : (frontendPrompt || defaultSystemPrompt);
+      const systemPrompt = basePrompt + (activeMode === 'auto' && gateContextBlock ? '\n\n' + gateContextBlock : '');
 
       const messages = [
         { role: 'system', content: systemPrompt },
@@ -2163,7 +2213,17 @@ COACHING RULES:
         if (!generic.some(g => lower.includes(g))) {
           console.log('[AI Coach] Returning real AI response');
           lastAiError = null;
-          return { text: streamedText, suggestions: ["What should I study today?", "Am I on track?", "Which subject should I prioritize?"], source: 'ai', provider: provider || lastProviderUsed || 'AI' };
+
+          // Append contextual next action (only for auto mode)
+          let finalText = streamedText;
+          if (activeMode === 'auto' && gateContext?.hasTopic) {
+            const nextAction = generateNextAction(gateContext, context);
+            if (nextAction) {
+              finalText = streamedText + '\n\n---\n' + nextAction;
+            }
+          }
+
+          return { text: finalText, suggestions: ["What should I study today?", "Am I on track?", "Which subject should I prioritize?"], source: 'ai', provider: provider || lastProviderUsed || 'AI' };
         } else {
           console.log('[AI Coach] AI response contained generic phrases');
           lastAiError = 'AI returned generic response';

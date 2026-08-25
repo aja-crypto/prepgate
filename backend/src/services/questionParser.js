@@ -102,16 +102,21 @@ function detectSubjectTopic(questionText) {
   const matches = [];
 
   for (const [keyword, subjects] of Object.entries(SUBJECT_KEYWORDS)) {
-    if (lower.includes(keyword)) {
+    // Use word-boundary matching to avoid false positives (e.g. "lock" inside "deadlock")
+    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const isMultiWord = keyword.includes(' ');
+    const pattern = isMultiWord ? escaped : `\\b${escaped}\\b`;
+    if (new RegExp(pattern).test(lower)) {
       for (const s of subjects) {
         const existing = matches.find(m => m.code === s.code);
         if (existing) {
-          existing.score++;
+          // Topic-level keywords get 2 points (more specific), general keywords get 1
+          existing.score += s.topic ? 2 : 1;
           if (s.topic && !existing.topics.includes(s.topic)) {
             existing.topics.push(s.topic);
           }
         } else {
-          matches.push({ code: s.code, name: s.name, score: 1, topics: s.topic ? [s.topic] : [] });
+          matches.push({ code: s.code, name: s.name, score: s.topic ? 2 : 1, topics: s.topic ? [s.topic] : [] });
         }
       }
     }
@@ -305,4 +310,4 @@ function parseQuestions(ocrPages, metadata = {}) {
   return questions;
 }
 
-module.exports = { parseQuestions };
+module.exports = { parseQuestions, detectSubjectTopic };

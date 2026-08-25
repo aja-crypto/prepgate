@@ -318,7 +318,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
   const { timeRemaining } = useFocusTimer();
   const { startStream, stopStream, streaming, partialText, error: streamError } = useAiStreaming();
   const cache = useAiCache();
-  const { messages: conversationMessages, addUserMessage, addAssistantMessage, clearHistory, getHistoryForContext, lastTopic, sessionId: conversationSessionId, updateSessionId } = useConversation('floating');
+  const { messages: conversationMessages, addUserMessage, addAssistantMessage, clearHistory, getHistoryForContext, lastTopic, isFollowUpQuery, sessionId: conversationSessionId, updateSessionId } = useConversation('floating');
   const { mode: aiMode, setMode: setAiMode, current: currentAiMode } = useAiMode();
 
   const [messages, setMessages] = useState([]);
@@ -435,7 +435,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     return Math.round((correct / pyqs.length) * 100);
   }, [pyqs]);
 
-  const buildContext = useCallback(() => {
+  const buildContext = useCallback((userMessage) => {
     const base = {
       weakSubjects,
       strongSubjects,
@@ -451,11 +451,12 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
       studyHoursWeek: studyStats?.weekHours || 0,
       history: getHistoryForContext(),
     };
-    return {
+    const ctx = {
       ...base,
       mode: aiMode,
-      lastTopic: lastTopic(),
+      lastTopic: isFollowUpQuery(userMessage) ? lastTopic() : null,
     };
+    return ctx;
   }, [weakSubjects, strongSubjects, weakTopics, avgMock, streak, pyqs, topics, studyStats, gateFeatures, recentAccuracy, conversationSessionId, aiMode]);
 
   useEffect(() => {
@@ -551,7 +552,7 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     addUserMessage(userMsg);
     setMessages(prev => [...prev, { id: `u-${id}`, role: 'user', text: userMsg }]);
 
-    const ctx = buildContext();
+    const ctx = buildContext(userMsg);
     ctx.modePrompt = buildModePrompt(aiMode, ctx);
     setStatusText('Thinking');
 

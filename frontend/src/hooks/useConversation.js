@@ -68,6 +68,21 @@ export default function useConversation(sessionId = 'default') {
     return null;
   }, [messages]);
 
+  const isFollowUpQuery = useCallback((userMessage) => {
+    const lower = userMessage.toLowerCase().trim();
+    const followUpPatterns = [
+      /^what about/i, /^how does/i, /^why does/i, /^why do/i,
+      /^can you explain/i, /^tell me more/i, /^elaborate/i,
+      /^can you elaborate/i, /^go deeper/i, /^expand on/i,
+      /^continue/i, /^more on/i, /^and for/i, /^and about/i,
+      /^what about that/i, /^how about/i, /^what else/i,
+      /^what's the difference/i, /^compared to/i, /^vs\.?/i,
+      /^versus/i, /^related to/i, /^in that case/i, /^then what/i,
+      /^what do you mean/i, /^can you clarify/i, /^sorry,? ?(can you|i meant)/i,
+    ];
+    return followUpPatterns.some(p => p.test(lower));
+  }, []);
+
   return {
     messages,
     addUserMessage,
@@ -76,6 +91,7 @@ export default function useConversation(sessionId = 'default') {
     clearHistory,
     getHistoryForContext,
     lastTopic,
+    isFollowUpQuery,
     sessionId: sessionIdRef.current,
     updateSessionId,
   };
