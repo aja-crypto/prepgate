@@ -240,12 +240,102 @@ function layoutAt(i, frontIndex, progress, direction) {
   return { y: 64, op: 0, z: 0, shot: 0, textOp: 0, textY: 0 };
 }
 
+let _diagFrameCount = 0;
+
+function diagnoseImage(shotEl, label) {
+  if (!shotEl) {
+    console.log(`[Showcase][diag] ${label}: shotEl is null`);
+    return;
+  }
+  const img = shotEl.querySelector('img');
+  if (!img) {
+    console.log(`[Showcase][diag] ${label}: img inside shotEl is null`);
+    return;
+  }
+
+  const shotComputed = window.getComputedStyle(shotEl);
+  const imgComputed = window.getComputedStyle(img);
+  const imgRect = img.getBoundingClientRect();
+  const shotRect = shotEl.getBoundingClientRect();
+
+  const cx = imgRect.left + imgRect.width / 2;
+  const cy = imgRect.top + imgRect.height / 2;
+  let covering = null;
+  try {
+    const topEl = document.elementFromPoint(cx, cy);
+    if (topEl && topEl !== img && !img.contains(topEl)) {
+      covering = { tag: topEl.tagName, id: topEl.id, className: topEl.className?.substring?.(0, 80) };
+    }
+  } catch (_) {}
+
+  let parentChain = [];
+  let el = shotEl;
+  for (let depth = 0; depth < 8; depth++) {
+    if (!el || el === document.body) break;
+    const s = window.getComputedStyle(el);
+    parentChain.push({
+      depth,
+      tag: el.tagName,
+      class: el.className?.substring?.(0, 60),
+      opacity: s.opacity,
+      visibility: s.visibility,
+      display: s.display,
+      overflow: s.overflow,
+      overflowY: s.overflowY,
+      height: s.height,
+      maxHeight: s.maxHeight,
+    });
+    el = el.parentElement;
+  }
+
+  console.log(`[Showcase][diag] ${label}`, {
+    imgSrc: img.src,
+    imgCurrentSrc: img.currentSrc,
+    imgComplete: img.complete,
+    imgNaturalWidth: img.naturalWidth,
+    imgNaturalHeight: img.naturalHeight,
+    imgLoading: img.loading,
+    imgRect: { w: imgRect.width, h: imgRect.height, top: imgRect.top, left: imgRect.left },
+    imgDisplay: imgComputed.display,
+    imgVisibility: imgComputed.visibility,
+    imgOpacity: imgComputed.opacity,
+    imgPosition: imgComputed.position,
+    imgZIndex: imgComputed.zIndex,
+    imgTransform: imgComputed.transform,
+    imgObjectFit: imgComputed.objectFit,
+    shotInlineOpacity: shotEl.style.opacity,
+    shotInlineVisibility: shotEl.style.visibility,
+    shotComputedOpacity: shotComputed.opacity,
+    shotComputedVisibility: shotComputed.visibility,
+    shotComputedDisplay: shotComputed.display,
+    shotRect: { w: shotRect.width, h: shotRect.height, top: shotRect.top, left: shotRect.left },
+    coveringElement: covering,
+    parentChain,
+  });
+}
+
 function isSectionInView(wrap, vh) {
-  if (!wrap) return false;
+  if (!wrap) {
+    console.log('[Showcase][isSectionInView] wrap is null');
+    return false;
+  }
   const rect = wrap.getBoundingClientRect();
   const topRatio = rect.top / vh;
   const bottomRatio = rect.bottom / vh;
-  return topRatio >= -0.05 && topRatio <= 0.25 && bottomRatio >= 0.75;
+  const result = topRatio >= -0.05 && topRatio <= 0.25 && bottomRatio >= 0.75;
+  if (_diagFrameCount % 60 === 1) {
+    console.log('[Showcase][isSectionInView]', {
+      vh,
+      rectTop: rect.top,
+      rectBottom: rect.bottom,
+      topRatio,
+      bottomRatio,
+      result,
+      viewportW: window.innerWidth,
+      viewportH: window.innerHeight,
+    });
+  }
+  return result;
 }
 
 export default function ProductShowcase() {
@@ -281,6 +371,11 @@ export default function ProductShowcase() {
   }, []);
 
   useEffect(() => {
+    console.log('[Showcase][mount] component mounted', {
+      viewportW: window.innerWidth,
+      viewportH: window.innerHeight,
+      scrollY: window.scrollY,
+    });
     let done = 0;
     FEATURES.forEach((f) => {
       const im = new Image();
@@ -301,7 +396,25 @@ export default function ProductShowcase() {
   }, []);
 
   const renderFrame = useCallback(() => {
+    const wrap = wrapRef.current;
+    const inView = wrap ? isSectionInView(wrap, window.innerHeight) : false;
+    const engaged = engagedRef.current;
+    const currentIndex = indexRef.current;
     const tr = transitionRef.current;
+
+    _diagFrameCount++;
+    if (_diagFrameCount % 30 === 1) {
+      console.log('[Showcase][renderFrame]', {
+        engaged,
+        inView,
+        currentIndex,
+        transitionActive: tr.active,
+        viewportW: window.innerWidth,
+        viewportH: window.innerHeight,
+        scrollY: window.scrollY,
+      });
+    }
+
     let dir = tr.active ? tr.direction : 0;
     let base = tr.active ? tr.from : indexRef.current;
     let p = 0;
@@ -315,6 +428,7 @@ export default function ProductShowcase() {
         postTransitionUntilRef.current = performance.now() + POST_TRANSITION_COOLDOWN;
         wheelAccumRef.current = 0;
         console.log('[Showcase] TRANSITION END → card', finalIndex);
+        diagnoseImage(shotEls.current[finalIndex], `TRANSITION_END card ${finalIndex}`);
         if (mountedRef.current) setShownIndex(finalIndex);
         dir = 0;
         base = finalIndex;
@@ -354,6 +468,32 @@ export default function ProductShowcase() {
       }
     }
 
+    if (_diagFrameCount % 30 === 1) {
+      const frontShot = shotEls.current[base];
+      if (frontShot) {
+        const frontImg = frontShot.querySelector('img');
+        const frontShotCS = window.getComputedStyle(frontShot);
+        const frontImgCS = frontImg ? window.getComputedStyle(frontImg) : null;
+        console.log('[Showcase][renderFrame][front-card]', {
+          index: base,
+          layoutShot: frontShot.style.opacity,
+          layoutVisibility: frontShot.style.visibility,
+          computedShotOpacity: frontShotCS.opacity,
+          computedShotVisibility: frontShotCS.visibility,
+          computedShotDisplay: frontShotCS.display,
+          imgSrc: frontImg?.src,
+          imgComplete: frontImg?.complete,
+          imgNaturalWidth: frontImg?.naturalWidth,
+          imgNaturalHeight: frontImg?.naturalHeight,
+          imgComputedOpacity: frontImgCS?.opacity,
+          imgComputedVisibility: frontImgCS?.visibility,
+          imgComputedDisplay: frontImgCS?.display,
+          imgComputedTransform: frontImgCS?.transform,
+          imgComputedZIndex: frontImgCS?.zIndex,
+        });
+      }
+    }
+
     const ind = indicatorRef.current;
     if (ind) {
       const drawIndex = base + (dir !== 0 ? dir * easeShow(p) : 0);
@@ -387,7 +527,14 @@ export default function ProductShowcase() {
 
   const disengage = useCallback((reason) => {
     if (!engagedRef.current) return;
-    console.log('[Showcase] DISENGAGE:', reason, { card: indexRef.current, scrollY: window.scrollY });
+    console.log('[Showcase][disengage]', {
+      reason,
+      card: indexRef.current,
+      scrollY: window.scrollY,
+      viewportW: window.innerWidth,
+      viewportH: window.innerHeight,
+      engagedBefore: engagedRef.current,
+    });
     if (transitionRef.current.active) {
       indexRef.current = Math.max(0, Math.min(transitionRef.current.from + transitionRef.current.direction, N - 1));
       if (mountedRef.current) setShownIndex(indexRef.current);
@@ -408,13 +555,31 @@ export default function ProductShowcase() {
   }, [emitShowcaseState, stopRafLoop]);
 
   const engage = useCallback(() => {
+    const beforeEngaged = engagedRef.current;
     if (engagedRef.current) return;
     if (performance.now() < cooldownUntilRef.current) return;
     const wrap = wrapRef.current;
-    if (!wrap || !isSectionInView(wrap, window.innerHeight)) return;
+    if (!wrap) {
+      console.log('[Showcase][engage] wrap is null');
+      return;
+    }
+    const inView = isSectionInView(wrap, window.innerHeight);
+    console.log('[Showcase][engage] called', {
+      viewportW: window.innerWidth,
+      viewportH: window.innerHeight,
+      scrollY: window.scrollY,
+      wrapRect: wrap.getBoundingClientRect(),
+      inView,
+      engagedBefore: beforeEngaged,
+      cooldownRemaining: Math.max(0, cooldownUntilRef.current - performance.now()),
+    });
+    if (!inView) return;
 
-    console.log('[Showcase] ENGAGE', { scrollY: window.scrollY });
     engagedRef.current = true;
+    console.log('[Showcase][engage] ENGAGED', { engagedAfter: engagedRef.current });
+    for (let i = 0; i < N; i++) {
+      diagnoseImage(shotEls.current[i], `ENGAGE card ${i}`);
+    }
     transitionRef.current = { active: false, from: 0, direction: 0, start: 0 };
     wheelAccumRef.current = 0;
     postTransitionUntilRef.current = performance.now() + 250;
@@ -448,6 +613,11 @@ export default function ProductShowcase() {
 
   useEffect(() => {
     if (!ready) return;
+    console.log('[Showcase][ready] ready became true', {
+      viewportW: window.innerWidth,
+      viewportH: window.innerHeight,
+      scrollY: window.scrollY,
+    });
     cacheShotEls();
     renderFrame();
   }, [ready, cacheShotEls, renderFrame]);
@@ -456,7 +626,17 @@ export default function ProductShowcase() {
     if (!ready) return;
 
     let scrollRAF = null;
+    let scrollCount = 0;
     const onScroll = () => {
+      scrollCount++;
+      if (scrollCount % 5 === 1) {
+        console.log('[Showcase][onScroll] fired', {
+          scrollY: window.scrollY,
+          engaged: engagedRef.current,
+          viewportW: window.innerWidth,
+          viewportH: window.innerHeight,
+        });
+      }
       if (scrollRAF === null) {
         scrollRAF = requestAnimationFrame(() => {
           if (!engagedRef.current) {
@@ -469,6 +649,16 @@ export default function ProductShowcase() {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
+        console.log('[Showcase][IntersectionObserver]', {
+          isIntersecting: entry.isIntersecting,
+          intersectionRatio: entry.intersectionRatio,
+          boundingRectTop: entry.boundingClientRect.top,
+          boundingRectBottom: entry.boundingClientRect.bottom,
+          rootBoundsHeight: entry.rootBounds?.height,
+          engaged: engagedRef.current,
+          viewportW: window.innerWidth,
+          viewportH: window.innerHeight,
+        });
         if (!entry.isIntersecting && engagedRef.current) {
           disengage('section-left-viewport');
         }
