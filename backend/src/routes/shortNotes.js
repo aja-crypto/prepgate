@@ -110,9 +110,49 @@ function scanNotesDir() {
 }
 
 // GET /api/short-notes — list all subjects with their note files
-router.get('/', protect, (req, res, next) => {
+router.get('/', protect, async (req, res, next) => {
   try {
-    const notes = scanNotesDir();
+    let notes = scanNotesDir();
+
+    // If local filesystem returned only embedded fallback (no real files), augment with MediaFile records
+    if (isMongoConnected()) {
+      try {
+        const mediaFiles = await MediaFile.find({ category: 'short-notes' });
+        if (mediaFiles.length > 0) {
+          const mediaByFolder = {};
+          mediaFiles.forEach(doc => {
+            const folder = doc.folder || doc.meta?.subject || 'Uncategorized';
+            if (!mediaByFolder[folder]) mediaByFolder[folder] = [];
+            const fileName = doc.title ? doc.title + '.pdf' : (doc.legacy_path || '').split('/').pop();
+            const safeFileName = fileName.endsWith('.pdf') ? fileName : fileName + '.pdf';
+            mediaByFolder[folder].push({
+              name: safeFileName,
+              fileUrl: `/api/short-notes/download/${folder}/${safeFileName}`,
+              type: 'pdf',
+              size: doc.size || 0,
+            });
+          });
+
+          // Merge: prefer real local files, add missing from Cloudinary
+          const existingFolders = new Set(notes.map(n => n.folder));
+          for (const [folder, files] of Object.entries(mediaByFolder)) {
+            const existingIdx = notes.findIndex(n => n.folder === folder);
+            if (existingIdx >= 0) {
+              const existingFiles = new Set(notes[existingIdx].files.map(f => f.name));
+              files.forEach(f => {
+                if (!existingFiles.has(f.name)) notes[existingIdx].files.push(f);
+              });
+              notes[existingIdx].count = notes[existingIdx].files.length;
+            } else {
+              const subjectMeta = FOLDER_TO_SUBJECT[folder] || { code: folder, name: folder, icon: '📄', color: '#64748b' };
+              notes.push({ folder, ...subjectMeta, files, count: files.length, lastModified: Date.now() });
+            }
+          }
+          notes.sort((a, b) => a.name.localeCompare(b.name));
+        }
+      } catch (e) { /* fall through to local-only data */ }
+    }
+
     res.json({ success: true, data: notes });
   } catch (err) {
     next(err);

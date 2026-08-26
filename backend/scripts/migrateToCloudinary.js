@@ -61,11 +61,11 @@ function formatSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
-async function uploadOne(filePath, folder, legacyPath, category, meta = {}) {
+async function uploadOne(filePath, folder, legacyPath, category, meta = {}, customPublicId) {
   const buffer = fs.readFileSync(filePath);
   const hash = sha256(buffer);
   const fileName = path.basename(filePath);
-  const publicId = fileName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const publicId = customPublicId || fileName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
 
   if (DRY_RUN) {
     return { public_id: `${folder}/${publicId}`, secure_url: `(dry-run)`, size: buffer.length, sha256: hash };
@@ -119,9 +119,14 @@ async function main() {
   let totalFailed = 0;
   let totalSkipped = 0;
 
-  // 1. Resources (course notes)
+  // 1. Resources (course notes) — exclude short-notes and weekly-tests (handled separately)
   console.log('--- MIGRATING RESOURCES ---');
-  const resources = scanDir(RESOURCES_DIR, f => f.endsWith('.pdf')).filter(f => f.size >= 1024);
+  const resources = scanDir(RESOURCES_DIR, f => f.endsWith('.pdf')).filter(f => {
+    if (f.size < 1024) return false;
+    const relFromResources = path.relative(RESOURCES_DIR, f.path).replace(/\\/g, '/');
+    if (relFromResources.startsWith('short-notes/') || relFromResources.startsWith('weekly-tests/')) return false;
+    return true;
+  });
   console.log(`Found ${resources.length} real PDFs to upload\n`);
 
   for (const file of resources) {
@@ -163,7 +168,61 @@ async function main() {
     }
   }
 
-  // 2. Gate Papers
+  // 2. Short Notes
+  console.log('\n--- MIGRATING SHORT NOTES ---');
+  const SHORT_NOTES_DIR = path.join(RESOURCES_DIR, 'short-notes');
+  const shortNotes = scanDir(SHORT_NOTES_DIR, f => f.endsWith('.pdf')).filter(f => f.size >= 1024);
+  console.log(`Found ${shortNotes.length} real PDFs to upload\n`);
+
+  const SHORT_NOTE_FOLDER_MAP = {
+    'OS': 'OS', 'DBMS': 'DB', 'CN': 'CN', 'Algorithms': 'AL',
+    'COA': 'CO', 'Compiler': 'CD', 'Mathematics': 'EM', 'TOC': 'TOC',
+    'DS': 'DS', 'DL': 'DL', 'Aptitude': 'APT', 'C': 'DS'
+  };
+
+  for (const file of shortNotes) {
+    const relPath = path.relative(SHORT_NOTES_DIR, file.path).replace(/\\/g, '/');
+    const parts = relPath.split('/');
+    const rawFolder = parts.length > 1 ? parts[0] : 'Uncategorized';
+    const folderCode = SHORT_NOTE_FOLDER_MAP[rawFolder] || rawFolder;
+    const fileName = file.name;
+    const safeFileName = fileName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const publicIdWithFolder = `${folderCode}_${safeFileName}`;
+
+    try {
+      const uploaded = await uploadOne(file.path, 'GateNexa/short-notes', relPath, 'short-notes', { subject: folderCode, topic: fileName.replace('.pdf', '') }, publicIdWithFolder);
+
+      if (!DRY_RUN) {
+        await MediaFile.findOneAndUpdate(
+          { public_id: uploaded.public_id },
+          {
+            title: fileName.replace('.pdf', ''),
+            subject: folderCode,
+            category: 'short-notes',
+            type: 'pdf',
+            public_id: uploaded.public_id,
+            secure_url: uploaded.secure_url,
+            resource_type: 'raw',
+            size: uploaded.size,
+            sha256: uploaded.sha256,
+            visibility: 'premium',
+            folder: rawFolder,
+            legacy_path: `/resources/short-notes/${rawFolder}/${fileName}`,
+            meta: { subject: folderCode, topic: fileName.replace('.pdf', '') },
+          },
+          { upsert: true, new: true }
+        );
+      }
+
+      totalUploaded++;
+      process.stdout.write(`  ✅ ${rawFolder}/${fileName} (${(file.size / 1024 / 1024).toFixed(1)} MB)\n`);
+    } catch (e) {
+      totalFailed++;
+      process.stdout.write(`  ❌ ${rawFolder}/${fileName} — ${e.message}\n`);
+    }
+  }
+
+  // 3. Gate Papers
   console.log('\n--- MIGRATING GATE PAPERS ---');
   const gatePapers = scanDir(GATE_PAPERS_DIR, f => f.endsWith('.pdf'));
   console.log(`Found ${gatePapers.length} PDFs to upload\n`);
@@ -222,9 +281,11 @@ async function main() {
     const parts = relPath.split('/');
     const subject = parts.length > 1 ? parts[0] : 'misc';
     const fileName = file.name;
+    const safeFileName = fileName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const publicIdWithSubject = `${subject}_${safeFileName}`;
 
     try {
-      const uploaded = await uploadOne(file.path, 'GateNexa/weekly-tests', relPath, 'weekly-tests', { subject });
+      const uploaded = await uploadOne(file.path, 'GateNexa/weekly-tests', relPath, 'weekly-tests', { subject }, publicIdWithSubject);
 
       if (!DRY_RUN) {
         await MediaFile.findOneAndUpdate(
