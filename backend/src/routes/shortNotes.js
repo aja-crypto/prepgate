@@ -241,7 +241,9 @@ router.get('/download/:folder/:filename', protect, async (req, res) => {
     try {
       const doc = await MediaFile.findOne({ legacy_path: `/resources/short-notes/${folder}/${safeFilename}` });
       if (doc && doc.secure_url) {
-        return res.redirect(doc.secure_url);
+        let url = doc.secure_url;
+        if (req.query.force === '1') url += (url.includes('?') ? '&' : '?') + 'fl_attachment';
+        return res.redirect(url);
       }
     } catch (e) { /* fall through to local */ }
   }
