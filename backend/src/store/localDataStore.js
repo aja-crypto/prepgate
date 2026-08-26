@@ -471,7 +471,7 @@ function seedLocalWeeklyTests(seedData) {
     localWeeklyTests.push({
       _id: oid(),
       ...t,
-      pdfUrl: `/resources/weekly-tests/${t.subject}/Test-${String(t.testNumber).padStart(2, '0')}.pdf`,
+      pdfUrl: `/api/weekly-tests/download/${t.subject}/Test-${String(t.testNumber).padStart(2, '0')}.pdf`,
       isActive: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

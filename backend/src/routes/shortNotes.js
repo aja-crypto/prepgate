@@ -10,8 +10,13 @@ const { isMongoConnected } = require('../config/db');
 
 const NOTES_DIR = path.join(__dirname, '../../../resources/short-notes');
 
+// Ensure NOTES_DIR exists for local fallback
+if (!fs.existsSync(NOTES_DIR)) {
+  try { fs.mkdirSync(NOTES_DIR, { recursive: true }); } catch {}
+}
+
 const EMBEDDED_SHORT_NOTES = [
-  { folder: 'OS', code: 'OS', name: 'Operating Systems', icon: '⚙️', color: '#a855f7', files: [{ name: 'os-notes.pdf', fileUrl: '/resources/short-notes/OS/os-notes.pdf', type: 'pdf', size: 12 }], count: 1, lastModified: Date.now() },
+  { folder: 'OS', code: 'OS', name: 'Operating Systems', icon: '⚙️', color: '#a855f7', files: [{ name: 'os-notes.pdf', fileUrl: '/api/short-notes/download/OS/os-notes.pdf', type: 'pdf', size: 12 }], count: 1, lastModified: Date.now() },
   { folder: 'DBMS', code: 'DB', name: 'DBMS', icon: '🗄', color: '#06b6d4', files: [], count: 0, lastModified: Date.now() },
   { folder: 'CN', code: 'CN', name: 'Computer Networks', icon: '🌐', color: '#ffd166', files: [], count: 0, lastModified: Date.now() },
   { folder: 'Algorithms', code: 'AL', name: 'Algorithms', icon: '⚡', color: '#ff6b6b', files: [], count: 0, lastModified: Date.now() },
@@ -82,10 +87,10 @@ function scanNotesDir() {
     const files = fs.readdirSync(folderPath)
       .filter(f => ALLOWED_EXTENSIONS.includes(path.extname(f).toLowerCase()))
       .map(f => {
-        const legacyPath = `/resources/short-notes/${folderName}/${f}`;
+        const downloadUrl = `/api/short-notes/download/${folderName}/${f}`;
         return {
           name: f,
-          fileUrl: legacyPath,
+          fileUrl: downloadUrl,
           type: path.extname(f).toLowerCase() === '.pdf' ? 'pdf' : 'image',
           size: fs.statSync(path.join(folderPath, f)).size,
         };
@@ -165,7 +170,7 @@ router.post('/upload/:folder', protect, uploadNote.single('file'), async (req, r
     res.json({
       success: true,
       data: {
-        fileUrl: `/resources/short-notes/${req.params.folder}/${req.file.filename}`,
+        fileUrl: `/api/short-notes/download/${req.params.folder}/${req.file.filename}`,
         filename: req.file.filename,
         size: stats.size,
         type: isPdf ? 'pdf' : 'image',
@@ -180,6 +185,34 @@ router.post('/upload/:folder', protect, uploadNote.single('file'), async (req, r
       error: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
+});
+
+// GET /api/short-notes/download/:folder/:filename — serve PDF via Cloudinary or local fallback
+router.get('/download/:folder/:filename', protect, async (req, res) => {
+  const { folder, filename } = req.params;
+  if (!isSafeFolder(folder)) {
+    return res.status(400).json({ success: false, message: 'Invalid folder' });
+  }
+
+  const safeFilename = path.basename(filename);
+
+  // Try Cloudinary first via MediaFile lookup
+  if (isMongoConnected()) {
+    try {
+      const doc = await MediaFile.findOne({ legacy_path: `/resources/short-notes/${folder}/${safeFilename}` });
+      if (doc && doc.secure_url) {
+        return res.redirect(doc.secure_url);
+      }
+    } catch (e) { /* fall through to local */ }
+  }
+
+  // Local filesystem fallback
+  const filePath = path.join(NOTES_DIR, folder, safeFilename);
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+
+  res.status(404).json({ success: false, message: 'File not found' });
 });
 
 module.exports = router;

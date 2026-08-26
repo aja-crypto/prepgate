@@ -13,17 +13,13 @@ const RESOURCES_DIR = path.join(__dirname, '../..', 'resources');
 // Serve PDF files — Cloudinary redirect with local fallback
 router.get('/file/:path(*)', protect, async (req, res) => {
   const relPath = req.params.path;
-  const wantInline = req.query.inline === 'true';
   
   // Try Cloudinary first via MediaFile lookup
   if (isMongoConnected()) {
     try {
       const doc = await MediaFile.findOne({ legacy_path: `/resources/${relPath}`, category: 'resources' });
       if (doc && doc.secure_url) {
-        const url = wantInline
-          ? doc.secure_url.replace('/upload/', '/upload/fl_attachment:false/')
-          : doc.secure_url;
-        return res.redirect(url);
+        return res.redirect(doc.secure_url);
       }
     } catch (e) { /* fall through to local */ }
   }

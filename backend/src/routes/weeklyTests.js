@@ -6,6 +6,7 @@ const fs = require('fs');
 const { sanitizeFilename, createFileFilter } = require('../utils/uploadValidator');
 const { protect } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
+const MediaFile = require('../models/MediaFile');
 const { WeeklyTest, UserTestProgress } = require('../models/WeeklyTest');
 const {
   getLocalWeeklyTests,
@@ -44,6 +45,42 @@ const uploadPdf = multer({
 // Seed weekly tests on first load
 seedLocalWeeklyTests(WEEKLY_TESTS_SEED);
 
+// Transform legacy /resources/weekly-tests/... URLs to /api/weekly-tests/download/...
+function fixWeeklyTestPdfUrl(test) {
+  if (!test || !test.pdfUrl) return test;
+  const obj = test.toObject ? test.toObject() : { ...test };
+  if (obj.pdfUrl && obj.pdfUrl.startsWith('/resources/weekly-tests/')) {
+    obj.pdfUrl = obj.pdfUrl.replace('/resources/weekly-tests/', '/api/weekly-tests/download/');
+  }
+  return obj;
+}
+
+// GET /api/weekly-tests/download/:subject/:filename — serve PDF via Cloudinary or local fallback
+// MUST be before /:id to avoid Express matching "download" as an :id
+router.get('/download/:subject/:filename', protect, async (req, res) => {
+  const { subject, filename } = req.params;
+  const safeFilename = path.basename(filename);
+  const weeklyTestsDir = path.join(__dirname, '../../resources/weekly-tests');
+
+  // Try Cloudinary first via MediaFile lookup
+  if (isMongoConnected()) {
+    try {
+      const doc = await MediaFile.findOne({ legacy_path: `/resources/weekly-tests/${subject}/${safeFilename}` });
+      if (doc && doc.secure_url) {
+        return res.redirect(doc.secure_url);
+      }
+    } catch (e) { /* fall through to local */ }
+  }
+
+  // Local filesystem fallback
+  const filePath = path.join(weeklyTestsDir, subject, safeFilename);
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  }
+
+  res.status(404).json({ success: false, message: 'File not found' });
+});
+
 // GET /api/weekly-tests — list all tests, optional subject filter
 router.get('/', protect, async (req, res, next) => {
   try {
@@ -58,7 +95,7 @@ router.get('/', protect, async (req, res, next) => {
     const filter = { isActive: true };
     if (subject) filter.subject = subject;
     const tests = await WeeklyTest.find(filter).sort({ subject: 1, testNumber: 1 });
-    res.json({ success: true, data: tests });
+    res.json({ success: true, data: tests.map(fixWeeklyTestPdfUrl) });
   } catch (err) {
     next(err);
   }
@@ -96,7 +133,7 @@ router.get('/:id', protect, async (req, res, next) => {
   try {
     const test = getLocalWeeklyTestById(req.params.id);
     if (!test) return res.status(404).json({ success: false, message: 'Test not found' });
-    res.json({ success: true, data: test });
+    res.json({ success: true, data: fixWeeklyTestPdfUrl(test) });
   } catch (err) {
     next(err);
   }
@@ -179,7 +216,7 @@ router.post('/upload/:id', protect, uploadPdf.single('pdf'), async (req, res, ne
 
     const test = getLocalWeeklyTestById(req.params.id);
     const subDir = test?.subject || 'misc';
-    const pdfUrl = `/resources/weekly-tests/${subDir}/${req.file.filename}`;
+    const pdfUrl = `/api/weekly-tests/download/${subDir}/${req.file.filename}`;
     updateLocalWeeklyTestPdfUrl(req.params.id, pdfUrl);
 
     res.json({ success: true, data: { pdfUrl, filename: req.file.filename } });
