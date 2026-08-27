@@ -263,7 +263,7 @@ router.get('/sync', protect, async (req, res, next) => {
     const userId = req.user._id;
     const [mocks, notes] = await Promise.all([
       MockTest.find({ user: userId }).sort('-testDate'),
-      Note.find({ user: userId }).populate('subject', 'name').sort('-createdAt'),
+      Note.find({ user: userId }).sort('-createdAt'),
     ]);
 
     syncStreakToProgress(req.user);
@@ -367,8 +367,7 @@ router.put('/sync', protect, async (req, res, next) => {
         .map(n => n.mongoId);
       const createdIds = noteResults.upsertedIds || {};
       const allNoteIds = [...noteIds, ...Object.values(createdIds).map(v => v._id)];
-      const syncedNotesDb = await Note.find({ _id: { $in: allNoteIds }, user: userId })
-        .populate('subject', 'name');
+      const syncedNotesDb = await Note.find({ _id: { $in: allNoteIds }, user: userId });
       syncedNotes.push(...syncedNotesDb.map(noteFromDb));
     }
 

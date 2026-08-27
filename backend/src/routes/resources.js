@@ -19,7 +19,7 @@ router.get('/file/:path(*)', protect, async (req, res) => {
     try {
       const doc = await MediaFile.findOne({ legacy_path: `/resources/${relPath}`, category: 'resources' });
       if (doc && doc.secure_url) {
-        return res.redirect(doc.secure_url);
+        return res.json({ success: true, url: doc.secure_url });
       }
     } catch (e) { /* fall through to local */ }
   }

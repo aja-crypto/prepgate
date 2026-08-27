@@ -61,9 +61,12 @@ router.get('/download/:filename', async (req, res) => {
     try {
       const doc = await MediaFile.findOne({ 'meta.filename': filename, category: 'gate-papers' });
       if (doc && doc.secure_url) {
-        let url = doc.secure_url;
-        if (req.query.force === '1') url += (url.includes('?') ? '&' : '?') + 'fl_attachment';
-        return res.redirect(url);
+        if (req.query.force === '1') {
+          let url = doc.secure_url;
+          url += (url.includes('?') ? '&' : '?') + 'fl_attachment';
+          return res.redirect(url);
+        }
+        return res.json({ success: true, url: doc.secure_url });
       }
     } catch (e) { /* fall through to local */ }
   }

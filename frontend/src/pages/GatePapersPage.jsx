@@ -104,7 +104,7 @@ export default function GatePapersPage() {
                       className="text-[10px] px-3 py-1.5 rounded-lg border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all font-medium"
                     >View</button>
                     <a
-                      href={gatePaperService.downloadUrl(paper.filename)}
+                      href={gatePaperService.downloadUrl(paper.filename) + '?force=1'}
                       download
                       className="text-[10px] px-3 py-1.5 rounded-lg border bg-green-500/10 border-green-500/20 text-green-400 hover:bg-green-500/20 transition-all font-medium"
                     >Download</a>
@@ -125,7 +125,7 @@ export default function GatePapersPage() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
               <div className="text-sm font-semibold text-text truncate">{previewFile.title}</div>
               <div className="flex items-center gap-2">
-                <a href={gatePaperService.downloadUrl(previewFile.filename)} download className="text-[10px] px-3 py-1.5 rounded-lg border bg-green-500/10 border-green-500/20 text-green-400 hover:bg-green-500/20 transition-all font-medium">Download</a>
+                <a href={gatePaperService.downloadUrl(previewFile.filename) + '?force=1'} download className="text-[10px] px-3 py-1.5 rounded-lg border bg-green-500/10 border-green-500/20 text-green-400 hover:bg-green-500/20 transition-all font-medium">Download</a>
                 <button onClick={() => setPreviewFile(null)} className="text-text3 hover:text-text p-1 text-lg">&times;</button>
               </div>
             </div>

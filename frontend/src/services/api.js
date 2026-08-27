@@ -342,11 +342,26 @@ export const resourceService = {
   fileUrl: (filePath) => `/api/resources/file/${filePath}`,
   openFile: async (filePath) => {
     const token = localStorage.getItem('accessToken');
-    const baseUrl = `/api/resources/file/${encodeURIComponent(filePath)}`;
-    const params = new URLSearchParams();
-    params.set('inline', 'true');
-    if (token) params.set('token', token);
-    window.open(`${baseUrl}?${params.toString()}`, '_blank');
+    const url = `/api/resources/file/${encodeURIComponent(filePath)}`;
+    const response = await fetch(url, {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || `Failed to open file (${response.status})`);
+    }
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const { url: fileUrl } = await response.json();
+      if (fileUrl) {
+        window.open(fileUrl, '_blank');
+        return fileUrl;
+      }
+    }
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    return blobUrl;
   },
 };
 
