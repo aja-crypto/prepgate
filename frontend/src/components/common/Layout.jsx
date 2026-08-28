@@ -177,35 +177,44 @@ const Layout = memo(function Layout() {
         <header className="sticky top-0 z-30 flex items-center gap-1.5 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-4 py-2 md:py-3 glass-header relative">
           <div className="header-hairline" />
 
-          {/* ═══ MOBILE HEADER ═══ */}
-          <div className="mobile-top-header md:hidden">
-            <button
-              id="mobile-hamburger"
-              onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(true), 150); }}
-              aria-label="Open navigation menu"
-              className="mobile-top-navbar__menu"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-5 h-5">
-                <path d="M3 12h18M3 6h18M3 18h18" strokeLinecap="round" />
-              </svg>
-            </button>
+          {/* ═══ MOBILE HEADER — 3-column grid (mobile only) ═══ */}
+          <header className="mobile-top-header md:hidden">
+            <div className="mobile-top-header__left">
+              <button
+                type="button"
+                id="mobile-hamburger"
+                className="mobile-top-navbar__menu"
+                aria-label="Open menu"
+                aria-expanded={sidebarOpen}
+                onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(true), 150); }}
+              >
+                <span className="hamburger-icon">
+                  <span />
+                  <span />
+                  <span />
+                </span>
+              </button>
+            </div>
 
             <button
-              onClick={() => setSearchOpen(true)}
-              aria-label="Open search"
+              type="button"
               className="mobile-top-navbar__search"
+              aria-label="Search"
+              onClick={() => setSearchOpen(true)}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-4 h-4 shrink-0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-4 h-4 shrink-0">
                 <circle cx="11" cy="11" r="7" />
                 <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
               </svg>
-              <span className="truncate">Search...</span>
+              <span>Search GateNexa...</span>
             </button>
 
-            <div className="mobile-top-navbar__notification">
-              <NotificationPanel />
+            <div className="mobile-top-header__right">
+              <div className="mobile-top-navbar__notification">
+                <NotificationPanel />
+              </div>
             </div>
-          </div>
+          </header>
 
           {/* ═══ DESKTOP HEADER (original, unchanged) ═══ */}
           <button
