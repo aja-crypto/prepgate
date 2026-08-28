@@ -29,10 +29,16 @@ export default function DoubtSolverPage() {
   const [subjects, setSubjects] = useState([]);
   const scrollRef = useRef(null);
 
+  const doubtSubjectsFetchedRef = useRef(false);
   useEffect(() => {
+    if (doubtSubjectsFetchedRef.current) return;
+    doubtSubjectsFetchedRef.current = true;
     aiService.getDoubtSubjects().then((res) => {
       if (res.data?.success) setSubjects(res.data.data || []);
-    }).catch(silentCatch('Load doubt subjects'));
+    }).catch((err) => {
+      if (err.response?.status === 429) return;
+      silentCatch('Load doubt subjects')(err);
+    });
   }, []);
 
   useEffect(() => {

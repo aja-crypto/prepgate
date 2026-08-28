@@ -96,16 +96,19 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     if (!originalRequest) return Promise.reject(error);
 
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && import.meta.env.DEV) {
       const token = localStorage.getItem('accessToken');
       const defaultAuth = api.defaults.headers.common['Authorization'];
       console.error(`[AUTH-DEBUG] 401 ON ${originalRequest.method?.toUpperCase()} ${originalRequest.url} | sent_header=${originalRequest.headers?.Authorization ? 'YES' : 'NO'} | token_in_storage=${token ? 'YES(' + token.length + ')' : 'NO'} | default_auth=${defaultAuth ? 'YES' : 'NO'} | response_msg=${error.response?.data?.message} | response_code=${error.response?.data?.code}`);
-      console.error(`[AUTH-DEBUG] 401 FULL RESPONSE:`, JSON.stringify(error.response?.data));
+    }
+
+    if (error.response?.status === 429) {
+      return Promise.reject(error);
     }
 
     // Auto-retry on network/timeout errors (backend cold start, DB reconnect, down) — up to 2 tries
     const isNetworkError = (!error.response && error.message === 'Network Error') || error.code === 'ECONNABORTED';
-    const isServerUnavailable = error.response?.status === 503 || error.response?.status === 502 || error.response?.status === 504 || error.response?.status === 500;
+    const isServerUnavailable = error.response?.status === 503 || error.response?.status === 502 || error.response?.status === 504;
     if ((isNetworkError || isServerUnavailable) && !originalRequest._retryCount) {
       originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
       if (originalRequest._retryCount <= 2) {

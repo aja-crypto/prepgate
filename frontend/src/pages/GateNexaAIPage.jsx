@@ -101,11 +101,11 @@ export default function GateNexaAIPage() {
         </div>
 
         <div className="animate-fade-in">
-          <div style={{ display: activeTab === 'ai-coach' ? 'block' : 'none' }}><AiCoachDashboard /></div>
-          <div style={{ display: activeTab === 'mentor' ? 'block' : 'none' }}><AIMentorPage /></div>
-          <div style={{ display: activeTab === 'coach' ? 'block' : 'none' }}><DailyCoachPage /></div>
-          <div style={{ display: activeTab === 'insights' ? 'block' : 'none' }}><InsightsPage /></div>
-          <div style={{ display: activeTab === 'doubt' ? 'block' : 'none' }}><DoubtSolverPage /></div>
+          {activeTab === 'ai-coach' && <AiCoachDashboard />}
+          {activeTab === 'mentor' && <AIMentorPage />}
+          {activeTab === 'coach' && <DailyCoachPage />}
+          {activeTab === 'insights' && <InsightsPage />}
+          {activeTab === 'doubt' && <DoubtSolverPage />}
         </div>
       </div>
       <style>{`.overflow-x-auto::-webkit-scrollbar { display: none; }`}</style>

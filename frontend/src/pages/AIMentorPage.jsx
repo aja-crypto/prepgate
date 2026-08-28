@@ -194,11 +194,13 @@ const AIMentorPage = () => {
 
   const fetchTimerRef = useRef(null);
   const abortRef = useRef(null);
+  const lastPayloadHashRef = useRef('');
+  const lastFetchAtRef = useRef(0);
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
     if (!localStorage.getItem('accessToken') && localStorage.getItem('isGuest') !== 'true') return;
 
-    // Demo mode — use local recommendations directly, skip API call
     if (localStorage.getItem('isGuest') === 'true' && !localStorage.getItem('accessToken')) {
       const fallback = localHeuristicRecommendations({
         subjects: subjects || [], topics: topics || [], pyqs: pyqs || [],
@@ -211,24 +213,34 @@ const AIMentorPage = () => {
       return;
     }
 
+    const payload = {
+      subjects: subjects || [],
+      topics: topics || [],
+      pyqs: pyqs || [],
+      mocks: mocks || [],
+      gateFeatures: gateFeatures || {},
+      overall: { percentage: overall || 0 },
+      studyStats: studyStats || {}
+    };
+    const hash = JSON.stringify({ o: overall, s: subjects?.length, t: topics?.length, p: pyqs?.length, m: mocks?.length });
+    const isForcedRefresh = refreshKey > 0 && !hasFetchedRef.current;
+    const samePayload = hash === lastPayloadHashRef.current;
+    const recentlyFetched = Date.now() - lastFetchAtRef.current < 60000;
+    if (hasFetchedRef.current && samePayload && recentlyFetched && refreshKey === 0) return;
+
     if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
     if (abortRef.current) abortRef.current.abort();
 
     fetchTimerRef.current = setTimeout(async () => {
+      if (hash === lastPayloadHashRef.current && Date.now() - lastFetchAtRef.current < 30000 && !isForcedRefresh && hasFetchedRef.current) return;
+      lastPayloadHashRef.current = hash;
+      lastFetchAtRef.current = Date.now();
+      hasFetchedRef.current = true;
       const controller = new AbortController();
       abortRef.current = controller;
-
       setLoading(true);
       try {
-        const res = await aiService.getRecommendations({
-          subjects: subjects || [],
-          topics: topics || [],
-          pyqs: pyqs || [],
-          mocks: mocks || [],
-          gateFeatures: gateFeatures || {},
-          overall: { percentage: overall || 0 },
-          studyStats: studyStats || {}
-        });
+        const res = await aiService.getRecommendations(payload);
         if (controller.signal.aborted) return;
         if (res.data.success) {
           setRecommendations(res.data.data.recommendations);
@@ -237,15 +249,15 @@ const AIMentorPage = () => {
         }
       } catch (error) {
         if (error.name === 'CanceledError' || controller.signal.aborted) return;
+        if (error.response?.status === 429) {
+          const fallback = localHeuristicRecommendations(payload);
+          setRecommendations(fallback.recommendations);
+          setAnalysis(fallback.analysis);
+          setAiError(null);
+          return;
+        }
         toast.error('AI service unavailable. Showing local recommendations.');
-        const fallback = localHeuristicRecommendations({
-          subjects: subjects || [],
-          topics: topics || [],
-          pyqs: pyqs || [],
-          mocks: mocks || [],
-          overall: { percentage: overall || 0 },
-          studyStats: studyStats || {}
-        });
+        const fallback = localHeuristicRecommendations(payload);
         setRecommendations(fallback.recommendations);
         setAnalysis(fallback.analysis);
         setAiError(null);

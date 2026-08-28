@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, useRef } from 'react';
 import { useAiMentor } from '../../context/AiMentorContext';
 import { useProgress } from '../../context/ProgressContext';
 import { aiService } from '../../services/api';
@@ -23,20 +23,29 @@ export default function useCoachState() {
     gateFeatures,
   } = useProgress();
 
-  // Fetch the server-built AI context (enriched with real backend data)
   const [serverCtx, setServerCtx] = useState(null);
   const [serverCtxStatus, setServerCtxStatus] = useState('loading');
+  const ctxFetchedRef = useRef(false);
+  const ctxHashRef = useRef('');
+  const ctxTimeRef = useRef(0);
   useEffect(() => {
+    const hash = JSON.stringify({ t: topics?.length || 0, p: pyqs?.length || 0, m: mocks?.length || 0 });
+    if (ctxFetchedRef.current && hash === ctxHashRef.current) return;
+    if (ctxFetchedRef.current && Date.now() - ctxTimeRef.current < 60000) return;
     let cancelled = false;
-    setServerCtxStatus('loading');
+    if (!ctxFetchedRef.current) setServerCtxStatus('loading');
     aiService.getContext()
       .then(res => {
         if (cancelled) return;
         setServerCtx(res.data?.data || null);
         setServerCtxStatus('ok');
+        ctxFetchedRef.current = true;
+        ctxHashRef.current = hash;
+        ctxTimeRef.current = Date.now();
       })
-      .catch(() => {
+      .catch((err) => {
         if (cancelled) return;
+        if (err.response?.status === 429) { setServerCtxStatus('fallback'); return; }
         setServerCtx(null);
         setServerCtxStatus('fallback');
       });
