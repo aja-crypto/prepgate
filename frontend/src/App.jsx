@@ -345,6 +345,12 @@ export default function App() {
         <Route path="referral" element={<ReferralDashboardPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="learning-hub" element={<LearningHubPage />} />
+        {/* Redirects for legacy/alternate URLs */}
+        <Route path="focus" element={<Navigate to="/focus-session" replace />} />
+        <Route path="ai-mentor" element={<Navigate to="/mentor" replace />} />
+        <Route path="roadmaps" element={<Navigate to="/roadmap" replace />} />
+        <Route path="pyqs" element={<Navigate to="/pyq" replace />} />
+        <Route path="gate-qa" element={<Navigate to="/pyq" replace />} />
       </Route>
 
       {/* Full-screen routes (no sidebar) */}
@@ -378,6 +384,7 @@ export default function App() {
       <Route path="/help" element={<HelpPage />} />
       <Route path="/feedback" element={<FeedbackPage />} />
       <Route path="/study-resources" element={<ResourcesPage />} />
+      <Route path="/resources" element={<Navigate to="/study-resources" replace />} />
       {/* Standalone routes (no sidebar) */}
       <Route path="/platform" element={<PlatformPage />} />
       <Route path="/protected/view/:id" element={<PrivateRoute><ProtectedViewPage /></PrivateRoute>} />
