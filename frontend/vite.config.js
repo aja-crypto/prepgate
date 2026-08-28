@@ -48,8 +48,10 @@ export default defineConfig({
       },
     },
   },
+  publicDir: 'public',
   build: {
     outDir: 'dist',
+    copyPublicDir: true,
     sourcemap: false,
     cssCodeSplit: true,
     cssMinify: 'esbuild',
