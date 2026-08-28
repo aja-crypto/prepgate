@@ -426,11 +426,12 @@ export default function AIBrainScene() {
   const containerRef = useRef(null);
 
 
-  let useWebGL = true;
-  try {
-    const c = document.createElement('canvas');
-    if (!c.getContext('webgl2') && !c.getContext('webgl')) useWebGL = false;
-  } catch { useWebGL = false; }
+  const useWebGL = useMemo(() => {
+    try {
+      const c = document.createElement('canvas');
+      return !!(c.getContext('webgl2') || c.getContext('webgl'));
+    } catch { return false; }
+  }, []);
 
   const handleMouseMove = useCallback((e) => {
     tooltipRef.current = { x: e.clientX, y: e.clientY };
