@@ -212,7 +212,7 @@ const Layout = memo(function Layout() {
             id="mobile-hamburger"
             onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(true), 150); }}
             aria-label="Open navigation menu"
-            className="mobile-header-btn md:hidden flex items-center justify-center rounded-xl text-text2 hover:text-text hover:bg-white/10 active:scale-95 transition-all shrink-0"
+            className="mobile-header-btn hidden md:flex items-center justify-center rounded-xl text-text2 hover:text-text hover:bg-white/10 active:scale-95 transition-all shrink-0"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-5 h-5">
               <path d="M3 12h18M3 6h18M3 18h18" strokeLinecap="round" />
