@@ -1011,7 +1011,8 @@ function DeviceFrame({ color, rgb, image, title, compact = false, fillHeight = f
             aria-hidden
             decoding="async"
             draggable={false}
-            loading="lazy"
+            loading="eager"
+            fetchPriority="high"
             className="block h-full w-full object-cover object-top select-none"
             style={{
               transform: 'translate3d(0,0,0)',
