@@ -48,6 +48,21 @@ const Layout = memo(function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [calcOpen, setCalcOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setIsScrolled(window.scrollY > 12);
+        ticking = false;
+      });
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const handler = (e) => {
@@ -177,8 +192,8 @@ const Layout = memo(function Layout() {
         <header className="sticky top-0 z-30 flex items-center gap-1.5 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-4 py-2 md:py-3 glass-header relative">
           <div className="header-hairline" />
 
-          {/* ═══ MOBILE HEADER — 3-column grid (mobile only) ═══ */}
-          <header className="mobile-top-header md:hidden">
+          {/* ═══ MOBILE HEADER — single-layer glass (mobile only) ═══ */}
+          <header className={`mobile-top-header md:hidden ${isScrolled ? 'is-scrolled' : ''}`}>
             <div className="mobile-top-header__left">
               <button
                 type="button"
