@@ -294,19 +294,11 @@ export default function ProductShowcase() {
   }, []);
 
   const cacheShotEls = useCallback(() => {
-    for (let i = 0; i < N; i++) {
-      const card = cardEls.current[i];
-      if (!card) continue;
-      const shots = card.querySelectorAll('[data-showcase-shot]');
-      let visible = null;
-      for (let j = 0; j < shots.length; j++) {
-        if (window.getComputedStyle(shots[j]).display !== 'none') {
-          visible = shots[j];
-          break;
-        }
-      }
-      shotEls.current[i] = visible || shots[0] || null;
-    }
+    cardEls.current.forEach((card, i) => {
+      if (!card) return;
+      const shots = Array.from(card.querySelectorAll('[data-showcase-shot]'));
+      shotEls.current[i] = shots;
+    });
   }, []);
 
   const renderFrame = useCallback(() => {
@@ -349,11 +341,11 @@ export default function ProductShowcase() {
       el.style.zIndex = String(Math.round(s.z));
       el.style.pointerEvents = i === peFront ? 'auto' : 'none';
 
-      const shot = shotEls.current[i];
-      if (shot) {
+      const shots = shotEls.current[i] || [];
+      shots.forEach((shot) => {
         shot.style.opacity = String(s.shot);
         shot.style.visibility = s.shot > 0.01 ? 'visible' : 'hidden';
-      }
+      });
 
       const textEl = textEls.current[i];
       if (textEl) {
@@ -1000,21 +992,26 @@ function DeviceFrame({ color, rgb, image, title, compact = false, fillHeight = f
           className="h-full w-full"
           data-showcase-shot
           style={{
-            opacity: 0,
-            visibility: 'hidden',
+            opacity: 1,
+            visibility: 'visible',
             backfaceVisibility: 'hidden',
+            transition: 'opacity 280ms ease, transform 280ms ease',
           }}
         >
           <img
             src={image}
-            alt=""
-            aria-hidden
+            alt={title || ''}
             decoding="async"
             draggable={false}
             loading="eager"
             fetchPriority="high"
+            onError={(e) => console.error('[Showcase] image failed:', e.currentTarget.src)}
             className="block h-full w-full object-cover object-top select-none"
             style={{
+              display: 'block',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
               transform: 'translate3d(0,0,0)',
               WebkitUserDrag: 'none',
               userSelect: 'none',
