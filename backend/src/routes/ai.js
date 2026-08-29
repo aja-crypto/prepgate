@@ -1103,7 +1103,7 @@ router.post('/chat', validateFields([
     context = context || {};
     const tAuth = Date.now();
     const isGreeting = /^(hi|hello|hey|hiya|howdy|hi nexa|hello nexa|hey nexa|good morning|good evening|good afternoon|thanks|thank you|thankyou|hey there|hi there|hello there)\s*[!.]*\s*$/i.test(message) && message.length < 30;
-    const isSimpleDef = /^(what is|what are|explain|define|what's|whats)\s+.{2,50}\??$/i.test(message) && message.length < 60;
+    const isSimpleDef = /^(what is|what are|what's|whats)\s+.{2,30}\??$/i.test(message) && message.length < 50;
     const isFastPath = isGreeting || isSimpleDef;
     const userId = req.user?._id;
   const isAdmin = req.user?.role === 'admin';
