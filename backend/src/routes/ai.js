@@ -352,8 +352,9 @@ async function callAiApiSingle(providerCfg, messages, options = {}) {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
     if (attempt > 0) { console.log(`[callAiApi] Retry attempt ${attempt}/${maxRetries}`); totalRetries++; }
 
+    const tMs = options.timeoutMs || 8000;
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), tMs);
     const reqStartTs = Date.now();
 
     const requestPayload = {
@@ -370,7 +371,7 @@ async function callAiApiSingle(providerCfg, messages, options = {}) {
         'Authorization': `Bearer ${apiKey}`,
         ...(isOpenRouter ? { 'HTTP-Referer': 'https://GateNexa.app', 'X-Title': 'GateNexa' } : {}),
       };
-      const { status, json: jsonBody, raw, headers: respHeaders } = await httpsPostJson(endpoint, requestPayload, headers, 8000);
+      const { status, json: jsonBody, raw, headers: respHeaders } = await httpsPostJson(endpoint, requestPayload, headers, tMs);
 
       clearTimeout(timeoutId);
 
@@ -581,7 +582,7 @@ async function streamAiApi(messages, options = {}, onDelta) {
           stream: true,
         },
         headers,
-        opts.timeoutMs || 60000,
+        opts.timeoutMs || 8000,
         (delta) => { fullText += delta; if (onDelta) onDelta(delta); }
       );
 
@@ -1118,26 +1119,71 @@ router.post('/chat', validateFields([
 
     message = message.trim();
     context = context || {};
-
+    const tAuth = Date.now();
+    const isGreeting = /^(hi|hello|hey|hiya|howdy|hi nexa|hello nexa|hey nexa|good morning|good evening|good afternoon|thanks|thank you|thankyou|hey there|hi there|hello there)\s*[!.]*\s*$/i.test(message) && message.length < 30;
+    if (isGreeting) {
+      const wantsStreamGreet = req.body.stream === true || /text\/event-stream/i.test(req.headers.accept || '');
+      const greetSystem = 'You are GateNexa AI, friendly GATE 2027 assistant. Greet warmly in 1-2 sentences, offer help for GATE preparation. Be concise.';
+      const greetMessages = [{ role: 'system', content: greetSystem }, { role: 'user', content: message }];
+      const greetStart = Date.now();
+      let greetText = null;
+      try {
+        const chain = buildProviderChain();
+        if (chain.length) {
+          const cfg = chain[0];
+          const txt = await callAiApiSingle(cfg, greetMessages, { max_tokens: 80, temperature: 0.7, timeoutMs: 5500 });
+          if (txt) greetText = txt.trim();
+        }
+      } catch (e) {}
+      if (!greetText) greetText = "Hi! I'm GateNexa AI — your GATE 2027 co-pilot. Ask me about concepts, PYQs, study plans, or predictions!";
+      console.log(`[AI-TIMING] greeting fast-path auth=${Date.now()-tAuth}ms greetProvider=${Date.now()-greetStart}ms total=${Date.now()-chatStart}ms`);
+      if (wantsStreamGreet) {
+        res.status(200);
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache, no-transform');
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('X-Accel-Buffering', 'no');
+        if (res.flushHeaders) res.flushHeaders();
+        const send = (obj) => { if (!res.writableEnded) res.write(`data: ${JSON.stringify(obj)}\n\n`); };
+        send({ type: 'delta', content: greetText.slice(0, Math.floor(greetText.length/2)) });
+        await new Promise(r => setTimeout(r, 30));
+        send({ type: 'delta', content: greetText.slice(Math.floor(greetText.length/2)) });
+        send({ type: 'done', content: greetText, source: 'ai', provider: lastProviderUsed || 'OpenAI', remaining: null, conversationId: null });
+        aiUsage.increment(true, Date.now() - chatStart);
+        try { await incrementAiUsage(req.user?._id?.toString()); } catch(e) {}
+        return res.end();
+      } else {
+        aiUsage.increment(true, Date.now() - chatStart);
+        try { await incrementAiUsage(req.user?._id?.toString()); } catch(e) {}
+        return res.json({ success: true, data: { text: greetText, source: 'ai', provider: lastProviderUsed || 'OpenAI' } });
+      }
+    }
     // Server-side AI context: enrich every AI request with the user's REAL
     // backend data (profile, progress, roadmap, journey, recommendations,
     // analytics, prediction). The frontend-supplied context still provides
     // mode/history/modePrompt, but personalization no longer depends on it.
-    try {
-      const { buildContextForUser } = require('../services/aiContextBuilder');
-      const serverCtx = await buildContextForUser(req.user);
-      if (serverCtx) {
-        context = { ...serverCtx, ...context };
-        context.weakTopics = context.weakTopics?.map?.(t => typeof t === 'string' ? t : t.name) || [];
-        context.roadmap = context.roadmap || serverCtx.roadmap;
-        context.journey = context.journey || serverCtx.journey;
-        context.recommendations = context.recommendations || serverCtx.recommendations;
-        context.analytics = context.analytics || serverCtx.analytics;
-        context.prediction = context.prediction || serverCtx.prediction;
+    // Skip heavy context for very short messages to reduce latency
+    const skipHeavyContext = message.length < 12 && !context.mode;
+    if (!skipHeavyContext) {
+      try {
+        const { buildContextForUser } = require('../services/aiContextBuilder');
+        const serverCtx = await buildContextForUser(req.user);
+        if (serverCtx) {
+          context = { ...serverCtx, ...context };
+          context.weakTopics = context.weakTopics?.map?.(t => typeof t === 'string' ? t : t.name) || [];
+          context.roadmap = context.roadmap || serverCtx.roadmap;
+          context.journey = context.journey || serverCtx.journey;
+          context.recommendations = context.recommendations || serverCtx.recommendations;
+          context.analytics = context.analytics || serverCtx.analytics;
+          context.prediction = context.prediction || serverCtx.prediction;
+        }
+      } catch (ctxErr) {
+        console.error('[AI Coach] context builder failed:', ctxErr.message);
       }
-    } catch (ctxErr) {
-      console.error('[AI Coach] context builder failed:', ctxErr.message);
+    } else {
+      console.log(`[AI-TIMING] skipHeavyContext for short message "${message.slice(0,20)}"`);
     }
+    console.log(`[AI-TIMING] untilContext=${Date.now()-tAuth}ms`);
 
     let conv = null;
     const { isMockAuthEnabled } = require('../config/devMode');
@@ -1183,15 +1229,18 @@ router.post('/chat', validateFields([
       await conv.save();
 
       const recentMessages = await Message.find({ conversation: conv._id })
-        .sort({ createdAt: -1 }).limit(8).lean();
+        .sort({ createdAt: -1 }).limit(3).lean();
       context.history = recentMessages.reverse().map(m => ({
         role: m.role,
         content: m.content,
       }));
+      if (Array.isArray(context.history) && context.history.length > 3) context.history = context.history.slice(-3);
     }
 
     // Thread conversationId into context so follow-ups reference the same conversation.
     context.conversationId = conversationId || context.conversationId || null;
+    if (Array.isArray(context.history) && context.history.length > 4) context.history = context.history.slice(-4);
+    console.log(`[AI-TIMING] beforeProvider total=${Date.now()-chatStart}ms historyLen=${Array.isArray(context.history)?context.history.length:0}`);
 
     // Streaming is requested by the assistant clients (Accept: text/event-stream
     // or explicit stream flag). JSON path preserved for existing askCoach consumers.
