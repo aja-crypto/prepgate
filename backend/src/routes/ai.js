@@ -1143,15 +1143,15 @@ router.post('/chat', validateFields([
         if (res.flushHeaders) res.flushHeaders();
         const send = (obj) => { if (!res.writableEnded) res.write(`data: ${JSON.stringify(obj)}\n\n`); };
         send({ type: 'delta', content: greetText.slice(0, Math.floor(greetText.length/2)) });
-        await new Promise(r => setTimeout(r, 30));
+        await new Promise(r => setTimeout(r, 20));
         send({ type: 'delta', content: greetText.slice(Math.floor(greetText.length/2)) });
         send({ type: 'done', content: greetText, source: 'ai', provider: lastProviderUsed || 'OpenAI', remaining: null, conversationId: null });
         aiUsage.increment(true, Date.now() - chatStart);
-        try { await incrementAiUsage(req.user?._id?.toString()); } catch(e) {}
+        incrementAiUsage(req.user?._id?.toString()).catch(()=>{});
         return res.end();
       } else {
         aiUsage.increment(true, Date.now() - chatStart);
-        try { await incrementAiUsage(req.user?._id?.toString()); } catch(e) {}
+        incrementAiUsage(req.user?._id?.toString()).catch(()=>{});
         return res.json({ success: true, data: { text: greetText, source: 'ai', provider: lastProviderUsed || 'OpenAI' } });
       }
     }
