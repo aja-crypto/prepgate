@@ -1105,11 +1105,10 @@ router.post('/chat', validateFields([
     const isGreeting = /^(hi|hello|hey|hiya|howdy|hi nexa|hello nexa|hey nexa|good morning|good evening|good afternoon|thanks|thank you|thankyou|hey there|hi there|hello there)\s*[!.]*\s*$/i.test(message) && message.length < 30;
     const isSimpleDef = /^(what is|what are|explain|define|what's|whats)\s+.{2,50}\??$/i.test(message) && message.length < 60;
     const isFastPath = isGreeting || isSimpleDef;
-    // Enforce quota — fast path uses 1.2s timeout to keep greeting <1s
     const userId = req.user?._id;
   const isAdmin = req.user?.role === 'admin';
-    if (!isAdmin) {
-      const quotaTimeoutMs = isFastPath ? 1200 : 4000;
+    if (!isAdmin && !isGreeting) {
+      const quotaTimeoutMs = isSimpleDef ? 1500 : 4000;
       const quota = await Promise.race([
         checkAiQuota(userId),
         new Promise((_, rej) => setTimeout(() => rej(new Error('quota timeout')), quotaTimeoutMs))
