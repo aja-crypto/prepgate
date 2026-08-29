@@ -1160,7 +1160,9 @@ router.post('/chat', validateFields([
     if (!skipHeavyContext) {
       try {
         const { buildContextForUser } = require('../services/aiContextBuilder');
-        const serverCtx = await buildContextForUser(req.user);
+        const ctxPromise = buildContextForUser(req.user);
+        const timeoutPromise = new Promise((_, rej) => setTimeout(() => rej(new Error('context timeout 2500ms')), 2500));
+        const serverCtx = await Promise.race([ctxPromise, timeoutPromise]).catch(e => { console.log('[AI-TIMING] buildContext timeout/err', e.message); return null; });
         if (serverCtx) {
           context = { ...serverCtx, ...context };
           context.weakTopics = context.weakTopics?.map?.(t => typeof t === 'string' ? t : t.name) || [];
@@ -1252,9 +1254,13 @@ router.post('/chat', validateFields([
 
       let response = null;
       try {
-        response = await getAiCoachResponse(message, context, req.user, modePrompt, (delta) => {
+        const aiPromise = getAiCoachResponse(message, context, req.user, modePrompt, (delta) => {
           send({ type: 'delta', content: delta });
         });
+        response = await Promise.race([
+          aiPromise,
+          new Promise((_, rej) => setTimeout(() => rej(new Error('ai timeout 15s')), 15000))
+        ]).catch(e => { console.error('[AI-TIMING] getAiCoachResponse timeout', e.message); return { text: null, source: 'error', offlineError: 'AI request timed out. Please try again.' }; });
       } catch (err) {
         console.error('[AI Coach] SSE unhandled error:', err.message);
         response = { text: null, source: 'error', offlineError: 'AI chat error. Please try again.' };
@@ -1302,8 +1308,12 @@ router.post('/chat', validateFields([
       return res.end();
     }
 
-    const response = await getAiCoachResponse(message, context, req.user, modePrompt);
-    response.conversationId = conv?._id?.toString() || null;
+    let response = await Promise.race([
+      getAiCoachResponse(message, context, req.user, modePrompt),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('ai timeout 15s')), 15000))
+    ]).catch(e => { console.error('[AI-TIMING] getAiCoachResponse timeout', e.message); return { text: null, source: 'error', offlineError: 'AI request timed out. Please try again.', conversationId: conv?._id?.toString() || null }; });
+    if (!response) response = { text: null, source: 'error', offlineError: 'AI request timed out.' };
+    response.conversationId = response.conversationId || conv?._id?.toString() || null;
 
     // Get updated remaining count after increment
     let remaining = null;
