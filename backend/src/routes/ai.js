@@ -1099,13 +1099,20 @@ router.post('/chat', validateFields([
       return res.status(400).json({ success: false, message: 'Message cannot be empty.' });
     }
 
-    // Enforce quota
+    message = message.trim();
+    context = context || {};
+    const tAuth = Date.now();
+    const isGreeting = /^(hi|hello|hey|hiya|howdy|hi nexa|hello nexa|hey nexa|good morning|good evening|good afternoon|thanks|thank you|thankyou|hey there|hi there|hello there)\s*[!.]*\s*$/i.test(message) && message.length < 30;
+    const isSimpleDef = /^(what is|what are|explain|define|what's|whats)\s+.{2,50}\??$/i.test(message) && message.length < 60;
+    const isFastPath = isGreeting || isSimpleDef;
+    // Enforce quota — fast path uses 1.2s timeout to keep greeting <1s
     const userId = req.user?._id;
   const isAdmin = req.user?.role === 'admin';
     if (!isAdmin) {
+      const quotaTimeoutMs = isFastPath ? 1200 : 4000;
       const quota = await Promise.race([
         checkAiQuota(userId),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('quota timeout')), 4000))
+        new Promise((_, rej) => setTimeout(() => rej(new Error('quota timeout')), quotaTimeoutMs))
       ]).catch(e => { console.log('[AI-TIMING] quota timeout', e.message); return { allowed: true, remaining: 5, limit: 5 }; });
       if (!quota.allowed) {
         aiUsage.increment(false, Date.now() - chatStart);
@@ -1119,12 +1126,6 @@ router.post('/chat', validateFields([
         });
       }
     }
-
-    message = message.trim();
-    context = context || {};
-    const tAuth = Date.now();
-    const isGreeting = /^(hi|hello|hey|hiya|howdy|hi nexa|hello nexa|hey nexa|good morning|good evening|good afternoon|thanks|thank you|thankyou|hey there|hi there|hello there)\s*[!.]*\s*$/i.test(message.trim()) && message.trim().length < 30;
-    const isSimpleDef = /^(what is|what are|explain|define|what's|whats)\s+.{2,50}\??$/i.test(message.trim()) && message.trim().length < 60;
     if (isGreeting) {
       const wantsStreamGreet = req.body.stream === true || /text\/event-stream/i.test(req.headers.accept || '');
       let greetText = "Hi! I'm GateNexa AI — your GATE 2027 co-pilot. Ask me about concepts, PYQs, study plans, or predictions!";
@@ -1165,7 +1166,7 @@ router.post('/chat', validateFields([
         const chain = buildProviderChain();
         if (chain.length) {
           const cfg = chain[0];
-          const txt = await callAiApiSingle(cfg, defMessages, { max_tokens: 600, temperature: 0.6, timeoutMs: 5500 });
+          const txt = await callAiApiSingle(cfg, defMessages, { max_tokens: 500, temperature: 0.6, timeoutMs: 2800 });
           if (txt) defText = txt.trim();
         }
       } catch (e) { console.log('[AI-TIMING] def provider err', e.message); }
