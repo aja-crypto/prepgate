@@ -1103,7 +1103,10 @@ router.post('/chat', validateFields([
     const userId = req.user?._id;
   const isAdmin = req.user?.role === 'admin';
     if (!isAdmin) {
-      const quota = await checkAiQuota(userId);
+      const quota = await Promise.race([
+        checkAiQuota(userId),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('quota timeout')), 4000))
+      ]).catch(e => { console.log('[AI-TIMING] quota timeout', e.message); return { allowed: true, remaining: 5, limit: 5 }; });
       if (!quota.allowed) {
         aiUsage.increment(false, Date.now() - chatStart);
         const msg = quota.isGuest
