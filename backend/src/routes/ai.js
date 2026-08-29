@@ -1124,6 +1124,7 @@ router.post('/chat', validateFields([
     context = context || {};
     const tAuth = Date.now();
     const isGreeting = /^(hi|hello|hey|hiya|howdy|hi nexa|hello nexa|hey nexa|good morning|good evening|good afternoon|thanks|thank you|thankyou|hey there|hi there|hello there)\s*[!.]*\s*$/i.test(message.trim()) && message.trim().length < 30;
+    const isSimpleDef = /^(what is|what are|explain|define|what's|whats)\s+.{2,50}\??$/i.test(message.trim()) && message.trim().length < 60;
     if (isGreeting) {
       const wantsStreamGreet = req.body.stream === true || /text\/event-stream/i.test(req.headers.accept || '');
       let greetText = "Hi! I'm GateNexa AI — your GATE 2027 co-pilot. Ask me about concepts, PYQs, study plans, or predictions!";
@@ -1152,6 +1153,44 @@ router.post('/chat', validateFields([
         aiUsage.increment(true, Date.now() - chatStart);
         try { await incrementAiUsage(req.user?._id?.toString()); } catch(e) {}
         return res.json({ success: true, data: { text: greetText, source: 'ai', provider: lastProviderUsed || 'OpenAI' } });
+      }
+    }
+    if (isSimpleDef) {
+      const wantsStreamDef = req.body.stream === true || /text\/event-stream/i.test(req.headers.accept || '');
+      const defPrompt = `You are GateNexa AI for GATE 2027. Explain "${message.trim()}" concisely, accurately, with a clear definition, key points, and GATE relevance in 4-6 short paragraphs. Be direct and technically precise.`;
+      const defMessages = [{ role: 'system', content: defPrompt }, { role: 'user', content: message }];
+      const defStart = Date.now();
+      let defText = null;
+      try {
+        const chain = buildProviderChain();
+        if (chain.length) {
+          const cfg = chain[0];
+          const txt = await callAiApiSingle(cfg, defMessages, { max_tokens: 600, temperature: 0.6, timeoutMs: 6500 });
+          if (txt) defText = txt.trim();
+        }
+      } catch (e) {}
+      if (defText) {
+        console.log(`[AI-TIMING] def fast-path provider=${Date.now()-defStart}ms total=${Date.now()-chatStart}ms`);
+        if (wantsStreamDef) {
+          res.status(200);
+          res.setHeader('Content-Type', 'text/event-stream');
+          res.setHeader('Cache-Control', 'no-cache, no-transform');
+          res.setHeader('Connection', 'keep-alive');
+          res.setHeader('X-Accel-Buffering', 'no');
+          if (res.flushHeaders) res.flushHeaders();
+          const send = (obj) => { if (!res.writableEnded) res.write(`data: ${JSON.stringify(obj)}\n\n`); };
+          send({ type: 'delta', content: defText.slice(0, Math.floor(defText.length/2)) });
+          await new Promise(r => setTimeout(r, 20));
+          send({ type: 'delta', content: defText.slice(Math.floor(defText.length/2)) });
+          send({ type: 'done', content: defText, source: 'ai', provider: lastProviderUsed || 'OpenAI', remaining: null, conversationId: null });
+          aiUsage.increment(true, Date.now() - chatStart);
+          try { await incrementAiUsage(req.user?._id?.toString()); } catch(e) {}
+          return res.end();
+        } else {
+          aiUsage.increment(true, Date.now() - chatStart);
+          try { await incrementAiUsage(req.user?._id?.toString()); } catch(e) {}
+          return res.json({ success: true, data: { text: defText, source: 'ai', provider: lastProviderUsed || 'OpenAI' } });
+        }
       }
     }
     // Server-side AI context: enrich every AI request with the user's REAL
