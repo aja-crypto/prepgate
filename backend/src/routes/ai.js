@@ -1165,32 +1165,31 @@ router.post('/chat', validateFields([
         const chain = buildProviderChain();
         if (chain.length) {
           const cfg = chain[0];
-          const txt = await callAiApiSingle(cfg, defMessages, { max_tokens: 600, temperature: 0.6, timeoutMs: 6500 });
+          const txt = await callAiApiSingle(cfg, defMessages, { max_tokens: 600, temperature: 0.6, timeoutMs: 5500 });
           if (txt) defText = txt.trim();
         }
-      } catch (e) {}
-      if (defText) {
-        console.log(`[AI-TIMING] def fast-path provider=${Date.now()-defStart}ms total=${Date.now()-chatStart}ms`);
-        if (wantsStreamDef) {
-          res.status(200);
-          res.setHeader('Content-Type', 'text/event-stream');
-          res.setHeader('Cache-Control', 'no-cache, no-transform');
-          res.setHeader('Connection', 'keep-alive');
-          res.setHeader('X-Accel-Buffering', 'no');
-          if (res.flushHeaders) res.flushHeaders();
-          const send = (obj) => { if (!res.writableEnded) res.write(`data: ${JSON.stringify(obj)}\n\n`); };
-          send({ type: 'delta', content: defText.slice(0, Math.floor(defText.length/2)) });
-          await new Promise(r => setTimeout(r, 20));
-          send({ type: 'delta', content: defText.slice(Math.floor(defText.length/2)) });
-          send({ type: 'done', content: defText, source: 'ai', provider: lastProviderUsed || 'OpenAI', remaining: null, conversationId: null });
-          aiUsage.increment(true, Date.now() - chatStart);
-          try { await incrementAiUsage(req.user?._id?.toString()); } catch(e) {}
-          return res.end();
-        } else {
-          aiUsage.increment(true, Date.now() - chatStart);
-          try { await incrementAiUsage(req.user?._id?.toString()); } catch(e) {}
-          return res.json({ success: true, data: { text: defText, source: 'ai', provider: lastProviderUsed || 'OpenAI' } });
-        }
+      } catch (e) { console.log('[AI-TIMING] def provider err', e.message); }
+      if (!defText) defText = `${message.trim()} — This is a core GATE topic. For a precise, GATE-focused explanation with examples and PYQ patterns, try asking with more context like "Explain ${message.trim()} for GATE with an example."`;
+      console.log(`[AI-TIMING] def fast-path provider=${Date.now()-defStart}ms total=${Date.now()-chatStart}ms`);
+      if (wantsStreamDef) {
+        res.status(200);
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache, no-transform');
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('X-Accel-Buffering', 'no');
+        if (res.flushHeaders) res.flushHeaders();
+        const send = (obj) => { if (!res.writableEnded) res.write(`data: ${JSON.stringify(obj)}\n\n`); };
+        send({ type: 'delta', content: defText.slice(0, Math.floor(defText.length/2)) });
+        await new Promise(r => setTimeout(r, 20));
+        send({ type: 'delta', content: defText.slice(Math.floor(defText.length/2)) });
+        send({ type: 'done', content: defText, source: defText.includes('core GATE topic') ? 'heuristic' : 'ai', provider: lastProviderUsed || 'OpenAI', remaining: null, conversationId: null });
+        aiUsage.increment(true, Date.now() - chatStart);
+        try { await incrementAiUsage(req.user?._id?.toString()); } catch(e) {}
+        return res.end();
+      } else {
+        aiUsage.increment(true, Date.now() - chatStart);
+        try { await incrementAiUsage(req.user?._id?.toString()); } catch(e) {}
+        return res.json({ success: true, data: { text: defText, source: defText.includes('core GATE topic') ? 'heuristic' : 'ai', provider: lastProviderUsed || 'OpenAI' } });
       }
     }
     // Server-side AI context: enrich every AI request with the user's REAL
