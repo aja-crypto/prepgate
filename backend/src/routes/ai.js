@@ -1120,23 +1120,16 @@ router.post('/chat', validateFields([
     message = message.trim();
     context = context || {};
     const tAuth = Date.now();
-    const isGreeting = /^(hi|hello|hey|hiya|howdy|hi nexa|hello nexa|hey nexa|good morning|good evening|good afternoon|thanks|thank you|thankyou|hey there|hi there|hello there)\s*[!.]*\s*$/i.test(message) && message.length < 30;
+    const isGreeting = /^(hi|hello|hey|hiya|howdy|hi nexa|hello nexa|hey nexa|good morning|good evening|good afternoon|thanks|thank you|thankyou|hey there|hi there|hello there)\s*[!.]*\s*$/i.test(message.trim()) && message.trim().length < 30;
     if (isGreeting) {
       const wantsStreamGreet = req.body.stream === true || /text\/event-stream/i.test(req.headers.accept || '');
-      const greetSystem = 'You are GateNexa AI, friendly GATE 2027 assistant. Greet warmly in 1-2 sentences, offer help for GATE preparation. Be concise.';
-      const greetMessages = [{ role: 'system', content: greetSystem }, { role: 'user', content: message }];
-      const greetStart = Date.now();
-      let greetText = null;
-      try {
-        const chain = buildProviderChain();
-        if (chain.length) {
-          const cfg = chain[0];
-          const txt = await callAiApiSingle(cfg, greetMessages, { max_tokens: 80, temperature: 0.7, timeoutMs: 5500 });
-          if (txt) greetText = txt.trim();
-        }
-      } catch (e) {}
-      if (!greetText) greetText = "Hi! I'm GateNexa AI — your GATE 2027 co-pilot. Ask me about concepts, PYQs, study plans, or predictions!";
-      console.log(`[AI-TIMING] greeting fast-path auth=${Date.now()-tAuth}ms greetProvider=${Date.now()-greetStart}ms total=${Date.now()-chatStart}ms`);
+      let greetText = "Hi! I'm GateNexa AI — your GATE 2027 co-pilot. Ask me about concepts, PYQs, study plans, or predictions!";
+      const lower = message.trim().toLowerCase();
+      if (/good morning/i.test(lower)) greetText = "Good morning! I'm GateNexa AI — ready to help you ace GATE 2027. What would you like to study today?";
+      else if (/good evening/i.test(lower)) greetText = "Good evening! I'm GateNexa AI — your GATE 2027 co-pilot. How can I help you this evening?";
+      else if (/thanks|thank you/i.test(lower)) greetText = "You're welcome! Happy to help with GATE 2027. Ask me anything!";
+      else if (/hello/i.test(lower)) greetText = "Hello! I'm GateNexa AI — your GATE 2027 co-pilot. How can I help you today?";
+      console.log(`[AI-TIMING] greeting fast-path (static) auth=${Date.now()-tAuth}ms total=${Date.now()-chatStart}ms`);
       if (wantsStreamGreet) {
         res.status(200);
         res.setHeader('Content-Type', 'text/event-stream');
