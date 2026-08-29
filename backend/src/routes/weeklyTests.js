@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { sanitizeFilename, createFileFilter } = require('../utils/uploadValidator');
 const { protect } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
@@ -22,7 +23,10 @@ const {
 
 const WEEKLY_TESTS_SEED = require('../data/weeklyTestSeed');
 
-const weeklyTestStorage = multer.diskStorage({
+const weeklyTestsDir = path.join(__dirname, '../../resources/weekly-tests');
+
+// Short-lived token store for local file access
+const localFileTokens = new Map();
   destination: (req, file, cb) => {
     const test = getLocalWeeklyTestById(req.params.id);
     const subDir = test?.subject || 'misc';
@@ -69,18 +73,35 @@ router.get('/download/:subject/:filename', protect, async (req, res) => {
       if (doc && doc.secure_url) {
         let url = doc.secure_url;
         if (req.query.force === '1') url += (url.includes('?') ? '&' : '?') + 'fl_attachment';
-        return res.redirect(url);
+        return res.json({ success: true, url });
       }
     } catch (e) { /* fall through to local */ }
   }
 
-  // Local filesystem fallback
+  // Local filesystem fallback - generate short-lived signed URL token
   const filePath = path.join(weeklyTestsDir, subject, safeFilename);
   if (fs.existsSync(filePath)) {
-    return res.sendFile(filePath);
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = Date.now() + 5 * 60 * 1000; // 5 minutes
+    localFileTokens.set(token, { filePath, expires });
+    const tokenUrl = `/api/weekly-tests/local-file/${token}`;
+    return res.json({ success: true, url: tokenUrl });
   }
 
   res.status(404).json({ success: false, message: 'File not found' });
+});
+
+// GET /api/weekly-tests/local-file/:token — serve local file with short-lived token
+router.get('/local-file/:token', async (req, res) => {
+  const tokenData = localFileTokens.get(req.params.token);
+  if (!tokenData || tokenData.expires < Date.now()) {
+    localFileTokens.delete(req.params.token);
+    return res.status(404).json({ success: false, message: 'Token expired or invalid' });
+  }
+  localFileTokens.delete(req.params.token);
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="${path.basename(tokenData.filePath)}"`);
+  fs.createReadStream(tokenData.filePath).pipe(res);
 });
 
 // GET /api/weekly-tests — list all tests, optional subject filter

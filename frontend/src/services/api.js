@@ -389,6 +389,15 @@ export const shortNoteService = {
     headers: { 'Content-Type': 'multipart/form-data' },
     timeout: 60000,
   }),
+  downloadUrl: (folder, filename) => `/api/short-notes/download/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}`,
+  openFile: async (folder, filename) => {
+    const response = await api.get(`/api/short-notes/download/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}`);
+    if (response.data?.success && response.data?.url) {
+      window.open(response.data.url, '_blank');
+      return response.data.url;
+    }
+    throw new Error(response.data?.message || 'Failed to get file URL');
+  },
 };
 
 export const mockTestService = {
@@ -427,6 +436,15 @@ export const weeklyTestService = {
   }),
   create: (data) => api.post('/weekly-tests', data),
   delete: (id) => api.delete(`/weekly-tests/${id}`),
+  downloadUrl: (subject, filename) => `/api/weekly-tests/download/${encodeURIComponent(subject)}/${encodeURIComponent(filename)}`,
+  openFile: async (subject, filename) => {
+    const response = await api.get(`/api/weekly-tests/download/${encodeURIComponent(subject)}/${encodeURIComponent(filename)}`);
+    if (response.data?.success && response.data?.url) {
+      window.open(response.data.url, '_blank');
+      return response.data.url;
+    }
+    throw new Error(response.data?.message || 'Failed to get file URL');
+  },
 };
 
 export const feedbackService = {

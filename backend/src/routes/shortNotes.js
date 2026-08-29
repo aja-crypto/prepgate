@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const mkdirp = require('mkdirp');
 const multer = require('multer');
 const { protect } = require('../middleware/auth');
@@ -14,6 +15,9 @@ const NOTES_DIR = path.join(__dirname, '../../../resources/short-notes');
 if (!fs.existsSync(NOTES_DIR)) {
   try { fs.mkdirSync(NOTES_DIR, { recursive: true }); } catch {}
 }
+
+// Short-lived token store for local file access
+const localFileTokens = new Map();
 
 const EMBEDDED_SHORT_NOTES = [
   { folder: 'OS', code: 'OS', name: 'Operating Systems', icon: '⚙️', color: '#a855f7', files: [{ name: 'os-notes.pdf', fileUrl: '/api/short-notes/download/OS/os-notes.pdf', type: 'pdf', size: 12 }], count: 1, lastModified: Date.now() },
@@ -243,18 +247,35 @@ router.get('/download/:folder/:filename', protect, async (req, res) => {
       if (doc && doc.secure_url) {
         let url = doc.secure_url;
         if (req.query.force === '1') url += (url.includes('?') ? '&' : '?') + 'fl_attachment';
-        return res.redirect(url);
+        return res.json({ success: true, url });
       }
     } catch (e) { /* fall through to local */ }
   }
 
-  // Local filesystem fallback
+  // Local filesystem fallback - generate short-lived signed URL token
   const filePath = path.join(NOTES_DIR, folder, safeFilename);
   if (fs.existsSync(filePath)) {
-    return res.sendFile(filePath);
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = Date.now() + 5 * 60 * 1000; // 5 minutes
+    localFileTokens.set(token, { filePath, expires });
+    const tokenUrl = `/api/short-notes/local-file/${token}`;
+    return res.json({ success: true, url: tokenUrl });
   }
 
   res.status(404).json({ success: false, message: 'File not found' });
+});
+
+// GET /api/short-notes/local-file/:token — serve local file with short-lived token
+router.get('/local-file/:token', async (req, res) => {
+  const tokenData = localFileTokens.get(req.params.token);
+  if (!tokenData || tokenData.expires < Date.now()) {
+    localFileTokens.delete(req.params.token);
+    return res.status(404).json({ success: false, message: 'Token expired or invalid' });
+  }
+  localFileTokens.delete(req.params.token);
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="${path.basename(tokenData.filePath)}"`);
+  fs.createReadStream(tokenData.filePath).pipe(res);
 });
 
 module.exports = router;

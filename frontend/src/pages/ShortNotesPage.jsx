@@ -1,15 +1,12 @@
-import { useState, useEffect, useMemo, lazy } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { shortNoteService } from '../services/api';
 import { silentCatch } from '../utils/errorHandler';
-import { resolveMediaUrl } from '../utils/mediaUrl';
 import { PageLoading } from '../components/common/GateLoadingScreen';
-const PremiumPdfViewer = lazy(() => import('../components/common/PremiumPdfViewer'));
 
 export default function ShortNotesPage() {
   const [subjects, setSubjects] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
-  const [preview, setPreview] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -76,10 +73,10 @@ export default function ShortNotesPage() {
                     <span className="text-xs">{file.type === 'pdf' ? '📄' : '🖼'}</span>
                     <span className="text-[11px] text-text truncate">{file.name}</span>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {file.type === 'pdf' && (
-                      <button onClick={() => setPreview(file)} className="text-[10px] px-2 py-1 rounded border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all">View</button>
-                    )}
+<div className="flex items-center gap-1 shrink-0">
+              {file.type === 'pdf' && (
+                <button onClick={() => shortNoteService.openFile(sub.folder || sub.code, file.name)} className="text-[10px] px-2 py-1 rounded border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all">View</button>
+              )}
                   </div>
                 </div>
               ))}
@@ -88,27 +85,6 @@ export default function ShortNotesPage() {
         ))}
         {filtered.length === 0 && <div className="col-span-full text-center py-16 text-text3 text-sm">No short notes found</div>}
       </div>
-
-      {preview && preview.type === 'pdf' && (
-        <PremiumPdfViewer
-          url={resolveMediaUrl(preview.fileUrl)}
-          fileName={preview.name}
-          onClose={() => setPreview(null)}
-        />
-      )}
-      {preview && preview.type !== 'pdf' && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => setPreview(null)}>
-          <div className="max-w-4xl max-h-[90vh] w-full bg-surface rounded-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-              <div className="text-sm font-semibold text-text truncate">{preview.name}</div>
-              <button onClick={() => setPreview(null)} className="text-text3 hover:text-text p-1">&times;</button>
-            </div>
-            <div className="p-2">
-              <img src={resolveMediaUrl(preview.fileUrl)} alt={preview.name} className="max-w-full max-h-[75vh] mx-auto object-contain" />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

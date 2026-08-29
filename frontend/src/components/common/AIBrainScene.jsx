@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState, Suspense, useCallback, memo } from 'react';
+import { useRef, useMemo, useState, Suspense, useCallback, memo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 
 // ─── BRAIN GEOMETRY GENERATOR ────────────────────────────────────────
@@ -149,6 +149,7 @@ function NeuralMesh() {
 
   // Breathing + synapse animation
   useFrame(({ clock }) => {
+    if (!mountedRef.current) return;
     const t = clock.getElapsedTime();
 
     if (groupRef.current) {
@@ -343,6 +344,16 @@ function EnergyField() {
 
 // ─── COMPLETE 3D SCENE ───────────────────────────────────────────────
 function NeuralBrainScene() {
+  // Track if component is mounted for cleanup
+  const mountedRef = useRef(true);
+  
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   return (
     <>
       <ambientLight intensity={0.03} />

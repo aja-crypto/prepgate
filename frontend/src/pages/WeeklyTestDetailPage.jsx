@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo, lazy } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { weeklyTestService } from '../services/api';
 import { silentCatch } from '../utils/errorHandler';
 import { PageLoading } from '../components/common/GateLoadingScreen';
-const PremiumPdfViewer = lazy(() => import('../components/common/PremiumPdfViewer'));
 import toast from 'react-hot-toast';
+import GlassCard from '../components/ui/GlassCard';
+import Icon from '../components/ui/Icon';
 
 const SUBJECT_META = {
   AL: { icon: '⚡', color: '#ff6b6b', name: 'Algorithms' },
@@ -37,9 +38,6 @@ export default function WeeklyTestDetailPage() {
   const [scoreInput, setScoreInput] = useState({});
   const [submitting, setSubmitting] = useState({});
   const [loading, setLoading] = useState(true);
-  const [viewerPdfUrl, setViewerPdfUrl] = useState(null);
-  const [viewerPdfError, setViewerPdfError] = useState(false);
-  const [showDisclaimer, setShowDisclaimer] = useState(true);
 
   const meta = SUBJECT_META[subjectCode] || { icon: '📝', color: 'var(--color-primary)', name: subjectCode };
 
@@ -235,7 +233,7 @@ export default function WeeklyTestDetailPage() {
                 <div className="flex items-center gap-2 shrink-0">
                   {test.pdfUrl ? (
                     <button
-                      onClick={() => { setViewerPdfUrl(test.pdfUrl); setViewerPdfError(false); }}
+                      onClick={() => weeklyTestService.openFile(subjectCode, test.pdfUrl.split('/').pop())}
                       className="text-xs px-3 py-2 rounded-lg border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all"
                     >
                       View PDF
@@ -278,14 +276,6 @@ export default function WeeklyTestDetailPage() {
           <div className="text-center py-16 text-text3 text-sm">No tests found</div>
         )}
       </div>
-
-      {viewerPdfUrl && (
-        <PremiumPdfViewer
-          url={viewerPdfUrl}
-          fileName="Test Paper"
-          onClose={() => { setViewerPdfUrl(null); setViewerPdfError(false); }}
-        />
-      )}
     </div>
   );
 }

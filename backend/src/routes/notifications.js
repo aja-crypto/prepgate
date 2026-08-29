@@ -94,6 +94,38 @@ router.get('/', protect, async (req, res, next) => {
       }
     }
 
+    // Daily generation: if it's a new day and user has no notifications for today, generate them idempotently
+    try {
+      const prefs = await ensurePrefs(mongoUserId);
+      const today = new Date().toISOString().slice(0, 10);
+      const todayStart = new Date(today + 'T00:00:00.000Z');
+      const todayCount = await Notification.countDocuments({ user: mongoUserId, createdAt: { $gte: todayStart } });
+      if (todayCount === 0 && prefs.todayCount === 0 && prefs.todayDate === today) {
+        // Already checked today and found nothing to generate — skip to avoid spam
+      } else if (todayCount === 0) {
+        const context = {};
+        try {
+          const User = require('../models/User');
+          const u = await User.findById(mongoUserId).select('createdAt').lean();
+          if (u?.createdAt) {
+            const diffDays = Math.floor((Date.now() - new Date(u.createdAt).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            context.loginDay = diffDays;
+          }
+        } catch (_) {}
+        const daily = await generateDailyNotifications(mongoUserId, context);
+        if (daily && daily.length > 0) {
+          const [fresh, freshTotal, freshUnread] = await Promise.all([
+            Notification.find(filter).sort({ scheduledAt: -1 }).skip(skip).limit(limit).lean(),
+            Notification.countDocuments(filter),
+            Notification.countDocuments({ user: mongoUserId, isRead: false }),
+          ]);
+          return res.json({ success: true, data: { notifications: fresh, total: freshTotal, unreadCount: freshUnread, page, pages: Math.ceil(freshTotal / limit), prefs: await ensurePrefs(mongoUserId) } });
+        }
+      }
+    } catch (e) {
+      // Daily generation failure should not block fetching
+    }
+
     res.json({ success: true, data: { notifications, total, unreadCount, page, pages: Math.ceil(total / limit), prefs } });
   } catch (e) { next(e); }
 });
