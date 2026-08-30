@@ -352,9 +352,8 @@ async function callAiApiSingle(providerCfg, messages, options = {}) {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
     if (attempt > 0) { console.log(`[callAiApi] Retry attempt ${attempt}/${maxRetries}`); totalRetries++; }
 
-    const tMs = options.timeoutMs || 8000;
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), tMs);
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
     const reqStartTs = Date.now();
 
     const requestPayload = {
@@ -371,7 +370,7 @@ async function callAiApiSingle(providerCfg, messages, options = {}) {
         'Authorization': `Bearer ${apiKey}`,
         ...(isOpenRouter ? { 'HTTP-Referer': 'https://GateNexa.app', 'X-Title': 'GateNexa' } : {}),
       };
-      const { status, json: jsonBody, raw, headers: respHeaders } = await httpsPostJson(endpoint, requestPayload, headers, tMs);
+      const { status, json: jsonBody, raw, headers: respHeaders } = await httpsPostJson(endpoint, requestPayload, headers, 8000);
 
       clearTimeout(timeoutId);
 
@@ -582,7 +581,7 @@ async function streamAiApi(messages, options = {}, onDelta) {
           stream: true,
         },
         headers,
-        opts.timeoutMs || 8000,
+        opts.timeoutMs || 60000,
         (delta) => { fullText += delta; if (onDelta) onDelta(delta); }
       );
 
@@ -1099,20 +1098,11 @@ router.post('/chat', validateFields([
       return res.status(400).json({ success: false, message: 'Message cannot be empty.' });
     }
 
-    message = message.trim();
-    context = context || {};
-    const tAuth = Date.now();
-    const isGreeting = /^(hi|hello|hey|hiya|howdy|hi nexa|hello nexa|hey nexa|good morning|good evening|good afternoon|thanks|thank you|thankyou|hey there|hi there|hello there)\s*[!.]*\s*$/i.test(message) && message.length < 30;
-    const isSimpleDef = /^(what is|what are|what's|whats)\s+.{2,30}\??$/i.test(message) && message.length < 50;
-    const isFastPath = isGreeting || isSimpleDef;
+    // Enforce quota
     const userId = req.user?._id;
   const isAdmin = req.user?.role === 'admin';
-    if (!isAdmin && !isGreeting) {
-      const quotaTimeoutMs = isSimpleDef ? 1500 : 4000;
-      const quota = await Promise.race([
-        checkAiQuota(userId),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('quota timeout')), quotaTimeoutMs))
-      ]).catch(e => { console.log('[AI-TIMING] quota timeout', e.message); return { allowed: true, remaining: 5, limit: 5 }; });
+    if (!isAdmin) {
+      const quota = await checkAiQuota(userId);
       if (!quota.allowed) {
         aiUsage.increment(false, Date.now() - chatStart);
         const msg = quota.isGuest
@@ -1125,101 +1115,29 @@ router.post('/chat', validateFields([
         });
       }
     }
-    if (isGreeting) {
-      const wantsStreamGreet = req.body.stream === true || /text\/event-stream/i.test(req.headers.accept || '');
-      let greetText = "Hi! I'm GateNexa AI — your GATE 2027 co-pilot. Ask me about concepts, PYQs, study plans, or predictions!";
-      const lower = message.trim().toLowerCase();
-      if (/good morning/i.test(lower)) greetText = "Good morning! I'm GateNexa AI — ready to help you ace GATE 2027. What would you like to study today?";
-      else if (/good evening/i.test(lower)) greetText = "Good evening! I'm GateNexa AI — your GATE 2027 co-pilot. How can I help you this evening?";
-      else if (/thanks|thank you/i.test(lower)) greetText = "You're welcome! Happy to help with GATE 2027. Ask me anything!";
-      else if (/hello/i.test(lower)) greetText = "Hello! I'm GateNexa AI — your GATE 2027 co-pilot. How can I help you today?";
-      console.log(`[AI-TIMING] greeting fast-path (static) auth=${Date.now()-tAuth}ms total=${Date.now()-chatStart}ms`);
-      if (wantsStreamGreet) {
-        res.status(200);
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache, no-transform');
-        res.setHeader('Connection', 'keep-alive');
-        res.setHeader('X-Accel-Buffering', 'no');
-        if (res.flushHeaders) res.flushHeaders();
-        const send = (obj) => { if (!res.writableEnded) res.write(`data: ${JSON.stringify(obj)}\n\n`); };
-        send({ type: 'delta', content: greetText.slice(0, Math.floor(greetText.length/2)) });
-        await new Promise(r => setTimeout(r, 20));
-        send({ type: 'delta', content: greetText.slice(Math.floor(greetText.length/2)) });
-        send({ type: 'done', content: greetText, source: 'ai', provider: lastProviderUsed || 'OpenAI', remaining: null, conversationId: null });
-        aiUsage.increment(true, Date.now() - chatStart);
-        incrementAiUsage(req.user?._id?.toString()).catch(()=>{});
-        return res.end();
-      } else {
-        aiUsage.increment(true, Date.now() - chatStart);
-        incrementAiUsage(req.user?._id?.toString()).catch(()=>{});
-        return res.json({ success: true, data: { text: greetText, source: 'ai', provider: lastProviderUsed || 'OpenAI' } });
-      }
-    }
-    if (isSimpleDef) {
-      const wantsStreamDef = req.body.stream === true || /text\/event-stream/i.test(req.headers.accept || '');
-      const defPrompt = `You are GateNexa AI for GATE 2027. Explain "${message.trim()}" concisely, accurately, with a clear definition, key points, and GATE relevance in 4-6 short paragraphs. Be direct and technically precise.`;
-      const defMessages = [{ role: 'system', content: defPrompt }, { role: 'user', content: message }];
-      const defStart = Date.now();
-      let defText = null;
-      try {
-        const chain = buildProviderChain();
-        if (chain.length) {
-          const cfg = chain[0];
-          const txt = await callAiApiSingle(cfg, defMessages, { max_tokens: 500, temperature: 0.6, timeoutMs: 2800 });
-          if (txt) defText = txt.trim();
-        }
-      } catch (e) { console.log('[AI-TIMING] def provider err', e.message); }
-      if (!defText) defText = `${message.trim()} — This is a core GATE topic. For a precise, GATE-focused explanation with examples and PYQ patterns, try asking with more context like "Explain ${message.trim()} for GATE with an example."`;
-      console.log(`[AI-TIMING] def fast-path provider=${Date.now()-defStart}ms total=${Date.now()-chatStart}ms`);
-      if (wantsStreamDef) {
-        res.status(200);
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache, no-transform');
-        res.setHeader('Connection', 'keep-alive');
-        res.setHeader('X-Accel-Buffering', 'no');
-        if (res.flushHeaders) res.flushHeaders();
-        const send = (obj) => { if (!res.writableEnded) res.write(`data: ${JSON.stringify(obj)}\n\n`); };
-        send({ type: 'delta', content: defText.slice(0, Math.floor(defText.length/2)) });
-        await new Promise(r => setTimeout(r, 20));
-        send({ type: 'delta', content: defText.slice(Math.floor(defText.length/2)) });
-        send({ type: 'done', content: defText, source: defText.includes('core GATE topic') ? 'heuristic' : 'ai', provider: lastProviderUsed || 'OpenAI', remaining: null, conversationId: null });
-        aiUsage.increment(true, Date.now() - chatStart);
-        try { await incrementAiUsage(req.user?._id?.toString()); } catch(e) {}
-        return res.end();
-      } else {
-        aiUsage.increment(true, Date.now() - chatStart);
-        try { await incrementAiUsage(req.user?._id?.toString()); } catch(e) {}
-        return res.json({ success: true, data: { text: defText, source: defText.includes('core GATE topic') ? 'heuristic' : 'ai', provider: lastProviderUsed || 'OpenAI' } });
-      }
-    }
+
+    message = message.trim();
+    context = context || {};
+
     // Server-side AI context: enrich every AI request with the user's REAL
     // backend data (profile, progress, roadmap, journey, recommendations,
     // analytics, prediction). The frontend-supplied context still provides
     // mode/history/modePrompt, but personalization no longer depends on it.
-    // Skip heavy context for very short messages to reduce latency
-    const skipHeavyContext = message.length < 12 && !context.mode;
-    if (!skipHeavyContext) {
-      try {
-        const { buildContextForUser } = require('../services/aiContextBuilder');
-        const ctxPromise = buildContextForUser(req.user);
-        const timeoutPromise = new Promise((_, rej) => setTimeout(() => rej(new Error('context timeout 2500ms')), 2500));
-        const serverCtx = await Promise.race([ctxPromise, timeoutPromise]).catch(e => { console.log('[AI-TIMING] buildContext timeout/err', e.message); return null; });
-        if (serverCtx) {
-          context = { ...serverCtx, ...context };
-          context.weakTopics = context.weakTopics?.map?.(t => typeof t === 'string' ? t : t.name) || [];
-          context.roadmap = context.roadmap || serverCtx.roadmap;
-          context.journey = context.journey || serverCtx.journey;
-          context.recommendations = context.recommendations || serverCtx.recommendations;
-          context.analytics = context.analytics || serverCtx.analytics;
-          context.prediction = context.prediction || serverCtx.prediction;
-        }
-      } catch (ctxErr) {
-        console.error('[AI Coach] context builder failed:', ctxErr.message);
+    try {
+      const { buildContextForUser } = require('../services/aiContextBuilder');
+      const serverCtx = await buildContextForUser(req.user);
+      if (serverCtx) {
+        context = { ...serverCtx, ...context };
+        context.weakTopics = context.weakTopics?.map?.(t => typeof t === 'string' ? t : t.name) || [];
+        context.roadmap = context.roadmap || serverCtx.roadmap;
+        context.journey = context.journey || serverCtx.journey;
+        context.recommendations = context.recommendations || serverCtx.recommendations;
+        context.analytics = context.analytics || serverCtx.analytics;
+        context.prediction = context.prediction || serverCtx.prediction;
       }
-    } else {
-      console.log(`[AI-TIMING] skipHeavyContext for short message "${message.slice(0,20)}"`);
+    } catch (ctxErr) {
+      console.error('[AI Coach] context builder failed:', ctxErr.message);
     }
-    console.log(`[AI-TIMING] untilContext=${Date.now()-tAuth}ms`);
 
     let conv = null;
     const { isMockAuthEnabled } = require('../config/devMode');
@@ -1265,18 +1183,15 @@ router.post('/chat', validateFields([
       await conv.save();
 
       const recentMessages = await Message.find({ conversation: conv._id })
-        .sort({ createdAt: -1 }).limit(3).lean();
+        .sort({ createdAt: -1 }).limit(8).lean();
       context.history = recentMessages.reverse().map(m => ({
         role: m.role,
         content: m.content,
       }));
-      if (Array.isArray(context.history) && context.history.length > 3) context.history = context.history.slice(-3);
     }
 
     // Thread conversationId into context so follow-ups reference the same conversation.
     context.conversationId = conversationId || context.conversationId || null;
-    if (Array.isArray(context.history) && context.history.length > 4) context.history = context.history.slice(-4);
-    console.log(`[AI-TIMING] beforeProvider total=${Date.now()-chatStart}ms historyLen=${Array.isArray(context.history)?context.history.length:0}`);
 
     // Streaming is requested by the assistant clients (Accept: text/event-stream
     // or explicit stream flag). JSON path preserved for existing askCoach consumers.
@@ -1295,13 +1210,9 @@ router.post('/chat', validateFields([
 
       let response = null;
       try {
-        const aiPromise = getAiCoachResponse(message, context, req.user, modePrompt, (delta) => {
+        response = await getAiCoachResponse(message, context, req.user, modePrompt, (delta) => {
           send({ type: 'delta', content: delta });
         });
-        response = await Promise.race([
-          aiPromise,
-          new Promise((_, rej) => setTimeout(() => rej(new Error('ai timeout 15s')), 15000))
-        ]).catch(e => { console.error('[AI-TIMING] getAiCoachResponse timeout', e.message); return { text: null, source: 'error', offlineError: 'AI request timed out. Please try again.' }; });
       } catch (err) {
         console.error('[AI Coach] SSE unhandled error:', err.message);
         response = { text: null, source: 'error', offlineError: 'AI chat error. Please try again.' };
@@ -1349,12 +1260,8 @@ router.post('/chat', validateFields([
       return res.end();
     }
 
-    let response = await Promise.race([
-      getAiCoachResponse(message, context, req.user, modePrompt),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('ai timeout 15s')), 15000))
-    ]).catch(e => { console.error('[AI-TIMING] getAiCoachResponse timeout', e.message); return { text: null, source: 'error', offlineError: 'AI request timed out. Please try again.', conversationId: conv?._id?.toString() || null }; });
-    if (!response) response = { text: null, source: 'error', offlineError: 'AI request timed out.' };
-    response.conversationId = response.conversationId || conv?._id?.toString() || null;
+    const response = await getAiCoachResponse(message, context, req.user, modePrompt);
+    response.conversationId = conv?._id?.toString() || null;
 
     // Get updated remaining count after increment
     let remaining = null;
