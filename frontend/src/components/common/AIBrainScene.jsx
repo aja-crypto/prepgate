@@ -109,6 +109,11 @@ function NeuralMesh() {
   const nodesRef = useRef();
   const linesRef = useRef();
   const synapseRef = useRef();
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const { nodes, connections, nodePositions, linePositions, lineColors } = useMemo(() => {
     const geo = generateBrainGeometry(260);
