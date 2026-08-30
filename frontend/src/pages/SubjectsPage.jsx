@@ -30,21 +30,16 @@ export default function SubjectsPage() {
 
   const loadData = async () => {
     try {
-      const [subRes, analRes] = await Promise.all([
-        subjectService.getHierarchy().catch(() => null),
-        subjectService.getAnalytics().catch(() => null),
-      ]);
-
+      const subRes = await subjectService.getHierarchy().catch(() => null);
       if (subRes?.data?.data && subRes.data.data.length > 0) {
-        return {
-          subjects: subRes.data.data,
-          analytics: analRes?.data?.data || null,
-          expanded: (subRes.data.data || []).find((s) => s.isHighPriority)?._id || null,
-        };
-      } else {
-        const fallback = buildFallbackData();
-        return { subjects: fallback.subjects, analytics: fallback, expanded: null };
+        const subjects = subRes.data.data;
+        const totalTopics = subjects.reduce((s, sub) => s + (sub.topicCount || 0), 0);
+        const totalCompleted = subjects.reduce((s, sub) => s + (sub.completedTopics || 0), 0);
+        const analytics = { overall: { totalTopics, completedTopics: totalCompleted, topicCompletionPct: totalTopics ? Math.round((totalCompleted / totalTopics) * 100) : 0 }, subjects };
+        return { subjects, analytics, expanded: subjects.find((s) => s.isHighPriority)?._id || null };
       }
+      const fallback = buildFallbackData();
+      return { subjects: fallback.subjects, analytics: fallback, expanded: null };
     } catch (err) {
       const fallback = buildFallbackData();
       toast.error(getApiErrorMessage(err, 'Showing local syllabus fallback'));

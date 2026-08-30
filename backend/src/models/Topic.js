@@ -24,6 +24,8 @@ const topicSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 topicSchema.index({ subject: 1, order: 1 });
+topicSchema.index({ isDefault: 1, subject: 1 });
+topicSchema.index({ isDefault: 1 });
 
 const Topic = mongoose.models.Topic || mongoose.model('Topic', topicSchema);
 

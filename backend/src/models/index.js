@@ -135,7 +135,8 @@ const progressSchema = new mongoose.Schema({
 
 // Unique per user-topic pair
 progressSchema.index({ user: 1, topic: 1 }, { unique: true });
-const Progress = mongoose.model('Progress', progressSchema);
+progressSchema.index({ user: 1 });
+progressSchema.index({ user: 1, subject: 1 });
 
 // ─────────────────────────────────────────────────────────────
 // src/models/StudyLog.js – Daily study hours

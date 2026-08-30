@@ -73,37 +73,43 @@ export function PageState({
   return <div className={className}>{children}</div>;
 }
 
+const pageCache = new Map();
+const PAGE_TTL = 2 * 60 * 1000;
+function pageKey(deps) {
+  try { return JSON.stringify(deps); } catch { return String(deps); }
+}
 export function usePageState(loadFn, deps = []) {
-  const [state, setState] = useState('loading');
-  const [data, setData] = useState(null);
+  const key = pageKey(deps);
+  const cached = pageCache.get(key);
+  const hasFreshCache = cached && Date.now() - cached.ts < PAGE_TTL;
+  const [state, setState] = useState(hasFreshCache ? 'success' : 'loading');
+  const [data, setData] = useState(hasFreshCache ? cached.data : null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (hasFreshCache) {
+      let cancelled = false;
+      loadFn().then((result) => {
+        if (cancelled) return;
+        const isEmpty = !result || (Array.isArray(result) ? result.length === 0 : Object.keys(result).length === 0);
+        if (!isEmpty) { pageCache.set(key, { data: result, ts: Date.now() }); setData(result); }
+      }).catch(() => {});
+      return () => { cancelled = true; };
+    }
     let cancelled = false;
     setState('loading');
     setError(null);
-
     loadFn()
       .then((result) => {
         if (!cancelled) {
+          pageCache.set(key, { data: result, ts: Date.now() });
           setData(result);
-          setState(
-            result &&
-            (Array.isArray(result)
-              ? result.length > 0
-              : Object.keys(result).length > 0)
-              ? 'success'
-              : 'empty'
-          );
+          setState(result && (Array.isArray(result) ? result.length > 0 : Object.keys(result).length > 0) ? 'success' : 'empty');
         }
       })
       .catch((err) => {
-        if (!cancelled) {
-          setError(err);
-          setState('error');
-        }
+        if (!cancelled) { setError(err); setState('error'); }
       });
-
     return () => { cancelled = true; };
   }, deps);
 

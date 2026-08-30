@@ -63,6 +63,8 @@ const subjectSchema = new mongoose.Schema({
   toObject: { virtuals: true },
 });
 
+subjectSchema.index({ isActive: 1, order: 1 });
+subjectSchema.index({ code: 1 });
 // Virtual: topic count
 subjectSchema.virtual('topicCount', {
   ref: 'Topic',

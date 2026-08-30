@@ -1,14 +1,23 @@
 // src/services/api.js – Axios API Service with token refresh
 import axios from 'axios';
 
-// Simple in-memory cache with TTL for stable data
 const apiCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 5 * 60 * 1000;
+const SWR_TTL = 2 * 60 * 1000;
+function cacheKeyFor(config) {
+  const url = config.url || '';
+  const params = config.params ? JSON.stringify(config.params, Object.keys(config.params).sort()) : '';
+  return `get:${url}?${params}`;
+}
 export function getCached(key) {
   const entry = apiCache.get(key);
   if (entry && Date.now() - entry.timestamp < CACHE_TTL) return entry.data;
-  apiCache.delete(key);
+  if (entry) apiCache.delete(key);
   return null;
+}
+export function getStale(key) {
+  const entry = apiCache.get(key);
+  return entry ? entry.data : null;
 }
 export function setCache(key, data) {
   apiCache.set(key, { data, timestamp: Date.now() });
@@ -47,12 +56,14 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Auto-cache GET requests (skip auth/dynamic endpoints)
     if (config.method === 'get' && !NO_CACHE_PATTERNS.some(p => config.url?.includes(p))) {
-      const cacheKey = `get:${config.url}`;
+      const cacheKey = cacheKeyFor(config);
       const cached = getCached(cacheKey);
       if (cached) {
         config.adapter = () => Promise.resolve({ data: cached, status: 200, statusText: 'OK', headers: {}, config });
+      } else {
+        const stale = getStale(cacheKey);
+        if (stale) config.headers['X-Cache-Stale'] = 'true';
       }
     }
 
@@ -85,9 +96,8 @@ const refreshAccessToken = async () => {
 
 api.interceptors.response.use(
   (response) => {
-    // Cache successful GET responses (skip auth/dynamic endpoints)
     if (response.config?.method === 'get' && !NO_CACHE_PATTERNS.some(p => response.config?.url?.includes(p))) {
-      const cacheKey = `get:${response.config.url}`;
+      const cacheKey = cacheKeyFor(response.config);
       setCache(cacheKey, response.data);
     }
     return response;

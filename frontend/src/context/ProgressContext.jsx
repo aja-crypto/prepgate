@@ -22,7 +22,8 @@ const ProgressDataContext = createContext(null);
 const ProgressActionsContext = createContext(null);
 const storageKey = (userId) => `gatenexa_progress_${userId || 'guest'}`;
 const BACKUP_INTERVAL_MS = 5 * 60 * 1000;
-const PUSH_DEBOUNCE_MS = 2000;
+const PUSH_DEBOUNCE_MS = 5000;
+const VISIBILITY_THROTTLE_MS = 5 * 60 * 1000;
 
 function getInitialData() {
   return getEmptyProgressData();
@@ -108,15 +109,14 @@ export const ProgressProvider = ({ children }) => {
       }
 
       if (ma ?? mongo) {
-        try {
-          const pyqRes = await pyqService.getAll({ limit: 500 });
+        pyqService.getAll({ limit: 500 }).then((pyqRes) => {
           const apiPyqs = pyqRes.data?.data || [];
-          if (apiPyqs.length) {
+          if (apiPyqs.length && !controller.signal.aborted) {
             const withPyqs = { ...merged, pyqs: mergePyqLists(apiPyqs, merged.pyqs) };
             setData(withPyqs);
             localStorage.setItem(storageKey(userId), JSON.stringify(withPyqs));
           }
-        } catch { /* PYQ API optional */ }
+        }).catch(() => {});
       }
     })();
 
@@ -185,11 +185,14 @@ export const ProgressProvider = ({ children }) => {
     return () => clearInterval(cloudTimer.current);
   }, [user, userId, syncToCloud]);
 
+  const lastVisibilitySync = useRef(0);
   // Wake-from-sleep detection — re-sync when page becomes visible after being hidden
   useEffect(() => {
     if (!user || userId === 'guest') return;
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
+        if (Date.now() - lastVisibilitySync.current < VISIBILITY_THROTTLE_MS) return;
+        lastVisibilitySync.current = Date.now();
         if (wakeSyncTimer.current) clearTimeout(wakeSyncTimer.current);
         wakeSyncTimer.current = setTimeout(syncToCloud, 1000);
       }

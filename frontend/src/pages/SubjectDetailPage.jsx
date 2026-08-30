@@ -137,34 +137,26 @@ export default function SubjectDetailPage() {
     (async () => {
       setLoading(true);
       try {
-        const subRes = await subjectService.getAll({ code: subjectCode });
-        const found = subRes.data?.data?.find(
-          (s) => s.code === subjectCode || s.code?.toUpperCase() === subjectCode.toUpperCase()
-        );
+        const [subRes, notesRes] = await Promise.all([
+          subjectService.getAll({ code: subjectCode }),
+          shortNoteService.getAll().catch(() => ({ data: { data: [] } })),
+        ]);
+        const found = subRes.data?.data?.find((s) => s.code === subjectCode || s.code?.toUpperCase() === subjectCode.toUpperCase());
         if (found) setSubject(found);
-
         const subjectId = found?._id;
-        if (!subjectId) {
-          toast.error('Subject not found');
-          setLoading(false);
-          return;
-        }
-        const [topicsRes, notesRes, weeklyRes, mockRes] = await Promise.allSettled([
+        if (!subjectId) { toast.error('Subject not found'); setLoading(false); return; }
+        setShortNotes(notesRes.data?.data || []);
+        const [topicsRes, weeklyRes, mockRes] = await Promise.allSettled([
           topicService.getAll({ subject: subjectId }),
-          shortNoteService.getAll(),
           weeklyTestService.getAll({ subject: subjectCode }),
           mockTestService.getAll({ subject: subjectCode }),
         ]);
-
         setTopics(topicsRes.status === 'fulfilled' ? topicsRes.value.data?.data || [] : []);
-        setShortNotes(notesRes.status === 'fulfilled' ? notesRes.value.data?.data || [] : []);
         setWeeklyTests(weeklyRes.status === 'fulfilled' ? weeklyRes.value.data?.data || [] : []);
         setMockTests(mockRes.status === 'fulfilled' ? mockRes.value.data?.data || [] : []);
       } catch (err) {
         toast.error(getApiErrorMessage(err, 'Failed to load subject data'));
-      } finally {
-        setLoading(false);
-      }
+      } finally { setLoading(false); }
     })();
   }, [subjectCode]);
 
