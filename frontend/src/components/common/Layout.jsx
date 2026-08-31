@@ -192,50 +192,40 @@ const Layout = memo(function Layout() {
         <header className="sticky top-0 z-30 flex items-center gap-1.5 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-4 py-2 md:py-3 glass-header relative">
           <div className="header-hairline" />
 
-          {/* ═══ MOBILE HEADER — single-layer glass + NEXA brand (mobile only) ═══ */}
-          <header className={`mobile-top-header md:hidden ${isScrolled ? 'is-scrolled' : ''}`}>
-            <div className="mobile-top-header__left">
-              <button
-                type="button"
-                id="mobile-hamburger"
-                className="mobile-top-navbar__menu"
-                aria-label="Open menu"
-                aria-expanded={sidebarOpen}
-                onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(true), 150); }}
-              >
-                <span className="hamburger-icon">
-                  <span />
-                  <span />
-                  <span />
-                </span>
-              </button>
-            </div>
-
-            <div className="mobile-top-navbar__brand" aria-label="GATE NEXA">
-              <span className="mobile-top-navbar__brand-gate">GATE</span>
-              <span className="mobile-top-navbar__brand-main">
-                <span className="mobile-top-navbar__brand-n">N</span>
-                <span className="mobile-top-navbar__brand-exa">EXA</span>
-              </span>
-            </div>
-
+          {/* MOBILE TOP NAVBAR — MOBILE ONLY */}
+          <header className={`mobile-top-header ${isScrolled ? 'is-scrolled' : ''}`}>
             <button
               type="button"
-              className="mobile-top-navbar__search"
-              aria-label="Search"
-              onClick={() => setSearchOpen(true)}
+              className="mobile-top-header__menu"
+              onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(!sidebarOpen), 150); }}
+              aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={sidebarOpen}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-4 h-4 shrink-0">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
-              </svg>
-              <span>Search GateNexa...</span>
+              <span />
+              <span />
+              <span />
             </button>
-
-            <div className="mobile-top-header__right">
-              <div className="mobile-top-navbar__notification">
-                <NotificationPanel />
-              </div>
+            <div className="mobile-top-header__brand" aria-label="GateNexa">
+              <span className="mobile-top-header__gate">GATE</span>
+              <span className="mobile-top-header__nexa">
+                <span className="mobile-top-header__n">N</span>
+                <span>EXA</span>
+              </span>
+            </div>
+            <button
+              type="button"
+              className="mobile-top-header__search"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search GateNexa"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="mobile-top-header__search-icon">
+                <circle cx="11" cy="11" r="6.5" />
+                <path d="m16 16 4 4" />
+              </svg>
+              <span>Search...</span>
+            </button>
+            <div className="mobile-top-header__notification">
+              <NotificationPanel />
             </div>
           </header>
 
