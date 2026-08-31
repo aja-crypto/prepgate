@@ -192,7 +192,7 @@ const Layout = memo(function Layout() {
         <header className="sticky top-0 z-30 flex items-center gap-1.5 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-4 py-2 md:py-3 glass-header relative">
           <div className="header-hairline" />
 
-          {/* ═══ MOBILE HEADER — single-layer glass (mobile only) ═══ */}
+          {/* ═══ MOBILE HEADER — single-layer glass + NEXA brand (mobile only) ═══ */}
           <header className={`mobile-top-header md:hidden ${isScrolled ? 'is-scrolled' : ''}`}>
             <div className="mobile-top-header__left">
               <button
@@ -209,6 +209,14 @@ const Layout = memo(function Layout() {
                   <span />
                 </span>
               </button>
+            </div>
+
+            <div className="mobile-top-navbar__brand" aria-label="GATE NEXA">
+              <span className="mobile-top-navbar__brand-gate">GATE</span>
+              <span className="mobile-top-navbar__brand-main">
+                <span className="mobile-top-navbar__brand-n">N</span>
+                <span className="mobile-top-navbar__brand-exa">EXA</span>
+              </span>
             </div>
 
             <button

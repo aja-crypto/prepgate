@@ -170,7 +170,7 @@
       width: 100%;
       min-height: 64px;
       display: grid;
-      grid-template-columns: 48px minmax(0, 1fr) 48px;
+      grid-template-columns: 48px auto minmax(0, 1fr) 48px;
       align-items: center;
       gap: 10px;
       padding: 8px 12px;
@@ -2292,7 +2292,7 @@
 }
 
 /* =========================================================
-   GATENEXA — MOBILE TOP NAVBAR FIX — compressed/squashed
+   GATENEXA ï¿½ MOBILE TOP NAVBAR FIX ï¿½ compressed/squashed
    ========================================================= */
 @media (max-width: 1023px) {
   .mobile-top-header {
@@ -2369,7 +2369,7 @@
 }
 
 /* =========================================================
-   GATENEXA MOBILE NAV — PREMIUM MOTION LAYER
+   GATENEXA MOBILE NAV ï¿½ PREMIUM MOTION LAYER
    ========================================================= */
 @media (max-width: 1023px) {
   .mobile-top-header::before {
