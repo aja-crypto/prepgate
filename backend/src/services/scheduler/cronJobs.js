@@ -2,6 +2,7 @@
 const cron = require('node-cron');
 const { isMockAuthEnabled } = require('../../config/devMode');
 const { runJob, runAllJobs, getJobList } = require('../fetchOrchestrator');
+const { startNotificationScheduler } = require('./notificationScheduler');
 
 let started = false;
 
@@ -45,6 +46,13 @@ function startScheduler() {
   getJobList().forEach(({ name, interval }) => {
     console.log(`   · ${name} (every ${interval})`);
   });
+
+  try {
+    const r = startNotificationScheduler();
+    if (r && r.started) console.log(`   · notifications (5 slots Asia/Kolkata)`);
+  } catch (e) {
+    console.error('[CronJobs] notification scheduler failed:', e.message);
+  }
 }
 
 module.exports = { startScheduler, runAllJobs, runJob, getJobList };

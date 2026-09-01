@@ -40,6 +40,11 @@ const notificationSchema = new mongoose.Schema({
   scheduledAt: { type: Date, default: Date.now },
   deliveredAt: Date,
   expiresAt: Date,
+  notificationKey: {
+    type: String,
+    trim: true,
+    index: true,
+  },
 }, { timestamps: true });
 
 notificationSchema.index({ user: 1, isRead: 1, scheduledAt: -1 });
@@ -48,5 +53,17 @@ notificationSchema.index({ user: 1, type: 1, scheduledAt: -1 });
 notificationSchema.index({ user: 1, isRead: 1, type: 1, scheduledAt: -1 });
 // Index for count queries with user + isRead filter
 notificationSchema.index({ user: 1, isRead: 1 });
+notificationSchema.index({ user: 1, createdAt: -1 });
+notificationSchema.index({ user: 1, scheduledAt: -1 });
+notificationSchema.index(
+  { user: 1, notificationKey: 1 },
+  {
+    unique: true,
+    name: 'user_notificationKey_unique',
+    partialFilterExpression: {
+      notificationKey: { $exists: true, $type: 'string', $gt: '' },
+    },
+  }
+);
 
 module.exports = mongoose.model('Notification', notificationSchema);

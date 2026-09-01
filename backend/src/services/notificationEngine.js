@@ -1,739 +1,758 @@
+const mongoose = require('mongoose');
 const Notification = require('../models/Notification');
 const NotificationPrefs = require('../models/NotificationPrefs');
-const LearningContent = require('../models/LearningContent');
-const { isMongoConnected } = require('../config/db');
 
-const MOTIVATIONAL_VIDEOS = [
-  { id: 'motiv-1', title: 'The Power of Consistency', url: 'https://www.youtube.com/watch?v=YJ9xBFAenVw' },
-  { id: 'motiv-2', title: 'Why Small Daily Wins Matter', url: 'https://www.youtube.com/watch?v=8iI5MSSS3dk' },
-  { id: 'motiv-3', title: 'From Zero to IIT — A Journey', url: 'https://www.youtube.com/watch?v=4fTv9NshzUc' },
-  { id: 'motiv-4', title: 'The Last 30 Days Strategy', url: 'https://www.youtube.com/watch?v=Zr9Lm5D_bL8' },
-  { id: 'motiv-5', title: 'Believe in the Process', url: 'https://www.youtube.com/watch?v=VpE2aSCxScE' },
+const TIMEZONE = 'Asia/Kolkata';
+
+const SLOTS = [
+  { id: 'morning', hour: 8, minute: 0 },
+  { id: 'late_morning', hour: 11, minute: 30 },
+  { id: 'afternoon', hour: 15, minute: 0 },
+  { id: 'evening', hour: 19, minute: 0 },
+  { id: 'night', hour: 21, minute: 0 },
 ];
 
-const DID_YOU_KNOW = [
-  { text: 'The GATE Computer Science paper contains approximately 65 questions worth 100 marks.', link: '/pyq' },
-  { text: 'GATE scores are valid for 3 years for PSU recruitment.', link: '/gate-papers' },
-  { text: 'IIT Bombay offers M.Tech in CSE with a focus on AI and Machine Learning.', link: '/opportunity-predictor' },
-  { text: 'GATE 2027 will be conducted by IIT Roorkee.', link: '/gate-papers' },
-  { text: 'Over 1.5 lakh candidates appear for GATE CSE every year.', link: '/analytics' },
+const SLOT_MINUTES = Object.fromEntries(
+  SLOTS.map((s) => [s.id, s.hour * 60 + s.minute])
+);
+
+const EVENT_TYPES = {
+  first_topic: {
+    type: 'first_topic',
+    category: 'events',
+    priority: 'high',
+    title: 'First topic completed',
+    message: 'You finished your first topic. Keep the streak going with a short revision today.',
+    description: 'A strong start compounds. Review key formulas once, then move to the next high-weight topic.',
+    action: { label: 'Open topics', href: '/topics' },
+  },
+  streak_7: {
+    type: 'streak_7',
+    category: 'events',
+    priority: 'high',
+    title: '7-day streak',
+    message: 'Seven days of consistent study. Protect the streak with a focused 45-minute block.',
+    description: 'Consistency beats intensity. Lock a fixed slot for tomorrow before you close GateNexa.',
+    action: { label: 'Open planner', href: '/planner' },
+  },
+  pyq_100: {
+    type: 'pyq_100',
+    category: 'events',
+    priority: 'high',
+    title: '100 PYQs practiced',
+    message: 'You have practiced 100 previous-year questions. Next: review every incorrect attempt.',
+    description: 'Accuracy grows from error analysis, not from more volume alone.',
+    action: { label: 'Review PYQs', href: '/pyq' },
+  },
+  first_mock: {
+    type: 'first_mock',
+    category: 'events',
+    priority: 'high',
+    title: 'First mock completed',
+    message: 'Your first mock is done. Note weak subjects and schedule a targeted revision.',
+    description: 'Treat the mock as a map, not a verdict. One weak area per day is enough.',
+    action: { label: 'Open mocks', href: '/mocks' },
+  },
+  hours_50: {
+    type: 'hours_50',
+    category: 'events',
+    priority: 'high',
+    title: '50 study hours logged',
+    message: 'You have crossed 50 hours. Shift 20% of time to mixed PYQ practice.',
+    description: 'At this stage, mixed practice reveals gaps that topic-wise study can hide.',
+    action: { label: 'See progress', href: '/progress' },
+  },
+  level_up: {
+    type: 'level_up',
+    category: 'events',
+    priority: 'high',
+    title: 'Level up',
+    message: 'You moved to the next level. Raise the bar with one harder topic and one mock section.',
+    description: 'Keep the same daily hours, but increase question difficulty this week.',
+    action: { label: 'Continue', href: '/dashboard' },
+  },
+};
+
+const ONBOARDING_ITEMS = [
+  {
+    type: 'welcome',
+    category: 'onboarding',
+    priority: 'high',
+    title: 'Welcome to GateNexa',
+    message: 'Your GATE 2027 workspace is ready. Start with today’s focus and one complete topic block.',
+    description: 'Use the planner for the day, then mark one topic complete before you stop.',
+    action: { label: 'Go to dashboard', href: '/dashboard' },
+    slot: 'onboarding',
+  },
+  {
+    type: 'onboarding_roadmap',
+    category: 'onboarding',
+    priority: 'normal',
+    title: 'Set your study rhythm',
+    message: 'Pick a daily hour target and a first subject. Small, repeatable blocks beat long irregular sessions.',
+    description: 'Morning theory, afternoon PYQs, evening revision is a reliable default.',
+    action: { label: 'Open planner', href: '/planner' },
+    slot: 'onboarding',
+  },
+  {
+    type: 'onboarding_pyq',
+    category: 'onboarding',
+    priority: 'normal',
+    title: 'Practice from day one',
+    message: 'Solve a few previous-year questions today, even before the syllabus feels complete.',
+    description: 'PYQs show the exam’s actual language. Start with one easy set.',
+    action: { label: 'Open PYQs', href: '/pyq' },
+    slot: 'onboarding',
+  },
 ];
 
-const QUICK_FACTS = [
-  { text: 'Operating Systems contributes around 6-8 marks every year.', subject: 'Operating Systems', link: '/subjects' },
-  { text: 'DBMS normalization questions appear in almost every GATE paper.', subject: 'DBMS', link: '/subjects' },
-  { text: 'Computer Networks carries 5-7 marks in GATE CSE.', subject: 'Computer Networks', link: '/subjects' },
-  { text: 'Digital Logic is one of the highest scoring subjects — aim for full marks.', subject: 'Digital Logic', link: '/subjects' },
-  { text: 'Theory of Computation questions are mostly moderate difficulty.', subject: 'TOC', link: '/subjects' },
-];
-
-const PRODUCTIVITY_TIPS = [
-  { text: 'Students who revise within 24 hours remember concepts much longer.', link: '/revision' },
-  { text: 'The Pomodoro technique (25 min study, 5 min break) boosts focus by 40%.', link: '/productivity' },
-  { text: 'Solving PYQs from the last 5 years covers 70% of repeated concepts.', link: '/pyq' },
-  { text: 'Teaching a concept to someone else is the fastest way to master it.', link: '/dashboard' },
-  { text: 'Taking a 10-minute walk after 2 hours of study improves retention.', link: '/productivity' },
-];
-
-const CAMPUS_INSIGHTS = [
-  { name: 'IIT Bombay', desc: 'Top-ranked for CSE research with state-of-the-art AI labs.', link: '/opportunity-predictor' },
-  { name: 'IIT Madras', desc: 'Home to India\'s fastest supercomputer and world-class faculty.', link: '/opportunity-predictor' },
-  { name: 'IISc Bangalore', desc: 'India\'s #1 research institute with interdisciplinary programs.', link: '/opportunity-predictor' },
-  { name: 'IIT Delhi', desc: 'Strong industry connections with average CSE placement of 25+ LPA.', link: '/opportunity-predictor' },
-  { name: 'IIT Kanpur', desc: 'Pioneer in computer science education with excellent lab facilities.', link: '/opportunity-predictor' },
-];
-
-const LEARNING_HUB_VIDEOS = [
-  { id: 'lh-1', title: 'Life inside IIT Bombay Hostel', category: 'Campus Life', link: '/learning-hub', emoji: '🎥' },
-  { id: 'lh-2', title: 'A day in IISc Bangalore', category: 'Campus Life', link: '/learning-hub', emoji: '🎓' },
-  { id: 'lh-3', title: 'How AIR 24 revised all subjects in 45 days', category: 'Strategy', link: '/learning-hub', emoji: '🚀' },
-  { id: 'lh-4', title: 'Pomodoro vs Deep Work — Which is better for GATE?', category: 'Study Technique', link: '/learning-hub', emoji: '📖' },
-  { id: 'lh-5', title: 'Don\'t lose today\'s opportunity — 3-minute motivation', category: 'Motivation', link: '/learning-hub', emoji: '🎯' },
-  { id: 'lh-6', title: 'IIT Delhi campus tour — Where India\'s best minds study', category: 'Campus Life', link: '/learning-hub', emoji: '🏛️' },
-  { id: 'lh-7', title: 'My GATE preparation journey — AIR 15 story', category: 'Success Story', link: '/learning-hub', emoji: '🏆' },
-  { id: 'lh-8', title: 'How to make short notes that actually work', category: 'Study Technique', link: '/learning-hub', emoji: '📝' },
-  { id: 'lh-9', title: 'Last 30 days strategy for GATE 2027', category: 'Strategy', link: '/learning-hub', emoji: '🔥' },
-  { id: 'lh-10', title: 'IIT Madras research labs — Future of AI in India', category: 'Campus Life', link: '/learning-hub', emoji: '🧠' },
-];
-
-const DISCOVERY_ITEMS = [
-  { id: 'disc-1', title: 'College Predictor', desc: 'Wondering which IIT you can get? Predict your admission chances now.', link: '/opportunity-predictor', emoji: '🏛️' },
-  { id: 'disc-2', title: 'Gate Vault', desc: 'A new Premium PDF has been added. Read now.', link: '/gate-vault', emoji: '📄' },
-  { id: 'disc-3', title: 'Notes Hub', desc: 'Today\'s Short Notes: Operating Systems — Memory Management', link: '/short-notes', emoji: '📚' },
-  { id: 'disc-4', title: 'Daily Content', desc: 'Today\'s Daily Concept is ready. Read in 5 minutes.', link: '/daily-coach', emoji: '🔥' },
-  { id: 'disc-5', title: 'Analytics', desc: 'Your weekly report is available. Check your progress.', link: '/analytics', emoji: '📊' },
-  { id: 'disc-6', title: 'Formula Sheets', desc: 'Quick reference formulas for Operating Systems — ready for revision.', link: '/formula-sheets', emoji: '📘' },
-  { id: 'disc-7', title: 'Flashcard Bank', desc: 'New flashcards added for Computer Networks. Review now.', link: '/flashcard-bank', emoji: '🃏' },
-];
-
-const INSPIRATION_QUOTES = [
-  { text: 'I wasn\'t the smartest student. I was simply the most consistent.', author: 'Anonymous GATE Topper' },
-  { text: 'Success is not final, failure is not fatal: it is the courage to continue that counts.', author: 'Winston Churchill' },
-  { text: 'The secret of getting ahead is getting started.', author: 'Mark Twain' },
-  { text: 'It does not matter how slowly you go as long as you do not stop.', author: 'Confucius' },
-  { text: 'Every expert was once a beginner.', author: 'Helen Hayes' },
-  { text: 'Discipline is the bridge between goals and accomplishment.', author: 'Jim Rohn' },
-  { text: 'You don\'t have to be great to start, but you have to start to be great.', author: 'Zig Ziglar' },
-  { text: 'The only way to do great work is to love what you do.', author: 'Steve Jobs' },
-];
-
-const SUCCESS_STORIES_DATA = [
-  { id: 'ss-1', title: 'How AIR 58 prepared while studying in college', category: 'college-student', link: '/success-hub' },
-  { id: 'ss-2', title: 'From average student to IIT Bombay — A complete transformation', category: 'transformation', link: '/success-hub' },
-  { id: 'ss-3', title: 'Working professional who cracked GATE in 6 months', category: 'working-professional', link: '/success-hub' },
-  { id: 'ss-4', title: 'How self-study and free resources helped achieve AIR 12', category: 'self-study', link: '/success-hub' },
-  { id: 'ss-5', title: 'From electronics to CSE — Branch change through GATE', category: 'branch-change', link: '/success-hub' },
-];
-
-const LOGIN_DAY_MESSAGES = {
-  2: {
-    title: 'Welcome Back!',
-    emoji: '🌅',
-    body: (ctx) => {
-      const parts = ['Day 2 of your GATE Journey.\n'];
-      if (ctx.yesterdayHours > 0 || ctx.yesterdayPyqs > 0 || ctx.yesterdayTopics > 0) {
-        parts.push('Yesterday:');
-        if (ctx.yesterdayHours > 0) parts.push(`✓ ${ctx.yesterdayHours} Study Hours`);
-        if (ctx.yesterdayPyqs > 0) parts.push(`✓ ${ctx.yesterdayPyqs} PYQs`);
-        if (ctx.yesterdayTopics > 0) parts.push(`✓ ${ctx.yesterdayTopics} Topics Completed`);
-        parts.push('');
-      }
-      parts.push("Today's goal is ready.");
-      return parts.join('\n');
+const SLOT_LIBRARY = {
+  morning: [
+    {
+      type: 'morning_mission',
+      category: 'study',
+      priority: 'high',
+      title: 'Morning study mission',
+      message: 'Complete one focused block: theory notes, then 8–10 PYQs on the same topic.',
+      description: 'Protect the first 90 minutes. No mixed subjects until the block is done.',
+      action: { label: 'Start planner', href: '/planner' },
     },
-    action: { label: 'Open Planner', path: '/planner' },
-  },
-  3: {
-    title: 'Day 3!',
-    emoji: '🔥',
-    body: () => "Consistency beats motivation.\n\nToday's recommendation:\nOperating Systems — Deadlocks\n\nEstimated Gain:\n+3 Marks",
-    action: { label: 'Start Studying', path: '/subjects' },
-  },
-  5: {
-    title: 'Almost a Week!',
-    emoji: '💪',
-    body: () => "5 days of preparation.\n\nYou're building real habits.\n\nGateNexa AI has identified your weak areas.\nLet's focus on them today.",
-    action: { label: 'View AI Coach', path: '/ai-coach' },
-  },
-  10: {
-    title: 'Amazing!',
-    emoji: '🏆',
-    body: (ctx) => `You've been preparing for 10 days.\n\nStudy Hours: ${ctx.totalHours || 0}\nTopics Completed: ${ctx.topicsCompleted || 0}\nPYQs Solved: ${ctx.pyqsSolved || 0}\n\nGateNexa AI has updated your roadmap.`,
-    action: { label: 'View Roadmap', path: '/personalized-roadmap' },
-  },
-  15: {
-    title: 'Two Weeks Strong!',
-    emoji: '⭐',
-    body: () => "15 days of consistent preparation.\n\nYou're in the top 20% of GATE aspirants who stay consistent.\n\nKeep going — your rank is being built right now.",
-    action: { label: 'Continue', path: '/dashboard' },
-  },
-  30: {
-    title: 'One Month!',
-    emoji: '👑',
-    body: (ctx) => `30 days of dedication.\n\nTotal Hours: ${ctx.totalHours || 0}\nCurrent Streak: ${ctx.streak || 0} days\n\nYou've covered more than most aspirants do in 3 months.\n\nGateNexa AI recommends a mock test to benchmark your progress.`,
-    action: { label: 'Take Mock Test', path: '/mocks' },
-  },
+    {
+      type: 'todays_focus',
+      category: 'study',
+      priority: 'high',
+      title: 'Today’s focus',
+      message: 'Choose one high-weight topic and finish its concept map before noon.',
+      description: 'Write 5 key formulas from memory. If you cannot, revise before practice.',
+      action: { label: 'Open topics', href: '/topics' },
+    },
+  ],
+  late_morning: [
+    {
+      type: 'motivation',
+      category: 'motivation',
+      priority: 'normal',
+      title: 'Stay on the line',
+      message: 'You do not need a perfect day. You need the next honest 40 minutes.',
+      description: 'If energy is low, switch to formula revision instead of skipping the slot.',
+      action: { label: 'Continue', href: '/dashboard' },
+    },
+    {
+      type: 'learning_suggestion',
+      category: 'study',
+      priority: 'normal',
+      title: 'Learning suggestion',
+      message: 'Revisit yesterday’s weakest concept with 5 fresh questions, not more notes.',
+      description: 'Active recall now will save a full revision cycle later.',
+      action: { label: 'Practice PYQs', href: '/pyq' },
+    },
+    {
+      type: 'success_story',
+      category: 'motivation',
+      priority: 'normal',
+      title: 'What toppers repeat',
+      message: 'High scorers treat error logs as the syllabus. Add 3 mistakes to yours today.',
+      description: 'A short, honest error list beats another unmarked chapter.',
+      action: { label: 'Open notes', href: '/notes' },
+    },
+    {
+      type: 'campus_insight',
+      category: 'insights',
+      priority: 'low',
+      title: 'Campus insight',
+      message: 'M.Tech shortlists reward GATE score plus a clean core-subject story. Keep CS/EE fundamentals tight.',
+      description: 'Document one project or subject strength this week while scores are still forming.',
+      action: { label: 'See live data', href: '/live' },
+    },
+  ],
+  afternoon: [
+    {
+      type: 'ai_recommendation',
+      category: 'study',
+      priority: 'normal',
+      title: 'AI study recommendation',
+      message: 'Use a mixed set this afternoon: 60% current topic, 40% a weak older topic.',
+      description: 'Interleaving improves retention more than another full chapter read.',
+      action: { label: 'Ask GateNexa AI', href: '/ai' },
+    },
+    {
+      type: 'roadmap_suggestion',
+      category: 'study',
+      priority: 'normal',
+      title: 'Roadmap check',
+      message: 'If a topic is taking more than two sessions, split it: definitions first, then numericals.',
+      description: 'Unfinished chapters usually fail at the numerical step, not the reading step.',
+      action: { label: 'Open roadmap', href: '/subjects' },
+    },
+    {
+      type: 'dsa_challenge',
+      category: 'study',
+      priority: 'normal',
+      title: 'DSA challenge',
+      message: 'Solve one array/graph problem with a timer. Explain the complexity out loud after you finish.',
+      description: 'GATE rewards clear method, not only the final answer.',
+      action: { label: 'Practice', href: '/topics' },
+    },
+    {
+      type: 'learning_suggestion',
+      category: 'study',
+      priority: 'normal',
+      title: 'Afternoon learning nudge',
+      message: 'Do a 25-minute PYQ burst, then 10 minutes of solution review. Stop there.',
+      description: 'Review is the session. Extra volume without review is noise.',
+      action: { label: 'Open PYQs', href: '/pyq' },
+    },
+  ],
+  evening: [
+    {
+      type: 'revision_reminder',
+      category: 'revision',
+      priority: 'high',
+      title: 'Revision reminder',
+      message: 'Revise today’s formulas and one older topic you marked difficult.',
+      description: 'Closed-book recall for 15 minutes is enough if you write the blanks down.',
+      action: { label: 'Revise topics', href: '/topics' },
+    },
+    {
+      type: 'focus_reminder',
+      category: 'study',
+      priority: 'normal',
+      title: 'Evening focus',
+      message: 'One more clean block: no new chapters, only practice and correction.',
+      description: 'Protect sleep. A short accurate session beats a late messy one.',
+      action: { label: 'Open planner', href: '/planner' },
+    },
+    {
+      type: 'planner_reminder',
+      category: 'study',
+      priority: 'normal',
+      title: 'Plan tomorrow',
+      message: 'Write tomorrow’s three tasks now: topic, PYQ set, and a revision item.',
+      description: 'A written plan reduces morning friction.',
+      action: { label: 'Open planner', href: '/planner' },
+    },
+    {
+      type: 'discovery',
+      category: 'insights',
+      priority: 'low',
+      title: 'Discover a gap',
+      message: 'Scan your last mock or PYQ set and pick the single most expensive mistake.',
+      description: 'Fix that one pattern tomorrow morning before new theory.',
+      action: { label: 'Open mocks', href: '/mocks' },
+    },
+  ],
+  night: [
+    {
+      type: 'daily_inspiration',
+      category: 'motivation',
+      priority: 'low',
+      title: 'Close the day well',
+      message: 'Stop if you are exhausted. A recovered morning is worth more than a tired extra hour.',
+      description: 'Log what you finished. Tomorrow starts from a clear list, not guilt.',
+      action: { label: 'Dashboard', href: '/dashboard' },
+    },
+    {
+      type: 'quick_fact',
+      category: 'insights',
+      priority: 'low',
+      title: 'Quick GATE fact',
+      message: 'Most papers reward accuracy on 1-mark questions. Do not rush the easy ones tomorrow.',
+      description: 'A calm first 30 minutes in the exam often decides the rank band.',
+      action: { label: 'Practice 1-markers', href: '/pyq' },
+    },
+    {
+      type: 'daily_insight',
+      category: 'insights',
+      priority: 'normal',
+      title: 'Daily insight',
+      message: 'If today’s accuracy dropped, cut new topics tomorrow and rebuild with mixed PYQs.',
+      description: 'Volume without accuracy is a false progress signal.',
+      action: { label: 'See progress', href: '/progress' },
+    },
+    {
+      type: 'weekly_progress',
+      category: 'insights',
+      priority: 'normal',
+      title: 'Weekly progress check',
+      message: 'Look at hours, topics completed, and mock trend. Keep what worked; drop one low-value habit.',
+      description: 'Weekly review is how a long GATE year stays on track.',
+      action: { label: 'Open progress', href: '/progress' },
+    },
+  ],
 };
 
-const MILESTONES_DATA = [
-  { key: 'first_topic', emoji: '🎉', title: 'First Topic Completed', body: "You've completed your first topic. Every great rank starts with understanding the basics.", color: 'from-purple-500 to-pink-500', link: '/subjects' },
-  { key: 'streak_7', emoji: '🔥', title: '7-Day Streak!', body: 'A full week of consistent study. This is how GATE toppers are built.', color: 'from-orange-500 to-red-500', link: '/dashboard' },
-  { key: 'pyq_100', emoji: '📚', title: '100 PYQs Solved!', body: "You've solved 100 previous year questions. Every question brings you closer to your dream rank.", color: 'from-violet-500 to-indigo-500', link: '/pyq' },
-  { key: 'first_mock', emoji: '🏆', title: 'First Mock Completed!', body: 'You took your first mock test. Analysis is the key to improvement.', color: 'from-amber-500 to-orange-500', link: '/mocks' },
-  { key: 'hours_50', emoji: '⏱', title: '50 Study Hours!', body: '50 hours of focused preparation. Your dedication is inspiring.', color: 'from-rose-500 to-pink-500', link: '/analytics' },
-  { key: 'level_up', emoji: '⭐', title: 'Level Up!', body: "You've improved your predicted score. GateNexa AI recognizes your progress.", color: 'from-emerald-500 to-teal-500', link: '/analytics' },
-];
+let injectedNow = null;
 
-const SUBJECT_WEIGHTAGE = {
-  'Operating Systems': 9, 'Computer Networks': 8.5, 'DBMS': 8,
-  'Computer Organization': 8.5, 'Theory of Computation': 8, 'Algorithms': 7.5,
-  'Programming & Data Structures': 11.5, 'Engineering Mathematics': 12.5,
-  'Digital Logic': 5, 'Compiler Design': 5, 'General Aptitude': 15,
-};
-
-function getRandomItem(arr, seen = []) {
-  const available = arr.filter(i => !seen.includes(i.id || i.text));
-  if (available.length === 0) return arr[Math.floor(Math.random() * arr.length)];
-  return available[Math.floor(Math.random() * available.length)];
+function isTestTimeAllowed() {
+  return process.env.NODE_ENV === 'test' || process.env.GATENEXA_TEST_TIME === '1';
 }
 
-async function ensurePrefs(userId) {
+function setTestNow(value) {
+  if (!isTestTimeAllowed()) return false;
+  injectedNow = value ? new Date(value) : null;
+  return true;
+}
+
+function getGateNexaNow() {
+  if (isTestTimeAllowed() && injectedNow) {
+    return new Date(injectedNow.getTime());
+  }
+  if (isTestTimeAllowed() && process.env.GATENEXA_NOW) {
+    return new Date(process.env.GATENEXA_NOW);
+  }
+  return new Date();
+}
+
+function getIstParts(date = getGateNexaNow()) {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    weekday: 'short',
+  });
+  const map = {};
+  for (const part of formatter.formatToParts(date)) {
+    if (part.type !== 'literal') map[part.type] = part.value;
+  }
+  return {
+    year: map.year,
+    month: map.month,
+    day: map.day,
+    hour: Number(map.hour),
+    minute: Number(map.minute),
+    weekday: map.weekday,
+  };
+}
+
+function getGateNexaDateKey(date = getGateNexaNow()) {
+  const parts = getIstParts(date);
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function getIstMinutes(date = getGateNexaNow()) {
+  const parts = getIstParts(date);
+  return parts.hour * 60 + parts.minute;
+}
+
+function parseHHMM(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const h = Math.floor(value);
+    if (h >= 0 && h <= 23) return h * 60;
+    return null;
+  }
+  if (!value || typeof value !== 'string') return null;
+  const match = value.trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return null;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (hour > 23 || minute > 59) return null;
+  return hour * 60 + minute;
+}
+
+function isQuietHours(date, prefs) {
+  const start = parseHHMM(prefs?.quietHoursStart);
+  const end = parseHHMM(prefs?.quietHoursEnd);
+  if (start == null || end == null || start === end) return false;
+  const mins = getIstMinutes(date);
+  if (start < end) return mins >= start && mins < end;
+  return mins >= start || mins < end;
+}
+
+function getNotificationKey(userId, type, dateKey, slot) {
+  const uid = String(userId);
+  if (slot === 'event') return `${uid}:event:${type}`;
+  if (slot === 'onboarding') return `${uid}:onboarding:${type}`;
+  return `${uid}:${dateKey}:${slot}:${type}`;
+}
+
+function hashPick(seed, modulo) {
+  let hash = 0;
+  const text = String(seed);
+  for (let i = 0; i < text.length; i += 1) {
+    hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash) % Math.max(modulo, 1);
+}
+
+function pickSlotContent(userId, dateKey, slot) {
+  const library = SLOT_LIBRARY[slot] || [];
+  if (!library.length) return null;
+  let options = library;
+  if (slot === 'night') {
+    const weekday = getIstParts(dateFromKey(dateKey)).weekday;
+    const isWeekReviewDay = weekday === 'Sun' || weekday === 'Sat';
+    options = library.filter((item) => item.type !== 'weekly_progress' || isWeekReviewDay);
+    if (!options.length) options = library;
+  }
+  const index = hashPick(`${userId}:${dateKey}:${slot}`, options.length);
+  return options[index];
+}
+
+function dateFromKey(dateKey) {
+  const [year, month, day] = String(dateKey).split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+}
+
+function slotScheduledAt(dateKey, slot) {
+  const minutes = SLOT_MINUTES[slot];
+  if (minutes == null) return getGateNexaNow();
+  const [year, month, day] = String(dateKey).split('-').map(Number);
+  const utcMinutes = minutes - (5 * 60 + 30);
+  const hours = Math.floor(utcMinutes / 60);
+  const mins = ((utcMinutes % 60) + 60) % 60;
+  const extraDay = utcMinutes < 0 ? -1 : 0;
+  return new Date(Date.UTC(year, month - 1, day + extraDay, hours, mins, 0));
+}
+
+function isNotificationSlotDue(slot, date = getGateNexaNow()) {
+  if (!SLOT_MINUTES[slot] && SLOT_MINUTES[slot] !== 0) return false;
+  const dateKey = getGateNexaDateKey(date);
+  const nowKey = getGateNexaDateKey(getGateNexaNow());
+  if (dateKey < nowKey) return true;
+  if (dateKey > nowKey) return false;
+  return getIstMinutes(date) >= SLOT_MINUTES[slot];
+}
+
+function currentEligibleSlot(date = getGateNexaNow()) {
+  const minutes = getIstMinutes(date);
+  let current = null;
+  for (const slot of SLOTS) {
+    if (minutes >= slot.hour * 60 + slot.minute) current = slot.id;
+  }
+  return current;
+}
+
+function isValidUserId(userId) {
+  return mongoose.Types.ObjectId.isValid(userId)
+    && String(new mongoose.Types.ObjectId(userId)) === String(userId);
+}
+
+function categoryEnabled(prefs, category) {
+  if (!category) return true;
+  if (!prefs?.categories) return true;
+  const value = prefs.categories[category];
+  return value !== false;
+}
+
+async function ensurePrefs(userId, now = getGateNexaNow()) {
+  if (!isValidUserId(userId)) return null;
+  const dateKey = getGateNexaDateKey(now);
   let prefs = await NotificationPrefs.findOne({ user: userId });
   if (!prefs) {
-    try {
-      prefs = await NotificationPrefs.create({ user: userId, maxPerDay: 5 });
-    } catch (e) {
-      if (e.code === 11000) {
-        prefs = await NotificationPrefs.findOne({ user: userId });
-      } else {
-        throw e;
-      }
-    }
+    prefs = await NotificationPrefs.create({
+      user: userId,
+      enabled: true,
+      maxPerDay: 5,
+      todayCount: 0,
+      todayDate: dateKey,
+    });
   }
-  // Reset daily counter if new day
-  const today = new Date().toISOString().slice(0, 10);
-  if (prefs.todayDate !== today) {
+  if (prefs.todayDate !== dateKey) {
+    prefs.todayDate = dateKey;
     prefs.todayCount = 0;
-    prefs.todayDate = today;
     await prefs.save();
   }
   return prefs;
 }
 
-function inQuietHours(prefs) {
-  const hour = new Date().getHours();
-  if (prefs.quietHoursStart <= prefs.quietHoursEnd) {
-    return hour >= prefs.quietHoursStart && hour < prefs.quietHoursEnd;
+async function createIfAbsent(payload) {
+  const existing = await Notification.findOne({
+    user: payload.user,
+    notificationKey: payload.notificationKey,
+  });
+  if (existing) {
+    return { created: false, duplicate: true, notification: existing };
   }
-  return hour >= prefs.quietHoursStart || hour < prefs.quietHoursEnd;
-}
-
-async function generateMorningMission(userId, context) {
-  const { weakSubjects, topics, dailyHours } = context;
-  const weak = weakSubjects?.slice(0, 2) || ['Engineering Mathematics', 'Operating Systems'];
-  const items = [];
-  items.push(`• Study: ${weak[0]} — Focus on high-weightage topics`);
-  items.push(`• Practice: Solve 15-20 PYQs from ${weak[1] || 'recently completed subjects'}`);
-  items.push('• Revise: Quick revision of last week\'s topics (20 min)');
-
-  return {
-    type: 'morning_mission',
-    title: 'Good Morning!',
-    body: `Today's mission is ready.\n\n${items.join('\n')}\n\nEstimated: ${dailyHours || 4} hours. Let's go!`,
-    emoji: '🌅',
-    action: { label: 'Start Today\'s Plan', path: '/planner' },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
-}
-
-async function generateMotivation(userId, prefs) {
-  const video = getRandomItem(MOTIVATIONAL_VIDEOS, prefs.seenMotivations);
-  if (!prefs.seenMotivations.includes(video.id)) {
-    prefs.seenMotivations.push(video.id);
-    await prefs.save();
+  try {
+    const notification = await Notification.create(payload);
+    return { created: true, duplicate: false, notification };
+  } catch (err) {
+    if (err && err.code === 11000) {
+      const dup = await Notification.findOne({
+        user: payload.user,
+        notificationKey: payload.notificationKey,
+      });
+      return { created: false, duplicate: true, notification: dup };
+    }
+    console.error('[NotificationEngine] create failed');
+    return { created: false, duplicate: false, error: true };
   }
-  return {
-    type: 'motivation',
-    title: 'Today\'s Motivation',
-    body: 'Success is built one study session at a time.\n\nWatch today\'s 2-minute motivational video to set your mindset right.',
-    emoji: '🔥',
-    action: { label: 'Watch Now', path: '/dashboard' },
-    metadata: { videoId: video.id },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
 }
 
-async function generateSuccessStory(userId, prefs) {
-  let stories = [];
-  if (isMongoConnected()) {
-    stories = await LearningContent.find({ type: 'success_story', isActive: true }).lean();
-  }
-  if (stories.length === 0) {
-    stories = [
-      { _id: 'default-1', title: 'IISc Journey', description: 'How a determined student secured IISc Bangalore through consistent practice.', category: 'air-top-10' },
-      { _id: 'default-2', title: 'Self Study Victory', description: 'Cracked GATE using only free YouTube resources and self-made notes.', category: 'self-study' },
-      { _id: 'default-3', title: 'Working Professional', description: 'A software engineer who prepared while working full-time.', category: 'working-professional' },
-    ];
-  }
-
-  const unseen = stories.filter(s => !prefs.seenStories.includes(s._id.toString()));
-  const story = unseen.length > 0 ? unseen[0] : stories[0];
-  if (!prefs.seenStories.includes(story._id.toString())) {
-    prefs.seenStories.push(story._id.toString());
-    await prefs.save();
-  }
-
-  return {
-    type: 'success_story',
-    title: 'Today\'s Inspiration',
-    body: `${story.title}\n\n${story.description || 'Read their study strategy and key lessons to stay motivated.'}`,
-    emoji: '🎓',
-    action: { label: 'Read Story', path: '/success-hub' },
-    metadata: { storyId: story._id.toString() },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
-}
-
-function generateRoadmap(context) {
-  const subjects = context.subjects || [];
-  const weak = context.weakSubjects?.[0] || 'Computer Networks';
-  const sub = subjects.find(s => s.name === weak) || { name: weak, progress: 0 };
-  const topics = context.topics?.filter(t => t.subject === weak && !t.done) || [];
-  const nextTopic = topics[0] || { name: 'Core Concepts', done: false };
-
-  return {
-    type: 'roadmap',
-    title: 'AI Study Roadmap',
-    body: `You have completed ${Math.round(sub.progress || 0)}% of ${weak}.\n\nNext recommended topic:\n${nextTopic.name}\n\nEstimated Time: 90 minutes`,
-    emoji: '🗺️',
-    action: { label: 'Continue Learning', path: '/subjects' },
-    metadata: { subject: weak, topic: nextTopic.name, progress: sub.progress, duration: 90 },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
-}
-
-function generateRecommendation(context) {
-  const subjects = context.subjects || [];
-  const sorted = [...subjects].sort((a, b) => (a.progress || 0) - (b.progress || 0));
-  const weakest = sorted[0];
-  const strongest = sorted[sorted.length - 1];
-
-  return {
-    type: 'recommendation',
-    title: 'GateNexa AI says:',
-    body: `You are strongest in ${strongest?.name || 'Mathematics'} this week.\n\nToday, focus on ${weakest?.name || 'Operating Systems'} to improve your overall score.`,
-    emoji: '🧠',
-    action: { label: 'Open Recommendation', path: '/ai-coach' },
-    metadata: { subject: weakest?.name },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
-}
-
-function generateDSAChallenge() {
-  const challenges = [
-    { topic: 'Binary Search', difficulty: 'Easy' },
-    { topic: 'Two Pointers', difficulty: 'Easy' },
-    { topic: 'Linked List Reversal', difficulty: 'Medium' },
-    { topic: 'Tree Traversal', difficulty: 'Easy' },
-    { topic: 'Dynamic Programming — Fibonacci', difficulty: 'Easy' },
-    { topic: 'Stack — Valid Parentheses', difficulty: 'Easy' },
-    { topic: 'Queue — Sliding Window', difficulty: 'Medium' },
-    { topic: 'Graph BFS', difficulty: 'Medium' },
-  ];
-  const challenge = challenges[Math.floor(Math.random() * challenges.length)];
-
-  return {
-    type: 'dsa_challenge',
-    title: 'DSA Challenge',
-    body: `Can you solve today's ${challenge.topic} problem in under 15 minutes?\n\nDifficulty: ${challenge.difficulty}`,
-    emoji: '💻',
-    action: { label: 'Start Challenge', path: '/pyq' },
-    metadata: { topic: challenge.topic, difficulty: challenge.difficulty, duration: 15 },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
-}
-
-function generateRevision(context) {
-  const topics = context.topics?.filter(t => !t.done) || [];
-  const due = topics[Math.floor(Math.random() * topics.length)] || { name: 'Key Concepts', subject: 'Recent Topics' };
-
-  return {
-    type: 'revision',
-    title: 'Revision Time',
-    body: `Your AI recommends revising ${due.name} today.\n\nEstimated Time: 25 minutes`,
-    emoji: '🔁',
-    action: { label: 'Start Revision', path: '/revision' },
-    metadata: { topic: due.name, subject: due.subject, duration: 25 },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
-}
-
-function generateFocusReminder(context) {
-  const hours = context.dailyHours || 4;
-
-  return {
-    type: 'focus_reminder',
-    title: 'Deep Focus Time',
-    body: `You planned a ${hours}-hour study session today.\n\nReady to continue?`,
-    emoji: '⏰',
-    action: { label: 'Start Focus', path: '/productivity' },
-    metadata: { duration: hours * 60 },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
-}
-
-function generateDidYouKnow() {
-  const fact = DID_YOU_KNOW[Math.floor(Math.random() * DID_YOU_KNOW.length)];
-
-  return {
-    type: 'did_you_know',
-    title: 'Did You Know?',
-    body: fact.text,
-    emoji: '💡',
-    action: { label: 'Learn More', path: fact.link },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
-}
-
-function generateQuickFact() {
-  const fact = QUICK_FACTS[Math.floor(Math.random() * QUICK_FACTS.length)];
-
-  return {
-    type: 'quick_fact',
-    title: 'Quick Fact',
-    body: fact.text,
-    emoji: '🎯',
-    action: { label: 'Study Now', path: fact.link },
-    metadata: { subject: fact.subject },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
-}
-
-function generateProductivityTip() {
-  const tip = PRODUCTIVITY_TIPS[Math.floor(Math.random() * PRODUCTIVITY_TIPS.length)];
-
-  return {
-    type: 'productivity_tip',
-    title: 'Productivity Tip',
-    body: tip.text,
-    emoji: '🚀',
-    action: { label: 'Open Revision', path: tip.link },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
-}
-
-function generateCampusInsight() {
-  const insight = CAMPUS_INSIGHTS[Math.floor(Math.random() * CAMPUS_INSIGHTS.length)];
-
-  return {
-    type: 'campus_insight',
-    title: `Explore ${insight.name}`,
-    body: insight.desc,
-    emoji: '🎓',
-    action: { label: 'Explore Institute', path: insight.link },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
-}
-
-function generateWeeklyReport(context) {
-  const subjects = context.subjects || [];
-  const sorted = [...subjects].sort((a, b) => (a.progress || 0) - (b.progress || 0));
-  const weakest = sorted[0];
-  const strongest = sorted[sorted.length - 1];
-  const weekStats = context.weekStats || { hours: 0, pyqsSolved: 0, topicsCompleted: 0, revisions: 0 };
-
-  return {
-    type: 'weekly_report',
-    title: 'Weekly Report',
-    body: [
-      `📊 Study Hours: ${weekStats.hours || 0}h`,
-      `✅ Topics Completed: ${weekStats.topicsCompleted || 0}`,
-      `📝 PYQs Solved: ${weekStats.pyqsSolved || 0}`,
-      `🔄 Revision Sessions: ${weekStats.revisions || 0}`,
-      ``,
-      `Best Subject: ${strongest?.name || '—'}`,
-      `Needs Focus: ${weakest?.name || '—'}`,
-      ``,
-      `GateNexa AI recommends dedicating extra time to ${weakest?.name || 'your weak areas'} this week.`,
-    ].join('\n'),
-    emoji: '📊',
-    action: { label: 'View Report', path: '/analytics' },
-    metadata: { subject: weakest?.name },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-  };
-}
-
-function generateLearningHub(userId, prefs) {
-  const video = getRandomItem(LEARNING_HUB_VIDEOS, prefs.seenLearningHub || []);
-  if (!(prefs.seenLearningHub || []).includes(video.id)) {
-    prefs.seenLearningHub = [...(prefs.seenLearningHub || []), video.id];
-  }
-
-  return {
-    type: 'learning_hub',
-    title: `${video.emoji} Recommended Video`,
-    body: `${video.title}\n\n${video.category}\n\nWatch now.`,
-    emoji: video.emoji,
-    action: { label: 'Watch Now', path: video.link },
-    metadata: { videoId: video.id, category: video.category },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000),
-  };
-}
-
-function generateDiscovery(userId, prefs) {
-  const item = getRandomItem(DISCOVERY_ITEMS, prefs.seenDiscovery || []);
-  if (!(prefs.seenDiscovery || []).includes(item.id)) {
-    prefs.seenDiscovery = [...(prefs.seenDiscovery || []), item.id];
-  }
-
-  return {
-    type: 'discovery',
-    title: `${item.emoji} ${item.title}`,
-    body: item.desc,
-    emoji: item.emoji,
-    action: { label: 'Open', path: item.link },
-    metadata: { discoveryId: item.id },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000),
-  };
-}
-
-function generateSmartReminder(userId, context) {
-  const reminders = [
-    { title: '⏰ Study Reminder', body: "You planned to study at this time.\n\nReady?", emoji: '⏰', action: { label: 'Start Focus', path: '/productivity' } },
-    { title: '🔁 Revision Due', body: `Computer Networks\n\nEstimated time: 25 minutes\n\nStart now.`, emoji: '🔁', action: { label: 'Start Revision', path: '/revision' } },
-    { title: '📘 Planner', body: "Today's timetable isn't completed.\n\nContinue where you left off.", emoji: '📘', action: { label: 'Open Planner', path: '/planner' } },
-    { title: '🧘 Focus Session', body: "You haven't logged a focus session today.\n\nEven 25 minutes counts.", emoji: '🧘', action: { label: 'Start Session', path: '/productivity' } },
-    { title: '📝 PYQ Practice', body: "Solving just 5 PYQs today keeps your momentum.\n\nPick a subject.", emoji: '📝', action: { label: 'Practice Now', path: '/pyq' } },
-  ];
-  const pick = reminders[Math.floor(Math.random() * reminders.length)];
-
-  return {
-    type: 'smart_reminder',
-    ...pick,
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 6 * 60 * 60 * 1000),
-  };
-}
-
-function generateDailyInspiration(userId, prefs) {
-  const quote = getRandomItem(INSPIRATION_QUOTES, prefs.seenStories || []);
-
-  return {
-    type: 'daily_inspiration',
-    title: '💡 Daily Inspiration',
-    body: `"${quote.text}"\n\n— ${quote.author}`,
-    emoji: '💡',
-    action: { label: 'Read More', path: '/success-hub' },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
-}
-
-function generateLoginDay(userId, prefs, context) {
-  const day = context.loginDay || 1;
-  const config = LOGIN_DAY_MESSAGES[day];
-  if (!config) return null;
-
-  const body = typeof config.body === 'function' ? config.body(context) : config.body;
-
-  return {
-    type: 'login_day',
-    title: config.title,
-    body,
-    emoji: config.emoji,
-    action: config.action,
-    metadata: { loginDay: day },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-  };
-}
-
-function generateMilestone(userId, prefs, context) {
-  const milestoneKey = context.milestoneKey;
-  const config = MILESTONES_DATA.find(m => m.key === milestoneKey);
-  if (!config) return null;
-
-  return {
-    type: 'milestone',
-    title: `${config.emoji} ${config.title}`,
-    body: config.body,
-    emoji: config.emoji,
-    action: { label: 'View Progress', path: config.link },
-    metadata: { milestoneKey },
-    scheduledAt: new Date(),
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-  };
-}
-
-const generators = {
-  morning_mission: generateMorningMission,
-  motivation: generateMotivation,
-  success_story: generateSuccessStory,
-  roadmap: generateRoadmap,
-  recommendation: generateRecommendation,
-  dsa_challenge: generateDSAChallenge,
-  revision: generateRevision,
-  focus_reminder: generateFocusReminder,
-  did_you_know: generateDidYouKnow,
-  quick_fact: generateQuickFact,
-  productivity_tip: generateProductivityTip,
-  campus_insight: generateCampusInsight,
-  weekly_report: generateWeeklyReport,
-  learning_hub: generateLearningHub,
-  discovery: generateDiscovery,
-  smart_reminder: generateSmartReminder,
-  daily_inspiration: generateDailyInspiration,
-  login_day: generateLoginDay,
-  milestone: generateMilestone,
-};
-
-async function generateAndDeliver(userId, type, context) {
-  const prefs = await ensurePrefs(userId);
-  if (!prefs.enabled) return null;
-  if (prefs.todayCount >= prefs.maxPerDay) return null;
-  if (inQuietHours(prefs)) return null;
-  if (!prefs.categories[type]) return null;
-
-  const generator = generators[type];
-  if (!generator) return null;
-
-  const data = await generator(userId, prefs, context);
-  if (!data || !data.title) return null;
-  const notification = await Notification.create({ user: userId, ...data, deliveredAt: new Date() });
-
-  prefs.todayCount += 1;
-  prefs.lastSentAt = new Date();
+async function recordDelivery(prefs) {
+  prefs.todayCount = (prefs.todayCount || 0) + 1;
+  prefs.lastSentAt = getGateNexaNow();
   await prefs.save();
-
-  return notification;
 }
 
-async function generateDailyNotifications(userId, context) {
-  const prefs = await ensurePrefs(userId);
-  const hour = new Date().getHours();
-  const day = new Date().getDay();
-  const notifications = [];
+async function generateDailyNotifications(userId, options = {}) {
+  const now = options.now ? new Date(options.now) : getGateNexaNow();
+  const slot = options.slot;
+  const result = {
+    created: 0,
+    skippedDuplicate: 0,
+    skipped: 0,
+    slot: slot || null,
+    dateKey: getGateNexaDateKey(now),
+  };
 
-  // Slot 1: Morning (7-9am) — Welcome + Today's Mission
-  if (hour >= 7 && hour < 9) {
-    if (prefs.todayCount < prefs.maxPerDay) {
-      const n = await generateAndDeliver(userId, 'morning_mission', context);
-      if (n) notifications.push(n);
-    }
-    if (prefs.todayCount < prefs.maxPerDay) {
-      const n = await generateAndDeliver(userId, 'motivation', context);
-      if (n) notifications.push(n);
-    }
+  if (!isValidUserId(userId) || !slot || SLOT_MINUTES[slot] == null) {
+    result.skipped += 1;
+    return result;
   }
 
-  // Slot 2: Late Morning (11am-12pm) — Motivation or Learning Hub
-  if (hour >= 11 && hour < 12) {
-    if (prefs.todayCount < prefs.maxPerDay) {
-      const types = ['motivation', 'learning_hub', 'success_story', 'campus_insight'];
-      const pick = types[Math.floor(Math.random() * types.length)];
-      const n = await generateAndDeliver(userId, pick, context);
-      if (n) notifications.push(n);
-    }
+  const prefs = await ensurePrefs(userId, now);
+  if (!prefs) {
+    result.skipped += 1;
+    return result;
+  }
+  if (!prefs.enabled) {
+    result.skipped += 1;
+    return result;
   }
 
-  // Slot 3: Afternoon (2-4pm) — AI Mentor Recommendation
-  if (hour >= 14 && hour < 16) {
-    if (prefs.todayCount < prefs.maxPerDay) {
-      const types = ['recommendation', 'roadmap', 'dsa_challenge', 'learning_hub'];
-      const pick = types[Math.floor(Math.random() * types.length)];
-      const n = await generateAndDeliver(userId, pick, context);
-      if (n) notifications.push(n);
-    }
+  const maxPerDay = Number.isFinite(prefs.maxPerDay) ? prefs.maxPerDay : 5;
+  if ((prefs.todayCount || 0) >= maxPerDay) {
+    result.skipped += 1;
+    return result;
   }
 
-  // Slot 4: Evening (6-8pm) — Revision or Focus Reminder
-  if (hour >= 18 && hour < 20) {
-    if (prefs.todayCount < prefs.maxPerDay) {
-      const types = ['revision', 'focus_reminder', 'smart_reminder', 'discovery'];
-      const pick = types[Math.floor(Math.random() * types.length)];
-      const n = await generateAndDeliver(userId, pick, context);
-      if (n) notifications.push(n);
-    }
+  if (!options.schedulerRun && !isNotificationSlotDue(slot, now)) {
+    result.skipped += 1;
+    return result;
   }
 
-  // Slot 5: Night (8:30-10pm) — Daily Summary or Inspiration
-  if (hour >= 20 && hour < 22) {
-    if (prefs.todayCount < prefs.maxPerDay) {
-      const types = ['daily_inspiration', 'weekly_report', 'did_you_know', 'quick_fact'];
-      const pick = day === 0 ? 'weekly_report' : types[Math.floor(Math.random() * types.length)];
-      const n = await generateAndDeliver(userId, pick, context);
-      if (n) notifications.push(n);
-    }
+  if (!options.schedulerRun && isQuietHours(now, prefs) && slot === currentEligibleSlot(now)) {
+    result.skipped += 1;
+    return result;
   }
 
-  // Login day notification (if applicable)
-  if (context.loginDay && LOGIN_DAY_MESSAGES[context.loginDay] && prefs.todayCount < prefs.maxPerDay) {
-    const n = await generateAndDeliver(userId, 'login_day', context);
-    if (n) notifications.push(n);
+  const dateKey = getGateNexaDateKey(now);
+  const content = pickSlotContent(userId, dateKey, slot);
+  if (!content) {
+    result.skipped += 1;
+    return result;
+  }
+  if (!categoryEnabled(prefs, content.category)) {
+    result.skipped += 1;
+    return result;
   }
 
-  // Milestone notification (if applicable)
-  if (context.milestoneKey && prefs.todayCount < prefs.maxPerDay) {
-    const n = await generateAndDeliver(userId, 'milestone', context);
-    if (n) notifications.push(n);
+  const notificationKey = getNotificationKey(userId, content.type, dateKey, slot);
+  const scheduledAt = slotScheduledAt(dateKey, slot);
+  const deliveredAt = now;
+  const expiresAt = new Date(scheduledAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  const created = await createIfAbsent({
+    user: userId,
+    type: content.type,
+    title: content.title,
+    message: content.message,
+    description: content.description || '',
+    category: content.category,
+    priority: content.priority || 'normal',
+    isRead: false,
+    isBookmarked: false,
+    scheduledAt,
+    deliveredAt,
+    expiresAt,
+    metadata: {
+      slot,
+      dateKey,
+      source: options.schedulerRun ? 'scheduler' : 'engine',
+    },
+    action: content.action || null,
+    notificationKey,
+  });
+
+  if (created.duplicate) {
+    result.skippedDuplicate += 1;
+    return result;
+  }
+  if (created.created) {
+    await recordDelivery(prefs);
+    result.created += 1;
+    result.notificationKey = notificationKey;
+    result.type = content.type;
+    return result;
   }
 
-  // Fill remaining slots with rotating content
-  while (prefs.todayCount < prefs.maxPerDay) {
-    const extras = ['learning_hub', 'discovery', 'daily_inspiration', 'smart_reminder', 'did_you_know', 'quick_fact', 'productivity_tip', 'campus_insight'];
-    const pick = extras[Math.floor(Math.random() * extras.length)];
-    const n = await generateAndDeliver(userId, pick, context);
-    if (n) notifications.push(n);
-    else break;
-  }
-
-  return notifications;
+  result.skipped += 1;
+  return result;
 }
 
-async function generateOnboardingNotifications(userId) {
-  const prefs = await ensurePrefs(userId);
-  const now = new Date();
-  const onboarding = [
-    {
-      type: 'login_day',
-      title: 'Welcome to GateNexa! 🎉',
-      body: 'This is Day 1 of your GATE journey.\n\nStart by exploring your dashboard and getting familiar with your study space.',
-      emoji: '🎉',
-      action: { label: 'Explore Dashboard', path: '/dashboard' },
-      scheduledAt: now,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    },
-    {
-      type: 'roadmap',
-      title: 'Create Today\'s Study Plan 📚',
-      body: 'Plan your day with focused topics and time blocks. A clear plan is the first step to a high score.',
-      emoji: '📚',
-      action: { label: 'Open Planner', path: '/planner' },
-      scheduledAt: now,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    },
-    {
-      type: 'motivation',
-      title: 'Watch Today\'s Motivation 🎥',
-      body: 'Watch a 2-minute motivational video to set the right mindset before you start studying.',
-      emoji: '🎥',
-      action: { label: 'Watch Now', path: '/learning-hub' },
-      scheduledAt: now,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    },
-    {
-      type: 'recommendation',
-      title: 'Meet GateNexa AI 🧠',
-      body: 'Your AI Mentor builds a personalized roadmap, recommends topics, and keeps you on track.',
-      emoji: '🧠',
-      action: { label: 'Meet AI Mentor', path: '/mentor' },
-      scheduledAt: now,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    },
-    {
-      type: 'focus_reminder',
-      title: 'Start Your First Focus Session ⏱',
-      body: 'Use the Focus Timer to study in deep, distraction-free sessions and build your streak.',
-      emoji: '⏱',
-      action: { label: 'Start Focus', path: '/focus' },
-      scheduledAt: now,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    },
-  ];
+async function generateOnboardingNotifications(userId, options = {}) {
+  const now = options.now ? new Date(options.now) : getGateNexaNow();
+  const summary = { created: 0, skippedDuplicate: 0 };
+  if (!isValidUserId(userId)) return summary;
 
-  let count = 0;
-  for (const data of onboarding) {
-    try {
-      await Notification.create({ user: userId, ...data, deliveredAt: now });
-      count += 1;
-    } catch (_) {}
+  const prefs = await ensurePrefs(userId, now);
+  if (!prefs || !prefs.enabled || !categoryEnabled(prefs, 'onboarding')) {
+    return summary;
   }
-  prefs.onboardingSeeded = true;
-  prefs.todayCount = Math.min(prefs.todayCount + count, prefs.maxPerDay);
-  prefs.lastSentAt = now;
-  await prefs.save();
-  return count;
+
+  const dateKey = getGateNexaDateKey(now);
+  for (const item of ONBOARDING_ITEMS) {
+    const notificationKey = getNotificationKey(userId, item.type, dateKey, 'onboarding');
+    const created = await createIfAbsent({
+      user: userId,
+      type: item.type,
+      title: item.title,
+      message: item.message,
+      description: item.description || '',
+      category: item.category,
+      priority: item.priority || 'normal',
+      isRead: false,
+      isBookmarked: false,
+      scheduledAt: now,
+      deliveredAt: now,
+      expiresAt: null,
+      metadata: { slot: 'onboarding', dateKey, source: 'onboarding' },
+      action: item.action || null,
+      notificationKey,
+    });
+    if (created.created) summary.created += 1;
+    else if (created.duplicate) summary.skippedDuplicate += 1;
+  }
+  return summary;
+}
+
+async function generateEventNotification(userId, eventType, context = {}) {
+  const now = context.now ? new Date(context.now) : getGateNexaNow();
+  const summary = { created: 0, skippedDuplicate: 0 };
+  const template = EVENT_TYPES[eventType];
+  if (!template || !isValidUserId(userId)) return summary;
+
+  const prefs = await ensurePrefs(userId, now);
+  if (!prefs || !prefs.enabled || !categoryEnabled(prefs, 'events')) return summary;
+
+  const dateKey = getGateNexaDateKey(now);
+  const notificationKey = getNotificationKey(userId, eventType, dateKey, 'event');
+  const title = typeof context.title === 'string' ? context.title : template.title;
+  const message = typeof context.message === 'string' ? context.message : template.message;
+
+  const created = await createIfAbsent({
+    user: userId,
+    type: template.type,
+    title,
+    message,
+    description: template.description || '',
+    category: template.category,
+    priority: template.priority,
+    isRead: false,
+    isBookmarked: false,
+    scheduledAt: now,
+    deliveredAt: now,
+    expiresAt: null,
+    metadata: {
+      slot: 'event',
+      dateKey,
+      eventType,
+      source: 'event',
+      context: sanitizeContext(context),
+    },
+    action: template.action || null,
+    notificationKey,
+  });
+
+  if (created.created) summary.created += 1;
+  else if (created.duplicate) summary.skippedDuplicate += 1;
+  return summary;
+}
+
+function sanitizeContext(context) {
+  if (!context || typeof context !== 'object') return {};
+  const allowed = {};
+  for (const key of ['topicId', 'level', 'count', 'hours', 'label']) {
+    if (context[key] != null && typeof context[key] !== 'object') {
+      allowed[key] = context[key];
+    }
+  }
+  return allowed;
+}
+
+async function generateAndDeliver(userId, options = {}, legacyContext) {
+  if (typeof options === 'string') {
+    const type = options;
+    const context = legacyContext || {};
+    const now = context.now ? new Date(context.now) : getGateNexaNow();
+    const prefs = await ensurePrefs(userId, now);
+    if (!prefs || !prefs.enabled) return null;
+    if (prefs.maxPerDay != null && (prefs.todayCount || 0) >= prefs.maxPerDay) return null;
+    if (isQuietHours(now, prefs)) return null;
+    const dateKey = getGateNexaDateKey(now);
+    const notificationKey = getNotificationKey(userId, type, dateKey, 'single');
+    let content = null;
+    for (const slot of Object.keys(SLOT_LIBRARY)) {
+      const arr = SLOT_LIBRARY[slot] || [];
+      const found = arr.find((i) => i.type === type);
+      if (found) { content = found; break; }
+    }
+    if (!content) {
+      const map = { motivation: SLOT_LIBRARY.late_morning?.[0], revision: SLOT_LIBRARY.evening?.[0] };
+      content = map[type] || { type, category: 'general', priority: 'normal', title: type, message: context.message || `Notification ${type}`, description: context.description || '', action: context.action || null };
+      if (context.title) content.title = context.title;
+      if (context.message) content.message = context.message;
+    }
+    const category = content.category;
+    if (prefs.categories && prefs.categories[category] === false) return null;
+    const created = await createIfAbsent({
+      user: userId,
+      type: content.type,
+      title: content.title,
+      message: content.message,
+      description: content.description || '',
+      category: content.category || 'general',
+      priority: content.priority || 'normal',
+      isRead: false,
+      isBookmarked: false,
+      scheduledAt: now,
+      deliveredAt: now,
+      expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+      metadata: { slot: 'single', dateKey, source: 'legacy', type },
+      action: content.action || null,
+      notificationKey,
+    });
+    if (created.created) {
+      await recordDelivery(prefs);
+      return created.notification;
+    }
+    return null;
+  }
+  const now = options.now ? new Date(options.now) : getGateNexaNow();
+  const onboarding = await generateOnboardingNotifications(userId, { now });
+  const slot = options.slot || currentEligibleSlot(now);
+  const daily = slot
+    ? await generateDailyNotifications(userId, {
+      slot,
+      schedulerRun: Boolean(options.schedulerRun),
+      now,
+    })
+    : { created: 0, skippedDuplicate: 0, skipped: 1 };
+  return {
+    onboarding,
+    daily,
+    dateKey: getGateNexaDateKey(now),
+    slot: slot || null,
+  };
 }
 
 module.exports = {
+  TIMEZONE,
+  SLOTS,
+  ensurePrefs,
   generateAndDeliver,
   generateDailyNotifications,
   generateOnboardingNotifications,
-  ensurePrefs,
-  generators,
+  generateEventNotification,
+  getNotificationKey,
+  getGateNexaNow,
+  getGateNexaDateKey,
+  isNotificationSlotDue,
+  setTestNow,
+  currentEligibleSlot,
 };

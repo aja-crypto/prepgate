@@ -10,15 +10,31 @@ const { isMongoConnected } = require('../config/db');
 
 const RESOURCES_DIR = path.join(__dirname, '../..', 'resources');
 
-// Serve PDF files — Cloudinary redirect with local fallback
+// Serve PDF files — Cloudinary proxy with correct MIME, local fallback
 router.get('/file/:path(*)', protect, async (req, res) => {
   const relPath = req.params.path;
   
-  // Try Cloudinary first via MediaFile lookup
+  // Try Cloudinary first via MediaFile lookup — proxy with application/pdf
   if (isMongoConnected()) {
     try {
       const doc = await MediaFile.findOne({ legacy_path: `/resources/${relPath}`, category: 'resources' });
       if (doc && doc.secure_url) {
+        const isPdf = (doc.type === 'pdf') || relPath.toLowerCase().endsWith('.pdf');
+        if (isPdf) {
+          try {
+            const cloudRes = await fetch(doc.secure_url);
+            if (cloudRes.ok) {
+              const buf = Buffer.from(await cloudRes.arrayBuffer());
+              if (buf.length > 0) {
+                res.setHeader('Content-Type', 'application/pdf');
+                res.setHeader('Content-Length', buf.length);
+                res.setHeader('Content-Disposition', `inline; filename="${path.basename(relPath)}"`);
+                res.setHeader('Cache-Control', 'private, max-age=3600');
+                return res.send(buf);
+              }
+            }
+          } catch (_) { /* fall through to JSON */ }
+        }
         return res.json({ success: true, url: doc.secure_url });
       }
     } catch (e) { /* fall through to local */ }

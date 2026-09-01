@@ -189,47 +189,46 @@ const Layout = memo(function Layout() {
       </aside>
 
       <main className="flex-1 overflow-y-auto flex flex-col min-w-0 relative z-10 transition-all duration-300 page-enter">
-        <header className="sticky top-0 z-30 flex items-center gap-1.5 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-4 py-2 md:py-3 glass-header relative">
+        {/* MOBILE HEADER — MOBILE ONLY */}
+        <header className={`mobile-top-header md:hidden ${isScrolled ? 'is-scrolled' : ''}`}>
+          <button
+            type="button"
+            className="mobile-top-header__menu"
+            onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(!sidebarOpen), 150); }}
+            aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={sidebarOpen}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+          <div className="mobile-top-header__brand" aria-label="GateNexa">
+            <span className="mobile-top-header__gate">GATE</span>
+            <span className="mobile-top-header__nexa">
+              <span className="mobile-top-header__n">N</span>
+              <span>EXA</span>
+            </span>
+          </div>
+          <button
+            type="button"
+            className="mobile-top-header__search"
+            onClick={() => setSearchOpen(true)}
+            aria-label="Search GateNexa"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="mobile-top-header__search-icon">
+              <circle cx="11" cy="11" r="6.5" />
+              <path d="m16 16 4 4" />
+            </svg>
+            <span>Search...</span>
+          </button>
+          <div className="mobile-top-header__notification">
+            <NotificationPanel />
+          </div>
+        </header>
+
+        {/* DESKTOP HEADER — DESKTOP ONLY */}
+        <header className="hidden md:flex sticky top-0 z-30 items-center gap-1.5 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-4 py-2 md:py-3 glass-header relative">
           <div className="header-hairline" />
-
-          {/* MOBILE TOP NAVBAR — MOBILE ONLY */}
-          <header className={`mobile-top-header ${isScrolled ? 'is-scrolled' : ''}`}>
-            <button
-              type="button"
-              className="mobile-top-header__menu"
-              onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(!sidebarOpen), 150); }}
-              aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={sidebarOpen}
-            >
-              <span />
-              <span />
-              <span />
-            </button>
-            <div className="mobile-top-header__brand" aria-label="GateNexa">
-              <span className="mobile-top-header__gate">GATE</span>
-              <span className="mobile-top-header__nexa">
-                <span className="mobile-top-header__n">N</span>
-                <span>EXA</span>
-              </span>
-            </div>
-            <button
-              type="button"
-              className="mobile-top-header__search"
-              onClick={() => setSearchOpen(true)}
-              aria-label="Search GateNexa"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true" className="mobile-top-header__search-icon">
-                <circle cx="11" cy="11" r="6.5" />
-                <path d="m16 16 4 4" />
-              </svg>
-              <span>Search...</span>
-            </button>
-            <div className="mobile-top-header__notification">
-              <NotificationPanel />
-            </div>
-          </header>
-
-          {/* ═══ DESKTOP HEADER (original, unchanged) ═══ */}
           <button
             id="mobile-hamburger"
             onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(true), 150); }}
