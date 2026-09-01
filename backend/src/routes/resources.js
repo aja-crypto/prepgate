@@ -13,10 +13,14 @@ const http = require('http');
 
 const RESOURCES_DIR = path.join(__dirname, '../..', 'resources');
 
-function fetchBuffer(url) {
+function fetchBuffer(url, redirects = 3) {
   return new Promise((resolve, reject) => {
     const lib = url.startsWith('https:') ? https : http;
     const req = lib.get(url, (resp) => {
+      if (resp.statusCode >= 300 && resp.statusCode < 400 && resp.headers.location && redirects > 0) {
+        resp.resume();
+        return resolve(fetchBuffer(resp.headers.location, redirects - 1));
+      }
       if (resp.statusCode !== 200) {
         resp.resume();
         return reject(new Error('Status ' + resp.statusCode));
@@ -27,7 +31,7 @@ function fetchBuffer(url) {
       resp.on('error', reject);
     });
     req.on('error', reject);
-    req.setTimeout(8000, () => { req.destroy(new Error('timeout')); });
+    req.setTimeout(10000, () => { req.destroy(new Error('timeout')); });
   });
 }
 
