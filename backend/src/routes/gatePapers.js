@@ -1,8 +1,32 @@
 const router = require('express').Router();
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
+const http = require('http');
 const MediaFile = require('../models/MediaFile');
 const { isMongoConnected } = require('../config/db');
+
+function fetchBuffer(url, redirects = 3) {
+  return new Promise((resolve, reject) => {
+    const lib = url.startsWith('https:') ? https : http;
+    const req = lib.get(url, (resp) => {
+      if (resp.statusCode >= 300 && resp.statusCode < 400 && resp.headers.location && redirects > 0) {
+        resp.resume();
+        return resolve(fetchBuffer(resp.headers.location, redirects - 1));
+      }
+      if (resp.statusCode !== 200) {
+        resp.resume();
+        return reject(new Error('Status ' + resp.statusCode));
+      }
+      const chunks = [];
+      resp.on('data', (c) => chunks.push(c));
+      resp.on('end', () => resolve(Buffer.concat(chunks)));
+      resp.on('error', reject);
+    });
+    req.on('error', reject);
+    req.setTimeout(10000, () => { req.destroy(new Error('timeout')); });
+  });
+}
 
 const PAPERS_DIR = path.join(__dirname, '../../uploads/gate-papers');
 const MANIFEST_PATH = path.join(PAPERS_DIR, 'manifest.json');
@@ -56,16 +80,36 @@ router.get('/', (req, res) => {
 router.get('/download/:filename', async (req, res) => {
   const filename = path.basename(req.params.filename);
   
-  // Try Cloudinary first
+  // Try Cloudinary first — proxy with correct PDF headers
   if (isMongoConnected()) {
     try {
       const doc = await MediaFile.findOne({ 'meta.filename': filename, category: 'gate-papers' });
       if (doc && doc.secure_url) {
         if (req.query.force === '1') {
+          try {
+            const buf = await fetchBuffer(doc.secure_url);
+            if (buf && buf.length > 0) {
+              res.setHeader('Content-Type', 'application/pdf');
+              res.setHeader('Content-Length', buf.length);
+              res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+              return res.send(buf);
+            }
+          } catch (_) { /* fallback to redirect */ }
           let url = doc.secure_url;
           url += (url.includes('?') ? '&' : '?') + 'fl_attachment';
           return res.redirect(url);
         }
+        // Default preview: inline PDF proxy (fixes iframe JSON bug)
+        try {
+          const buf = await fetchBuffer(doc.secure_url);
+          if (buf && buf.length > 0) {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Length', buf.length);
+            res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+            res.setHeader('Cache-Control', 'private, max-age=3600');
+            return res.send(buf);
+          }
+        } catch (_) { /* fall through to JSON fallback */ }
         return res.json({ success: true, url: doc.secure_url });
       }
     } catch (e) { /* fall through to local */ }

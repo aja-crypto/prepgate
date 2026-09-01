@@ -261,22 +261,38 @@ router.get('/sync', protect, async (req, res, next) => {
     }
 
     const userId = req.user._id;
-    const [mocks, notes] = await Promise.all([
-      MockTest.find({ user: userId }).sort('-testDate'),
-      Note.find({ user: userId }).sort('-createdAt'),
-    ]);
-
-    syncStreakToProgress(req.user);
+    let mocks = [];
+    let notes = [];
+    try {
+      const results = await Promise.allSettled([
+        MockTest.find({ user: userId }).sort('-testDate'),
+        Note.find({ user: userId }).sort('-createdAt'),
+      ]);
+      if (results[0].status === 'fulfilled') mocks = results[0].value;
+      if (results[1].status === 'fulfilled') notes = results[1].value;
+    } catch {}
+    try { syncStreakToProgress(req.user); } catch {}
     res.json({
       success: true,
       data: {
         backup: req.user.progressBackup || null,
-        mocks: mocks.map(mockFromDb),
-        notes: notes.map(noteFromDb),
+        mocks: (mocks || []).map(mockFromDb),
+        notes: (notes || []).map(noteFromDb),
         mongoAvailable: true,
       },
     });
-  } catch (e) { next(e); }
+  } catch (e) {
+    try { syncStreakToProgress(req.user); } catch {}
+    return res.json({
+      success: true,
+      data: {
+        backup: req.user?.progressBackup || null,
+        mocks: [],
+        notes: [],
+        mongoAvailable: true,
+      },
+    });
+  }
 });
 
 // PUT full sync — backup blob + upsert mocks & notes, return mongoIds

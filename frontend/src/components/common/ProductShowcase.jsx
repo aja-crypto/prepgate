@@ -281,16 +281,17 @@ export default function ProductShowcase() {
   }, []);
 
   useEffect(() => {
-    let done = 0;
-    FEATURES.forEach((f) => {
+    const first = FEATURES[0];
+    if (first) {
       const im = new Image();
-      im.onload = im.onerror = () => {
-        done += 1;
-        if (done === FEATURES.length && mountedRef.current) setReady(true);
-      };
-      im.src = f.image;
+      im.onload = im.onerror = () => { if (mountedRef.current) setReady(true); };
+      im.src = first.image;
+      setTimeout(() => { if (mountedRef.current) setReady(true); }, 1200);
+    } else if (mountedRef.current) setReady(true);
+    FEATURES.slice(1).forEach((f) => {
+      if ('requestIdleCallback' in window) requestIdleCallback(() => { const im2 = new Image(); im2.src = f.image; }, { timeout: 3000 });
+      else setTimeout(() => { const im2 = new Image(); im2.src = f.image; }, 2000);
     });
-    if (mountedRef.current) setReady(true);
   }, []);
 
   const cacheShotEls = useCallback(() => {
@@ -1003,8 +1004,8 @@ function DeviceFrame({ color, rgb, image, title, compact = false, fillHeight = f
             alt={title || ''}
             decoding="async"
             draggable={false}
-            loading="eager"
-            fetchPriority="high"
+            loading={image === FEATURES[0].image ? "eager" : "lazy"}
+            fetchPriority={image === FEATURES[0].image ? "high" : "low"}
             onError={(e) => console.error('[Showcase] image failed:', e.currentTarget.src)}
             className="block h-full w-full object-cover object-top select-none"
             style={{

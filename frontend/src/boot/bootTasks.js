@@ -1,4 +1,4 @@
-function withSoftFail(promiseFactory, timeoutMs = 4000) {
+function withSoftFail(promiseFactory, timeoutMs = 1200) {
   return () =>
     new Promise((resolve) => {
       let settled = false;
@@ -28,15 +28,16 @@ function withSoftFail(promiseFactory, timeoutMs = 4000) {
 async function mountApp() {
   return { ok: true };
 }
-const restoreSession = withSoftFail(async () => {
-  return true;
-});
-const loadConfig = withSoftFail(async () => {
-  return true;
-});
+const restoreSession = withSoftFail(async () => true, 800);
+const loadConfig = withSoftFail(async () => true, 800);
 async function loadCriticalAssets() {
   if (typeof document !== 'undefined' && document.fonts?.ready) {
-    await document.fonts.ready;
+    try {
+      await Promise.race([
+        document.fonts.ready,
+        new Promise((r) => setTimeout(() => r(true), 700)),
+      ]);
+    } catch {}
   }
   return { ok: true };
 }
@@ -44,10 +45,10 @@ async function readyCheck() {
   return { ok: true };
 }
 export const BOOT_STAGES = [
-  { key: 'app', weight: 20, label: 'Initializing GateNexa', run: mountApp, soft: false },
+  { key: 'app', weight: 35, label: 'Initializing GateNexa', run: mountApp, soft: false },
   { key: 'session', weight: 25, label: 'Restoring your session', run: restoreSession, soft: true },
-  { key: 'config', weight: 20, label: 'Preparing your workspace', run: loadConfig, soft: true },
-  { key: 'assets', weight: 15, label: 'Loading study data', run: loadCriticalAssets, soft: false },
+  { key: 'config', weight: 15, label: 'Preparing your workspace', run: loadConfig, soft: true },
+  { key: 'assets', weight: 5, label: 'Loading study data', run: withSoftFail(loadCriticalAssets, 900), soft: true },
   { key: 'readyCheck', weight: 20, label: 'Ready', run: readyCheck, soft: false },
 ];
-export const BOOT_SAFETY_TIMEOUT_MS = 8000;
+export const BOOT_SAFETY_TIMEOUT_MS = 2200;

@@ -401,10 +401,16 @@ export const shortNoteService = {
   }),
   downloadUrl: (folder, filename) => `/api/short-notes/download/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}`,
   openFile: async (folder, filename) => {
-    const response = await api.get(`/api/short-notes/download/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}`);
+    const response = await api.get(`/short-notes/download/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}`);
     if (response.data?.success && response.data?.url) {
       window.open(response.data.url, '_blank');
       return response.data.url;
+    }
+    if (response.headers['content-type']?.includes('application/pdf')) {
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      return url;
     }
     throw new Error(response.data?.message || 'Failed to get file URL');
   },
@@ -448,10 +454,16 @@ export const weeklyTestService = {
   delete: (id) => api.delete(`/weekly-tests/${id}`),
   downloadUrl: (subject, filename) => `/api/weekly-tests/download/${encodeURIComponent(subject)}/${encodeURIComponent(filename)}`,
   openFile: async (subject, filename) => {
-    const response = await api.get(`/api/weekly-tests/download/${encodeURIComponent(subject)}/${encodeURIComponent(filename)}`);
+    const response = await api.get(`/weekly-tests/download/${encodeURIComponent(subject)}/${encodeURIComponent(filename)}`);
     if (response.data?.success && response.data?.url) {
       window.open(response.data.url, '_blank');
       return response.data.url;
+    }
+    if (response.headers['content-type']?.includes('application/pdf')) {
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      return url;
     }
     throw new Error(response.data?.message || 'Failed to get file URL');
   },

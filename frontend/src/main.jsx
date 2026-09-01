@@ -1,14 +1,20 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
-import * as Sentry from '@sentry/react';
 
-Sentry.init({
-  dsn: import.meta.env.VITE_SENTRY_DSN || '',
-  environment: import.meta.env.MODE || 'development',
-  tracesSampleRate: import.meta.env.PROD ? 0.1 : 0,
-  integrations: [Sentry.browserTracingIntegration()],
-  beforeSend(event) { if (!import.meta.env.PROD) return null; return event; },
-});
+const initSentry = () => {
+  if (!import.meta.env.PROD || !import.meta.env.VITE_SENTRY_DSN) return;
+  import('@sentry/react').then((Sentry) => {
+    Sentry.init({
+      dsn: import.meta.env.VITE_SENTRY_DSN || '',
+      environment: import.meta.env.MODE || 'development',
+      tracesSampleRate: 0.1,
+      integrations: [Sentry.browserTracingIntegration()],
+      beforeSend(event) { return event; },
+    });
+  });
+};
+if ('requestIdleCallback' in window) requestIdleCallback(initSentry, { timeout: 3000 });
+else setTimeout(initSentry, 1500);
 
 // Suppress Three.js deprecation warning for THREE.Clock
 const originalWarn = console.warn.bind(console);
@@ -84,8 +90,8 @@ import { ProgressProvider, useProgress } from './context/ProgressContext';
 import { AiMentorProvider } from './context/AiMentorContext';
 import AiMentorTracker from './components/ai-mentor/AiMentorTracker';
 import { FocusProvider } from './context/FocusContext';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
+const AnalyticsLazy = lazy(() => import('@vercel/analytics/react').then((m) => ({ default: m.Analytics })));
+const SpeedInsightsLazy = lazy(() => import('@vercel/speed-insights/react').then((m) => ({ default: m.SpeedInsights })));
 import { checkReminders } from './utils/reminderUtils';
 import { initFirebasePush, isFirebaseConfigured } from './utils/firebase';
 import { silentCatch } from './utils/errorHandler';
@@ -149,10 +155,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               </DiagnosticsProvider>
               <Toaster position="top-right" />
               {import.meta.env.PROD && window.location.hostname === 'gatenexa.vercel.app' && (
-    <>
-      <Analytics />
-      <SpeedInsights />
-    </>
+    <Suspense fallback={null}>
+      <AnalyticsLazy />
+      <SpeedInsightsLazy />
+    </Suspense>
   )}
             </AdminAuthProvider>
           </BrowserRouter>
