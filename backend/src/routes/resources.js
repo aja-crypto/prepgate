@@ -8,7 +8,28 @@ const { searchResources, getSubjects, getBySubject, getIndex } = require('../ser
 const MediaFile = require('../models/MediaFile');
 const { isMongoConnected } = require('../config/db');
 
+const https = require('https');
+const http = require('http');
+
 const RESOURCES_DIR = path.join(__dirname, '../..', 'resources');
+
+function fetchBuffer(url) {
+  return new Promise((resolve, reject) => {
+    const lib = url.startsWith('https:') ? https : http;
+    const req = lib.get(url, (resp) => {
+      if (resp.statusCode !== 200) {
+        resp.resume();
+        return reject(new Error('Status ' + resp.statusCode));
+      }
+      const chunks = [];
+      resp.on('data', (c) => chunks.push(c));
+      resp.on('end', () => resolve(Buffer.concat(chunks)));
+      resp.on('error', reject);
+    });
+    req.on('error', reject);
+    req.setTimeout(8000, () => { req.destroy(new Error('timeout')); });
+  });
+}
 
 // Serve PDF files — Cloudinary proxy with correct MIME, local fallback
 router.get('/file/:path(*)', protect, async (req, res) => {
@@ -22,16 +43,13 @@ router.get('/file/:path(*)', protect, async (req, res) => {
         const isPdf = (doc.type === 'pdf') || relPath.toLowerCase().endsWith('.pdf');
         if (isPdf) {
           try {
-            const cloudRes = await fetch(doc.secure_url);
-            if (cloudRes.ok) {
-              const buf = Buffer.from(await cloudRes.arrayBuffer());
-              if (buf.length > 0) {
-                res.setHeader('Content-Type', 'application/pdf');
-                res.setHeader('Content-Length', buf.length);
-                res.setHeader('Content-Disposition', `inline; filename="${path.basename(relPath)}"`);
-                res.setHeader('Cache-Control', 'private, max-age=3600');
-                return res.send(buf);
-              }
+            const buf = await fetchBuffer(doc.secure_url);
+            if (buf && buf.length > 0) {
+              res.setHeader('Content-Type', 'application/pdf');
+              res.setHeader('Content-Length', buf.length);
+              res.setHeader('Content-Disposition', `inline; filename="${path.basename(relPath)}"`);
+              res.setHeader('Cache-Control', 'private, max-age=3600');
+              return res.send(buf);
             }
           } catch (_) { /* fall through to JSON */ }
         }
