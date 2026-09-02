@@ -9,15 +9,18 @@ export function AdminAuthProvider({ children }) {
 
   const loadAdmin = useCallback(async () => {
     const token = localStorage.getItem('adminToken');
+    console.log('[ADMIN-DIAG] AdminAuthContext loadAdmin:', { hasToken: !!token });
     if (!token) {
       setLoading(false);
       return Promise.resolve();
     }
     try {
       const res = await adminAuthService.me();
+      console.log('[ADMIN-DIAG] AdminAuthContext me() success:', { admin: !!res.data?.data, name: res.data?.data?.name, role: res.data?.data?.role });
       setAdmin(res.data.data);
       return Promise.resolve();
-    } catch {
+    } catch (err) {
+      console.error('[ADMIN-DIAG] AdminAuthContext me() FAILED:', { status: err.response?.status, message: err.response?.data?.message || err.message });
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminUser');
     } finally {

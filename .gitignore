@@ -53,9 +53,9 @@ tunnel_url.txt
 AGENTS.md
 AUDIT_REPORT.md
 DEPLOY.md
-resources/*
-!resources/weekly-tests/
-!resources/short-notes/
+/resources/*
+!/resources/weekly-tests/
+!/resources/short-notes/
 
 # Test files
 backend/test-*.js

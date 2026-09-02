@@ -130,16 +130,25 @@ const PrivateRoute = ({ children }) => {
 // Admin route wrapper
 const AdminPrivateRoute = ({ children }) => {
   const { admin, loading } = useAdminAuth();
-  if (loading) return (
-    <div className="flex items-center justify-center h-screen bg-bg mesh-bg">
-      <div className="text-center animate-fade-in">
-        <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}>
-          <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+  console.log('[ADMIN-DIAG] AdminPrivateRoute render:', { admin: !!admin, adminName: admin?.name, adminRole: admin?.role, loading });
+  if (loading) {
+    console.log('[ADMIN-DIAG] AdminPrivateRoute: showing loading spinner');
+    return (
+      <div className="flex items-center justify-center h-screen bg-bg mesh-bg">
+        <div className="text-center animate-fade-in">
+          <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}>
+            <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </div>
+          <div className="text-text2 text-sm font-medium">Loading Admin...</div>
         </div>
-        <div className="text-text2 text-sm font-medium">Loading Admin...</div>
       </div>
-    </div>
-  );
+    );
+  }
+  if (!admin) {
+    console.log('[ADMIN-DIAG] AdminPrivateRoute: no admin, redirecting to /admin/login');
+  } else {
+    console.log('[ADMIN-DIAG] AdminPrivateRoute: rendering children');
+  }
   return admin ? children : <Navigate to="/admin/login" replace />;
 };
 

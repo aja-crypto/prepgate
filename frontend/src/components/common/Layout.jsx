@@ -486,6 +486,7 @@ const Layout = memo(function Layout() {
                 transition={{ duration: 0.15, ease: 'easeOut' }}
                 className="flex-1 flex flex-col"
               >
+                {console.log('[ADMIN-DIAG] Layout Outlet rendering for:', location.pathname)}
                 <Outlet />
               </motion.div>
             </AnimatePresence>
