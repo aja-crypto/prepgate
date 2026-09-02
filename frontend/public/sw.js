@@ -1,6 +1,6 @@
-const CACHE_NAME = 'gatenexa-v4';
-const STATIC_CACHE = 'gatenexa-static-v4';
-const DYNAMIC_CACHE = 'gatenexa-dynamic-v4';
+const CACHE_NAME = 'gatenexa-v5';
+const STATIC_CACHE = 'gatenexa-static-v5';
+const DYNAMIC_CACHE = 'gatenexa-dynamic-v5';
 
 const APP_SHELL = [
   '/',
@@ -19,7 +19,15 @@ const APP_SHELL = [
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll(APP_SHELL))
+    caches.open(STATIC_CACHE).then((cache) =>
+      Promise.allSettled(
+        APP_SHELL.map((url) =>
+          cache.add(url).catch((err) => {
+            console.warn('[SW] Failed to cache:', url, err);
+          })
+        )
+      )
+    )
   );
 });
 
@@ -27,8 +35,9 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
-        keys.filter((k) => k !== CACHE_NAME && k !== STATIC_CACHE && k !== DYNAMIC_CACHE)
-            .map((k) => caches.delete(k))
+        keys
+          .filter((k) => k !== CACHE_NAME && k !== STATIC_CACHE && k !== DYNAMIC_CACHE)
+          .map((k) => caches.delete(k))
       )
     ).then(() => self.clients.claim())
   );
@@ -40,10 +49,8 @@ self.addEventListener('fetch', (event) => {
 
   if (request.method !== 'GET') return;
 
-  // Skip non-http(s) schemes (chrome-extension, data, blob)
   if (!url.protocol.startsWith('http')) return;
 
-  // Skip Vite dev server paths (node_modules, .vite, @fs) to avoid opaque-response errors
   if (url.pathname.includes('/node_modules/') || url.pathname.includes('/.vite/') || url.pathname.includes('/@fs/')) return;
 
   if (url.pathname.startsWith('/api/')) {

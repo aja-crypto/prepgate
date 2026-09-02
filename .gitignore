@@ -46,6 +46,7 @@ frontend/dist/
 !frontend/public/showcase/*.png
 !frontend/public/icons/*.jpeg
 !frontend/public/icons/*.jpg
+!frontend/public/icons/*.png
 screenshot_*
 mentor-debug.png
 tunnel_url.txt
