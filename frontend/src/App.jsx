@@ -216,6 +216,7 @@ function AppFloatingWidgets() {
   const hideOn = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/feedback', '/about', '/help'];
   const hideOnAi = path === '/mentor' || path === '/ai-coach';
   const hideFloatingWidgets = path.startsWith('/legal/');
+  const isAdminRoute = path.startsWith('/admin');
   if (hideOn.includes(path) || hideFloatingWidgets) {
     // Still allow brand intro to show
     return <BrandIntroModal open={brandIntroOpen} onClose={() => setBrandIntroOpen(false)} />;
@@ -224,7 +225,7 @@ function AppFloatingWidgets() {
     <>
       {aiIntroOpen && <AiIntroModal onComplete={handleAiIntroComplete} />}
       <BrandIntroModal open={brandIntroOpen} onClose={() => setBrandIntroOpen(false)} />
-      <AmbientBackground />
+      {!isAdminRoute && <AmbientBackground />}
       {localStorage.getItem('gatenexa_ai_fab') !== 'false' && !hideOnAi && (
         <FloatingAIAssistant open={aiPanelOpen} setOpen={setAiPanelOpen} />
       )}
