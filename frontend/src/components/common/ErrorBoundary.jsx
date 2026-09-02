@@ -5,12 +5,10 @@ export class ErrorBoundary extends Component {
   retryTimer = null;
 
   static getDerivedStateFromError(error) {
-    console.error('[ADMIN-DIAG] ErrorBoundary getDerivedStateFromError:', error?.message, error?.name, 'context:', this?.props?.name);
     return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('[ADMIN-DIAG] ErrorBoundary componentDidCatch:', { message: error?.message, name: error?.name, context: this?.props?.name, retried: this.state?.retried, errorCount: this.errorCount });
     if (this.errorCount > 2) return;
     this.errorCount = (this.errorCount || 0) + 1;
     console.error('========== [ErrorBoundary] Caught Error ==========');

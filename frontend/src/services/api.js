@@ -357,12 +357,21 @@ export const resourceService = {
     const token = localStorage.getItem('accessToken');
     const url = `/api/resources/file/${encodeURIComponent(filePath)}`;
     const response = await fetch(url, {
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      headers: token ? { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json, application/pdf, */*' } : { 'Accept': 'application/json, application/pdf, */*' },
       redirect: 'follow',
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.message || `Failed to open file (${response.status})`);
+    }
+    const contentType = (response.headers.get('content-type') || '').toLowerCase();
+    if (contentType.includes('application/json')) {
+      const data = await response.json().catch(() => ({}));
+      if (data?.success && data?.url) {
+        window.open(data.url, '_blank');
+        return data.url;
+      }
+      throw new Error(data?.message || 'Failed to get file');
     }
     const blob = await response.blob();
     const blobUrl = URL.createObjectURL(blob);

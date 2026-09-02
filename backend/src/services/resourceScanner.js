@@ -9,19 +9,6 @@ const INDEX_CACHE_PATH = path.join(__dirname, '../..', 'data', 'resource-index.j
 
 let resourceIndex = [];
 
-const FOLDER_TO_SUBJECT = {
-  'c by pankaj sir': 'Programming & Data Structures',
-  'coa by vd sir': 'Computer Organization',
-  'dm satish yadav': 'Discrete Mathematics',
-  'os by vd sir': 'Operating Systems',
-};
-
-function normalizeSubject(name) {
-  const lower = name.toLowerCase().trim();
-  if (FOLDER_TO_SUBJECT[lower]) return FOLDER_TO_SUBJECT[lower];
-  return SUBJECT_ALIASES[lower] || name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-}
-
 const SUBJECT_ALIASES = {
   'os': 'Operating Systems',
   'operating system': 'Operating Systems',
@@ -29,25 +16,86 @@ const SUBJECT_ALIASES = {
   'cn': 'Computer Networks',
   'computer network': 'Computer Networks',
   'computer networks': 'Computer Networks',
+  'networks': 'Computer Networks',
   'dbms': 'DBMS',
+  'database': 'DBMS',
+  'database management systems': 'DBMS',
   'toc': 'Theory of Computation',
   'theory of computation': 'Theory of Computation',
   'co': 'Computer Organization',
   'computer organization': 'Computer Organization',
   'coa': 'Computer Organization',
+  'computer organization and architecture': 'Computer Organization',
   'dl': 'Digital Logic',
   'digital logic': 'Digital Logic',
-  'ds': 'Data Structures',
-  'data structures': 'Data Structures',
+  'digital design': 'Digital Logic',
+  'ds': 'Programming & Data Structures',
+  'data structures': 'Programming & Data Structures',
+  'data structure': 'Programming & Data Structures',
   'programming': 'Programming & Data Structures',
+  'c programming': 'Programming & Data Structures',
+  'programming and data structures': 'Programming & Data Structures',
+  'programming & data structures': 'Programming & Data Structures',
   'algo': 'Algorithms',
   'algorithm': 'Algorithms',
+  'algorithms': 'Algorithms',
+  'cd': 'Compiler Design',
+  'compiler': 'Compiler Design',
+  'compiler design': 'Compiler Design',
+  'compilers': 'Compiler Design',
   'math': 'Engineering Mathematics',
   'maths': 'Engineering Mathematics',
   'engineering mathematics': 'Engineering Mathematics',
+  'mathematics': 'Engineering Mathematics',
   'aptitude': 'General Aptitude',
   'general aptitude': 'General Aptitude',
+  'apt': 'General Aptitude',
 };
+
+const FOLDER_TO_SUBJECT = {
+  'c by pankaj sir': 'Programming & Data Structures',
+  'coa by vd sir': 'Computer Organization',
+  'dm satish yadav': 'Discrete Mathematics',
+  'os by vd sir': 'Operating Systems',
+  'discrete mathematics': 'Discrete Mathematics',
+  'dm': 'Discrete Mathematics',
+  'c': 'Programming & Data Structures',
+  'computer organization': 'Computer Organization',
+  'coa': 'Computer Organization',
+  'algorithms': 'Algorithms',
+  'algo': 'Algorithms',
+  'compiler design': 'Compiler Design',
+  'cd': 'Compiler Design',
+  'compiler': 'Compiler Design',
+  'digital logic': 'Digital Logic',
+  'dl': 'Digital Logic',
+  'engineering mathematics': 'Engineering Mathematics',
+  'mathematics': 'Engineering Mathematics',
+  'math': 'Engineering Mathematics',
+  'general aptitude': 'General Aptitude',
+  'aptitude': 'General Aptitude',
+  'apt': 'General Aptitude',
+  'dbms': 'DBMS',
+  'database': 'DBMS',
+  'toc': 'Theory of Computation',
+  'theory of computation': 'Theory of Computation',
+  'computer networks': 'Computer Networks',
+  'cn': 'Computer Networks',
+  'networks': 'Computer Networks',
+  'operating systems': 'Operating Systems',
+  'os': 'Operating Systems',
+  'data structures': 'Programming & Data Structures',
+  'ds': 'Programming & Data Structures',
+  'programming': 'Programming & Data Structures',
+  'programming & data structures': 'Programming & Data Structures',
+};
+
+function normalizeSubject(name) {
+  const lower = name.toLowerCase().trim();
+  if (FOLDER_TO_SUBJECT[lower]) return FOLDER_TO_SUBJECT[lower];
+  if (SUBJECT_ALIASES[lower]) return SUBJECT_ALIASES[lower];
+  return name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
 
 const TOPIC_KEYWORDS = {
   'deadlock': { subject: 'Operating Systems', topic: 'Deadlock' },
@@ -56,17 +104,17 @@ const TOPIC_KEYWORDS = {
   'memory': { subject: 'Operating Systems', topic: 'Memory Management' },
   'paging': { subject: 'Operating Systems', topic: 'Memory Management' },
   'file system': { subject: 'Operating Systems', topic: 'File Systems' },
-  'bst': { subject: 'Data Structures', topic: 'Trees' },
-  'avl': { subject: 'Data Structures', topic: 'Trees' },
-  'binary tree': { subject: 'Data Structures', topic: 'Trees' },
-  'binary search tree': { subject: 'Data Structures', topic: 'Trees' },
-  'tree': { subject: 'Data Structures', topic: 'Trees' },
-  'heap': { subject: 'Data Structures', topic: 'Heap' },
-  'hashing': { subject: 'Data Structures', topic: 'Hashing' },
-  'linked list': { subject: 'Data Structures', topic: 'Linked List' },
-  'stack': { subject: 'Data Structures', topic: 'Stack & Queue' },
-  'queue': { subject: 'Data Structures', topic: 'Stack & Queue' },
-  'sorting': { subject: 'Data Structures', topic: 'Sorting' },
+  'bst': { subject: 'Programming & Data Structures', topic: 'Trees' },
+  'avl': { subject: 'Programming & Data Structures', topic: 'Trees' },
+  'binary tree': { subject: 'Programming & Data Structures', topic: 'Trees' },
+  'binary search tree': { subject: 'Programming & Data Structures', topic: 'Trees' },
+  'tree': { subject: 'Programming & Data Structures', topic: 'Trees' },
+  'heap': { subject: 'Programming & Data Structures', topic: 'Heap' },
+  'hashing': { subject: 'Programming & Data Structures', topic: 'Hashing' },
+  'linked list': { subject: 'Programming & Data Structures', topic: 'Linked List' },
+  'stack': { subject: 'Programming & Data Structures', topic: 'Stack & Queue' },
+  'queue': { subject: 'Programming & Data Structures', topic: 'Stack & Queue' },
+  'sorting': { subject: 'Programming & Data Structures', topic: 'Sorting' },
   'graph': { subject: 'Algorithms', topic: 'Graphs' },
   'dp': { subject: 'Algorithms', topic: 'Dynamic Programming' },
   'dynamic programming': { subject: 'Algorithms', topic: 'Dynamic Programming' },
@@ -139,16 +187,31 @@ function buildIndex() {
   const start = Date.now();
   
   if (!fs.existsSync(RESOURCES_DIR)) {
-    fs.mkdirSync(RESOURCES_DIR, { recursive: true });
+    try { fs.mkdirSync(RESOURCES_DIR, { recursive: true }); } catch (_) {}
     console.log('[ResourceScanner] Created resources directory at', RESOURCES_DIR);
   }
 
   resourceIndex = scanDirectory(RESOURCES_DIR);
   
-  // Fallback to embedded data when filesystem is empty (e.g. Render ephemeral disk)
-  if (resourceIndex.length === 0 && EMBEDDED_RESOURCES.length > 0) {
-    console.log('[ResourceScanner] Filesystem empty, using embedded resource index');
-    resourceIndex = [...EMBEDDED_RESOURCES];
+  // Always merge embedded data: fill in subjects missing from filesystem
+  if (Array.isArray(EMBEDDED_RESOURCES) && EMBEDDED_RESOURCES.length > 0) {
+    const fsKeys = new Set(resourceIndex.map(r => (r.subject + '||' + r.filePath).toLowerCase()));
+    const fsSubjects = new Set(resourceIndex.map(r => r.subject));
+    const merged = [...resourceIndex];
+    let addedCount = 0;
+    for (const emb of EMBEDDED_RESOURCES) {
+      const key = (emb.subject + '||' + emb.filePath).toLowerCase();
+      if (!fsKeys.has(key)) {
+        // Skip duplicate subjects' files when filesystem already has the subject (avoid duplication of content)
+        if (fsSubjects.has(emb.subject)) continue;
+        merged.push(emb);
+        addedCount++;
+      }
+    }
+    if (addedCount > 0) {
+      console.log(`[ResourceScanner] Merged ${addedCount} embedded resources (${resourceIndex.length} from disk)`);
+      resourceIndex = merged;
+    }
   }
   
   // Sort by subject then title

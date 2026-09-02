@@ -42,9 +42,14 @@ router.get('/file/:path(*)', protect, async (req, res) => {
   // Try Cloudinary first via MediaFile lookup — proxy with application/pdf
   if (isMongoConnected()) {
     try {
-      const doc = await MediaFile.findOne({ legacy_path: `/resources/${relPath}`, category: 'resources' });
+      const doc = await MediaFile.findOne({
+        $or: [
+          { legacy_path: `/resources/${relPath}`, category: 'resources' },
+          { legacy_path: `/resources/${relPath}` },
+        ],
+      });
       if (doc && doc.secure_url) {
-        const isPdf = (doc.type === 'pdf') || relPath.toLowerCase().endsWith('.pdf');
+        const isPdf = (doc.type === 'pdf') || String(relPath).toLowerCase().endsWith('.pdf');
         if (isPdf) {
           try {
             const buf = await fetchBuffer(doc.secure_url);
@@ -55,9 +60,10 @@ router.get('/file/:path(*)', protect, async (req, res) => {
               res.setHeader('Cache-Control', 'private, max-age=3600');
               return res.send(buf);
             }
-          } catch (_) { /* fall through to redirect */ }
+          } catch (_) { /* fall through to JSON URL redirect */ }
         }
-        return res.redirect(doc.secure_url);
+        // Return JSON with secure URL (frontend will window.open it)
+        return res.json({ success: true, url: doc.secure_url, type: doc.type || (isPdf ? 'pdf' : 'other') });
       }
     } catch (e) { /* fall through to local */ }
   }

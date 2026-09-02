@@ -53,8 +53,6 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  console.log('[ADMIN-DIAG] AdminLayout render:', { pathname: location.pathname, admin: !!admin });
-
   const handleLogout = () => {
     logout();
     navigate('/admin/login');
@@ -136,7 +134,6 @@ export default function AdminLayout() {
         <main className="flex-1 overflow-y-auto px-2 sm:px-4 md:px-6 pt-4 sm:pt-6 pb-6">
           <ErrorBoundary name="AdminSection">
             <Suspense fallback={<AdminSectionFallback />}>
-              {console.log('[ADMIN-DIAG] AdminLayout main: rendering Outlet')}
               <Outlet />
             </Suspense>
           </ErrorBoundary>

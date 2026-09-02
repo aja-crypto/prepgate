@@ -130,9 +130,7 @@ const PrivateRoute = ({ children }) => {
 // Admin route wrapper
 const AdminPrivateRoute = ({ children }) => {
   const { admin, loading } = useAdminAuth();
-  console.log('[ADMIN-DIAG] AdminPrivateRoute render:', { admin: !!admin, adminName: admin?.name, adminRole: admin?.role, loading });
   if (loading) {
-    console.log('[ADMIN-DIAG] AdminPrivateRoute: showing loading spinner');
     return (
       <div className="flex items-center justify-center h-screen bg-bg mesh-bg">
         <div className="text-center animate-fade-in">
@@ -143,11 +141,6 @@ const AdminPrivateRoute = ({ children }) => {
         </div>
       </div>
     );
-  }
-  if (!admin) {
-    console.log('[ADMIN-DIAG] AdminPrivateRoute: no admin, redirecting to /admin/login');
-  } else {
-    console.log('[ADMIN-DIAG] AdminPrivateRoute: rendering children');
   }
   return admin ? children : <Navigate to="/admin/login" replace />;
 };

@@ -315,8 +315,6 @@ export default function AdminFeedbackCenterPage() {
   const [tab, setTab] = useState('tickets');
   const fetchingRef = useRef(false);
 
-  console.log('[ADMIN-DIAG] AdminFeedbackCenterPage render:', { loading, error: !!error, tab, ticketsCount: tickets.length });
-
   const fetchData = useCallback(async ({ silent = false } = {}) => {
     if (fetchingRef.current) return;
     fetchingRef.current = true;

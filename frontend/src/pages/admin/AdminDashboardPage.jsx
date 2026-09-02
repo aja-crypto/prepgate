@@ -64,17 +64,12 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  console.log('[ADMIN-DIAG] AdminDashboardPage render:', { loading, error: !!error, stats: !!stats, admin: !!admin });
-
   const fetchStats = useCallback(async () => {
     try {
       setError(null);
-      console.log('[ADMIN-DIAG] AdminDashboardPage: fetching stats...');
       const res = await adminApi.get('/admin/stats');
-      console.log('[ADMIN-DIAG] AdminDashboardPage: stats fetched successfully', { hasData: !!res.data?.data });
       setStats(res.data.data);
     } catch (err) {
-      console.error('[ADMIN-DIAG] AdminDashboardPage: stats fetch FAILED', { status: err.response?.status, message: err.response?.data?.message || err.message });
       setError(err.response?.data?.message || 'Failed to load stats');
     } finally {
       setLoading(false);
