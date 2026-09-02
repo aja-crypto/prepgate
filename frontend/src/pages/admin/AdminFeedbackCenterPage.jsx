@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { adminFeedbackService } from '../../services/adminApi';
 import toast from 'react-hot-toast';
 
@@ -306,14 +306,19 @@ export default function AdminFeedbackCenterPage() {
   const [stats, setStats] = useState(null);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [filter, setFilter] = useState({ status: '', category: '', priority: '', search: '' });
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [tab, setTab] = useState('tickets');
+  const fetchingRef = useRef(false);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(async ({ silent = false } = {}) => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+    if (!silent) setLoading(true);
     try {
       const params = { page, limit: 15 };
       if (filter.status) params.status = filter.status;
@@ -328,11 +333,33 @@ export default function AdminFeedbackCenterPage() {
       setStats(statsRes.data.data);
       setTickets(listRes.data.data);
       setTotalPages(listRes.data.pages || 1);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+      setLastUpdated(new Date());
+      setError(null);
+    } catch (e) {
+      console.error(e);
+      if (!stats && tickets.length === 0) {
+        setError('Unable to load feedback. Please check the connection and try again.');
+      } else {
+        setError('Refresh failed. Showing last known data.');
+      }
+    } finally {
+      setLoading(false);
+      fetchingRef.current = false;
+    }
   }, [page, filter]);
 
+  const fetchDataRef = useRef(fetchData);
+  fetchDataRef.current = fetchData;
+
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    const tick = () => { if (document.visibilityState === 'visible') fetchDataRef.current({ silent: true }); };
+    const interval = setInterval(tick, 10000);
+    const onVisibility = () => { if (document.visibilityState === 'visible') fetchDataRef.current({ silent: true }); };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => { clearInterval(interval); document.removeEventListener('visibilitychange', onVisibility); };
+  }, []);
 
   const handleTicketUpdate = () => { fetchData(); if (selectedTicket) { setSelectedTicket(null); } };
 
@@ -348,7 +375,16 @@ export default function AdminFeedbackCenterPage() {
           <h1 className="text-lg font-bold text-text">Feedback Center</h1>
           <p className="text-sm text-text3 mt-0.5">Manage user feedback, bug reports, and feature requests</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {lastUpdated && (
+            <span className="text-[10px] text-text3 hidden sm:inline">
+              Updated {lastUpdated.toLocaleTimeString()}
+            </span>
+          )}
+          <button onClick={() => fetchData()}
+            className="px-3 py-1.5 text-xs font-medium rounded-lg text-text3 hover:text-text border border-border transition-colors">
+            Refresh
+          </button>
           <button onClick={() => setTab('tickets')}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${tab === 'tickets' ? 'bg-primary/10 text-primary' : 'text-text3 hover:text-text border border-border'}`}>
             Tickets
@@ -359,6 +395,14 @@ export default function AdminFeedbackCenterPage() {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm border" style={{ background: 'rgba(239,68,68,0.06)', borderColor: 'rgba(239,68,68,0.15)', color: '#FCA5A5' }}>
+          <span>⚠</span>
+          <span className="flex-1">{error}</span>
+          <button onClick={() => fetchData()} className="text-xs font-medium px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">Retry</button>
+        </div>
+      )}
 
       {/* Stats Cards */}
       {stats && (

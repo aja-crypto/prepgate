@@ -13,10 +13,10 @@ import {
 
 const TOTAL_STEPS = 4;
 const STEPS = [
-  { icon: Rocket, label: 'Welcome', title: 'Welcome to GateNexa', subtitle: 'One intelligent workspace for your complete GATE preparation.' },
+  { icon: PartyPopper, label: 'Welcome', title: 'Start Your GATE 2027 Journey', subtitle: 'AI-powered preparation — everything you need in one place.' },
+  { icon: Rocket, label: 'Overview', title: 'Welcome to GateNexa', subtitle: 'One intelligent workspace for your complete GATE preparation.' },
   { icon: Palette, label: 'Personalize', title: 'Personalize Your Experience', subtitle: 'Customize how GateNexa looks and feels.' },
   { icon: Compass, label: 'Discover', title: 'Discover Your Workspace', subtitle: 'Everything you need, connected in one place.' },
-  { icon: PartyPopper, label: 'Launch', title: 'Welcome to GateNexa Early Access', subtitle: 'Thank you for being one of our early users.' },
 ];
 
 const THEMES = [
@@ -184,6 +184,60 @@ export default function OnboardingFlow() {
     switch (step) {
       case 0:
         return (
+          <div className="space-y-4">
+            <div className="rounded-2xl border p-4 text-center" style={{
+              background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(59,130,246,0.06))',
+              borderColor: 'rgba(139,92,246,0.15)',
+            }}>
+              <div className="text-[14px] font-bold text-white mb-1">🎯 GATE 2027 Preparation</div>
+              <div className="text-[12px]" style={{ color: '#9498B0' }}>GateNexa is built specifically for GATE aspirants preparing for the 2027 exam.</div>
+              <div className="text-[11px] mt-1" style={{ color: '#6D728C' }}>Start with a clear plan and let AI guide your preparation.</div>
+            </div>
+
+            <GlassCard>
+              <div className="p-5">
+                <div className="flex items-center gap-2.5 text-[13px] font-bold text-white mb-3">
+                  <Sparkles size={15} style={{ color: '#F59E0B' }} /> What You Get
+                </div>
+                <ul className="space-y-2 text-[12px] leading-relaxed" style={{ color: '#C0C4DC' }}>
+                  {['AI-powered study guidance', 'Personalized daily plans', 'Curated learning resources', 'Performance analytics', 'Smart revision scheduling', 'Previous year question practice'].map((item) => (
+                    <li key={item} className="flex items-start gap-3"><span className="mt-1 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#8B5CF6' }} /> {item}</li>
+                  ))}
+                </ul>
+              </div>
+            </GlassCard>
+
+            <GlassCard>
+              <div className="p-5">
+                <div className="flex items-center gap-2.5 text-[13px] font-bold text-white mb-3">
+                  <Gift size={15} style={{ color: '#22C55E' }} /> Refer Friends, Earn Rewards
+                </div>
+                <p className="text-[12px] leading-relaxed mb-2" style={{ color: '#B0B4CC' }}>
+                  Invite friends to GateNexa and earn referral rewards that unlock Premium features directly from your dashboard.
+                </p>
+              </div>
+            </GlassCard>
+
+            <GlassCard>
+              <div className="p-5">
+                <div className="flex items-center gap-2.5 text-[13px] font-bold text-white mb-3">
+                  <Monitor size={15} style={{ color: '#A855F7' }} /> 💻 Best Experience
+                </div>
+                <p className="text-[12px] leading-relaxed mb-3" style={{ color: '#B0B4CC' }}>
+                  For the smoothest experience, we recommend using GateNexa on a desktop or laptop with Google Chrome or Microsoft Edge.
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-[11px]" style={{ color: '#9498B0' }}>
+                  {['Larger workspace', 'Better dashboards', 'Faster navigation', 'Improved multitasking', 'Better AI interaction', 'Rich analytics'].map((item) => (
+                    <span key={item} className="flex items-center gap-1.5"><Check size={10} style={{ color: '#A855F7' }} /> {item}</span>
+                  ))}
+                </div>
+              </div>
+            </GlassCard>
+          </div>
+        );
+
+      case 1:
+        return (
           <div className="space-y-6">
             <p className="text-[15px] leading-[1.8]" style={{ color: '#C0C4DC', maxWidth: '52ch' }}>
               GateNexa brings together everything you need in one place—from AI-powered learning and personalized study planning to analytics, reports, predictors, and curated learning resources.
@@ -213,9 +267,9 @@ export default function OnboardingFlow() {
               Setup takes less than 20 seconds.
             </div>
           </div>
-        );
+      );
 
-      case 1:
+      case 2:
         return (
           <div className="space-y-7">
             <div>
@@ -282,9 +336,9 @@ export default function OnboardingFlow() {
               These preferences only affect how GateNexa looks for you and can be changed anytime in Settings.
             </p>
           </div>
-        );
+      );
 
-      case 2:
+      case 3:
         return (
           <div className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -362,76 +416,6 @@ export default function OnboardingFlow() {
                       borderColor: 'rgba(6,182,212,0.12)',
                       color: '#9498B0',
                     }}>{f}</span>
-                  ))}
-                </div>
-              </div>
-            </GlassCard>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-4">
-            <div className="rounded-2xl border p-4 text-center" style={{
-              background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(59,130,246,0.06))',
-              borderColor: 'rgba(139,92,246,0.15)',
-            }}>
-              <div className="text-[14px] font-bold text-white mb-1">🧪 Early Access Beta</div>
-              <div className="text-[12px]" style={{ color: '#9498B0' }}>GateNexa is currently available only to selected early-access users.</div>
-              <div className="text-[11px] mt-1" style={{ color: '#6D728C' }}>You're helping shape the platform before the public launch.</div>
-            </div>
-
-            <GlassCard>
-              <div className="p-5">
-                <div className="flex items-center gap-2.5 text-[13px] font-bold text-white mb-3">
-                  <Sparkles size={15} style={{ color: '#F59E0B' }} /> During Beta
-                </div>
-                <ul className="space-y-2 text-[12px] leading-relaxed" style={{ color: '#C0C4DC' }}>
-                  {['Frequent feature updates', 'UI improvements', 'Performance optimization', 'Bug fixes', 'New AI capabilities', 'New learning resources'].map((item) => (
-                    <li key={item} className="flex items-start gap-3"><span className="mt-1 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#8B5CF6' }} /> {item}</li>
-                  ))}
-                </ul>
-              </div>
-            </GlassCard>
-
-            <GlassCard>
-              <div className="p-5">
-                <div className="flex items-center gap-2.5 text-[13px] font-bold text-white mb-3">
-                  <Gift size={15} style={{ color: '#22C55E' }} /> Your Feedback Matters
-                </div>
-                <p className="text-[12px] leading-relaxed mb-2" style={{ color: '#B0B4CC' }}>
-                  Every suggestion helps us:
-                </p>
-                <ul className="space-y-1.5 text-[11.5px] leading-relaxed" style={{ color: '#9498B0' }}>
-                  {['Improve the experience', 'Fix bugs faster', 'Prioritize new features', 'Build a better platform for everyone'].map((item) => (
-                    <li key={item} className="flex items-start gap-3"><span className="mt-1 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#22C55E' }} /> {item}</li>
-                  ))}
-                </ul>
-              </div>
-            </GlassCard>
-
-            <GlassCard>
-              <div className="p-5">
-                <div className="flex items-center gap-2.5 text-[13px] font-bold text-white mb-3">
-                  <ShieldCheck size={15} style={{ color: '#06B6D4' }} /> Data Notice
-                </div>
-                <p className="text-[12px] leading-relaxed" style={{ color: '#B0B4CC' }}>
-                  This platform is actively evolving. Some features and datasets may change during development. For important study notes or reports, we recommend keeping personal backups while we continue improving stability.
-                </p>
-              </div>
-            </GlassCard>
-
-            <GlassCard>
-              <div className="p-5">
-                <div className="flex items-center gap-2.5 text-[13px] font-bold text-white mb-3">
-                  <Monitor size={15} style={{ color: '#A855F7' }} /> 💻 Best Experience
-                </div>
-                <p className="text-[12px] leading-relaxed mb-3" style={{ color: '#B0B4CC' }}>
-                  For the smoothest experience, we recommend using GateNexa on a desktop or laptop with Google Chrome or Microsoft Edge.
-                </p>
-                <div className="grid grid-cols-2 gap-2 text-[11px]" style={{ color: '#9498B0' }}>
-                  {['Larger workspace', 'Better dashboards', 'Faster navigation', 'Improved multitasking', 'Better AI interaction', 'Rich analytics'].map((item) => (
-                    <span key={item} className="flex items-center gap-1.5"><Check size={10} style={{ color: '#A855F7' }} /> {item}</span>
                   ))}
                 </div>
               </div>
@@ -530,7 +514,7 @@ export default function OnboardingFlow() {
                       <div className="text-[16px] font-bold tracking-tight text-white">
                         <span style={{ color: '#A855F7' }}>Gate</span><span className="text-white">Nexa</span>
                       </div>
-                      <div className="text-[10.5px] font-medium text-white/30">GATE 2027 • Early Access</div>
+                      <div className="text-[10.5px] font-medium text-white/30">GATE 2027 • Your AI-Powered Study Platform</div>
                     </div>
                   </div>
 

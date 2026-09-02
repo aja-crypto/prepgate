@@ -16,14 +16,24 @@ adminApi.interceptors.request.use((config) => {
 
 adminApi.interceptors.response.use(
   (res) => res,
-  (error) => {
-    const isInvalidToken = error.response?.status === 401 && (
-      error.response?.data?.message?.toLowerCase().includes('invalid token') ||
-      error.response?.data?.message?.toLowerCase().includes('token expired') ||
-      error.response?.data?.code === 'TOKEN_EXPIRED'
+  async (error) => {
+    const { config, response } = error;
+    if (!config) return Promise.reject(error);
+
+    const isTransient = !response || response.status === 502 || response.status === 503 || response.status === 504;
+    if (isTransient && (config._retryCount || 0) < 1) {
+      config._retryCount = (config._retryCount || 0) + 1;
+      await new Promise(r => setTimeout(r, 1500));
+      return adminApi(config);
+    }
+
+    const isInvalidToken = response?.status === 401 && (
+      response?.data?.message?.toLowerCase().includes('invalid token') ||
+      response?.data?.message?.toLowerCase().includes('token expired') ||
+      response?.data?.code === 'TOKEN_EXPIRED'
     );
-    if (isInvalidToken || error.response?.status === 401) {
-      if (error.config?.url?.includes('/auth/login')) return Promise.reject(error);
+    if (isInvalidToken || response?.status === 401) {
+      if (config.url?.includes('/auth/login')) return Promise.reject(error);
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminUser');
       if (window.location.pathname !== '/admin/login') {
