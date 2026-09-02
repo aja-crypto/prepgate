@@ -55,9 +55,9 @@ router.get('/file/:path(*)', protect, async (req, res) => {
               res.setHeader('Cache-Control', 'private, max-age=3600');
               return res.send(buf);
             }
-          } catch (_) { /* fall through to JSON */ }
+          } catch (_) { /* fall through to redirect */ }
         }
-        return res.json({ success: true, url: doc.secure_url });
+        return res.redirect(doc.secure_url);
       }
     } catch (e) { /* fall through to local */ }
   }

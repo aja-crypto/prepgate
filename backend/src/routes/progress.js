@@ -317,11 +317,12 @@ router.put('/sync', protect, async (req, res, next) => {
     const userId = req.user._id;
     const syncedMocks = [];
     const syncedNotes = [];
+    const isObjectId = (v) => /^[0-9a-f]{24}$/i.test(String(v));
 
-    // Batch mock operations
+    // Batch mock operations — skip invalid mongoIds
     const mockOps = [];
     for (const m of data.mocks || []) {
-      if (m.mongoId) {
+      if (m.mongoId && isObjectId(m.mongoId)) {
         mockOps.push({
           updateOne: {
             filter: { _id: m.mongoId, user: userId },
@@ -338,11 +339,11 @@ router.put('/sync', protect, async (req, res, next) => {
       }
     }
 
-    // Batch note operations
+    // Batch note operations — skip invalid mongoIds
     const noteOps = [];
     for (const n of data.notes || []) {
       const payload = { title: n.title, content: n.content, color: n.color || '#4f8dff' };
-      if (n.mongoId) {
+      if (n.mongoId && isObjectId(n.mongoId)) {
         noteOps.push({
           updateOne: {
             filter: { _id: n.mongoId, user: userId },
@@ -359,49 +360,79 @@ router.put('/sync', protect, async (req, res, next) => {
       }
     }
 
-    // Execute bulk writes in parallel
-    const [mockResults, noteResults] = await Promise.all([
-      mockOps.length ? MockTest.bulkWrite(mockOps, { ordered: false }) : Promise.resolve({}),
-      noteOps.length ? Note.bulkWrite(noteOps, { ordered: false }) : Promise.resolve({}),
-    ]);
-
-    // Collect synced mocks
+    // Execute bulk writes independently — failure in one should not block the other
+    let mockResults = {};
+    let noteResults = {};
     if (mockOps.length) {
-      const mockIds = data.mocks
-        .filter(m => m.mongoId)
-        .map(m => m.mongoId);
-      const createdIds = mockResults.upsertedIds || {};
-      const allMockIds = [...mockIds, ...Object.values(createdIds).map(v => v._id)];
-      const syncedMocksDb = await MockTest.find({ _id: { $in: allMockIds }, user: userId });
-      syncedMocks.push(...syncedMocksDb.map(mockFromDb));
+      try {
+        mockResults = await MockTest.bulkWrite(mockOps, { ordered: false });
+      } catch (e) {
+        console.error('[Sync] Mock bulkWrite failed:', e.message);
+      }
     }
-
-    // Collect synced notes
     if (noteOps.length) {
-      const noteIds = data.notes
-        .filter(n => n.mongoId)
-        .map(n => n.mongoId);
-      const createdIds = noteResults.upsertedIds || {};
-      const allNoteIds = [...noteIds, ...Object.values(createdIds).map(v => v._id)];
-      const syncedNotesDb = await Note.find({ _id: { $in: allNoteIds }, user: userId });
-      syncedNotes.push(...syncedNotesDb.map(noteFromDb));
-    }
-
-    if (data.studyStats?.todayHours != null) {
-      const logDate = new Date();
-      logDate.setHours(0, 0, 0, 0);
-      await StudyLog.findOneAndUpdate(
-        { user: userId, date: logDate },
-        { $set: { hours: data.studyStats.todayHours, user: userId, date: logDate } },
-        { upsert: true, new: true }
-      );
-      if (typeof req.user.updateStreak === 'function') {
-        req.user.updateStreak();
+      try {
+        noteResults = await Note.bulkWrite(noteOps, { ordered: false });
+      } catch (e) {
+        console.error('[Sync] Note bulkWrite failed:', e.message);
       }
     }
 
-    if (typeof req.user.save === 'function') {
-      await req.user.save({ validateBeforeSave: false });
+    // Collect synced mocks independently
+    try {
+      if (mockOps.length) {
+        const mockIds = data.mocks
+          .filter(m => m.mongoId && isObjectId(m.mongoId))
+          .map(m => m.mongoId);
+        const createdIds = mockResults.upsertedIds || {};
+        const allMockIds = [...mockIds, ...Object.values(createdIds).map(v => v._id)];
+        const syncedMocksDb = await MockTest.find({ _id: { $in: allMockIds }, user: userId });
+        syncedMocks.push(...syncedMocksDb.map(mockFromDb));
+      }
+    } catch (e) {
+      console.error('[Sync] Mock fetch failed:', e.message);
+    }
+
+    // Collect synced notes independently
+    try {
+      if (noteOps.length) {
+        const noteIds = data.notes
+          .filter(n => n.mongoId && isObjectId(n.mongoId))
+          .map(n => n.mongoId);
+        const createdIds = noteResults.upsertedIds || {};
+        const allNoteIds = [...noteIds, ...Object.values(createdIds).map(v => v._id)];
+        const syncedNotesDb = await Note.find({ _id: { $in: allNoteIds }, user: userId });
+        syncedNotes.push(...syncedNotesDb.map(noteFromDb));
+      }
+    } catch (e) {
+      console.error('[Sync] Note fetch failed:', e.message);
+    }
+
+    // Update study stats independently — failure should not block sync
+    try {
+      if (data.studyStats?.todayHours != null) {
+        const logDate = new Date();
+        logDate.setHours(0, 0, 0, 0);
+        await StudyLog.findOneAndUpdate(
+          { user: userId, date: logDate },
+          { $set: { hours: data.studyStats.todayHours, user: userId, date: logDate } },
+          { upsert: true, new: true }
+        );
+        if (typeof req.user.updateStreak === 'function') {
+          req.user.updateStreak();
+        }
+      }
+    } catch (e) {
+      console.error('[Sync] Study stats update failed:', e.message);
+    }
+
+    // Save user backup independently — failure should not block sync
+    try {
+      if (typeof req.user.save === 'function') {
+        await req.user.save({ validateBeforeSave: false });
+      }
+    } catch (e) {
+      console.error('[Sync] User save failed:', e.message);
     }
 
     res.json({

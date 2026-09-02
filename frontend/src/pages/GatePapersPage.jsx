@@ -7,6 +7,7 @@ export default function GatePapersPage() {
   const [selectedYear, setSelectedYear] = useState(null);
   const [loading, setLoading] = useState(true);
   const [previewFile, setPreviewFile] = useState(null);
+  const [previewError, setPreviewError] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -100,7 +101,7 @@ export default function GatePapersPage() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
-                      onClick={() => setPreviewFile(paper)}
+                      onClick={() => { setPreviewFile(paper); setPreviewError(false); }}
                       className="text-[10px] px-3 py-1.5 rounded-lg border bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-all font-medium"
                     >View</button>
                     <a
@@ -130,12 +131,24 @@ export default function GatePapersPage() {
               </div>
             </div>
             <div className="flex-1 min-h-0 p-2">
-              <iframe
-                src={gatePaperService.previewUrl(previewFile.filename)}
-                className="w-full h-full rounded"
-                title={previewFile.title}
-                style={{ minHeight: '75vh' }}
-              />
+              {previewError ? (
+                <div className="flex flex-col items-center justify-center h-full min-h-[60vh] gap-3">
+                  <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 text-red-400"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                  </div>
+                  <p className="text-sm text-text3">PDF is temporarily unavailable</p>
+                  <p className="text-xs text-text3/60">The server may be starting up. Please try again.</p>
+                  <button onClick={() => { setPreviewError(false); }} className="mt-2 text-xs px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all font-semibold">Retry</button>
+                </div>
+              ) : (
+                <iframe
+                  src={gatePaperService.previewUrl(previewFile.filename)}
+                  className="w-full h-full rounded"
+                  title={previewFile.title}
+                  style={{ minHeight: '75vh' }}
+                  onError={() => setPreviewError(true)}
+                />
+              )}
             </div>
           </div>
         </div>

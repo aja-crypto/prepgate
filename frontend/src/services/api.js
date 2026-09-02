@@ -358,18 +358,11 @@ export const resourceService = {
     const url = `/api/resources/file/${encodeURIComponent(filePath)}`;
     const response = await fetch(url, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      redirect: 'follow',
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.message || `Failed to open file (${response.status})`);
-    }
-    const contentType = response.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-      const { url: fileUrl } = await response.json();
-      if (fileUrl) {
-        window.open(fileUrl, '_blank');
-        return fileUrl;
-      }
     }
     const blob = await response.blob();
     const blobUrl = URL.createObjectURL(blob);

@@ -76,22 +76,11 @@ router.get('/', protect, async (req, res, next) => {
       prefs = await ensurePrefs(mongoUserId);
     }
 
-    // If a user has no notifications at all AND has never been seeded, create default onboarding notifications
-    if (total === 0) {
-      const prefs = await ensurePrefs(mongoUserId);
-      if (!prefs.onboardingSeeded) {
-        try {
-          await generateOnboardingNotifications(mongoUserId);
-          const [fresh, freshTotal, freshUnread] = await Promise.all([
-            Notification.find(filter).sort({ scheduledAt: -1 }).skip(skip).limit(limit).lean(),
-            Notification.countDocuments(filter),
-            Notification.countDocuments({ user: mongoUserId, isRead: false }),
-          ]);
-          return res.json({ success: true, data: { notifications: fresh, total: freshTotal, unreadCount: freshUnread, page, pages: Math.ceil(freshTotal / limit), prefs } });
-        } catch (e) {
-          // If seeding fails, fall back to the empty result
-        }
-      }
+    // Always try to generate onboarding notifications for the current day (day-aware, idempotent)
+    try {
+      await generateOnboardingNotifications(mongoUserId, { now: new Date() });
+    } catch (e) {
+      // Onboarding failure should not block fetching
     }
 
     // Daily generation: if it's a new day and user has no notifications for today, generate them idempotently

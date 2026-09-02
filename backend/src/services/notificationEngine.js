@@ -74,17 +74,20 @@ const EVENT_TYPES = {
 };
 
 const ONBOARDING_ITEMS = [
+  // ── Day 1: Welcome + first steps ──
   {
+    day: 1,
     type: 'welcome',
     category: 'onboarding',
     priority: 'high',
     title: 'Welcome to GateNexa',
-    message: 'Your GATE 2027 workspace is ready. Start with today’s focus and one complete topic block.',
+    message: 'Your GATE 2027 workspace is ready. Start with today\'s focus and one complete topic block.',
     description: 'Use the planner for the day, then mark one topic complete before you stop.',
     action: { label: 'Go to dashboard', href: '/dashboard' },
     slot: 'onboarding',
   },
   {
+    day: 1,
     type: 'onboarding_roadmap',
     category: 'onboarding',
     priority: 'normal',
@@ -95,13 +98,83 @@ const ONBOARDING_ITEMS = [
     slot: 'onboarding',
   },
   {
+    day: 1,
     type: 'onboarding_pyq',
     category: 'onboarding',
     priority: 'normal',
     title: 'Practice from day one',
     message: 'Solve a few previous-year questions today, even before the syllabus feels complete.',
-    description: 'PYQs show the exam’s actual language. Start with one easy set.',
+    description: 'PYQs show the exam\'s actual language. Start with one easy set.',
     action: { label: 'Open PYQs', href: '/pyq' },
+    slot: 'onboarding',
+  },
+  // ── Day 2: Build the habit ──
+  {
+    day: 2,
+    type: 'onboarding_focus',
+    category: 'onboarding',
+    priority: 'high',
+    title: 'Start your first focus session',
+    message: 'Use the Focus Timer for one 45-minute deep-study block today. No phone, no tabs.',
+    description: 'A single focused session teaches your brain the new routine better than three distracted hours.',
+    action: { label: 'Start focus session', href: '/focus' },
+    slot: 'onboarding',
+  },
+  {
+    day: 2,
+    type: 'onboarding_notes',
+    category: 'onboarding',
+    priority: 'normal',
+    title: 'Capture one page of notes',
+    message: 'Write a short note on today\'s topic — key formulas, definitions, or a concept map.',
+    description: 'Short notes compound over weeks. Start with one page; the habit matters more than the length.',
+    action: { label: 'Open notes', href: '/notes' },
+    slot: 'onboarding',
+  },
+  // ── Day 3: Track and review ──
+  {
+    day: 3,
+    type: 'onboarding_mistakes',
+    category: 'onboarding',
+    priority: 'high',
+    title: 'Log your first mistakes',
+    message: 'Open the Mistake Notebook and add at least one error from today\'s practice.',
+    description: 'Mistake tracking is the single highest-ROI habit for GATE. Start the list now.',
+    action: { label: 'Open mistake notebook', href: '/mistakes' },
+    slot: 'onboarding',
+  },
+  {
+    day: 3,
+    type: 'onboarding_progress',
+    category: 'onboarding',
+    priority: 'normal',
+    title: 'Check your progress',
+    message: 'Visit the Progress page to see hours logged, topics covered, and your current streak.',
+    description: 'Seeing numbers move is motivating. If the numbers are small, that is fine — the trend matters.',
+    action: { label: 'See progress', href: '/progress' },
+    slot: 'onboarding',
+  },
+  // ── Day 4: Go deeper ──
+  {
+    day: 4,
+    type: 'onboarding_ai',
+    category: 'onboarding',
+    priority: 'normal',
+    title: 'Try GateNexa AI',
+    message: 'Ask the AI Mentor one question about a topic you found difficult today.',
+    description: 'The AI builds context from your study history. One good question saves an hour of confusion.',
+    action: { label: 'Open AI Mentor', href: '/ai' },
+    slot: 'onboarding',
+  },
+  {
+    day: 4,
+    type: 'onboarding_weekly_review',
+    category: 'onboarding',
+    priority: 'normal',
+    title: 'Plan your first weekly review',
+    message: 'In three days, review what you studied, what you got wrong, and what to prioritise next week.',
+    description: 'Weekly review is how a long GATE year stays on track. Put it on your calendar now.',
+    action: { label: 'Open planner', href: '/planner' },
     slot: 'onboarding',
   },
 ];
@@ -587,7 +660,7 @@ async function generateDailyNotifications(userId, options = {}) {
 
 async function generateOnboardingNotifications(userId, options = {}) {
   const now = options.now ? new Date(options.now) : getGateNexaNow();
-  const summary = { created: 0, skippedDuplicate: 0 };
+  const summary = { created: 0, skippedDuplicate: 0, day: null };
   if (!isValidUserId(userId)) return summary;
 
   const prefs = await ensurePrefs(userId, now);
@@ -595,9 +668,23 @@ async function generateOnboardingNotifications(userId, options = {}) {
     return summary;
   }
 
+  // Determine which onboarding day this is based on user creation date
+  const User = require('../models/User');
+  const user = await User.findById(userId).select('createdAt').lean();
+  if (!user?.createdAt) return summary;
+
+  const createdDate = new Date(user.createdAt);
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const dayNumber = Math.floor((now.getTime() - createdDate.getTime()) / msPerDay) + 1;
+  summary.day = dayNumber;
+
+  // Only deliver onboarding for days 1–4
+  if (dayNumber < 1 || dayNumber > 4) return summary;
+
   const dateKey = getGateNexaDateKey(now);
-  for (const item of ONBOARDING_ITEMS) {
-    const notificationKey = getNotificationKey(userId, item.type, dateKey, 'onboarding');
+  const todayItems = ONBOARDING_ITEMS.filter((item) => item.day === dayNumber);
+  for (const item of todayItems) {
+    const notificationKey = getNotificationKey(userId, `${item.type}:day${dayNumber}`, dateKey, 'onboarding');
     const created = await createIfAbsent({
       user: userId,
       type: item.type,
@@ -611,7 +698,7 @@ async function generateOnboardingNotifications(userId, options = {}) {
       scheduledAt: now,
       deliveredAt: now,
       expiresAt: null,
-      metadata: { slot: 'onboarding', dateKey, source: 'onboarding' },
+      metadata: { slot: 'onboarding', dateKey, source: 'onboarding', day: dayNumber },
       action: item.action || null,
       notificationKey,
     });

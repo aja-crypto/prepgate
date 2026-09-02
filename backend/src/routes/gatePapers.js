@@ -109,8 +109,9 @@ router.get('/download/:filename', async (req, res) => {
             res.setHeader('Cache-Control', 'private, max-age=3600');
             return res.send(buf);
           }
-        } catch (_) { /* fall through to JSON fallback */ }
-        return res.json({ success: true, url: doc.secure_url });
+        } catch (_) { /* fall through to redirect */ }
+        // Redirect to Cloudinary so the iframe loads the actual PDF
+        return res.redirect(doc.secure_url);
       }
     } catch (e) { /* fall through to local */ }
   }
