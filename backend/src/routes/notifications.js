@@ -3,7 +3,7 @@ const { protect } = require('../middleware/auth');
 const Notification = require('../models/Notification');
 const NotificationPrefs = require('../models/NotificationPrefs');
 const User = require('../models/User');
-const { generateAndDeliver, ensurePrefs, generateDailyNotifications, generateOnboardingNotifications } = require('../services/notificationEngine');
+const { generateAndDeliver, ensurePrefs, generateDailyNotifications, generateOnboardingNotifications, seedBaselineNotifications } = require('../services/notificationEngine');
 const { isMongoConnected } = require('../config/db');
 
 function requireMongo(res) {
@@ -49,6 +49,15 @@ router.get('/', protect, async (req, res, next) => {
     const mongoUserId = await resolveMongoUserId(req.user);
     if (!mongoUserId) return res.json({ success: true, data: { notifications: [], total: 0, unreadCount: 0, page: 1, pages: 0, prefs: null } });
 
+    // Idempotent ensure: guarantee due onboarding + baseline notifications exist.
+    // This is safe because both functions use createIfAbsent (dedup by notificationKey)
+    // and check pref flags (onboardingSeeded / baselineSeeded) before generating.
+    // The scheduler remains responsible for background/event notifications.
+    try {
+      await generateOnboardingNotifications(mongoUserId);
+      await seedBaselineNotifications(mongoUserId);
+    } catch (_) { /* non-fatal — continue to read whatever exists */ }
+
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
     const skip = (page - 1) * limit;
@@ -57,62 +66,20 @@ router.get('/', protect, async (req, res, next) => {
     if (unreadOnly === 'true') filter.isRead = false;
     if (type) filter.type = type;
 
-    // Single query with proper index usage - fetch notifications with pagination
     const notifications = await Notification.find(filter)
       .sort({ scheduledAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
 
-    // Parallel counts using the compound index
     const [total, unreadCount] = await Promise.all([
       Notification.countDocuments(filter),
       Notification.countDocuments({ user: mongoUserId, isRead: false }),
     ]);
 
-    // Optionally include prefs to avoid separate API call
     let prefs = null;
     if (includePrefs === 'true') {
       prefs = await ensurePrefs(mongoUserId);
-    }
-
-    // Always try to generate onboarding notifications for the current day (day-aware, idempotent)
-    try {
-      await generateOnboardingNotifications(mongoUserId, { now: new Date() });
-    } catch (e) {
-      // Onboarding failure should not block fetching
-    }
-
-    // Daily generation: if it's a new day and user has no notifications for today, generate them idempotently
-    try {
-      const prefs = await ensurePrefs(mongoUserId);
-      const today = new Date().toISOString().slice(0, 10);
-      const todayStart = new Date(today + 'T00:00:00.000Z');
-      const todayCount = await Notification.countDocuments({ user: mongoUserId, createdAt: { $gte: todayStart } });
-      if (todayCount === 0 && prefs.todayCount === 0 && prefs.todayDate === today) {
-        // Already checked today and found nothing to generate — skip to avoid spam
-      } else if (todayCount === 0) {
-        const context = {};
-        try {
-          const User = require('../models/User');
-          const u = await User.findById(mongoUserId).select('createdAt').lean();
-          if (u?.createdAt) {
-            const diffDays = Math.floor((Date.now() - new Date(u.createdAt).getTime()) / (1000 * 60 * 60 * 24)) + 1;
-            context.loginDay = diffDays;
-          }
-        } catch (_) {}
-        const daily = await generateDailyNotifications(mongoUserId, context);
-        if (daily && daily.length > 0) {
-          const [fresh, freshTotal, freshUnread] = await Promise.all([
-            Notification.find(filter).sort({ scheduledAt: -1 }).skip(skip).limit(limit).lean(),
-            Notification.countDocuments(filter),
-            Notification.countDocuments({ user: mongoUserId, isRead: false }),
-          ]);
-          return res.json({ success: true, data: { notifications: fresh, total: freshTotal, unreadCount: freshUnread, page, pages: Math.ceil(freshTotal / limit), prefs: await ensurePrefs(mongoUserId) } });
-        }
-      }
-    } catch (e) {
-      // Daily generation failure should not block fetching
     }
 
     res.json({ success: true, data: { notifications, total, unreadCount, page, pages: Math.ceil(total / limit), prefs } });

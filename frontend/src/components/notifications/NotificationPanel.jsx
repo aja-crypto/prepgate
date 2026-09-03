@@ -27,6 +27,32 @@ const TYPE_TO_CATEGORY = {
   daily_inspiration: 'streak',
   login_day: 'streak',
   milestone: 'achievement',
+  welcome: 'achievement',
+  onboarding_roadmap: 'goal',
+  onboarding_pyq: 'study',
+  onboarding_focus: 'reminder',
+  onboarding_notes: 'study',
+  onboarding_mistakes: 'study',
+  onboarding_progress: 'goal',
+  onboarding_ai: 'ai',
+  onboarding_weekly_review: 'reminder',
+  onboarding_consolidate: 'study',
+  onboarding_next_week: 'goal',
+  onboarding_gatenexa_ai: 'ai',
+  first_topic: 'achievement',
+  streak_7: 'streak',
+  pyq_100: 'achievement',
+  first_mock: 'achievement',
+  hours_50: 'achievement',
+  level_up: 'achievement',
+  early_access: 'goal',
+  maintenance: 'reminder',
+  feature_update: 'goal',
+  study_suggestion: 'study',
+  preparation_milestone: 'achievement',
+  weekly_summary: 'goal',
+  resource_update: 'study',
+  gate_update: 'reminder',
 };
 
 const CATEGORY_META = {
@@ -185,7 +211,8 @@ export default function NotificationPanel() {
 
   const handleClick = (n) => {
     if (!n.isRead) markRead(n._id);
-    if (n.action?.path) nav(n.action.path);
+    const dest = n.action?.path || n.action?.href;
+    if (dest) nav(dest);
     setOpen(false);
   };
 
@@ -471,7 +498,7 @@ export default function NotificationPanel() {
                                     </AnimatePresence>
                                   </div>
                                   <p className={`text-[12px] leading-relaxed line-clamp-2 mt-0.5 whitespace-pre-line transition-colors duration-200 ${n.isRead ? 'text-white/30' : 'text-white/45'}`}>
-                                    {n.body}
+                                    {n.body || n.message}
                                   </p>
                                   <div className="flex items-center gap-2.5 mt-1.5">
                                     <span className={`text-[10px] font-medium ${n.isRead ? 'text-white/25' : 'text-white/35'}`}>

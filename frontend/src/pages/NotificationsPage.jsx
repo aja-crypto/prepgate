@@ -12,6 +12,15 @@ const TYPE_EMOJIS = {
   productivity_tip: '🚀', campus_insight: '🏛️', success_spotlight: '🏆',
   learning_hub: '🎥', discovery: '🔍', smart_reminder: '🔔',
   daily_inspiration: '💡', login_day: '🎉', milestone: '⭐',
+  welcome: '👋', onboarding_roadmap: '🗺️', onboarding_pyq: '📝',
+  onboarding_focus: '🎯', onboarding_notes: '📒', onboarding_mistakes: '⚠️',
+  onboarding_progress: '📈', onboarding_ai: '🤖', onboarding_weekly_review: '📅',
+  onboarding_consolidate: '🔄', onboarding_next_week: '📆', onboarding_gatenexa_ai: '🧠',
+  first_topic: '✅', streak_7: '🔥', pyq_100: '💯', first_mock: '📋',
+  hours_50: '⏱️', level_up: '⬆️',
+  early_access: '🚀', maintenance: '🔧', feature_update: '🆕',
+  study_suggestion: '🧠', preparation_milestone: '🎯', weekly_summary: '📊',
+  resource_update: '📚', gate_update: '📢',
 };
 
 const TYPE_LABELS = {
@@ -22,6 +31,15 @@ const TYPE_LABELS = {
   productivity_tip: 'Productivity Tip', campus_insight: 'Campus Insight',
   learning_hub: 'Learning Hub', discovery: 'Discovery', smart_reminder: 'Smart Reminder',
   daily_inspiration: 'Daily Inspiration', login_day: 'Login Day', milestone: 'Milestone',
+  welcome: 'Welcome', onboarding_roadmap: 'Study Roadmap', onboarding_pyq: 'PYQ Practice',
+  onboarding_focus: 'Focus Session', onboarding_notes: 'Study Notes', onboarding_mistakes: 'Mistake Log',
+  onboarding_progress: 'Progress Check', onboarding_ai: 'AI Mentor', onboarding_weekly_review: 'Weekly Review',
+  onboarding_consolidate: 'Consolidation', onboarding_next_week: 'Next Week Plan', onboarding_gatenexa_ai: 'GateNexa AI',
+  first_topic: 'First Topic', streak_7: '7-Day Streak', pyq_100: '100 PYQs', first_mock: 'First Mock',
+  hours_50: '50 Hours', level_up: 'Level Up',
+  early_access: 'Early Access', maintenance: 'Maintenance', feature_update: 'Feature Update',
+  study_suggestion: 'Study Suggestion', preparation_milestone: 'Milestone', weekly_summary: 'Weekly Summary',
+  resource_update: 'Resource Update', gate_update: 'GATE Update',
 };
 
 const TYPE_GRADIENTS = {
@@ -44,6 +62,32 @@ const TYPE_GRADIENTS = {
   daily_inspiration: 'from-fuchsia-500/15 to-purple-500/5',
   login_day: 'from-violet-500/15 to-indigo-500/5',
   milestone: 'from-yellow-500/15 to-amber-500/5',
+  welcome: 'from-purple-500/15 to-pink-500/5',
+  onboarding_roadmap: 'from-emerald-500/15 to-teal-500/5',
+  onboarding_pyq: 'from-blue-500/15 to-indigo-500/5',
+  onboarding_focus: 'from-orange-500/15 to-red-500/5',
+  onboarding_notes: 'from-green-500/15 to-emerald-500/5',
+  onboarding_mistakes: 'from-red-500/15 to-rose-500/5',
+  onboarding_progress: 'from-cyan-500/15 to-sky-500/5',
+  onboarding_ai: 'from-blue-500/15 to-indigo-500/5',
+  onboarding_weekly_review: 'from-violet-500/15 to-purple-500/5',
+  onboarding_consolidate: 'from-amber-500/15 to-orange-500/5',
+  onboarding_next_week: 'from-emerald-500/15 to-teal-500/5',
+  onboarding_gatenexa_ai: 'from-cyan-500/15 to-sky-500/5',
+  first_topic: 'from-green-500/15 to-emerald-500/5',
+  streak_7: 'from-orange-500/15 to-red-500/5',
+  pyq_100: 'from-purple-500/15 to-violet-500/5',
+  first_mock: 'from-blue-500/15 to-indigo-500/5',
+  hours_50: 'from-amber-500/15 to-orange-500/5',
+  level_up: 'from-yellow-500/15 to-amber-500/5',
+  early_access: 'from-purple-500/15 to-pink-500/5',
+  maintenance: 'from-gray-500/15 to-slate-500/5',
+  feature_update: 'from-cyan-500/15 to-sky-500/5',
+  study_suggestion: 'from-blue-500/15 to-indigo-500/5',
+  preparation_milestone: 'from-yellow-500/15 to-amber-500/5',
+  weekly_summary: 'from-indigo-500/15 to-blue-500/5',
+  resource_update: 'from-green-500/15 to-emerald-500/5',
+  gate_update: 'from-orange-500/15 to-red-500/5',
 };
 
 const CATEGORIES = [
@@ -78,11 +122,11 @@ function matchesCategory(n, cat) {
   if (cat === 'all') return true;
   if (cat === 'unread') return !n.isRead;
   if (cat === 'bookmarked') return n.isBookmarked;
-  if (cat === 'learning') return ['learning_hub', 'motivation', 'campus_insight', 'success_story'].includes(n.type);
-  if (cat === 'ai') return ['recommendation', 'roadmap', 'dsa_challenge', 'daily_inspiration'].includes(n.type);
-  if (cat === 'reminders') return ['smart_reminder', 'focus_reminder', 'revision', 'morning_mission'].includes(n.type);
-  if (cat === 'discover') return ['discovery', 'did_you_know', 'quick_fact', 'productivity_tip', 'weekly_report'].includes(n.type);
-  if (cat === 'achievements') return ['milestone', 'login_day'].includes(n.type);
+  if (cat === 'learning') return ['learning_hub', 'motivation', 'campus_insight', 'success_story', 'onboarding_notes', 'onboarding_mistakes', 'resource_update'].includes(n.type);
+  if (cat === 'ai') return ['recommendation', 'roadmap', 'dsa_challenge', 'daily_inspiration', 'onboarding_ai', 'onboarding_gatenexa_ai', 'study_suggestion'].includes(n.type);
+  if (cat === 'reminders') return ['smart_reminder', 'focus_reminder', 'revision', 'morning_mission', 'onboarding_focus', 'onboarding_weekly_review', 'gate_update'].includes(n.type);
+  if (cat === 'discover') return ['discovery', 'did_you_know', 'quick_fact', 'productivity_tip', 'weekly_report', 'early_access', 'feature_update', 'preparation_milestone', 'weekly_summary'].includes(n.type);
+  if (cat === 'achievements') return ['milestone', 'login_day', 'welcome', 'first_topic', 'streak_7', 'pyq_100', 'first_mock', 'hours_50', 'level_up', 'onboarding_roadmap', 'onboarding_pyq', 'onboarding_progress', 'onboarding_consolidate', 'onboarding_next_week'].includes(n.type);
   return true;
 }
 
@@ -226,7 +270,7 @@ export default function NotificationsPage() {
                 className={`group relative rounded-2xl border transition-all cursor-pointer hover:bg-white/[0.02] overflow-hidden ${
                   n.isRead ? 'border-white/5' : 'border-white/10'
                 }`}
-                onClick={() => { if (!n.isRead) markRead(n._id); if (n.action?.path) nav(n.action.path); }}
+                onClick={() => { if (!n.isRead) markRead(n._id); const dest = n.action?.path || n.action?.href; if (dest) nav(dest); }}
               >
                 {/* Gradient background for unread */}
                 {!n.isRead && (
@@ -251,7 +295,7 @@ export default function NotificationsPage() {
                       <h3 className={`text-sm font-semibold ${n.isRead ? 'text-text2' : 'text-white'}`}>{n.title}</h3>
                       {!n.isRead && <span className="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0 shadow-sm shadow-purple-500/50" />}
                     </div>
-                    <p className="text-xs text-text2/70 whitespace-pre-line leading-relaxed">{n.body}</p>
+                    <p className="text-xs text-text2/70 whitespace-pre-line leading-relaxed">{n.body || n.message}</p>
                     <div className="flex items-center gap-3 mt-3">
                       {n.action?.label && (
                         <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-[11px] font-medium text-purple-400 hover:bg-purple-500/20 transition-all">

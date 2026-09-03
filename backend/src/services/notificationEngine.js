@@ -177,6 +177,40 @@ const ONBOARDING_ITEMS = [
     action: { label: 'Open planner', href: '/planner' },
     slot: 'onboarding',
   },
+  // ── Day 5: Consolidate and look ahead ──
+  {
+    day: 5,
+    type: 'onboarding_consolidate',
+    category: 'onboarding',
+    priority: 'high',
+    title: 'Consolidate your first five days',
+    message: 'Spend 30 minutes reworking the problems you got wrong this week. This is where real learning begins.',
+    description: 'The patterns you fix now will not resurface in mocks. Rework before you advance.',
+    action: { label: 'Open mistake notebook', href: '/mistakes' },
+    slot: 'onboarding',
+  },
+  {
+    day: 5,
+    type: 'onboarding_next_week',
+    category: 'onboarding',
+    priority: 'normal',
+    title: 'Plan next week now',
+    message: 'Write next week\'s three anchors: one high-weight topic, one PYQ set, and one revision block.',
+    description: 'A short written plan beats ambitious intentions. Keep anchors small enough to be honest.',
+    action: { label: 'Open planner', href: '/planner' },
+    slot: 'onboarding',
+  },
+  {
+    day: 5,
+    type: 'onboarding_gatenexa_ai',
+    category: 'onboarding',
+    priority: 'normal',
+    title: 'Use GateNexa AI for stuck topics',
+    message: 'Next time a concept is not landing, open the AI Mentor with the exact problem and your attempt.',
+    description: 'Good context = good answers. Paste the question, your steps, and where you got confused.',
+    action: { label: 'Open AI Mentor', href: '/ai' },
+    slot: 'onboarding',
+  },
 ];
 
 const SLOT_LIBRARY = {
@@ -354,6 +388,73 @@ const SLOT_LIBRARY = {
   ],
 };
 
+const GATENEXA_SYSTEM_LIBRARY = [
+  {
+    id: 'early_access_welcome',
+    type: 'early_access',
+    category: 'gatenexa',
+    priority: 'normal',
+    title: '\u{1F680} You are among the early users of GateNexa',
+    message: 'GateNexa is currently in Early Access, while we continue improving and validating features across the platform. Some features may change as we refine the experience based on real learner feedback. Your feedback helps us make GateNexa better before the full launch.',
+    description: '\u{1F6E0}\uFE0F Platform improvements are ongoing. We are actively improving AI assistance, study tools, notifications, resources, and other parts of the learning experience. Thanks for being part of the early-access journey.',
+    action: { label: 'Explore dashboard', href: '/dashboard' },
+  },
+  {
+    id: 'platform_status',
+    type: 'feature_update',
+    category: 'gatenexa',
+    priority: 'normal',
+    title: '\u{1F6E0}\uFE0F Platform improvements are ongoing',
+    message: 'We are actively improving AI assistance, study tools, notifications, resources, and other parts of the learning experience. Thanks for being part of the early-access journey.',
+    description: 'If you run into rough edges or have ideas, your feedback directly shapes what GateNexa becomes before the full launch.',
+    action: { label: 'Continue', href: '/dashboard' },
+  },
+];
+
+const STUDY_BASELINE_LIBRARY = [
+  {
+    id: 'study_today_focus_block',
+    type: 'study_suggestion',
+    category: 'study',
+    priority: 'normal',
+    title: '\u{1F9E0} Today\u2019s preparation suggestion',
+    message: 'Pick one high-weight topic, take a 45-minute focused block, and finish with 8 previous-year questions on the same topic. Close the loop with a 2-minute written summary.',
+    description: 'One clean block beats four distracted hours. Write the three takeaways before you move on.',
+    action: { label: 'Open planner', href: '/planner' },
+  },
+  {
+    id: 'study_milestone_small_wins',
+    type: 'preparation_milestone',
+    category: 'study',
+    priority: 'normal',
+    title: '\u{1F3AF} Preparation milestone',
+    message: 'Protect the 3-small-blocks habit today: one theory block, one PYQ block, one revision block. You do not need a perfect day to move the needle.',
+    description: 'Milestones form from repeated small blocks, not occasional marathon days.',
+    action: { label: 'See progress', href: '/progress' },
+  },
+  {
+    id: 'study_resources_check',
+    type: 'resource_update',
+    category: 'study',
+    priority: 'low',
+    title: '\u{1F4DA} New study resources available',
+    message: 'Check the Resources section for updated formula sheets, PYQ sets, and topic breakdowns curated for the current syllabus weight.',
+    description: 'The resource list is refined each week as we validate coverage against recent papers.',
+    action: { label: 'Explore resources', href: '/resources' },
+  },
+  {
+    id: 'gate_updates_watch_official',
+    type: 'gate_update',
+    category: 'gate_updates',
+    priority: 'normal',
+    title: '\u{1F4E2} Watch for official GATE 2027 announcements',
+    message: 'Keep an eye on official GATE authorities for application form, brochure, and deadline updates. GateNexa will surface clearly-labeled verified information once official sources publish them.',
+    description: 'To avoid misinformation, only trust dates and deadlines from the official organising institute and its designated portals.',
+    action: { label: 'Open dashboard', href: '/dashboard' },
+    verified: false,
+  },
+];
+
 let injectedNow = null;
 
 function isTestTimeAllowed() {
@@ -504,11 +605,113 @@ function isValidUserId(userId) {
     && String(new mongoose.Types.ObjectId(userId)) === String(userId);
 }
 
+const ENGINE_CATEGORIES = ['study', 'onboarding', 'events', 'motivation', 'revision', 'insights', 'gate_updates', 'gatenexa'];
+
+const LEGACY_TYPE_TO_CATEGORY = {
+  morning_mission: 'study', todays_focus: 'study', focus_reminder: 'study',
+  planner_reminder: 'study', roadmap_suggestion: 'study', dsa_challenge: 'study',
+  learning_suggestion: 'study', ai_recommendation: 'study', revision_reminder: 'revision',
+  motivation: 'motivation', success_story: 'motivation', daily_inspiration: 'motivation',
+  campus_insight: 'insights', discovery: 'insights', quick_fact: 'insights',
+  daily_insight: 'insights', weekly_progress: 'insights',
+  first_topic: 'events', streak_7: 'events', pyq_100: 'events',
+  first_mock: 'events', hours_50: 'events', level_up: 'events',
+  login_day: 'events', milestone: 'events',
+  welcome: 'onboarding', onboarding_roadmap: 'onboarding', onboarding_pyq: 'onboarding',
+  onboarding_focus: 'onboarding', onboarding_notes: 'onboarding', onboarding_mistakes: 'onboarding',
+  onboarding_progress: 'onboarding', onboarding_ai: 'onboarding', onboarding_weekly_review: 'onboarding',
+  onboarding_consolidate: 'onboarding', onboarding_next_week: 'onboarding', onboarding_gatenexa_ai: 'onboarding',
+  early_access: 'gatenexa', maintenance: 'gatenexa', feature_update: 'gatenexa',
+  study_suggestion: 'study', preparation_milestone: 'study', weekly_summary: 'insights',
+  resource_update: 'study', gate_update: 'gate_updates',
+};
+
+function normalizePrefsCategories(prefs) {
+  if (!prefs || !prefs.categories) return null;
+  const keys = Object.keys(prefs.categories);
+  const hasLegacy = keys.some(k => !ENGINE_CATEGORIES.includes(k));
+  if (!hasLegacy) return prefs.categories;
+  const next = {};
+  for (const cat of ENGINE_CATEGORIES) next[cat] = true;
+  for (const key of keys) {
+    if (ENGINE_CATEGORIES.includes(key)) {
+      next[key] = prefs.categories[key] !== false;
+    } else {
+      const mapped = LEGACY_TYPE_TO_CATEGORY[key];
+      if (mapped && next[mapped] !== false && prefs.categories[key] === false) {
+        next[mapped] = false;
+      }
+    }
+  }
+  return next;
+}
+
 function categoryEnabled(prefs, category) {
   if (!category) return true;
   if (!prefs?.categories) return true;
-  const value = prefs.categories[category];
-  return value !== false;
+  const normalized = normalizePrefsCategories(prefs) || prefs.categories;
+  if (normalized && normalized[category] === false) return false;
+  const direct = prefs.categories[category];
+  return direct !== false;
+}
+
+async function seedBaselineNotifications(userId, now = getGateNexaNow()) {
+  const summary = { created: 0, skippedDuplicate: 0, skipped: 0 };
+  if (!isValidUserId(userId)) return summary;
+  const prefs = await ensurePrefs(userId, now);
+  if (!prefs || !prefs.enabled) return summary;
+  if (prefs.baselineSeeded) return summary;
+
+  const dateKey = getGateNexaDateKey(now);
+  const all = [];
+  for (const item of GATENEXA_SYSTEM_LIBRARY) {
+    if (!categoryEnabled(prefs, item.category)) { summary.skipped += 1; continue; }
+    all.push(item);
+  }
+  for (const item of STUDY_BASELINE_LIBRARY) {
+    if (!categoryEnabled(prefs, item.category)) { summary.skipped += 1; continue; }
+    if (item.category === 'gate_updates' && item.verified === false) {
+      // Keep: explicitly labeled non-verified reminder. No fabricated GATE-official content.
+    }
+    all.push(item);
+  }
+
+  for (const item of all) {
+    const notificationKey = getNotificationKey(userId, `${item.type}:${item.id}`, dateKey, 'baseline');
+    const result = await createIfAbsent({
+      user: userId,
+      type: item.type,
+      title: item.title,
+      message: item.message,
+      body: item.message,
+      description: item.description || '',
+      category: item.category,
+      priority: item.priority || 'normal',
+      isRead: false,
+      isBookmarked: false,
+      scheduledAt: now,
+      deliveredAt: now,
+      expiresAt: null,
+      metadata: {
+        slot: 'baseline',
+        dateKey,
+        source: 'baseline_seed',
+        libraryId: item.id,
+        verified: item.verified === true,
+      },
+      action: item.action || null,
+      notificationKey,
+    });
+    if (result.created) summary.created += 1;
+    else if (result.duplicate) summary.skippedDuplicate += 1;
+    else summary.skipped += 1;
+  }
+
+  try {
+    prefs.baselineSeeded = true;
+    await prefs.save();
+  } catch (_) { /* ignore */ }
+  return summary;
 }
 
 async function ensurePrefs(userId, now = getGateNexaNow()) {
@@ -516,13 +719,36 @@ async function ensurePrefs(userId, now = getGateNexaNow()) {
   const dateKey = getGateNexaDateKey(now);
   let prefs = await NotificationPrefs.findOne({ user: userId });
   if (!prefs) {
+    const defaultCategories = {};
+    for (const cat of ENGINE_CATEGORIES) defaultCategories[cat] = true;
     prefs = await NotificationPrefs.create({
       user: userId,
       enabled: true,
       maxPerDay: 5,
       todayCount: 0,
       todayDate: dateKey,
+      categories: defaultCategories,
+      onboardingSeeded: false,
     });
+  } else {
+    let normalized = false;
+    const keys = prefs.categories ? Object.keys(prefs.categories) : [];
+    const hasLegacy = keys.length && keys.some(k => !ENGINE_CATEGORIES.includes(k));
+    const missingEngine = ENGINE_CATEGORIES.some(c => !prefs.categories || prefs.categories[c] == null);
+    if (hasLegacy || missingEngine) {
+      const merged = normalizePrefsCategories({ categories: prefs.categories || {} }) || {};
+      for (const cat of ENGINE_CATEGORIES) {
+        if (merged[cat] == null) merged[cat] = true;
+      }
+      prefs.categories = merged;
+      normalized = true;
+    }
+    if (prefs.todayDate !== dateKey) {
+      prefs.todayDate = dateKey;
+      prefs.todayCount = 0;
+      normalized = true;
+    }
+    if (normalized) await prefs.save();
   }
   if (prefs.todayDate !== dateKey) {
     prefs.todayDate = dateKey;
@@ -589,7 +815,16 @@ async function generateDailyNotifications(userId, options = {}) {
   }
 
   const maxPerDay = Number.isFinite(prefs.maxPerDay) ? prefs.maxPerDay : 5;
-  if ((prefs.todayCount || 0) >= maxPerDay) {
+  const dateKey = getGateNexaDateKey(now);
+  const dbTodayCount = await Notification.countDocuments({
+    user: userId,
+    'metadata.dateKey': dateKey,
+  }).catch(() => 0);
+  if (dbTodayCount >= maxPerDay) {
+    result.skipped += 1;
+    return result;
+  }
+  if ((prefs.todayCount || 0) >= maxPerDay && dbTodayCount >= (prefs.todayCount || 0)) {
     result.skipped += 1;
     return result;
   }
@@ -604,7 +839,6 @@ async function generateDailyNotifications(userId, options = {}) {
     return result;
   }
 
-  const dateKey = getGateNexaDateKey(now);
   const content = pickSlotContent(userId, dateKey, slot);
   if (!content) {
     result.skipped += 1;
@@ -625,6 +859,7 @@ async function generateDailyNotifications(userId, options = {}) {
     type: content.type,
     title: content.title,
     message: content.message,
+    body: content.message,
     description: content.description || '',
     category: content.category,
     priority: content.priority || 'normal',
@@ -660,7 +895,7 @@ async function generateDailyNotifications(userId, options = {}) {
 
 async function generateOnboardingNotifications(userId, options = {}) {
   const now = options.now ? new Date(options.now) : getGateNexaNow();
-  const summary = { created: 0, skippedDuplicate: 0, day: null };
+  const summary = { created: 0, skippedDuplicate: 0, day: null, seeded: false };
   if (!isValidUserId(userId)) return summary;
 
   const prefs = await ensurePrefs(userId, now);
@@ -668,43 +903,68 @@ async function generateOnboardingNotifications(userId, options = {}) {
     return summary;
   }
 
-  // Determine which onboarding day this is based on user creation date
   const User = require('../models/User');
   const user = await User.findById(userId).select('createdAt').lean();
   if (!user?.createdAt) return summary;
 
   const createdDate = new Date(user.createdAt);
   const msPerDay = 24 * 60 * 60 * 1000;
-  const dayNumber = Math.floor((now.getTime() - createdDate.getTime()) / msPerDay) + 1;
-  summary.day = dayNumber;
+  const currentDayNumber = Math.floor((now.getTime() - createdDate.getTime()) / msPerDay) + 1;
+  summary.day = currentDayNumber;
 
-  // Only deliver onboarding for days 1–4
-  if (dayNumber < 1 || dayNumber > 4) return summary;
+  if (currentDayNumber < 1) return summary;
+
+  const onboardingSeeded = Boolean(prefs.onboardingSeeded);
+  let startDay = currentDayNumber;
+  let endDay = currentDayNumber;
+  if (!onboardingSeeded) {
+    startDay = 1;
+    endDay = Math.min(Math.max(currentDayNumber, 1), 5);
+  } else if (currentDayNumber > 5) {
+    return summary;
+  }
+
+  if (endDay < 1 || startDay > 5) return summary;
+  startDay = Math.max(startDay, 1);
+  endDay = Math.min(endDay, 5);
 
   const dateKey = getGateNexaDateKey(now);
-  const todayItems = ONBOARDING_ITEMS.filter((item) => item.day === dayNumber);
-  for (const item of todayItems) {
-    const notificationKey = getNotificationKey(userId, `${item.type}:day${dayNumber}`, dateKey, 'onboarding');
-    const created = await createIfAbsent({
-      user: userId,
-      type: item.type,
-      title: item.title,
-      message: item.message,
-      description: item.description || '',
-      category: item.category,
-      priority: item.priority || 'normal',
-      isRead: false,
-      isBookmarked: false,
-      scheduledAt: now,
-      deliveredAt: now,
-      expiresAt: null,
-      metadata: { slot: 'onboarding', dateKey, source: 'onboarding', day: dayNumber },
-      action: item.action || null,
-      notificationKey,
-    });
-    if (created.created) summary.created += 1;
-    else if (created.duplicate) summary.skippedDuplicate += 1;
+  let anyCreated = false;
+  for (let dayNumber = startDay; dayNumber <= endDay; dayNumber += 1) {
+    const todayItems = ONBOARDING_ITEMS.filter((item) => item.day === dayNumber);
+    for (const item of todayItems) {
+      const notificationKey = getNotificationKey(userId, `${item.type}:day${dayNumber}`, dateKey, 'onboarding');
+      const created = await createIfAbsent({
+        user: userId,
+        type: item.type,
+        title: item.title,
+        message: item.message,
+        body: item.message,
+        description: item.description || '',
+        category: item.category,
+        priority: item.priority || 'normal',
+        isRead: false,
+        isBookmarked: false,
+        scheduledAt: now,
+        deliveredAt: now,
+        expiresAt: null,
+        metadata: { slot: 'onboarding', dateKey, source: 'onboarding', day: dayNumber },
+        action: item.action || null,
+        notificationKey,
+      });
+      if (created.created) { summary.created += 1; anyCreated = true; }
+      else if (created.duplicate) summary.skippedDuplicate += 1;
+    }
   }
+
+  if (!onboardingSeeded) {
+    try {
+      prefs.onboardingSeeded = true;
+      await prefs.save();
+      summary.seeded = true;
+    } catch (_) { /* ignore */ }
+  }
+  summary.anyCreated = anyCreated;
   return summary;
 }
 
@@ -727,6 +987,7 @@ async function generateEventNotification(userId, eventType, context = {}) {
     type: template.type,
     title,
     message,
+    body: message,
     description: template.description || '',
     category: template.category,
     priority: template.priority,
@@ -792,6 +1053,7 @@ async function generateAndDeliver(userId, options = {}, legacyContext) {
       type: content.type,
       title: content.title,
       message: content.message,
+      body: content.message,
       description: content.description || '',
       category: content.category || 'general',
       priority: content.priority || 'normal',
@@ -831,15 +1093,19 @@ async function generateAndDeliver(userId, options = {}, legacyContext) {
 module.exports = {
   TIMEZONE,
   SLOTS,
+  ENGINE_CATEGORIES,
+  LEGACY_TYPE_TO_CATEGORY,
   ensurePrefs,
   generateAndDeliver,
   generateDailyNotifications,
   generateOnboardingNotifications,
   generateEventNotification,
+  seedBaselineNotifications,
   getNotificationKey,
   getGateNexaNow,
   getGateNexaDateKey,
   isNotificationSlotDue,
   setTestNow,
   currentEligibleSlot,
+  ONBOARDING_ITEMS,
 };
