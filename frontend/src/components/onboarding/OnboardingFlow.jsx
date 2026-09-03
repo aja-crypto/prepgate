@@ -6,18 +6,19 @@ import { api } from '../../services/api';
 import {
   Rocket, Palette, Compass, PartyPopper, Check,
   ArrowRight, ArrowLeft, Eye, Zap, Layout, Activity,
-  BookOpen, Bot, Calendar, BarChart3, FileText, Brain,
-  ShieldCheck, Sparkles, Target, Gift, Crown,
-  Clock, Monitor,
+  BookOpen, Bot, Calendar, BarChart3, Target,
+  ShieldCheck, Sparkles,
 } from 'lucide-react';
 
 const TOTAL_STEPS = 4;
 const STEPS = [
-  { icon: PartyPopper, label: 'Welcome', title: 'Start Your GATE 2027 Journey', subtitle: 'AI-powered preparation — everything you need in one place.' },
-  { icon: Rocket, label: 'Overview', title: 'Welcome to GateNexa', subtitle: 'One intelligent workspace for your complete GATE preparation.' },
-  { icon: Palette, label: 'Personalize', title: 'Personalize Your Experience', subtitle: 'Customize how GateNexa looks and feels.' },
-  { icon: Compass, label: 'Discover', title: 'Discover Your Workspace', subtitle: 'Everything you need, connected in one place.' },
+  { icon: ShieldCheck, label: 'EARLY ACCESS', title: "You're Early \u2014 Welcome to GateNexa", subtitle: "You\u2019re among the early learners helping shape GateNexa for GATE 2027." },
+  { icon: Rocket, label: 'GATENEXA', title: 'Your GATE 2027 Preparation, Connected', subtitle: 'Learn, practice, plan, and track your preparation from one workspace.' },
+  { icon: Palette, label: 'PERSONALIZE', title: 'Make GateNexa Work Your Way', subtitle: 'Set up your workspace now, then discover the tools that fit your preparation.' },
+  { icon: Compass, label: 'GET STARTED', title: 'Start Your GATE 2027 Journey', subtitle: "You don\u2019t need to learn the whole platform today. Start with one useful step." },
 ];
+
+const CTA_LABELS = ['I understand', 'Show me GateNexa', 'Save preferences', 'Start preparing'];
 
 const THEMES = [
   { id: 'violet', label: 'Aurora Purple', primary: '#8B5CF6', secondary: '#A855F7', glow: 'rgba(139,92,246,0.4)' },
@@ -25,34 +26,29 @@ const THEMES = [
   { id: 'emerald', label: 'AMOLED Black', primary: '#10B981', secondary: '#34D399', glow: 'rgba(16,185,129,0.4)' },
 ];
 
-const FEATURES = [
-  { icon: BookOpen, title: 'Learning Hub', desc: 'Curated lectures, roadmaps, PYQs, formula sheets, subject-wise resources, and smart recommendations.', tint: 'rgba(6,182,212,0.12)', color: '#06B6D4' },
-  { icon: Bot, title: 'AI Mentor', desc: 'Personalized study guidance, daily planning, doubt solving, mock analysis, revision recommendations, and learning insights.', tint: 'rgba(168,85,247,0.14)', color: '#A855F7' },
-  { icon: Calendar, title: 'Smart Planner', desc: 'Automatic study schedules, daily targets, focus sessions, revision planner, and progress tracking.', tint: 'rgba(139,92,246,0.13)', color: '#8B5CF6' },
-  { icon: BarChart3, title: 'Analytics', desc: 'Study insights, topic completion, performance trends, weekly reports, and consistency tracking.', tint: 'rgba(236,72,153,0.10)', color: '#EC4899' },
-  { icon: Target, title: 'NEXA Predictor', desc: 'AIR prediction, score estimation, college opportunities, and previous year comparisons.', tint: 'rgba(34,211,238,0.10)', color: '#22D3EE' },
-  { icon: FileText, title: 'Reports', desc: 'Premium PDF reports, Excel exports, personalized analytics, and study summaries.', tint: 'rgba(168,85,247,0.12)', color: '#A855F7' },
+const PILLARS = [
+  { icon: BookOpen, label: 'LEARN', heading: 'Build your understanding', desc: 'Resources, notes, topics, formulas and curated learning material.', color: '#06B6D4' },
+  { icon: Target, label: 'PRACTICE', heading: 'Turn knowledge into performance', desc: 'PYQs, mock tests, weekly tests and mistake tracking.', color: '#A855F7' },
+  { icon: Calendar, label: 'PLAN', heading: 'Know what to do next', desc: 'Daily goals, focus sessions, study planning and revision.', color: '#8B5CF6' },
+  { icon: BarChart3, label: 'TRACK', heading: 'See your preparation grow', desc: 'Progress, consistency, performance insights and prediction tools.', color: '#EC4899' },
 ];
 
-const HIGHLIGHTS = [
-  { icon: Sparkles, label: 'AI-powered guidance' },
-  { icon: BookOpen, label: 'Curated Learning Hub' },
-  { icon: BarChart3, label: 'Smart Analytics' },
-  { icon: Target, label: 'Personalized Recommendations' },
-  { icon: Brain, label: 'Built for GATE Aspirants' },
-];
-
-const COMING_SOON = [
-  'Full Mock Test Platform', 'Community Discussions', 'Marketplace',
-  'Study Groups', 'AI Interview Coach', 'Placement Hub',
-  'Desktop Companion', 'Offline Sync',
+const EXPLORE_TOOLS = [
+  { icon: Bot, name: 'AI Coach', desc: 'Ask for guidance' },
+  { icon: BookOpen, name: 'Learning Hub', desc: 'Find study material' },
+  { icon: Target, name: 'PYQs', desc: 'Practice real questions' },
+  { icon: Sparkles, name: 'Mock Tests', desc: 'Test your preparation' },
+  { icon: Zap, name: 'Focus', desc: 'Protect your study time' },
+  { icon: BarChart3, name: 'Analytics', desc: 'Understand your progress' },
+  { icon: ShieldCheck, name: 'GateVault', desc: 'Keep revision engaging' },
+  { icon: Compass, name: 'Predictor', desc: 'Explore your current estimate' },
 ];
 
 const TIPS = [
-  'Everything syncs automatically across supported devices.',
+  'Your study progress remains yours, even as GateNexa evolves.',
   'You can customize your dashboard anytime from Settings.',
-  'Your AI Mentor learns from your activity to improve recommendations.',
-  'Use keyboard shortcuts to navigate faster.',
+  'Start with one subject \u2014 you don\u2019t need to use everything at once.',
+  'Use keyboard shortcuts \u2190 \u2192 to navigate onboarding faster.',
 ];
 
 const EASE_OUT = [0.16, 1, 0.3, 1];
@@ -102,10 +98,11 @@ function ToggleSwitch({ value, onChange }) {
 function GlassCard({ children, className = '' }) {
   return (
     <div
-      className={`relative rounded-3xl border border-white/[0.07] overflow-hidden ${className}`}
+      className={`relative rounded-3xl border overflow-hidden ${className}`}
       style={{
         background: 'rgba(255,255,255,0.025)',
-        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        backdropFilter: 'blur(18px)',
       }}
     >
       <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{
@@ -171,7 +168,6 @@ export default function OnboardingFlow() {
 
   const isLast = step === TOTAL_STEPS - 1;
   const progress = ((step + 1) / TOTAL_STEPS) * 100;
-  const previewTheme = useMemo(() => THEMES.find((t) => t.id === selectedTheme) || THEMES[0], [selectedTheme]);
   const currentTip = useMemo(() => TIPS[step % TIPS.length], [step]);
 
   const stepVariants = {
@@ -185,93 +181,101 @@ export default function OnboardingFlow() {
       case 0:
         return (
           <div className="space-y-4">
+            {/* Early access hero */}
             <div className="rounded-2xl border p-4 text-center" style={{
-              background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(59,130,246,0.06))',
-              borderColor: 'rgba(139,92,246,0.15)',
+              background: 'linear-gradient(135deg, rgba(34,197,94,0.06), rgba(139,92,246,0.04))',
+              borderColor: 'rgba(34,197,94,0.12)',
             }}>
-              <div className="text-[14px] font-bold text-white mb-1">🎯 GATE 2027 Preparation</div>
-              <div className="text-[12px]" style={{ color: '#9498B0' }}>GateNexa is built specifically for GATE aspirants preparing for the 2027 exam.</div>
-              <div className="text-[11px] mt-1" style={{ color: '#6D728C' }}>Start with a clear plan and let AI guide your preparation.</div>
+              <div className="text-[14px] font-bold text-white mb-1">GateNexa is in Early Access</div>
+              <div className="text-[12px]" style={{ color: '#9498B0' }}>We\u2019re testing, refining, and improving the experience with real learners before the wider launch.</div>
             </div>
 
+            {/* Three compact points */}
             <GlassCard>
-              <div className="p-5">
-                <div className="flex items-center gap-2.5 text-[13px] font-bold text-white mb-3">
-                  <Sparkles size={15} style={{ color: '#F59E0B' }} /> What You Get
+              <div className="p-5 space-y-3">
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#22C55E' }} />
+                  <div>
+                    <div className="text-[12.5px] font-semibold text-white">Early access</div>
+                    <div className="text-[11.5px] leading-relaxed" style={{ color: '#9498B0' }}>See improvements as GateNexa evolves.</div>
+                  </div>
                 </div>
-                <ul className="space-y-2 text-[12px] leading-relaxed" style={{ color: '#C0C4DC' }}>
-                  {['AI-powered study guidance', 'Personalized daily plans', 'Curated learning resources', 'Performance analytics', 'Smart revision scheduling', 'Previous year question practice'].map((item) => (
-                    <li key={item} className="flex items-start gap-3"><span className="mt-1 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#8B5CF6' }} /> {item}</li>
-                  ))}
-                </ul>
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#F59E0B' }} />
+                  <div>
+                    <div className="text-[12.5px] font-semibold text-white">Things may change</div>
+                    <div className="text-[11.5px] leading-relaxed" style={{ color: '#9498B0' }}>Some features, layouts, and workflows may be refined along the way.</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#A855F7' }} />
+                  <div>
+                    <div className="text-[12.5px] font-semibold text-white">Your feedback matters</div>
+                    <div className="text-[11.5px] leading-relaxed" style={{ color: '#9498B0' }}>Your experience helps us build a better preparation platform.</div>
+                  </div>
+                </div>
               </div>
             </GlassCard>
 
-            <GlassCard>
-              <div className="p-5">
-                <div className="flex items-center gap-2.5 text-[13px] font-bold text-white mb-3">
-                  <Gift size={15} style={{ color: '#22C55E' }} /> Refer Friends, Earn Rewards
-                </div>
-                <p className="text-[12px] leading-relaxed mb-2" style={{ color: '#B0B4CC' }}>
-                  Invite friends to GateNexa and earn referral rewards that unlock Premium features directly from your dashboard.
-                </p>
-              </div>
-            </GlassCard>
+            {/* Trust line */}
+            <div className="text-[11.5px] leading-relaxed px-1" style={{ color: '#6D728C' }}>
+              Your study progress remains yours. Product improvements may change the experience, but they shouldn\u2019t change the purpose: helping you prepare better.
+            </div>
 
-            <GlassCard>
-              <div className="p-5">
-                <div className="flex items-center gap-2.5 text-[13px] font-bold text-white mb-3">
-                  <Monitor size={15} style={{ color: '#A855F7' }} /> 💻 Best Experience
-                </div>
-                <p className="text-[12px] leading-relaxed mb-3" style={{ color: '#B0B4CC' }}>
-                  For the smoothest experience, we recommend using GateNexa on a desktop or laptop with Google Chrome or Microsoft Edge.
-                </p>
-                <div className="grid grid-cols-2 gap-2 text-[11px]" style={{ color: '#9498B0' }}>
-                  {['Larger workspace', 'Better dashboards', 'Faster navigation', 'Improved multitasking', 'Better AI interaction', 'Rich analytics'].map((item) => (
-                    <span key={item} className="flex items-center gap-1.5"><Check size={10} style={{ color: '#A855F7' }} /> {item}</span>
-                  ))}
-                </div>
+            {/* Bottom statement + badge */}
+            <div className="flex items-center justify-between pt-1">
+              <div className="text-[13px] font-semibold text-white/70">Thanks for being here early.</div>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9.5px] font-bold uppercase tracking-wider" style={{
+                background: 'rgba(34,197,94,0.1)',
+                border: '1px solid rgba(34,197,94,0.2)',
+                color: '#22C55E',
+              }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#22C55E', boxShadow: '0 0 6px rgba(34,197,94,0.4)' }} />
+                EARLY ACCESS
               </div>
-            </GlassCard>
+            </div>
           </div>
         );
 
       case 1:
         return (
-          <div className="space-y-6">
-            <p className="text-[15px] leading-[1.8]" style={{ color: '#C0C4DC', maxWidth: '52ch' }}>
-              GateNexa brings together everything you need in one place—from AI-powered learning and personalized study planning to analytics, reports, predictors, and curated learning resources.
-            </p>
-            <p className="text-[14px] leading-[1.75]" style={{ color: '#9498B0', maxWidth: '52ch' }}>
-              No more switching between multiple apps. Everything is connected inside one intelligent ecosystem designed to keep you focused on learning.
-            </p>
+          <div className="space-y-5">
+            {/* Four pillars */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {HIGHLIGHTS.map((h, i) => (
+              {PILLARS.map((p, i) => (
                 <motion.div
-                  key={h.label}
+                  key={p.label}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, delay: 0.06 * i }}
-                  className="group flex items-center gap-3.5 h-[52px] px-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/[0.12] cursor-default"
-                  style={{ transition: 'background 0.2s, border-color 0.2s' }}
                 >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(139,92,246,0.1)' }}>
-                    <h.icon size={15} style={{ color: '#A855F7' }} />
-                  </div>
-                  <span className="text-[13px] font-medium text-white/80">{h.label}</span>
+                  <GlassCard>
+                    <div className="p-4">
+                      <div className="flex items-center gap-2.5 mb-2">
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${p.color}15` }}>
+                          <p.icon size={15} style={{ color: p.color }} />
+                        </div>
+                        <div className="text-[12px] font-bold uppercase tracking-wider" style={{ color: p.color }}>{p.label}</div>
+                      </div>
+                      <div className="text-[13px] font-semibold text-white mb-1">{p.heading}</div>
+                      <div className="text-[11.5px] leading-relaxed" style={{ color: '#8085A0' }}>{p.desc}</div>
+                    </div>
+                  </GlassCard>
                 </motion.div>
               ))}
             </div>
-            <div className="flex items-center gap-2.5 text-[12px] font-medium pt-1" style={{ color: '#6D728C' }}>
-              <ShieldCheck size={15} style={{ color: '#22C55E' }} />
-              Setup takes less than 20 seconds.
+
+            {/* Closing line */}
+            <div className="text-[12px] leading-relaxed px-1" style={{ color: '#6D728C' }}>
+              You don\u2019t have to use everything at once. Start with what you need today.
             </div>
           </div>
-      );
+        );
 
       case 2:
         return (
-          <div className="space-y-7">
+          <div className="space-y-6">
+            {/* Theme */}
             <div>
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-white/40 mb-3.5">
                 <Palette size={13} /> Theme
@@ -302,6 +306,8 @@ export default function OnboardingFlow() {
                 })}
               </div>
             </div>
+
+            {/* Visual effects */}
             <div>
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-white/40 mb-3.5">
                 <Zap size={13} /> Visual Effects
@@ -332,94 +338,114 @@ export default function OnboardingFlow() {
                 ))}
               </div>
             </div>
+
             <p className="text-[11px] font-medium" style={{ color: '#5A5F78' }}>
               These preferences only affect how GateNexa looks for you and can be changed anytime in Settings.
             </p>
+
+            {/* Explore after setup */}
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#5A5F78' }}>Explore after setup</div>
+              <div className="space-y-2">
+                {[
+                  { icon: Bot, name: 'AI Coach', action: 'Ask', desc: 'Ask GateNexa for guidance, explanations and study help.' },
+                  { icon: Sparkles, name: 'Auto Mode', action: 'Let', desc: 'Let GateNexa choose appropriate assistance for the current question.' },
+                  { icon: BookOpen, name: 'Learning', action: 'Explore', desc: 'Explore subjects, topics, resources and focused study paths.' },
+                  { icon: Calendar, name: 'Planner', action: 'Turn', desc: 'Turn goals into a practical study routine.' },
+                  { icon: Compass, name: 'Predictor', action: 'Explore', desc: 'Explore score, rank and opportunity insights.' },
+                ].map((tool, i) => (
+                  <motion.div
+                    key={tool.name}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.04 * i }}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/[0.04] bg-white/[0.015]"
+                  >
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(139,92,246,0.08)' }}>
+                      <tool.icon size={13} style={{ color: '#A855F7' }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[12px] font-semibold text-white/80">{tool.name}</span>
+                      <span className="text-[11px] ml-1.5" style={{ color: '#6D728C' }}>{tool.desc}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            <div className="text-[11px] leading-relaxed px-1" style={{ color: '#5A5F78' }}>
+              These tools work together, but you stay in control of what you use.
+            </div>
           </div>
-      );
+        );
 
       case 3:
         return (
           <div className="space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {FEATURES.map((f, i) => (
-                <motion.div
-                  key={f.title}
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: 0.05 * i }}
-                >
-                  <GlassCard>
-                    <div className="p-5">
-                      <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-3.5" style={{
-                        background: f.tint,
-                        boxShadow: `0 0 20px ${f.color}15`,
-                      }}>
-                        <f.icon size={18} style={{ color: f.color }} />
+            {/* Journey flow */}
+            <GlassCard>
+              <div className="p-5">
+                <div className="space-y-0">
+                  {[
+                    { num: '01', text: 'Choose a subject' },
+                    { num: '02', text: 'Learn a topic' },
+                    { num: '03', text: 'Practice PYQs' },
+                    { num: '04', text: 'Focus on what matters' },
+                    { num: '05', text: 'Track your progress' },
+                  ].map((item, i) => (
+                    <motion.div
+                      key={item.num}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 0.06 * i }}
+                      className="flex items-center gap-3"
+                    >
+                      <div className="flex flex-col items-center">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{
+                          background: 'rgba(139,92,246,0.12)',
+                          color: '#A855F7',
+                        }}>{item.num}</div>
+                        {i < 4 && <div className="w-[1px] h-4 my-0.5" style={{ background: 'rgba(139,92,246,0.15)' }} />}
                       </div>
-                      <div className="text-[13.5px] font-semibold text-white mb-1.5">{f.title}</div>
-                      <div className="text-[12px] leading-[1.6]" style={{ color: '#8085A0' }}>{f.desc}</div>
+                      <div className="text-[12.5px] font-medium text-white/80 pb-0.5">{item.text}</div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </GlassCard>
+
+            {/* Explore GateNexa */}
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: '#5A5F78' }}>Explore GateNexa</div>
+              <div className="grid grid-cols-2 gap-2">
+                {EXPLORE_TOOLS.map((tool, i) => (
+                  <motion.div
+                    key={tool.name}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.04 * i }}
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-white/[0.04] bg-white/[0.015]"
+                  >
+                    <tool.icon size={13} style={{ color: '#A855F7' }} />
+                    <div>
+                      <div className="text-[11.5px] font-semibold text-white/80">{tool.name}</div>
+                      <div className="text-[10px]" style={{ color: '#6D728C' }}>{tool.desc}</div>
                     </div>
-                  </GlassCard>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))}
+              </div>
             </div>
 
-            {/* Premium card */}
-            <GlassCard>
-              <div className="p-5">
-                <div className="flex items-center gap-2.5 mb-3">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(59,130,246,0.1))' }}>
-                    <Crown size={16} style={{ color: '#F59E0B' }} />
-                  </div>
-                  <div>
-                    <div className="text-[13px] font-bold text-white">Unlock Premium</div>
-                    <div className="text-[10.5px] text-white/30">Take your preparation even further</div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px]" style={{ color: '#B0B4CC' }}>
-                  {['Unlimited AI Mentor', 'Advanced Analytics', 'Premium Reports', 'Excel Export', 'Cloud Backup', 'Exclusive Resources', 'Early Feature Access', 'Priority Support'].map((f) => (
-                    <span key={f} className="flex items-center gap-1.5"><Check size={10} style={{ color: '#22C55E' }} /> {f}</span>
-                  ))}
-                </div>
-              </div>
-            </GlassCard>
+            {/* Early access note */}
+            <div className="text-[11px] leading-relaxed px-1" style={{ color: '#6D728C' }}>
+              GateNexa is still evolving. More improvements will be introduced as we learn from early users.
+            </div>
 
-            {/* Referral card */}
-            <GlassCard>
-              <div className="p-5">
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.1)' }}>
-                    <Gift size={16} style={{ color: '#22C55E' }} />
-                  </div>
-                  <div>
-                    <div className="text-[13px] font-bold text-white">Refer Friends, Unlock Premium</div>
-                    <div className="text-[10.5px] text-white/30">Earn rewards without purchasing</div>
-                  </div>
-                </div>
-                <p className="text-[12px] leading-relaxed" style={{ color: '#8085A0' }}>
-                  Invite your friends to GateNexa. Earn referral rewards that unlock Premium features directly from your dashboard.
-                </p>
-              </div>
-            </GlassCard>
-
-            {/* Coming Soon */}
-            <GlassCard>
-              <div className="p-5">
-                <div className="flex items-center gap-2 text-[13px] font-bold text-white mb-3">
-                  <Clock size={14} style={{ color: '#06B6D4' }} /> Coming Soon
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {COMING_SOON.map((f) => (
-                    <span key={f} className="px-2.5 py-1 rounded-lg text-[10.5px] font-medium border" style={{
-                      background: 'rgba(6,182,212,0.06)',
-                      borderColor: 'rgba(6,182,212,0.12)',
-                      color: '#9498B0',
-                    }}>{f}</span>
-                  ))}
-                </div>
-              </div>
-            </GlassCard>
+            {/* Final */}
+            <div className="text-center pt-2">
+              <div className="text-[18px] font-bold text-white mb-1">You\u2019re ready.</div>
+              <div className="text-[12px]" style={{ color: '#7A7F98' }}>Continue to GateNexa</div>
+            </div>
           </div>
         );
 
@@ -514,7 +540,7 @@ export default function OnboardingFlow() {
                       <div className="text-[16px] font-bold tracking-tight text-white">
                         <span style={{ color: '#A855F7' }}>Gate</span><span className="text-white">Nexa</span>
                       </div>
-                      <div className="text-[10.5px] font-medium text-white/30">GATE 2027 • Your AI-Powered Study Platform</div>
+                      <div className="text-[10.5px] font-medium text-white/30">GATE 2027 \u2022 Your AI-Powered Study Platform</div>
                     </div>
                   </div>
 
@@ -568,6 +594,16 @@ export default function OnboardingFlow() {
                           </div>
                         );
                       })}
+                    </div>
+                    {/* Step labels */}
+                    <div className="flex items-center gap-0 mt-2">
+                      {STEPS.map((s, i) => (
+                        <div key={i} className="flex-1 text-center">
+                          <span className="text-[9px] font-semibold uppercase tracking-wider" style={{
+                            color: i === step ? '#A855F7' : completedSteps.includes(i) ? '#22C55E' : 'rgba(255,255,255,0.2)',
+                          }}>{s.label}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
@@ -668,7 +704,7 @@ export default function OnboardingFlow() {
                         background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 50%)',
                       }} />
                       <span className="relative z-10 flex items-center gap-2">
-                        {isLast ? <><Rocket size={15} /> Launch GateNexa</> : <>Continue <ArrowRight size={15} /></>}
+                        {isLast ? <><Rocket size={15} /> {CTA_LABELS[step]}</> : <>{CTA_LABELS[step]} <ArrowRight size={15} /></>}
                       </span>
                     </motion.button>
                   </div>
@@ -706,7 +742,7 @@ export default function OnboardingFlow() {
 
                 <div className="rounded-[20px] border border-white/[0.05] p-3.5 text-center" style={{ background: 'rgba(255,255,255,0.015)' }}>
                   <div className="text-[10px] text-white/20">
-                    Press <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] text-white/30 font-mono text-[9px]">←</kbd> <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] text-white/30 font-mono text-[9px]">→</kbd> to navigate
+                    Press <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] text-white/30 font-mono text-[9px]">\u2190</kbd> <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] text-white/30 font-mono text-[9px]">\u2192</kbd> to navigate
                   </div>
                 </div>
               </div>
@@ -728,7 +764,7 @@ export default function OnboardingFlow() {
               >
                 <img src="/images/logo.png" alt="" className="w-7 h-7 object-contain" />
               </motion.div>
-              <p className="text-[13px] font-medium text-white/45">Launching GateNexa…</p>
+              <p className="text-[13px] font-medium text-white/45">Launching GateNexa\u2026</p>
             </div>
           </motion.div>
         )}
