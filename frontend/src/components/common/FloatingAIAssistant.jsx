@@ -635,6 +635,14 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
       ));
       setSuggestions(null);
       refreshAiQuota();
+    } else if (result === null) {
+      // startStream returned null (auth error, abort, or network failure)
+      placeholderFinalizedRef.current = true;
+      setMessages(prev => prev.map(m => m.id === placeholderId
+        ? { ...m, text: "AI service is temporarily unavailable. Please try again.", source: 'error', provider: null, offlineInfo: null, cached: false, thumbs: null }
+        : m
+      ));
+      setSuggestions(null);
     } else if (!result?.text) {
       const fallbackText = "Live AI could not be reached, so I'm replying from the offline knowledge base. Ask me to explain any core GATE topic (CPU scheduling, deadlock, DBMS normalization, Dijkstra, TCP, binary search…) and I'll go deep.";
       placeholderFinalizedRef.current = true;

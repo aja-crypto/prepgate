@@ -41,7 +41,14 @@ export default function useAiStreaming() {
           abortRef.current = null;
           return { text: null, suggestions: null, source: 'quota', quotaExceeded: true, limit: errorData?.data?.limit, resetAt: errorData?.data?.resetAt };
         }
-        if (res.status === 401) throw new Error('auth');
+        if (res.status === 401) {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          if (window.location.pathname !== '/login') {
+            window.dispatchEvent(new CustomEvent('auth:expired'));
+          }
+          throw new Error('auth');
+        }
         if (res.status >= 500) throw new Error('server');
         throw new Error(`http_${res.status}`);
       }

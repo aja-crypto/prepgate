@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import CoachCard from './CoachCard';
 import { buildCoachContext } from './coachPromptBuilder';
 import { coachTokens } from './coachTokens';
+import { useAuthData } from '../../context/AuthContext';
 
 const { colors, typography } = coachTokens;
 
@@ -200,6 +201,7 @@ export default function CoachChat({ coachState = null, onboardingComplete = fals
   const inputRef = useRef(null);
   const msgIdRef = useRef(0);
   const onboardingHandled = useRef(false);
+  const { aiQuestionsRemaining, isPremium } = useAuthData();
 
   const coachContext = useMemo(() => coachState ? buildCoachContext(coachState) : null, [coachState]);
 
@@ -237,6 +239,21 @@ export default function CoachChat({ coachState = null, onboardingComplete = fals
   const handleSend = useCallback(async (overrideText) => {
     const msgText = typeof overrideText === 'string' ? overrideText : input.trim();
     if (!msgText || isThinking) return;
+
+    // Client-side quota check — prevent wasted API call
+    if (isPremium === false && aiQuestionsRemaining !== null && aiQuestionsRemaining <= 0) {
+      setInput('');
+      setShowWelcome(false);
+      const coachId = msgIdRef.current++;
+      setMessages(prev => [...prev, {
+        role: 'coach',
+        content: "You've reached your daily AI question limit. Your access resets tomorrow. You can continue studying with Resources, PYQs, Mock Tests and your Study Plan.",
+        mode: 'coach',
+        id: coachId,
+      }]);
+      return;
+    }
+
     setInput('');
     setShowWelcome(false);
     const userId = msgIdRef.current++;
@@ -257,12 +274,22 @@ export default function CoachChat({ coachState = null, onboardingComplete = fals
         const coachId = msgIdRef.current++;
         setMessages(prev => [...prev, { role: 'coach', content: "I'm here to help. What would you like to work on?", mode: 'coach', id: coachId }]);
       }
-    } catch {
+    } catch (err) {
       setIsThinking(false);
       const coachId = msgIdRef.current++;
-      setMessages(prev => [...prev, { role: 'coach', content: "I couldn't reach the server. Feel free to ask again.", mode: 'coach', id: coachId }]);
+      let errorMsg = "I couldn't reach the server. Feel free to ask again.";
+      const status = err?.response?.status;
+      const serverMsg = err?.response?.data?.message;
+      if (status === 429) {
+        errorMsg = serverMsg || "You've reached your daily AI question limit. Your access resets tomorrow.";
+      } else if (status === 401) {
+        errorMsg = "Your session has expired. Please log in again to continue.";
+      } else if (serverMsg) {
+        errorMsg = serverMsg;
+      }
+      setMessages(prev => [...prev, { role: 'coach', content: errorMsg, mode: 'coach', id: coachId }]);
     }
-  }, [input, isThinking, coachContext]);
+  }, [input, isThinking, coachContext, aiQuestionsRemaining, isPremium]);
 
   const handleTypewriterComplete = useCallback((msgId) => {
     setCompletedSet(prev => new Set([...prev, msgId]));
