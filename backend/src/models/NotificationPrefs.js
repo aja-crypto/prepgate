@@ -13,7 +13,7 @@ const notifPrefsSchema = new mongoose.Schema({
   },
   maxPerDay: {
     type: Number,
-    default: 3,
+    default: 5,
     min: 1,
     max: 5,
   },

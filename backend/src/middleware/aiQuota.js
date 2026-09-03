@@ -6,6 +6,10 @@ const FREE_DAILY_LIMIT = 30;
 const PREMIUM_DAILY_LIMIT = 200;
 const DEMO_LIFETIME_LIMIT = 5;
 
+function getIstDateKey(date = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+}
+
 async function aiQuota(req, res, next) {
   try {
     if (!isMongoConnected() || !req.user?._id) return next();
@@ -29,17 +33,17 @@ async function aiQuota(req, res, next) {
     const isPremium = user.isPremium || false;
     const limit = isPremium ? PREMIUM_DAILY_LIMIT : FREE_DAILY_LIMIT;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const lastReset = user.aiQuestionsDate ? new Date(user.aiQuestionsDate) : null;
-    if (!lastReset || lastReset < today) {
+    const todayKey = getIstDateKey();
+    const lastKey = user.aiQuestionsDate ? getIstDateKey(new Date(user.aiQuestionsDate)) : null;
+    if (!lastKey || lastKey !== todayKey) {
       user.aiQuestionsUsed = 0;
-      user.aiQuestionsDate = today;
+      user.aiQuestionsDate = new Date();
       await user.save({ validateBeforeSave: false });
     }
 
     if (user.aiQuestionsUsed >= limit) {
-      const resetAt = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+      const tomorrow = new Date(Date.parse(todayKey + 'T00:00:00+05:30') + 86400000);
+      const resetAt = tomorrow;
       return res.status(429).json({
         success: false,
         message: `Daily AI query limit reached (${limit}/day). Resets at midnight.`,

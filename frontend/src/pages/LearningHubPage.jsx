@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react';
+﻿import { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { useAuthData } from '../context/AuthContext';
@@ -187,8 +187,8 @@ const isVerifiedChannel = (name) => !!(name && name !== 'Unknown' && VERIFIED_CH
 const ResourceCard = memo(function ResourceCard({ item, onClick, index }) {
   const [isHovered, setIsHovered] = useState(false);
   const id = item._id || item.id;
-  const [isBookmarked, setIsBookmarked] = useState(() => (JSON.parse(localStorage.getItem('lh_bookmarks') || '[]')).includes(id));
-  const [isFavorited, setIsFavorited] = useState(() => (JSON.parse(localStorage.getItem('lh_favorites') || '[]')).includes(id));
+  const [isBookmarked, setIsBookmarked] = useState(() => { try { return JSON.parse(localStorage.getItem('lh_bookmarks') || '[]').includes(id); } catch { return false; } });
+  const [isFavorited, setIsFavorited] = useState(() => { try { return JSON.parse(localStorage.getItem('lh_favorites') || '[]').includes(id); } catch { return false; } });
   const videoId = item.youtubeId || item.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1];
   const { src: thumbnail, onError: onThumbError, exhausted: thumbExhausted } = useYoutubeThumbnail(videoId, item.thumbnail);
   const cat = CATEGORY_STYLES[item.category] || CATEGORY_STYLES['Resources'];
@@ -1875,3 +1875,4 @@ export default function LearningHubPage() {
     </div>
   );
 }
+

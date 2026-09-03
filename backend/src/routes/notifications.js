@@ -49,13 +49,12 @@ router.get('/', protect, async (req, res, next) => {
     const mongoUserId = await resolveMongoUserId(req.user);
     if (!mongoUserId) return res.json({ success: true, data: { notifications: [], total: 0, unreadCount: 0, page: 1, pages: 0, prefs: null } });
 
-    // Idempotent ensure: guarantee due onboarding + baseline notifications exist.
-    // This is safe because both functions use createIfAbsent (dedup by notificationKey)
-    // and check pref flags (onboardingSeeded / baselineSeeded) before generating.
-    // The scheduler remains responsible for background/event notifications.
     try {
+      const prefs = await NotificationPrefs.findOne({ user: mongoUserId }).select('baselineSeeded').lean();
+      if (!prefs || !prefs.baselineSeeded) {
+        await seedBaselineNotifications(mongoUserId);
+      }
       await generateOnboardingNotifications(mongoUserId);
-      await seedBaselineNotifications(mongoUserId);
     } catch (_) { /* non-fatal — continue to read whatever exists */ }
 
     const page = Math.max(1, parseInt(req.query.page) || 1);

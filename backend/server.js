@@ -50,22 +50,26 @@ RECOMMENDED_ENV.forEach(key => {
   }
 });
 
-// --- Global crash handlers (must be before anything else) --
+let httpServer = null;
+
 process.on('unhandledRejection', (reason) => {
-  console.error('?? Unhandled Rejection:', reason instanceof Error ? reason.message : reason);
-  // Do NOT exit � let the app continue running
+  console.error('Unhandled Rejection:', reason instanceof Error ? reason.message : reason);
+  if (reason instanceof Error) console.error(reason.stack);
+  try { Sentry.captureException(reason); } catch {}
+  setTimeout(() => { process.exit(1); }, 1000);
 });
 
 process.on('uncaughtException', (err) => {
-  console.error('?? Uncaught Exception:', err.message);
-  // Log full error but don't exit � the app may still function
+  console.error('Uncaught Exception:', err.message);
   console.error(err.stack);
-  // Only exit if the error indicates corruption (e.g., EADDRINUSE)
-  if (err.code === 'EADDRINUSE') {
-    console.error('Port in use � cannot start server. Exiting.');
-    process.exit(1);
+  try { Sentry.captureException(err); } catch {}
+  isShuttingDown = true;
+  if (httpServer) {
+    httpServer.close(() => process.exit(1));
+    setTimeout(() => process.exit(1), 5000);
+  } else {
+    setTimeout(() => process.exit(1), 1000);
   }
-  // For all other uncaught exceptions, attempt graceful recovery
 });
 
 // --- Security Middleware ─────────────────────────────────---
@@ -204,6 +208,18 @@ const uploadsNotesDir = path.join(uploadsDir, 'notes');
 if (!require('fs').existsSync(uploadsDir)) require('fs').mkdirSync(uploadsDir, { recursive: true });
 if (!require('fs').existsSync(uploadsNotesDir)) require('fs').mkdirSync(uploadsNotesDir, { recursive: true });
 
+const { protect: uploadsProtect } = require('./src/middleware/auth');
+app.use('/uploads/notes', uploadsProtect, async (req, res, next) => {
+  try {
+    if (!isMongoConnected()) return next();
+    const filename = path.basename(req.path);
+    if (!filename || filename === 'notes') return next();
+    const { Note } = require('./src/models');
+    const note = await Note.findOne({ fileUrl: { $regex: filename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$' }, user: req.user._id }).select('_id');
+    if (!note) return res.status(403).json({ success: false, message: 'Access denied. File not owned by you.' });
+    next();
+  } catch (e) { next(e); }
+}, express.static(uploadsNotesDir));
 app.use('/uploads', express.static(uploadsDir));
 
 // Cloudinary-aware resource serving: redirect to Cloudinary URL if available, else local fallback
@@ -601,7 +617,7 @@ connectDB().then(async () => {
     }
   }
 
-  server = app.listen(PORT, () => {
+  httpServer = server = app.listen(PORT, () => {
     console.log(`\nGATE 2027 API running on port ${PORT} [${process.env.NODE_ENV}]`);
     console.log(`Health check: http://localhost:${PORT}/health`);
     console.log(`Data source: ${isMongoConnected() ? 'MongoDB' : 'Local (in-memory)'}\n`);

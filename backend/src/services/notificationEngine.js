@@ -656,7 +656,7 @@ function categoryEnabled(prefs, category) {
 }
 
 async function seedBaselineNotifications(userId, now = getGateNexaNow()) {
-  const summary = { created: 0, skippedDuplicate: 0, skipped: 0 };
+  const summary = { created: 0, skippedDuplicate: 0, skipped: 0, failed: 0 };
   if (!isValidUserId(userId)) return summary;
   const prefs = await ensurePrefs(userId, now);
   if (!prefs || !prefs.enabled) return summary;
@@ -704,13 +704,15 @@ async function seedBaselineNotifications(userId, now = getGateNexaNow()) {
     });
     if (result.created) summary.created += 1;
     else if (result.duplicate) summary.skippedDuplicate += 1;
-    else summary.skipped += 1;
+    else summary.failed += 1;
   }
 
-  try {
-    prefs.baselineSeeded = true;
-    await prefs.save();
-  } catch (_) { /* ignore */ }
+  if (summary.failed === 0 && (summary.created > 0 || summary.skippedDuplicate > 0 || all.length === 0)) {
+    try {
+      prefs.baselineSeeded = true;
+      await prefs.save();
+    } catch (_) { /* ignore */ }
+  }
   return summary;
 }
 
@@ -819,6 +821,7 @@ async function generateDailyNotifications(userId, options = {}) {
   const dbTodayCount = await Notification.countDocuments({
     user: userId,
     'metadata.dateKey': dateKey,
+    'metadata.slot': { $nin: ['onboarding', 'baseline'] },
   }).catch(() => 0);
   if (dbTodayCount >= maxPerDay) {
     result.skipped += 1;
@@ -895,7 +898,7 @@ async function generateDailyNotifications(userId, options = {}) {
 
 async function generateOnboardingNotifications(userId, options = {}) {
   const now = options.now ? new Date(options.now) : getGateNexaNow();
-  const summary = { created: 0, skippedDuplicate: 0, day: null, seeded: false };
+  const summary = { created: 0, skippedDuplicate: 0, failed: 0, day: null, seeded: false };
   if (!isValidUserId(userId)) return summary;
 
   const prefs = await ensurePrefs(userId, now);
@@ -907,9 +910,11 @@ async function generateOnboardingNotifications(userId, options = {}) {
   const user = await User.findById(userId).select('createdAt').lean();
   if (!user?.createdAt) return summary;
 
-  const createdDate = new Date(user.createdAt);
-  const msPerDay = 24 * 60 * 60 * 1000;
-  const currentDayNumber = Math.floor((now.getTime() - createdDate.getTime()) / msPerDay) + 1;
+  const createdKey = getGateNexaDateKey(new Date(user.createdAt));
+  const nowKey = getGateNexaDateKey(now);
+  const createdDayUTC = new Date(createdKey + 'T00:00:00Z');
+  const nowDayUTC = new Date(nowKey + 'T00:00:00Z');
+  const currentDayNumber = Math.floor((nowDayUTC - createdDayUTC) / 86400000) + 1;
   summary.day = currentDayNumber;
 
   if (currentDayNumber < 1) return summary;
@@ -954,10 +959,11 @@ async function generateOnboardingNotifications(userId, options = {}) {
       });
       if (created.created) { summary.created += 1; anyCreated = true; }
       else if (created.duplicate) summary.skippedDuplicate += 1;
+      else summary.failed += 1;
     }
   }
 
-  if (!onboardingSeeded) {
+  if (!onboardingSeeded && summary.failed === 0 && (anyCreated || summary.skippedDuplicate > 0)) {
     try {
       prefs.onboardingSeeded = true;
       await prefs.save();

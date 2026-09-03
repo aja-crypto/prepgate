@@ -18,6 +18,10 @@ const { DEMO_EMAIL, isDemoUser } = require('../utils/permissions');
 
 let lastAiError = null;
 let lastAiMeta = null;      // { provider, model, status, reason, detail, ts } — for the offline details panel
+
+function getIstDateKeyAI(date = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+}
 let lastProviderUsed = null; // provider that last succeeded (OpenRouter/OpenAI/DashScope)
 
 // ─── Internal AI request instrumentation (debug-only, never exposed to users) ───
@@ -141,24 +145,27 @@ async function incrementAiUsage(userId) {
         await user.save();
         return;
       }
-      const today = new Date().toISOString().slice(0, 10);
-      const lastDate = user.aiQuestionsDate ? new Date(user.aiQuestionsDate).toISOString().slice(0, 10) : null;
+      const today = getIstDateKeyAI();
+      const lastDate = user.aiQuestionsDate ? getIstDateKeyAI(new Date(user.aiQuestionsDate)) : null;
       user.aiQuestionsUsed = lastDate === today ? (user.aiQuestionsUsed || 0) + 1 : 1;
       user.aiQuestionsDate = new Date();
       await user.save();
       return;
     }
     const User = require('../models/User');
-    const user = await User.findById(userId).select('email');
+    const user = await User.findById(userId).select('email aiQuestionsDate aiQuestionsUsed');
     const guest = user && isDemoUser(user);
     if (guest) {
       await User.updateOne({ _id: userId }, { $inc: { aiQuestionsUsed: 1 } });
       return;
     }
-    await User.updateOne(
-      { _id: userId },
-      { $inc: { aiQuestionsUsed: 1 }, $setOnInsert: { aiQuestionsDate: new Date() } }
-    );
+    const today = getIstDateKeyAI();
+    const lastDate = user?.aiQuestionsDate ? getIstDateKeyAI(new Date(user.aiQuestionsDate)) : null;
+    if (lastDate !== today) {
+      await User.updateOne({ _id: userId }, { $inc: { aiQuestionsUsed: 1 }, $set: { aiQuestionsDate: new Date() } });
+    } else {
+      await User.updateOne({ _id: userId }, { $inc: { aiQuestionsUsed: 1 } });
+    }
   } catch (e) { /* silent */ }
 }
 
@@ -1050,8 +1057,8 @@ async function checkAiQuota(userId) {
         const remaining = Math.max(0, limit - (user.aiQuestionsUsed || 0));
         return { allowed: (user.aiQuestionsUsed || 0) < limit, remaining, limit, isPremium: false, isGuest: true };
       }
-      const today = new Date().toISOString().slice(0, 10);
-      const lastDate = user.aiQuestionsDate ? new Date(user.aiQuestionsDate).toISOString().slice(0, 10) : null;
+      const today = getIstDateKeyAI();
+      const lastDate = user.aiQuestionsDate ? getIstDateKeyAI(new Date(user.aiQuestionsDate)) : null;
       if (lastDate !== today) {
         user.aiQuestionsUsed = 0;
         user.aiQuestionsDate = new Date();
@@ -1072,10 +1079,10 @@ async function checkAiQuota(userId) {
       return { allowed: user.aiQuestionsUsed < limit, remaining, limit, isPremium: false, isGuest: true };
     }
 
-    const today = new Date().toISOString().slice(0, 10);
-    const lastDate = user.aiQuestionsDate ? user.aiQuestionsDate.toISOString().slice(0, 10) : null;
+    const today = getIstDateKeyAI();
+    const lastDate = user.aiQuestionsDate ? getIstDateKeyAI(new Date(user.aiQuestionsDate)) : null;
 
-    // Reset if new day (non-demo users only)
+    // Reset if new IST day (non-demo users only)
     if (lastDate !== today) {
       user.aiQuestionsUsed = 0;
       user.aiQuestionsDate = new Date();

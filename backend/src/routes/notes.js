@@ -100,6 +100,24 @@ router.get('/', protect, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+router.get('/:id/file', protect, async (req, res, next) => {
+  try {
+    const noteId = req.params.id;
+    if (!isMongoConnected() || isMockAuthEnabled()) {
+      return res.status(404).json({ success: false, message: 'File not available in mock mode.' });
+    }
+    const note = await Note.findOne({ _id: noteId, user: req.user._id }).select('fileUrl fileType fileSize user');
+    if (!note || !note.fileUrl) return res.status(404).json({ success: false, message: 'File not found.' });
+    const filename = path.basename(note.fileUrl);
+    const filePath = path.join(uploadsNotesDir, filename);
+    if (!fs.existsSync(filePath)) return res.status(404).json({ success: false, message: 'File not found on server.' });
+    res.setHeader('Content-Type', note.fileType || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+    return fs.createReadStream(filePath).pipe(res);
+  } catch (e) { next(e); }
+});
+
 router.post('/', protect, upload.single('file'), validateFields([
   { name: 'title', type: 'string', required: true, min: 1, max: 200 },
   { name: 'content', type: 'string', min: 1, max: 50000 },

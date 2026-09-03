@@ -6,7 +6,7 @@ export default function AiLimitBadge({ className }) {
     return (
       <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium ${className || ''}`} style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22C55E', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
         <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5 shrink-0"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M22 4L12 14.01l-3-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        Unlimited AI Access
+        Premium AI Access - 200/day
       </div>
     );
   }

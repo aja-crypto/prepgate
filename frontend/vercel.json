@@ -1,5 +1,5 @@
 {
-  "buildCommand": "VITE_GOOGLE_CLIENT_ID=650014521981-6h32qr8hnu7t7elaiu6n5q4s61sh88k9.apps.googleusercontent.com npm install && VITE_GOOGLE_CLIENT_ID=650014521981-6h32qr8hnu7t7elaiu6n5q4s61sh88k9.apps.googleusercontent.com npm run build",
+  "buildCommand": "npm install && npm run build",
   "outputDirectory": "dist",
   "trailingSlash": false,
   "headers": [
@@ -26,6 +26,13 @@
       "source": "/images/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/icons/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
       ]
     },
     {

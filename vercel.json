@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd frontend && VITE_GOOGLE_CLIENT_ID=650014521981-6h32qr8hnu7t7elaiu6n5q4s61sh88k9.apps.googleusercontent.com npm run build",
+  "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "trailingSlash": false,
   "headers": [
