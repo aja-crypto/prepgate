@@ -152,7 +152,7 @@
 
 3. # Verify
    curl https://gatenexa-api.onrender.com/health
-   curl https://gatenexa.in/
+   curl https://gatenexa.vercel.app/
 ```
 
 ## Communication Templates

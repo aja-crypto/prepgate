@@ -1,4 +1,4 @@
-﻿// src/utils/email.js – Nodemailer Email Utility
+// src/utils/email.js – Nodemailer Email Utility
 const nodemailer = require('nodemailer');
 
 const SMTP_PLACEHOLDERS = new Set([
@@ -48,7 +48,7 @@ exports.sendEmail = async ({ to, subject, html, text }) => {
   const transporter = createTransporter();
 
   const info = await transporter.sendMail({
-    from: `"GateNexa.in" <${process.env.FROM_EMAIL || 'noreply@gatenexa.in'}>`,
+    from: `"GateNexa" <${process.env.FROM_EMAIL || 'noreply@gatenexa.in'}>`,
     to,
     subject,
     text,

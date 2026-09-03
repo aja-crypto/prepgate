@@ -26,9 +26,9 @@ services:
       - key: JWT_REFRESH_EXPIRE
         value: 7d
       - key: CORS_ORIGIN
-        value: https://gatenexa.in,https://www.gatenexa.in,https://gatenexa.vercel.app
+        value: https://gatenexa.vercel.app,https://gatenexa.in,https://www.gatenexa.in
       - key: FRONTEND_URL
-        value: https://gatenexa.in
+        value: https://gatenexa.vercel.app
       - key: BACKEND_URL
         value: https://gatenexa-api.onrender.com
       - key: OPENROUTER_API_KEY

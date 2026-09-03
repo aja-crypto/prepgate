@@ -112,10 +112,10 @@ export default function ResourcesPage() {
           <div className="text-center py-16 text-slate-400 text-sm">Loading resources...</div>
         ) : (
           <>
-            <div className="flex gap-2 flex-wrap mb-2">
+            <div className="flex flex-nowrap md:flex-wrap gap-2 mb-2 overflow-x-auto md:overflow-visible px-2 pb-1">
               {subjects.map(s => (
                 <button key={s} onClick={() => setFilter(s)}
-                  className="text-xs px-3 py-1.5 rounded-lg border transition-all"
+                  className="text-xs shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg border transition-all"
                   style={filter === s
                     ? { background: 'rgba(139,92,246,0.15)', borderColor: 'rgba(139,92,246,0.3)', color: '#C4B5FD' }
                     : { background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)', color: '#94A3B8' }}>
@@ -123,10 +123,10 @@ export default function ResourcesPage() {
                 </button>
               ))}
             </div>
-            <div className="flex gap-2 mb-5 flex-wrap">
+            <div className="flex flex-nowrap md:flex-wrap gap-2 mb-5 overflow-x-auto md:overflow-visible px-2 pb-1">
               {types.map(t => (
                 <button key={t} onClick={() => setTypeFilter(t)}
-                  className="text-xs px-3 py-1.5 rounded-lg border capitalize transition-all"
+                  className="text-xs shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg border capitalize transition-all"
                   style={typeFilter === t
                     ? { background: 'rgba(139,92,246,0.15)', borderColor: 'rgba(139,92,246,0.3)', color: '#C4B5FD' }
                     : { background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.08)', color: '#94A3B8' }}>

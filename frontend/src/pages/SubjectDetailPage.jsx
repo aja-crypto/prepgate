@@ -213,12 +213,12 @@ export default function SubjectDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1.5 mb-8 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex flex-nowrap md:flex-wrap gap-1.5 mb-8 overflow-x-auto md:overflow-visible pb-1 scrollbar-none px-2">
         {TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+            className={`flex items-center gap-2 shrink-0 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 ${
               activeTab === tab.key
                 ? 'text-white shadow-lg'
                 : 'text-text3 bg-bg-2/50 border border-border hover:border-purple-500/20 hover:text-text'

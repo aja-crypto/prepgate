@@ -1,5 +1,5 @@
 // src/pages/VideoLecturesPage.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GlassCard from '../components/ui/GlassCard';
 import LazyYouTubePlayer from '../components/learning/LazyYouTubePlayer';
@@ -14,8 +14,24 @@ export default function VideoLecturesPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const savedScrollY = useRef(0);
+  const prevSelected = useRef(null);
+  const closeBtnRef = useRef(null);
 
   useEffect(() => { loadLectures(); }, [filter, page]);
+
+  useEffect(() => {
+    if (selectedVideo && !prevSelected.current) {
+      savedScrollY.current = window.scrollY;
+      prevSelected.current = selectedVideo;
+      if (closeBtnRef.current) closeBtnRef.current.focus({ preventScroll: true });
+    }
+    if (selectedVideo === null && prevSelected.current !== null) {
+      const y = savedScrollY.current;
+      prevSelected.current = null;
+      requestAnimationFrame(() => window.scrollTo({ top: y, behavior: 'auto' }));
+    }
+  }, [selectedVideo]);
 
   const DEMO_LECTURES = [
     { _id: 'vl1', title: 'Data Structures Full Course', subject: 'Algorithms', source: 'YouTube', difficulty: 'Beginner', youtubeId: 'dQw4w9WgXcQ', channel: 'Gate Smashers', duration: { minutes: 45 }, views: 12000 },
@@ -213,7 +229,7 @@ export default function VideoLecturesPage() {
               {selectedVideo.description && (
                 <p className="text-sm text-text2 mt-2">{selectedVideo.description}</p>
               )}
-              <button onClick={() => setSelectedVideo(null)} className="mt-4 px-4 py-2 rounded-lg bg-white/[0.06] text-text2 text-sm hover:bg-white/[0.1] transition-all">
+              <button ref={closeBtnRef} onClick={() => setSelectedVideo(null)} className="mt-4 px-4 py-2 rounded-lg bg-white/[0.06] text-text2 text-sm hover:bg-white/[0.1] transition-all">
                 Close
               </button>
             </div>

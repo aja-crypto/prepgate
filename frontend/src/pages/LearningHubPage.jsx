@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { useAuthData } from '../context/AuthContext';
@@ -470,7 +470,7 @@ function FilterBar({ categories, active, onChange, label = 'Filter' }) {
 
   if (!isMobile) {
     return (
-      <div className="flex gap-1 p-1 rounded-2xl mb-5 overflow-x-auto"
+      <div className="flex flex-nowrap gap-1 p-1 rounded-2xl mb-5 overflow-x-auto px-2"
         style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
         {categories.map(item => (
           <motion.button
@@ -865,16 +865,18 @@ function ResourceModal({ selected, setSelected, canAccessPremium, videos = [], s
   }, [setSelected]);
 
   // Focus the modal panel on open and trap Tab focus inside it.
+  // Exclude iframe from focusable elements to prevent mobile browsers from
+  // forcibly scrolling focused iframes into view (jumps to top/off-screen).
   useEffect(() => {
     if (!selected) return;
     const panel = panelRef.current;
     if (panel) {
-      const focusable = panel.querySelectorAll('button:not([disabled]), [href], input, textarea, select, iframe, [tabindex]:not([tabindex="-1"])');
+      const focusable = panel.querySelectorAll('button:not([disabled]), [href], input, textarea, select, [tabindex]:not([tabindex="-1"])');
       if (focusable.length) focusable[0].focus({ preventScroll: true });
     }
     const onTab = (e) => {
       if (e.key !== 'Tab' || !panel) return;
-      const focusable = Array.from(panel.querySelectorAll('button:not([disabled]), [href], input, textarea, select, iframe, [tabindex]:not([tabindex="-1"])'))
+      const focusable = Array.from(panel.querySelectorAll('button:not([disabled]), [href], input, textarea, select, [tabindex]:not([tabindex="-1"])'))
         .filter(el => !el.disabled && el.offsetParent !== null);
       if (focusable.length === 0) { e.preventDefault(); return; }
       const first = focusable[0];
@@ -1278,8 +1280,10 @@ export default function LearningHubPage() {
   const [editorPicks, setEditorPicks] = useState([]);
   const lhTracking = useTrackLearningHub();
   const prevSelected = useRef(null);
+  const savedScrollY = useRef(0);
 
   const openResource = useCallback((item) => {
+    savedScrollY.current = window.scrollY;
     if (item.youtubeId || item.youtubeUrl) {
       if (item.type === 'video' || item.youtubeId) {
         lhTracking.trackVideoWatched(item);
@@ -1289,6 +1293,14 @@ export default function LearningHubPage() {
     }
     setSelectedItem(item);
   }, [lhTracking]);
+
+  useEffect(() => {
+    if (selectedItem === null && prevSelected.current !== null) {
+      const y = savedScrollY.current;
+      prevSelected.current = null;
+      requestAnimationFrame(() => window.scrollTo({ top: y, behavior: 'auto' }));
+    }
+  }, [selectedItem]);
 
   const handleApplySubject = useCallback((topic) => {
     setSearchQuery('');
@@ -1638,7 +1650,7 @@ export default function LearningHubPage() {
 
             {/* Tab bar */}
             <div>
-              <div className="flex gap-1 p-1 rounded-2xl mb-5 overflow-x-auto"
+              <div className="flex flex-nowrap gap-1 p-1 rounded-2xl mb-5 overflow-x-auto px-2"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 {TABS.map(tab => (
                   <motion.button
@@ -1697,7 +1709,7 @@ export default function LearningHubPage() {
                   {activeTab === 'videos' && (
                     <div>
                       <div className="flex items-center gap-2 mb-4 flex-wrap">
-                        <div className="flex gap-1 overflow-x-auto flex-1 min-w-0">
+                        <div className="flex flex-nowrap gap-1 overflow-x-auto flex-1 min-w-0 px-2 pb-1">
                           {VIDEO_FILTERS.map(item => (
                             <motion.button
                               key={item.id}

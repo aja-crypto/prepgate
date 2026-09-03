@@ -16,7 +16,7 @@ Frontend (Vercel) → Backend (Render/docker) → MongoDB Atlas
 
 | Item | Value |
 |------|-------|
-| Frontend | `https://gatenexa.in` |
+| Frontend | `https://gatenexa.vercel.app` |
 | Backend API | `https://gatenexa-api.onrender.com` |
 | Health | `GET /health` |
 | Readiness | `GET /health/readiness` |

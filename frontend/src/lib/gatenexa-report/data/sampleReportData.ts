@@ -72,7 +72,7 @@ export const sampleReportData: ReportData = {
     predictionId: 'GTX-26-4A0AF6',
     generatedDate: '17 July 2026',
     reportVersion: '2.0',
-    websiteUrl: 'gatenexa.ai',
+    websiteUrl: 'gatenexa.vercel.app',
   },
 
   candidate: {

@@ -51,8 +51,8 @@ jobs:
       - name: Verify deployment
         run: |
           echo "Deployment completed successfully"
-          echo "Production site should be available at: https://gatenexa.in"
-          curl -I https://gatenexa.in || echo "Note: Domain may not be configured yet"
+          echo "Production site should be available at: https://gatenexa.vercel.app"
+          curl -I https://gatenexa.vercel.app || echo "Note: Domain may not be configured yet"
       
       - name: Deployment Summary
         run: |
@@ -75,7 +75,7 @@ jobs:
         if: success()
         run: |
           echo "🎉 Production deployment completed successfully!"
-          echo "The application is now available at: https://gatenexa.in"
+          echo "The application is now available at: https://gatenexa.vercel.app"
 
       - name: Workflow failure notification
         if: failure()

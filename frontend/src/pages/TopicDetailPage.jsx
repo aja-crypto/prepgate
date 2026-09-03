@@ -1,4 +1,4 @@
-﻿// GateForge topic learning hub — full GATE 2027 preparation per topic
+// GateForge topic learning hub — full GATE 2027 preparation per topic
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { topicService, mockSessionService, getApiErrorMessage } from '../services/api';
@@ -213,9 +213,9 @@ export default function TopicDetailPage() {
         </div>
       </div>
 
-      <div className="flex gap-1 flex-wrap mb-5">
+      <div className="flex flex-nowrap md:flex-wrap gap-1 mb-5 overflow-x-auto md:overflow-visible px-2 pb-1">
         {TABS.map((t) => (
-          <button key={t} type="button" onClick={() => setTab(t)} className={`text-xs px-3 py-2 rounded-lg border whitespace-nowrap ${tab === t ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3'}`}>{t}</button>
+          <button key={t} type="button" onClick={() => setTab(t)} className={`text-xs shrink-0 whitespace-nowrap px-3 py-2 rounded-lg border ${tab === t ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3'}`}>{t}</button>
         ))}
       </div>
 
