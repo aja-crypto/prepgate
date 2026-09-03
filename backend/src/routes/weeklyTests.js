@@ -27,6 +27,8 @@ const weeklyTestsDir = path.join(__dirname, '../../resources/weekly-tests');
 
 // Short-lived token store for local file access
 const localFileTokens = new Map();
+
+const weeklyTestStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const test = getLocalWeeklyTestById(req.params.id);
     const subDir = test?.subject || 'misc';
