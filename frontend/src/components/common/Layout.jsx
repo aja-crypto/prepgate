@@ -50,18 +50,20 @@ const Layout = memo(function Layout() {
   const [calcOpen, setCalcOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   useEffect(() => {
+    const main = document.querySelector('main');
+    if (!main) return;
     let ticking = false;
     const handleScroll = () => {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
-        setIsScrolled(window.scrollY > 12);
+        setIsScrolled(main.scrollTop > 12);
         ticking = false;
       });
     };
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    main.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => main.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
@@ -468,7 +470,7 @@ const Layout = memo(function Layout() {
           </div>
         </header>
 
-        <div className="px-2 sm:px-3 md:px-4 lg:px-5 pt-6 sm:pt-8 md:pt-10 pb-4 sm:pb-6 max-w-full sm:max-w-[1600px] w-full mx-auto flex-1 flex flex-col">
+        <div className="px-2 sm:px-3 md:px-4 lg:px-5 pt-[72px] md:pt-10 pb-4 sm:pb-6 max-w-full sm:max-w-[1600px] w-full mx-auto flex-1 flex flex-col">
           <Suspense fallback={
             <div className="flex-1 flex items-center justify-center">
               <div className="flex flex-col items-center gap-3 animate-fade-in">

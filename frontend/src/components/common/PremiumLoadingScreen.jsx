@@ -52,7 +52,7 @@ export default function PremiumLoadingScreen({ onComplete }) {
   // Smooth progress — runs once on mount, immune to parent re-renders
   useEffect(() => {
     mountedRef.current = true;
-    const duration = 1800;
+    const duration = 900;
     let start;
 
     const tick = (ts) => {
@@ -63,15 +63,14 @@ export default function PremiumLoadingScreen({ onComplete }) {
       setProgress(Math.round(Math.min(eased, 1) * 100));
       if (elapsed < 1) { rafRef.current = requestAnimationFrame(tick); }
       else {
-        const remaining = Math.max(0, 3000 - (Date.now() - startRef.current));
         timersRef.current.push(setTimeout(() => {
           if (!mountedRef.current) return;
           setPhase('complete');
           phaseTimerRef.current = setTimeout(() => {
             if (!mountedRef.current) return;
             onCompleteRef.current?.();
-          }, reducedRef.current ? 200 : 400);
-        }, remaining));
+          }, reducedRef.current ? 100 : 180);
+        }, 0));
       }
     };
     rafRef.current = requestAnimationFrame(tick);

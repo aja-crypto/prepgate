@@ -84,6 +84,7 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
+    if (loading) return;
     if (!email || !password) {
       setError('Please fill in all fields');
       return;
@@ -104,9 +105,10 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
     } finally {
       setLoading(false);
     }
-  }, [email, password, login, onStatusChange, onLoginSuccess]);
+  }, [email, password, login, onStatusChange, onLoginSuccess, loading]);
 
   const handleDemo = useCallback(async () => {
+    if (loading) return;
     setLoading(true);
     setError('');
     onStatusChange?.('loading');
@@ -121,9 +123,11 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
     } finally {
       setLoading(false);
     }
-  }, [loginAsGuest, onStatusChange, onLoginSuccess]);
+  }, [loginAsGuest, onStatusChange, onLoginSuccess, loading]);
 
   const handleGoogleSuccess = useCallback(async (token) => {
+    if (loading) return;
+    setLoading(true);
     try {
       onStatusChange?.('loading');
       await googleLogin(token);
@@ -133,8 +137,10 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
       setError('Google sign-in failed');
       onStatusChange?.('error');
       setTimeout(() => onStatusChange?.('idle'), 2000);
+    } finally {
+      setLoading(false);
     }
-  }, [googleLogin, onStatusChange, onLoginSuccess]);
+  }, [googleLogin, onStatusChange, onLoginSuccess, loading]);
 
   const rotateX = mouse.y * -2;
   const rotateY = mouse.x * 2;

@@ -143,7 +143,5 @@ export default function AiIntroModal({ onComplete }) {
 }
 
 export function shouldShowAiIntro() {
-  // Never stack over the onboarding experience.
-  if (localStorage.getItem('gatenexa_onboarding_done') !== 'true') return false;
-  return !localStorage.getItem(AI_INTRO_KEY);
+  return false;
 }

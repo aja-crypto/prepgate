@@ -147,7 +147,7 @@ function MobileBottomNav() {
       <nav
         role="navigation"
         aria-label="Bottom navigation"
-        className={`sm:hidden fixed bottom-0 left-0 right-0 z-[9000] transition-transform duration-300 ease-out ${visible ? 'translate-y-0' : 'translate-y-full'}`}
+        className={`md:hidden fixed bottom-0 left-0 right-0 z-[9000] transition-transform duration-300 ease-out ${visible ? 'translate-y-0' : 'translate-y-full'}`}
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <div className="mx-2 mb-2 rounded-2xl bg-bg-2/90 backdrop-blur-2xl border border-white/[0.08] shadow-[0_-4px_24px_rgba(0,0,0,0.25),0_0_40px_-12px_rgba(139,92,246,0.08)] overflow-hidden">

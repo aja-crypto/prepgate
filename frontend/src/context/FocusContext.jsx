@@ -262,11 +262,6 @@ export function FocusProvider({ children }) {
       const end = endTimeRef.current;
       const rem = Math.max(0, Math.floor((end - Date.now()) / 1000));
       setTimeRemaining(rem);
-      persistState({
-        isActive: true, isPaused: false, mode: modeRef.current, sessionDuration: sessionDurationRef.current, endTime: end,
-        sessionsCompleted: sessionsCompletedRef.current, currentSubject: currentSubjectRef.current,
-        sessionStart: sessionStartRef.current,
-      });
       if (rem <= 0) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
