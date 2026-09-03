@@ -12,10 +12,10 @@ import {
 
 const TOTAL_STEPS = 4;
 const STEPS = [
-  { icon: ShieldCheck, label: 'EARLY ACCESS', title: 'You\u2019re Early \u2014 Welcome to GateNexa', subtitle: 'You\u2019re among the early learners helping shape GateNexa for GATE 2027.' },
+  { icon: ShieldCheck, label: 'EARLY ACCESS', title: "You're Early - Welcome to GateNexa", subtitle: "You're among the early learners helping shape GateNexa for GATE 2027." },
   { icon: Rocket, label: 'GATENEXA', title: 'Your GATE 2027 Preparation, Connected', subtitle: 'One workspace for learning, practice, planning, and progress.' },
   { icon: Palette, label: 'PERSONALIZE', title: 'Make GateNexa Work Your Way', subtitle: 'Personalize your workspace, then explore the tools built around your preparation.' },
-  { icon: Compass, label: 'GET STARTED', title: 'Explore Your GateNexa Workspace', subtitle: 'You don\u2019t need to use everything on day one. Start with one goal and explore as you go.' },
+  { icon: Compass, label: 'GET STARTED', title: 'Explore Your GateNexa Workspace', subtitle: "You don't need to use everything on day one. Start with one goal and explore as you go." },
 ];
 
 const CTA_LABELS = ['I understand', 'Show me GateNexa', 'Save preferences', 'Start your GATE 2027 preparation'];
@@ -28,7 +28,7 @@ const THEMES = [
 
 const TIPS = [
   'Your study progress remains yours, even as GateNexa evolves.',
-  'Start with one subject \u2014 you don\u2019t need to use everything at once.',
+  "Start with one subject - you don't need to use everything at once.",
   'You can change your workspace preferences anytime from Settings.',
   'Use keyboard shortcuts to navigate onboarding quickly.',
 ];
@@ -168,7 +168,7 @@ export default function OnboardingFlow() {
               borderColor: 'rgba(34,197,94,0.12)',
             }}>
               <div className="text-[13px] font-bold text-white">GateNexa is in Early Access</div>
-              <div className="text-[12px] mt-0.5" style={{ color: '#9498B0' }}>We\u2019re testing, refining, and improving the platform with early users before the wider launch.</div>
+              <div className="text-[12px] mt-0.5" style={{ color: '#9498B0' }}>We're testing, refining, and improving the platform with early users before the wider launch.</div>
             </div>
 
             <GlassCard>
@@ -202,7 +202,7 @@ export default function OnboardingFlow() {
               <div className="p-4">
                 <div className="text-[10px] font-semibold uppercase tracking-wider mb-2.5" style={{ color: '#5A5F78' }}>What you can expect</div>
                 <div className="grid grid-cols-2 gap-2 text-[12px]" style={{ color: '#C0C4DC' }}>
-                  {['GATE 2027-focused preparation tools', 'Continuous product improvements', 'New learning and practice experiences over time', 'A place to share feedback while you\u2019re early'].map((t) => (
+                  {['GATE 2027-focused preparation tools', 'Continuous product improvements', 'New learning and practice experiences over time', "A place to share feedback while you're early"].map((t) => (
                     <span key={t} className="flex items-start gap-1.5"><Check size={11} className="mt-0.5 shrink-0" style={{ color: '#22C55E' }} /> {t}</span>
                   ))}
                 </div>
@@ -210,7 +210,7 @@ export default function OnboardingFlow() {
             </GlassCard>
 
             <div className="text-[12px] leading-relaxed px-1 text-center font-medium" style={{ color: '#8B8FA8' }}>
-              You\u2019re not just using GateNexa early \u2014 you\u2019re helping shape it.
+              You're not just using GateNexa early - you're helping shape it.
             </div>
 
             <div className="flex items-center justify-center pt-1">
@@ -264,7 +264,7 @@ export default function OnboardingFlow() {
                 </div>
                 <div>
                   <div className="text-[12px] font-semibold text-white">Guided by AI</div>
-                  <div className="text-[12px] leading-relaxed mt-0.5" style={{ color: '#9CA0B8' }}>Use GateNexa\u2019s AI-powered experiences for study guidance, explanations, planning and recommendations where available.</div>
+                  <div className="text-[12px] leading-relaxed mt-0.5" style={{ color: '#9CA0B8' }}>Use GateNexa's AI-powered experiences for study guidance, explanations, planning and recommendations where available.</div>
                 </div>
               </div>
             </GlassCard>
@@ -394,7 +394,7 @@ export default function OnboardingFlow() {
                   { icon: BarChart3, name: 'Analytics', desc: 'Understand progress, consistency and performance.' },
                   { icon: Award, name: 'GateVault', desc: 'Practice, revise and keep learning engaging.' },
                   { icon: Compass, name: 'NEXA Predictor', desc: 'Explore score, rank and opportunity insights.' },
-                  { icon: Brain, name: 'AI Coach', desc: 'Get guidance when you don\u2019t know what to study or what to do next.' },
+                  { icon: Brain, name: 'AI Coach', desc: "Get guidance when you don't know what to study or what to do next." },
                 ].map((tool, i) => (
                   <motion.div
                     key={tool.name}
@@ -450,7 +450,7 @@ export default function OnboardingFlow() {
             </div>
 
             <div className="text-center pt-1">
-              <div className="text-[17px] font-bold text-white">You\u2019re ready.</div>
+              <div className="text-[17px] font-bold text-white">You're ready.</div>
               <div className="text-[12px] mt-0.5" style={{ color: '#7A7F98' }}>Start your GATE 2027 preparation.</div>
             </div>
           </div>
@@ -542,7 +542,7 @@ export default function OnboardingFlow() {
                       <div className="text-[15px] font-bold tracking-tight text-white">
                         <span style={{ color: '#A855F7' }}>Gate</span><span className="text-white">Nexa</span>
                       </div>
-                      <div className="text-[10.5px] font-medium text-white/30">GATE 2027 \u00B7 Your AI-Powered Study Platform</div>
+                      <div className="text-[10.5px] font-medium text-white/30">GATE 2027 - Your AI-Powered Study Platform</div>
                     </div>
                   </div>
 
@@ -732,7 +732,7 @@ export default function OnboardingFlow() {
                 </div>
                 <div className="rounded-[16px] border border-white/[0.05] p-3 text-center" style={{ background: 'rgba(255,255,255,0.015)' }}>
                   <div className="text-[10px] text-white/20">
-                    Press <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] text-white/30 font-mono text-[9px]">{'\u2190'}</kbd> <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] text-white/30 font-mono text-[9px]">{'\u2192'}</kbd> to navigate
+                    Press <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] text-white/30 font-mono text-[9px]">Left</kbd> <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] text-white/30 font-mono text-[9px]">Right</kbd> to navigate
                   </div>
                 </div>
               </div>
@@ -777,3 +777,5 @@ export default function OnboardingFlow() {
     </div>
   );
 }
+
+
