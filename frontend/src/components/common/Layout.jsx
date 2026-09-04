@@ -18,6 +18,7 @@ import SmartScrollNavigator from './SmartScrollNavigator';
 import NexaPersona from './NexaPersona';
 import SidebarNav from './navigation/SidebarNav';
 import MobileBottomNav from './navigation/MobileBottomNav';
+import PersistentVideoPlayer from '../video/PersistentVideoPlayer';
 
 function BackToTop() {
   const [show, setShow] = useState(false);
@@ -496,6 +497,7 @@ const Layout = memo(function Layout() {
       </main>
       <BackToTop />
       <SmartScrollNavigator />
+      <PersistentVideoPlayer />
       <MobileBottomNav />
     </div>
   );

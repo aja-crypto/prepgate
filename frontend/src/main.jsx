@@ -90,6 +90,7 @@ import { ProgressProvider, useProgress } from './context/ProgressContext';
 import { AiMentorProvider } from './context/AiMentorContext';
 import AiMentorTracker from './components/ai-mentor/AiMentorTracker';
 import { FocusProvider } from './context/FocusContext';
+import { VideoPlayerProvider } from './components/video/VideoPlayerContext';
 const AnalyticsLazy = lazy(() => import('@vercel/analytics/react').then((m) => ({ default: m.Analytics })));
 const SpeedInsightsLazy = lazy(() => import('@vercel/speed-insights/react').then((m) => ({ default: m.SpeedInsights })));
 import { checkReminders } from './utils/reminderUtils';
@@ -146,22 +147,24 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <GateNexaBootManager>
       <ThemeProvider>
         <AuthProvider>
-          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <AdminAuthProvider>
-              <DiagnosticsProvider>
-              <NotificationProvider>
-            <ProgressProviderWrapper />
-          </NotificationProvider>
-              </DiagnosticsProvider>
-              <Toaster position="top-right" />
-              {import.meta.env.PROD && window.location.hostname === 'gatenexa.vercel.app' && (
-    <Suspense fallback={null}>
-      <AnalyticsLazy />
-      <SpeedInsightsLazy />
-    </Suspense>
-  )}
-            </AdminAuthProvider>
-          </BrowserRouter>
+          <VideoPlayerProvider>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+              <AdminAuthProvider>
+                <DiagnosticsProvider>
+                <NotificationProvider>
+              <ProgressProviderWrapper />
+            </NotificationProvider>
+                </DiagnosticsProvider>
+                <Toaster position="top-right" />
+                {import.meta.env.PROD && window.location.hostname === 'gatenexa.vercel.app' && (
+      <Suspense fallback={null}>
+        <AnalyticsLazy />
+        <SpeedInsightsLazy />
+      </Suspense>
+    )}
+              </AdminAuthProvider>
+            </BrowserRouter>
+          </VideoPlayerProvider>
         </AuthProvider>
       </ThemeProvider>
     </GateNexaBootManager>
