@@ -262,6 +262,7 @@ export default function App() {
   const handleLoadComplete = useCallback(() => {
     setInitialLoad(false);
     document.body.classList.remove('app-loading');
+    window.dispatchEvent(new Event('gatenexa:ready'));
   }, []);
 
   useEffect(() => {
