@@ -1,13 +1,12 @@
 // src/routes/admin.js
 const router = require('express').Router();
 const { adminProtect, requirePermission } = require('../middleware/adminAuth');
-const { isMongoConnected } = require('../config/db');
+const { isMongoConnected, getMongoStatus } = require('../config/db');
 const User = require('../models/User');
 const Subject = require('../models/Subject');
 const AdminPdf = require('../models/AdminPdf');
 const aiUsage = require('../services/aiUsageTracker');
 const { Topic, Note, MockTest, PYQ } = require('../models');
-const { getLocalMockTests } = require('../store/localDataStore');
 
 // Local user helpers (mock store)
 const localAdminStore = require('../store/localAdminStore');
@@ -67,11 +66,11 @@ router.get('/stats', adminProtect, async (req, res, next) => {
               return created && created >= monthAgo;
             }).length || 0,
           },
-          subjects: 11,
-          topics: 74,
-          notes: 0,
-          tests: 55,
-          pyqs: 15,
+          subjects: null,
+          topics: null,
+          notes: null,
+          tests: null,
+          pyqs: null,
           mockTests: {
             totalAttempts: completedAttempts.length,
             completed: completedAttempts.filter(a => a.completed).length,
@@ -90,6 +89,7 @@ router.get('/stats', adminProtect, async (req, res, next) => {
           },
           system: {
             databaseConnected: false,
+            databaseStatus: getMongoStatus(),
             apiStatus: 'healthy',
             storageUsage: '0 MB',
           },
@@ -105,7 +105,6 @@ router.get('/stats', adminProtect, async (req, res, next) => {
     const queries = [
       User.countDocuments(),
       User.countDocuments({ lastLogin: { $gte: todayStart } }),
-      User.countDocuments({ $or: [{ lastLogin: { $gte: todayStart } }, { 'streak.lastStudyDate': { $gte: todayStart } }] }),
       User.countDocuments({ createdAt: { $gte: weekAgo } }),
       User.countDocuments({ createdAt: { $gte: monthAgo } }),
       Subject.countDocuments({ isActive: true }),
@@ -146,7 +145,7 @@ router.get('/stats', adminProtect, async (req, res, next) => {
           subjects: subjectCount,
           topics: topicCount,
           notes: noteCount,
-          tests: mockTestCount + (getLocalMockTests ? getLocalMockTests().length : 0),
+          tests: mockTestCount,
           pyqs: pyqCount,
           pdfs: {
             total: totalPdfs,
@@ -155,6 +154,7 @@ router.get('/stats', adminProtect, async (req, res, next) => {
           },
           system: {
             databaseConnected: true,
+            databaseStatus: getMongoStatus(),
             apiStatus: 'healthy',
             storageUsage: `${(totalPdfs * 2.5 + 15).toFixed(0)} MB`,
           },

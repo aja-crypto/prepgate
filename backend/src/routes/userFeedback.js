@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { protect } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
+const { createFeedbackNotification } = require('../services/notificationEngine');
 
 function getStore() { return require('../store/localDataStore'); }
 
@@ -19,6 +20,13 @@ router.post('/ticket', protect, async (req, res, next) => {
         category, subject, title, message, screenshotUrl,
         priority: priority || 'medium',
         deviceInfo: deviceInfo || {},
+      });
+      await createFeedbackNotification({
+        userId: req.user._id,
+        type: 'feedback_received',
+        title: 'Feedback received',
+        message: `Your feedback "${title}" was submitted successfully.`,
+        ticketId: doc._id,
       });
       return res.status(201).json({ success: true, data: doc });
     }
@@ -67,6 +75,14 @@ router.post('/ticket/:id/reply', protect, async (req, res, next) => {
         authorRole: 'user',
         message,
         isAdminReply: false,
+      });
+      await createFeedbackNotification({
+        userId: ticket.user,
+        type: 'feedback_reply',
+        title: 'New reply to your feedback',
+        message: `${req.user.name || 'You'} added a reply to "${ticket.title}".`,
+        ticketId: ticket._id,
+        replyId: reply._id,
       });
 
       ticket.replyCount = (ticket.replyCount || 0) + 1;

@@ -768,6 +768,7 @@ async function createIfAbsent(payload) {
   if (existing) {
     return { created: false, duplicate: true, notification: existing };
   }
+
   try {
     const notification = await Notification.create(payload);
     return { created: true, duplicate: false, notification };
@@ -779,9 +780,31 @@ async function createIfAbsent(payload) {
       });
       return { created: false, duplicate: true, notification: dup };
     }
+
     console.error('[NotificationEngine] create failed');
     return { created: false, duplicate: false, error: true };
   }
+
+}
+
+async function createFeedbackNotification({ userId, type, title, message, ticketId, replyId, status, actionPath = '/feedback', now = new Date() }) {
+  if (!isValidUserId(userId)) return { created: false, skipped: true };
+  const notificationKey = `feedback:${type}:${ticketId || 'unknown'}:${replyId || status || 'created'}`;
+  return createIfAbsent({
+    user: userId,
+    type,
+    title,
+    message,
+    body: message,
+    category: 'feedback',
+    priority: 'normal',
+    isRead: false,
+    scheduledAt: now,
+    deliveredAt: now,
+    metadata: { ticketId: String(ticketId || ''), replyId: replyId ? String(replyId) : undefined, feedbackType: type, status },
+    action: { label: 'Open feedback', path: `${actionPath}?ticketId=${ticketId}` },
+    notificationKey,
+  });
 }
 
 async function recordDelivery(prefs) {
@@ -1106,6 +1129,7 @@ module.exports = {
   generateDailyNotifications,
   generateOnboardingNotifications,
   generateEventNotification,
+  createFeedbackNotification,
   seedBaselineNotifications,
   getNotificationKey,
   getGateNexaNow,

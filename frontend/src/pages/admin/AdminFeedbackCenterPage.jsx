@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { adminFeedbackService } from '../../services/adminApi';
 import toast from 'react-hot-toast';
 
@@ -12,10 +13,12 @@ const CATEGORIES = [
 ];
 
 const STATUSES = [
-  { value: 'unread', label: 'Unread', color: 'bg-blue-500/20 text-blue-400' },
+  { value: 'new', label: 'New', color: 'bg-blue-500/20 text-blue-400' },
+  { value: 'reviewing', label: 'Reviewing', color: 'bg-cyan-500/20 text-cyan-400' },
+  { value: 'planned', label: 'Planned', color: 'bg-purple-500/20 text-purple-400' },
   { value: 'in_progress', label: 'In Progress', color: 'bg-yellow-500/20 text-yellow-400' },
   { value: 'resolved', label: 'Resolved', color: 'bg-green-500/20 text-green-400' },
-  { value: 'archived', label: 'Archived', color: 'bg-text3/20 text-text3' },
+  { value: 'closed', label: 'Closed', color: 'bg-text3/20 text-text3' },
 ];
 
 const PRIORITIES = [
@@ -303,6 +306,7 @@ function RequestsTab() {
 }
 
 export default function AdminFeedbackCenterPage() {
+  const [searchParams] = useSearchParams();
   const [stats, setStats] = useState(null);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -352,6 +356,13 @@ export default function AdminFeedbackCenterPage() {
   fetchDataRef.current = fetchData;
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    const ticketId = searchParams.get('ticketId');
+    if (!ticketId || !tickets.length) return;
+    const ticket = tickets.find(item => item._id === ticketId);
+    if (ticket) setSelectedTicket(ticket);
+  }, [searchParams, tickets]);
 
   useEffect(() => {
     const tick = () => { if (document.visibilityState === 'visible') fetchDataRef.current({ silent: true }); };
@@ -408,7 +419,7 @@ export default function AdminFeedbackCenterPage() {
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <StatCard label="Total" value={stats.total} icon="📋" />
-          <StatCard label="Unread" value={stats.unread} icon="📬" color="text-blue-400" />
+          <StatCard label="New" value={stats.unread} icon="📬" color="text-blue-400" />
           <StatCard label="In Progress" value={stats.pending} icon="⏳" color="text-yellow-400" />
           <StatCard label="Resolved" value={stats.resolved} icon="✅" color="text-green-400" />
           <StatCard label="Critical" value={stats.critical} icon="🚨" color="text-red-400" />

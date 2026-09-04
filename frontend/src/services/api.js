@@ -479,6 +479,11 @@ export const feedbackService = {
   getPolls: () => api.get('/feedback/polls'),
 };
 
+export const userFeedbackService = {
+  listTickets: () => api.get('/user/feedback/my-tickets'),
+  reply: (id, message) => api.post(`/user/feedback/ticket/${id}/reply`, { message }),
+};
+
 export const adminLiveService = {
   getPending: (params) => api.get('/admin/live-data/live/pending', { params }),
   getUpdates: (params) => api.get('/admin/live-data/live/updates', { params }),

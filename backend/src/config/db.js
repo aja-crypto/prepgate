@@ -175,6 +175,17 @@ function isMongoConnected() {
   return mongoConnected && mongoose.connection.readyState === 1;
 }
 
+function getMongoStatus() {
+  switch (mongoose.connection.readyState) {
+    case 1: return 'CONNECTED';
+    case 2: return 'CONNECTING';
+    case 3: return 'DISCONNECTED';
+    default: return 'DISCONNECTED';
+  }
+}
+
 module.exports = connectDB;
 module.exports.isMongoConnected = isMongoConnected;
+module.exports.getMongoStatus = getMongoStatus;
+module.exports.getMongoConnectionState = getMongoStatus;
 module.exports.isMockAuthEnabled = isMockAuthEnabled;

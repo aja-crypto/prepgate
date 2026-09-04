@@ -12,6 +12,10 @@ export default function AdminSystemHealthPage() {
     adminApi.get('/admin/stats').then(res => {
       setStats(res.data.data);
     }).catch(err => {
+      if (!err.response) {
+        setStats({ system: { databaseStatus: 'API_UNAVAILABLE', apiStatus: 'API_UNAVAILABLE' } });
+        return;
+      }
       setError(err.response?.data?.message || 'Failed to load system health');
     }).finally(() => setLoading(false));
   };
@@ -46,6 +50,9 @@ export default function AdminSystemHealthPage() {
   }
 
   const s = stats?.system || {};
+  const databaseStatus = s.databaseStatus || (s.databaseConnected ? 'CONNECTED' : 'DISCONNECTED');
+  const databaseLabel = databaseStatus;
+  const databaseColor = databaseStatus === 'CONNECTED' ? 'green' : databaseStatus === 'CONNECTING' ? 'yellow' : 'red';
 
   return (
     <div className="p-4 lg:p-6 space-y-6">
@@ -55,13 +62,13 @@ export default function AdminSystemHealthPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className={`rounded-xl p-5 border ${s.databaseConnected ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20'}`}>
+        <div className={`rounded-xl p-5 border ${databaseColor === 'green' ? 'bg-green-500/5 border-green-500/20' : databaseColor === 'yellow' ? 'bg-yellow-500/5 border-yellow-500/20' : 'bg-red-500/5 border-red-500/20'}`}>
           <div className="flex items-center gap-3 mb-3">
-            <div className={`w-3 h-3 rounded-full ${s.databaseConnected ? 'bg-green-400' : 'bg-red-400'}`} />
+            <div className={`w-3 h-3 rounded-full ${databaseColor === 'green' ? 'bg-green-400' : databaseColor === 'yellow' ? 'bg-yellow-400' : 'bg-red-400'}`} />
             <span className="text-sm font-semibold text-text">Database</span>
           </div>
           <div className="text-xs text-text3 space-y-1">
-            <div className="flex justify-between"><span>Status</span><span className={s.databaseConnected ? 'text-green-400' : 'text-red-400'}>{s.databaseConnected ? 'Connected' : 'Disconnected'}</span></div>
+            <div className="flex justify-between"><span>Status</span><span className={databaseColor === 'green' ? 'text-green-400' : databaseColor === 'yellow' ? 'text-yellow-400' : 'text-red-400'}>{databaseLabel}</span></div>
             {s.databaseName && <div className="flex justify-between"><span>Database</span><span className="text-text2">{s.databaseName}</span></div>}
           </div>
         </div>

@@ -1,6 +1,17 @@
 const router = require('express').Router();
 const { adminProtect } = require('../middleware/adminAuth');
 const { isMongoConnected } = require('../config/db');
+const { createFeedbackNotification } = require('../services/notificationEngine');
+
+const STATUS_ALIASES = { unread: 'new', archived: 'closed' };
+const CANONICAL_STATUSES = ['new', 'reviewing', 'planned', 'in_progress', 'resolved', 'closed'];
+function normalizeStatus(status) { return STATUS_ALIASES[status] || status; }
+function statusFilter(status) {
+  if (!status) return undefined;
+  if (status === 'new') return { $in: ['new', 'unread'] };
+  if (status === 'closed') return { $in: ['closed', 'archived'] };
+  return status;
+}
 
 // All routes require admin auth
 router.use(adminProtect);
@@ -15,9 +26,9 @@ router.get('/stats', async (req, res, next) => {
 
       const [total, unread, resolved, archived, critical, todayCount] = await Promise.all([
         FeedbackTicket.countDocuments(),
-        FeedbackTicket.countDocuments({ status: 'unread' }),
+        FeedbackTicket.countDocuments({ status: statusFilter('new') }),
         FeedbackTicket.countDocuments({ status: 'resolved' }),
-        FeedbackTicket.countDocuments({ status: 'archived' }),
+        FeedbackTicket.countDocuments({ status: statusFilter('closed') }),
         FeedbackTicket.countDocuments({ priority: 'critical', status: { $ne: 'archived' } }),
         FeedbackTicket.countDocuments({ createdAt: { $gte: todayStart } }),
       ]);
@@ -39,7 +50,7 @@ router.get('/', async (req, res, next) => {
     if (isMongoConnected()) {
       const FeedbackTicket = require('../models/FeedbackTicket');
       const filter = {};
-      if (status) filter.status = status;
+      if (status) filter.status = statusFilter(status);
       if (category) filter.category = category;
       if (priority) filter.priority = priority;
       if (search) filter.$or = [{ title: { $regex: search, $options: 'i' } }, { message: { $regex: search, $options: 'i' } }, { userName: { $regex: search, $options: 'i' } }];
@@ -48,7 +59,7 @@ router.get('/', async (req, res, next) => {
         FeedbackTicket.find(filter).sort('-createdAt').skip((page - 1) * limit).limit(limit).lean(),
         FeedbackTicket.countDocuments(filter),
       ]);
-      return res.json({ success: true, data, total, page, pages: Math.ceil(total / limit) });
+      return res.json({ success: true, data: data.map(t => ({ ...t, status: normalizeStatus(t.status) })), total, page, pages: Math.ceil(total / limit) });
     }
     res.json({ success: true, data: [], total: 0, page: 1, pages: 0 });
   } catch (e) { next(e); }
@@ -63,7 +74,7 @@ router.get('/:id', async (req, res, next) => {
       const doc = await FeedbackTicket.findById(req.params.id).lean();
       if (!doc) return res.status(404).json({ success: false, message: 'Not found' });
       const replies = await FeedbackReply.find({ ticket: doc._id }).sort('createdAt').lean();
-      return res.json({ success: true, data: { ...doc, replies } });
+      return res.json({ success: true, data: { ...doc, status: normalizeStatus(doc.status), replies } });
     }
     res.status(404).json({ success: false, message: 'Not found' });
   } catch (e) { next(e); }
@@ -76,6 +87,7 @@ router.put('/:id', async (req, res, next) => {
       const FeedbackTicket = require('../models/FeedbackTicket');
       const update = {};
       if (req.body.status) {
+        if (!CANONICAL_STATUSES.includes(req.body.status)) return res.status(400).json({ success: false, message: 'Invalid feedback status' });
         update.status = req.body.status;
         if (req.body.status === 'resolved') update.resolvedAt = new Date();
         if (req.body.status === 'archived') update.archivedAt = new Date();
@@ -84,6 +96,16 @@ router.put('/:id', async (req, res, next) => {
 
       const doc = await FeedbackTicket.findByIdAndUpdate(req.params.id, update, { new: true });
       if (!doc) return res.status(404).json({ success: false, message: 'Not found' });
+      if (req.body.status && doc.user) {
+        await createFeedbackNotification({
+          userId: doc.user,
+          type: 'feedback_status',
+          title: 'Feedback status updated',
+          message: `Your feedback "${doc.title}" is now ${normalizeStatus(doc.status).replace(/_/g, ' ')}.`,
+          ticketId: doc._id,
+          status: normalizeStatus(doc.status),
+        });
+      }
       return res.json({ success: true, data: doc });
     }
     res.json({ success: true, data: { _id: req.params.id, ...req.body } });
@@ -128,8 +150,18 @@ router.post('/:id/reply', async (req, res, next) => {
       ticket.replyCount = (ticket.replyCount || 0) + 1;
       ticket.lastReplyAt = new Date();
       ticket.lastReplyBy = req.admin.name || 'Admin';
-      if (ticket.status === 'unread') ticket.status = 'in_progress';
+      if (ticket.status === 'unread' || ticket.status === 'new') ticket.status = 'in_progress';
       await ticket.save();
+      if (ticket.user) {
+        await createFeedbackNotification({
+          userId: ticket.user,
+          type: 'feedback_reply',
+          title: 'Admin replied to your feedback',
+          message: `An admin replied to "${ticket.title}".`,
+          ticketId: ticket._id,
+          replyId: reply._id,
+        });
+      }
 
       return res.status(201).json({ success: true, data: reply });
     }

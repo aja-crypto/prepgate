@@ -3,6 +3,7 @@ const router = require('express').Router();
 const { protect, adminOnly } = require('../middleware/auth');
 const { isMongoConnected, isMockAuthEnabled } = require('../config/db');
 const Feedback = require('../models/Feedback');
+const { createFeedbackNotification } = require('../services/notificationEngine');
 
 function getStore() {
   return require('../store/localDataStore');
@@ -87,7 +88,7 @@ router.post('/', protect, async (req, res, next) => {
       const rawUserId = req.user?._id || req.user?.id;
       const userId = rawUserId && mongoose.isValidObjectId(rawUserId) ? rawUserId : null;
       const FeedbackTicket = require('../models/FeedbackTicket');
-      await FeedbackTicket.create({
+      const ticket = await FeedbackTicket.create({
         user: userId,
         userName: req.user?.name || 'Anonymous',
         userEmail: req.user?.email || '',
@@ -98,6 +99,23 @@ router.post('/', protect, async (req, res, next) => {
         priority: 'medium',
         deviceInfo: req.body.deviceInfo || {},
       });
+      await createFeedbackNotification({
+        userId: userId || req.user._id,
+        type: 'feedback_received',
+        title: 'Feedback received',
+        message: 'Your feedback was submitted successfully.',
+        ticketId: ticket._id,
+      });
+      const Admin = require('../models/Admin');
+      const admins = await Admin.find({ isActive: true }).select('_id').lean();
+      await Promise.all(admins.map(admin => createFeedbackNotification({
+        userId: admin._id,
+        type: 'feedback_received',
+        title: 'New feedback received',
+        message: `A new feedback ticket was submitted by ${req.user?.name || 'a user'}.`,
+        ticketId: ticket._id,
+        actionPath: '/admin/feedback',
+      })));
     }
 
     res.json({ success: true, data: feedback, message: 'Feedback submitted successfully.' });

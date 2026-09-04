@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { feedbackService, getApiErrorMessage } from '../services/api';
+import { feedbackService, getApiErrorMessage, userFeedbackService } from '../services/api';
 import toast from 'react-hot-toast';
 import { useSEO } from '../hooks/useSEO';
 
@@ -51,9 +51,22 @@ export default function FeedbackPage() {
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [submitPhase, setSubmitPhase] = useState('');
+  const [searchParams] = useSearchParams();
+  const [linkedTicket, setLinkedTicket] = useState(null);
   const fileRef = useRef(null);
   const submitGuard = useRef(false);
   const textRef = useRef(null);
+
+  useEffect(() => {
+    const ticketId = searchParams.get('ticketId');
+    if (!ticketId) return;
+    userFeedbackService.listTickets()
+      .then(res => {
+        const ticket = (res.data?.data || []).find(item => String(item._id) === ticketId);
+        if (ticket) setLinkedTicket(ticket);
+      })
+      .catch(() => {});
+  }, [searchParams]);
 
   const save = useCallback(() => saveDraft({ step, rating, category, description, screenshot, screenshotPreview, recommend }), [step, rating, category, description, screenshot, screenshotPreview, recommend]);
 
@@ -107,6 +120,15 @@ export default function FeedbackPage() {
     <div className="min-h-screen" style={{ background: '#070B1A' }}>
       <div className="max-w-lg mx-auto px-4 sm:px-6 py-12 sm:py-16">
         <Link to="/" className="text-xs text-purple-400 hover:text-purple-300 mb-8 inline-block transition-colors">← Back to Home</Link>
+      {linkedTicket && (
+        <div className="mb-6 rounded-xl border border-purple-400/50 bg-purple-500/10 p-4 shadow-lg shadow-purple-500/20" aria-label="Linked feedback ticket">
+          <p className="text-[10px] uppercase tracking-wide text-purple-300 mb-1">Feedback ticket</p>
+          <h2 className="text-sm font-semibold text-white">{linkedTicket.title}</h2>
+          <p className="text-xs text-slate-300 mt-1 whitespace-pre-wrap">{linkedTicket.message}</p>
+          <p className="text-[11px] text-purple-200 mt-3">Status: {String(linkedTicket.status || '').replace(/_/g, ' ')}</p>
+          {linkedTicket.lastReply && <p className="text-xs text-slate-200 mt-2">Latest reply: {linkedTicket.lastReply.message}</p>}
+        </div>
+      )}
       <AnimatePresence mode="wait">
         {step === 'welcome' && (
           <motion.div key="welcome" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="text-center pt-12">

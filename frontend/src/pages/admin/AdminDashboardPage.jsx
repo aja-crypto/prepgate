@@ -70,6 +70,10 @@ export default function AdminDashboardPage() {
       const res = await adminApi.get('/admin/stats');
       setStats(res.data.data);
     } catch (err) {
+      if (!err.response) {
+        setStats({ system: { databaseStatus: 'API_UNAVAILABLE', apiStatus: 'API_UNAVAILABLE' } });
+        return;
+      }
       setError(err.response?.data?.message || 'Failed to load stats');
     } finally {
       setLoading(false);
@@ -164,9 +168,9 @@ export default function AdminDashboardPage() {
                 <path d="M9 12h6M12 9v6M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" />
               </svg>
             </div>
-            <h2 className="text-base font-bold text-text mb-2">Live Analytics Not Available</h2>
+            <h2 className="text-base font-bold text-text mb-2">{stats?.system?.databaseStatus || 'DISCONNECTED'}</h2>
             <p className="text-sm text-text3 max-w-md mx-auto leading-relaxed mb-4">
-              Connect MongoDB to view:<br />
+              Connect MongoDB to view live statistics:<br />
               • User Growth<br />
               • Mock Test Analytics<br />
               • AI Usage Statistics<br />
@@ -189,6 +193,7 @@ export default function AdminDashboardPage() {
   const m = stats.mockTests || {};
   const p = stats.pdfs || {};
   const s = stats.system || {};
+  const databaseStatus = s.databaseStatus || (s.databaseConnected ? 'CONNECTED' : 'DISCONNECTED');
   const a = stats.aiMentor || {};
 
   return (
@@ -200,8 +205,8 @@ export default function AdminDashboardPage() {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-[11px] text-text3 bg-bg-2 border border-border rounded-lg px-3 py-1.5">
-            <span className={`w-1.5 h-1.5 rounded-full ${s.databaseConnected ? 'bg-green-400' : 'bg-red-400'}`} />
-            {s.databaseConnected ? 'Connected' : 'Disconnected'}
+            <span className={`w-1.5 h-1.5 rounded-full ${databaseStatus === 'CONNECTED' ? 'bg-green-400' : databaseStatus === 'CONNECTING' ? 'bg-yellow-400' : 'bg-red-400'}`} />
+            {databaseStatus}
           </div>
           <div className="text-[11px] text-text3 bg-bg-2 border border-border rounded-lg px-3 py-1.5 capitalize">
             {admin?.role?.replace('_', ' ')}
@@ -255,7 +260,7 @@ export default function AdminDashboardPage() {
 
       {/* System Section */}
       <StatSection title="System">
-        <StatCard label="Database" value={s.databaseConnected ? 'Connected' : 'Disconnected'} icon={ICONS.db} color={s.databaseConnected ? '#10B981' : '#EF4444'} />
+        <StatCard label="Database" value={databaseStatus} icon={ICONS.db} color={databaseStatus === 'CONNECTED' ? '#10B981' : databaseStatus === 'CONNECTING' ? '#F59E0B' : '#EF4444'} />
         <StatCard label="API Status" value={s.apiStatus || '—'} icon={s.apiStatus === 'healthy' ? ICONS.check : ICONS.warning} color={s.apiStatus === 'healthy' ? '#10B981' : '#F59E0B'} />
         <StatCard label="Storage" value={s.storageUsage || '—'} icon={ICONS.db} color="#8B5CF6" />
       </StatSection>

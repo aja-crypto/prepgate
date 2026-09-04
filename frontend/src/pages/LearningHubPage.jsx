@@ -4,7 +4,6 @@ import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { ArrowLeft, Eye, Clock3, Bookmark, Share2, CheckCircle2, Info, FileText, Link2, Bot, CalendarDays } from 'lucide-react';
 import { useAuthData } from '../context/AuthContext';
 import LazyYouTubePlayer from '../components/learning/LazyYouTubePlayer';
-import { useVideoPlayer } from '../components/video/VideoPlayerContext';
 import { TABS, ROADMAP_FILTERS, SUBJECT_FILTERS, STORY_FILTERS, MOTIVATION_FILTERS, RESOURCE_FILTERS, VIDEO_FILTERS } from '../data/filters';
 import { learningHubVideoService, learningHubDataService, api } from '../services/api';
 import InsightsDashboard from '../components/gate/InsightsDashboard';
@@ -202,7 +201,6 @@ const VERIFIED_CHANNELS = new Set([
 const isVerifiedChannel = (name) => !!(name && name !== 'Unknown' && VERIFIED_CHANNELS.has(name.trim()));
 
 const ResourceCard = memo(function ResourceCard({ item, onClick, index }) {
-  const { playVideo } = useVideoPlayer();
   const [isHovered, setIsHovered] = useState(false);
   const id = item._id || item.id;
   const [isBookmarked, setIsBookmarked] = useState(() => { try { return JSON.parse(localStorage.getItem('lh_bookmarks') || '[]').includes(id); } catch { return false; } });
@@ -210,7 +208,6 @@ const ResourceCard = memo(function ResourceCard({ item, onClick, index }) {
   const videoId = item.youtubeId || item.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1];
   const { src: thumbnail, onError: onThumbError, exhausted: thumbExhausted } = useYoutubeThumbnail(videoId, item.thumbnail);
   const cat = CATEGORY_STYLES[item.category] || CATEGORY_STYLES['Resources'];
-  const isVideo = !!videoId;
   const timeAgo = item.createdAt ? Math.floor((Date.now() - new Date(item.createdAt).getTime()) / 86400000) : null;
   const views = item.viewCount || item.views;
 
@@ -233,9 +230,8 @@ const ResourceCard = memo(function ResourceCard({ item, onClick, index }) {
   };
 
   const handleOpen = useCallback(() => {
-    if (isVideo) playVideo(item);
-    else onClick(item);
-  }, [isVideo, item, onClick, playVideo]);
+    onClick(item);
+  }, [item, onClick]);
 
   return (
     <motion.div
@@ -431,8 +427,7 @@ const ResourceCard = memo(function ResourceCard({ item, onClick, index }) {
               if (id) {
                 import('../services/api').then(m => m.api.patch(`/learning-hub/videos/${id}/view`).catch(() => {}));
               }
-              if (isVideo) playVideo(item);
-              else onClick(item);
+              onClick(item);
             }}
             className="flex-1 flex items-center justify-center gap-1.5 text-[10px] font-bold py-2 rounded-xl transition-all"
             style={{ background: cat.accent + '18', color: cat.accent }}
@@ -1431,19 +1426,14 @@ export default function LearningHubPage() {
   const [subjectResources, setSubjectResources] = useState([]);
   const [editorPicks, setEditorPicks] = useState([]);
   const lhTracking = useTrackLearningHub();
-  const { playVideo: playGlobalVideo } = useVideoPlayer();
   const prevSelected = useRef(null);
   const savedScrollY = useRef(0);
 
   const openResource = useCallback((item) => {
     const main = document.querySelector('main');
     savedScrollY.current = main ? main.scrollTop : window.scrollY;
-    const vid = item.youtubeId || item.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1] || item.videoId;
-    if (vid) {
-      playGlobalVideo(item);
-    }
     setSelectedItem(item);
-  }, [playGlobalVideo]);
+  }, []);
 
   useEffect(() => {
     if (selectedItem === null && prevSelected.current !== null) {
@@ -2061,4 +2051,3 @@ export default function LearningHubPage() {
     </div>
   );
 }
-

@@ -20,8 +20,8 @@ const feedbackTicketSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['unread', 'in_progress', 'resolved', 'archived'],
-    default: 'unread',
+    enum: ['new', 'reviewing', 'planned', 'in_progress', 'resolved', 'closed', 'unread', 'archived'],
+    default: 'new',
   },
   deviceInfo: {
     browser: { type: String, default: '' },
