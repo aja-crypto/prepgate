@@ -14,6 +14,7 @@ const INTENT_PATTERNS = {
   greeting: [
     /^(hi|hello|hey|yo|sup|good morning|good afternoon|good evening|howdy|namaste|greetings)\b/i,
     /^(how are you|what's up|what's good|sup)\b/i,
+    /^(thanks|thank you|thx|ok|okay|cool|great|nice|bye)\b[.!? ]*$/i,
   ],
   simpleFactual: [
     /^(what is|what are|what does|what do you mean by|define|who is|who was|when was|where is)\b/i,

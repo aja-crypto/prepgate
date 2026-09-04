@@ -1125,12 +1125,19 @@ router.post('/chat', validateFields([
 
     message = message.trim();
     context = context || {};
+    const classifiedIntent = classifyIntent(message);
+    const lightweightRequest = classifiedIntent === 'greeting' ||
+      (classifiedIntent === 'simpleFactual' && message.length <= 160);
+    if (lightweightRequest) context.lightweightRequest = true;
 
     // Server-side AI context: enrich every AI request with the user's REAL
     // backend data (profile, progress, roadmap, journey, recommendations,
     // analytics, prediction). The frontend-supplied context still provides
     // mode/history/modePrompt, but personalization no longer depends on it.
     try {
+      if (lightweightRequest) {
+        context = { ...context, history: Array.isArray(context.history) ? context.history.slice(-2) : [] };
+      } else {
       const { buildContextForUser } = require('../services/aiContextBuilder');
       const serverCtx = await buildContextForUser(req.user);
       if (serverCtx) {
@@ -1141,6 +1148,7 @@ router.post('/chat', validateFields([
         context.recommendations = context.recommendations || serverCtx.recommendations;
         context.analytics = context.analytics || serverCtx.analytics;
         context.prediction = context.prediction || serverCtx.prediction;
+      }
       }
     } catch (ctxErr) {
       console.error('[AI Coach] context builder failed:', ctxErr.message);
@@ -1159,7 +1167,7 @@ router.post('/chat', validateFields([
       conversationId = null;
     }
 
-    if (userId && mongoOk) {
+    if (userId && mongoOk && !lightweightRequest) {
       if (conversationId) {
         conv = await Conversation.findOne({ _id: conversationId, user: userId, isArchived: false });
         if (!conv) {
@@ -2096,14 +2104,17 @@ try {
 - Top recommendation: ${context.recommendations?.[0]?.title || 'Master core subjects'}
 - Predicted score: ${context.prediction?.expectedScore ?? 'not yet'} (AIR ~${context.prediction?.air ?? 'n/a'})`;
 
-      // ── GATE Intelligence: detect topic, query PYQ DB, classify intent ──
+      // Lightweight messages do not need database/PYQ enrichment before the
+      // provider request. Academic messages retain the full verified path.
       let gateContext = null;
-      let intent = 'ambiguous';
-      try {
-        gateContext = await getGATEContext(message, context);
-        intent = gateContext.intent || 'ambiguous';
-      } catch (e) {
-        console.error('[GATE Intelligence] Context detection failed:', e.message);
+      let intent = classifyIntent(message);
+      if (!context.lightweightRequest) {
+        try {
+          gateContext = await getGATEContext(message, context);
+          intent = gateContext.intent || intent;
+        } catch (e) {
+          console.error('[GATE Intelligence] Context detection failed:', e.message);
+        }
       }
 
       // ── Adaptive auto mode prompt ──
@@ -2128,6 +2139,8 @@ try {
       const gateContextBlock = (gateContext?.hasTopic && academicIntents.includes(intent))
         ? formatGATEContextPrompt(gateContext)
         : '';
+
+      const lightweightPrompt = `You are Nexa AI, a friendly GATE CSE study assistant. Reply naturally and briefly to the user's message. Do not provide a study report, student analytics, or lengthy explanation.`;
 
       const autoPrompt = `You are Nexa AI — an intelligent, trustworthy GATE CSE mentor. You combine deep subject knowledge with verified data from the GateNexa PYQ database.
 
@@ -2184,7 +2197,7 @@ COACHING RULES:
 4. Recommend specific PYQs or topics to practice.
 5. Keep it concise — 4-6 sentences max.`;
 
-      const modeDefaults = { auto: autoPrompt, learning: learningPrompt, coach: coachPrompt };
+      const modeDefaults = { auto: context.lightweightRequest ? lightweightPrompt : autoPrompt, learning: learningPrompt, coach: coachPrompt };
       const defaultSystemPrompt = modeDefaults[activeMode] || autoPrompt;
 
       // For auto mode: backend ALWAYS builds its own prompt (with GATE context + intent-aware style).
@@ -2496,4 +2509,3 @@ router.delete('/conversations/:id', async (req, res, next) => {
 });
 
 module.exports = router;
-
