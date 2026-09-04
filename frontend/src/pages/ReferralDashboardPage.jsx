@@ -35,7 +35,6 @@ export default function ReferralDashboardPage() {
       if (c.status === 'fulfilled' && c.value?.data?.data) {
         const cd = c.value.data.data;
         if (cd.referralCode) { setReferralCode(cd.referralCode); gotCode = true; }
-        if (cd.referralLink) setReferralLink(cd.referralLink);
       }
       if (h.status === 'fulfilled' && h.value?.data?.data) {
         setHistory(h.value.data.data.history || []);
@@ -95,11 +94,11 @@ export default function ReferralDashboardPage() {
     }
   };
 
-  // Fallback: if no referral link from backend, build one
   useEffect(() => {
-    if (!referralLink && referralCode) {
+    if (referralCode) {
       const base = window.location.origin;
-      setReferralLink(`${base}/register?ref=${referralCode}`);
+      const expected = `${base}/register?ref=${referralCode}`;
+      if (referralLink !== expected) setReferralLink(expected);
     }
   }, [referralCode, referralLink]);
 
