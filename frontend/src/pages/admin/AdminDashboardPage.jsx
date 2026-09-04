@@ -132,13 +132,13 @@ export default function AdminDashboardPage() {
               <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" strokeLinecap="round" />
             </svg>
           </div>
-          <h2 className="text-base font-bold text-text mb-2">Database Disconnected</h2>
+          <h2 className="text-base font-bold text-text mb-2">API_UNAVAILABLE</h2>
           <p className="text-sm text-text3 max-w-md mx-auto leading-relaxed mb-4">
-            Connect MongoDB to view live analytics including user growth, mock test performance, AI usage, and PDF metrics.
+            The admin statistics API could not be reached. Database state is unavailable until the request succeeds.
           </p>
           <div className="flex items-center justify-center gap-2 mb-4">
             <span className="w-2 h-2 rounded-full bg-red-500" />
-            <span className="text-[11px] text-text3">Status: Database Not Connected</span>
+            <span className="text-[11px] text-text3">Status: API unavailable</span>
           </div>
           <button onClick={fetchStats} className="text-xs px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all font-semibold">
             Retry Connection
@@ -148,7 +148,7 @@ export default function AdminDashboardPage() {
     );
   }
 
-  const dbConnected = stats?.system?.databaseConnected;
+  const dbConnected = stats?.system?.databaseStatus === 'CONNECTED' || stats?.system?.databaseConnected === true;
 
   if (!dbConnected) {
     // Show available local data even without MongoDB

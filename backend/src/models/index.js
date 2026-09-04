@@ -71,7 +71,7 @@ const topicSchema = new mongoose.Schema({
 topicSchema.index({ subject: 1, order: 1 });
 topicSchema.index({ name: 1, subject: 1 });
 
-const Topic = mongoose.model('Topic', topicSchema);
+const Topic = mongoose.models.Topic || mongoose.model('Topic', topicSchema);
 
 // ─────────────────────────────────────────────────────────────
 // src/models/Progress.js – User progress per topic
@@ -137,6 +137,7 @@ const progressSchema = new mongoose.Schema({
 progressSchema.index({ user: 1, topic: 1 }, { unique: true });
 progressSchema.index({ user: 1 });
 progressSchema.index({ user: 1, subject: 1 });
+const Progress = mongoose.models.Progress || mongoose.model('Progress', progressSchema);
 
 // ─────────────────────────────────────────────────────────────
 // src/models/StudyLog.js – Daily study hours

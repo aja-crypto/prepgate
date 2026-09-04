@@ -80,6 +80,19 @@ router.get('/:id', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// ─── Get a single ticket for notification deep links ──────────
+router.get('/:id', async (req, res, next) => {
+  try {
+    if (!isMongoConnected()) return res.status(503).json({ success: false, message: 'Database unavailable' });
+    const FeedbackTicket = require('../models/FeedbackTicket');
+    const FeedbackReply = require('../models/FeedbackReply');
+    const ticket = await FeedbackTicket.findById(req.params.id).lean();
+    if (!ticket) return res.status(404).json({ success: false, message: 'Not found' });
+    const replies = await FeedbackReply.find({ ticket: ticket._id }).sort('createdAt').lean();
+    return res.json({ success: true, data: { ...ticket, replies } });
+  } catch (e) { next(e); }
+});
+
 // ─── Update Ticket Status/Priority ───────────────────────────
 router.put('/:id', async (req, res, next) => {
   try {
@@ -157,7 +170,7 @@ router.post('/:id/reply', async (req, res, next) => {
           userId: ticket.user,
           type: 'feedback_reply',
           title: 'Admin replied to your feedback',
-          message: `An admin replied to "${ticket.title}".`,
+          message: `An admin replied to "${ticket.title}": "${message}"`,
           ticketId: ticket._id,
           replyId: reply._id,
         });

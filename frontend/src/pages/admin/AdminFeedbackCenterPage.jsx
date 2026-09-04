@@ -359,9 +359,15 @@ export default function AdminFeedbackCenterPage() {
 
   useEffect(() => {
     const ticketId = searchParams.get('ticketId');
-    if (!ticketId || !tickets.length) return;
+    if (!ticketId) return;
     const ticket = tickets.find(item => item._id === ticketId);
-    if (ticket) setSelectedTicket(ticket);
+    if (ticket) {
+      setSelectedTicket(ticket);
+      return;
+    }
+    adminFeedbackService.getOne(ticketId)
+      .then(res => setSelectedTicket(res.data?.data || null))
+      .catch(() => {});
   }, [searchParams, tickets]);
 
   useEffect(() => {

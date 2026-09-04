@@ -76,15 +76,6 @@ router.post('/ticket/:id/reply', protect, async (req, res, next) => {
         message,
         isAdminReply: false,
       });
-      await createFeedbackNotification({
-        userId: ticket.user,
-        type: 'feedback_reply',
-        title: 'New reply to your feedback',
-        message: `${req.user.name || 'You'} added a reply to "${ticket.title}".`,
-        ticketId: ticket._id,
-        replyId: reply._id,
-      });
-
       ticket.replyCount = (ticket.replyCount || 0) + 1;
       ticket.lastReplyAt = new Date();
       ticket.lastReplyBy = req.user.name || 'User';

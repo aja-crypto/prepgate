@@ -102,8 +102,8 @@ router.post('/', protect, async (req, res, next) => {
       await createFeedbackNotification({
         userId: userId || req.user._id,
         type: 'feedback_received',
-        title: 'Feedback received',
-        message: 'Your feedback was submitted successfully.',
+        title: 'Thank you for your feedback',
+        message: `Your ${req.body.category || 'general'} feedback was submitted successfully and is ready for review.`,
         ticketId: ticket._id,
       });
       const Admin = require('../models/Admin');
@@ -111,8 +111,8 @@ router.post('/', protect, async (req, res, next) => {
       await Promise.all(admins.map(admin => createFeedbackNotification({
         userId: admin._id,
         type: 'feedback_received',
-        title: 'New feedback received',
-        message: `A new feedback ticket was submitted by ${req.user?.name || 'a user'}.`,
+        title: `${req.body.category || 'General'} feedback — ${ratings?.overall || 0}/5`,
+        message: `A user reported: "${description || 'No written message provided.'}"`,
         ticketId: ticket._id,
         actionPath: '/admin/feedback',
       })));
