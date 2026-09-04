@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { feedbackService, getApiErrorMessage } from '../services/api';
 import toast from 'react-hot-toast';
+import { useSEO } from '../hooks/useSEO';
 
 const RATING_META = [
   { stars: 1, emoji: '😭', label: 'Very Poor', color: '#EF4444', glow: 'rgba(239,68,68,0.3)', msg: "We're sorry — tell us what went wrong." },
@@ -38,6 +39,7 @@ function saveDraft(d) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d
 function clearDraft() { try { localStorage.removeItem(STORAGE_KEY); } catch {} }
 
 export default function FeedbackPage() {
+  useSEO({ title: 'Feedback', description: 'Share feedback about GateNexa — report bugs, suggest features and help improve the platform for GATE aspirants.' });
   const [step, setStep] = useState(() => loadDraft().step || 'welcome');
   const [rating, setRating] = useState(() => loadDraft().rating || 0);
   const [hoverRating, setHoverRating] = useState(0);
