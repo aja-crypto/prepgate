@@ -14,7 +14,7 @@ const FEATURES = [
     cta: 'Try AI Assistant',
     color: '#A78BFA',
     rgb: '167,139,250',
-    image: '/showcase/ai-assistant.png',
+    image: '/showcase/ai-assistant.webp',
   },
   {
     id: 'predictor',
@@ -27,7 +27,7 @@ const FEATURES = [
     cta: 'Try Predictor',
     color: '#818CF8',
     rgb: '129,140,248',
-    image: '/showcase/predictor.png',
+    image: '/showcase/predictor.webp',
   },
   {
     id: 'learning-hub',
@@ -40,7 +40,7 @@ const FEATURES = [
     cta: 'Explore Hub',
     color: '#22D3EE',
     rgb: '34,211,238',
-    image: '/showcase/learning-hub.png',
+    image: '/showcase/learning-hub.webp',
   },
   {
     id: 'ai-mentor',
@@ -53,7 +53,7 @@ const FEATURES = [
     cta: 'Meet Your Mentor',
     color: '#C084FC',
     rgb: '192,132,252',
-    image: '/showcase/ai-mentor.png',
+    image: '/showcase/ai-mentor.webp',
   },
   {
     id: 'gate-vault',
@@ -66,7 +66,7 @@ const FEATURES = [
     cta: 'Enter GateVault',
     color: '#F472B6',
     rgb: '244,114,182',
-    image: '/showcase/gate-vault.png',
+    image: '/showcase/gate-vault.webp',
   },
 ];
 
@@ -281,17 +281,7 @@ export default function ProductShowcase() {
   }, []);
 
   useEffect(() => {
-    const first = FEATURES[0];
-    if (first) {
-      const im = new Image();
-      im.onload = im.onerror = () => { if (mountedRef.current) setReady(true); };
-      im.src = first.image;
-      setTimeout(() => { if (mountedRef.current) setReady(true); }, 1200);
-    } else if (mountedRef.current) setReady(true);
-    FEATURES.slice(1).forEach((f) => {
-      if ('requestIdleCallback' in window) requestIdleCallback(() => { const im2 = new Image(); im2.src = f.image; }, { timeout: 3000 });
-      else setTimeout(() => { const im2 = new Image(); im2.src = f.image; }, 2000);
-    });
+    if (mountedRef.current) setReady(true);
   }, []);
 
   const cacheShotEls = useCallback(() => {
@@ -1001,11 +991,15 @@ function DeviceFrame({ color, rgb, image, title, compact = false, fillHeight = f
         >
           <img
             src={image}
+            srcSet={`${image.replace('.webp','-480.webp')} 480w, ${image.replace('.webp','-960.webp')} 960w`}
+            sizes="(max-width: 768px) 100vw, 465px"
+            width="465"
+            height="310"
             alt={title || ''}
             decoding="async"
             draggable={false}
-            loading={image === FEATURES[0].image ? "eager" : "lazy"}
-            fetchPriority={image === FEATURES[0].image ? "high" : "low"}
+            loading="lazy"
+            fetchPriority="low"
             onError={(e) => console.error('[Showcase] image failed:', e.currentTarget.src)}
             className="block h-full w-full object-cover object-top select-none"
             style={{

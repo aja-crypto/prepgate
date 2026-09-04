@@ -19,7 +19,7 @@ import BrandIntroModal from './components/common/BrandIntroModal';
 import AiIntroModal, { shouldShowAiIntro } from './components/common/AiIntroModal';
 import { SkeletonDashboard, SkeletonSubjectGrid, SkeletonTable } from './components/ui/SkeletonLoader';
 
-const LandingPage = lazy(() => import('./pages/LandingPage'));
+import LandingPage from './pages/LandingPage';
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
@@ -234,26 +234,44 @@ const HomePageWrapper = () => {
   return <LandingPage />;
 };
 
-// Route prefetching - preload ONLY the top 5 most critical routes on idle for instant navigation
+// Route prefetching - only for authenticated users, deferred to idle
 function RoutePrefetcher() {
+  const { user } = useAuthData();
   useEffect(() => {
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(() => {
-        import('./pages/DashboardPage');
-        import('./pages/SubjectsPage');
-        import('./pages/AIMentorPage');
-        import('./pages/OpportunityPredictorPage');
-        import('./pages/LearningHubPage');
-      }, { timeout: 3000 });
-    }
-  }, []);
+    if (!user) return;
+    const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 2000));
+    const id = idle(() => {
+      import('./pages/DashboardPage');
+      import('./pages/SubjectsPage');
+      import('./pages/AIMentorPage');
+      import('./pages/OpportunityPredictorPage');
+      import('./pages/LearningHubPage');
+    }, { timeout: 4000 });
+    return () => {
+      if (window.cancelIdleCallback) window.cancelIdleCallback(id);
+      else clearTimeout(id);
+    };
+  }, [user]);
   return null;
 }
 
 export default function App() {
-  const [initialLoad, setInitialLoad] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(() => {
+    try {
+      const isHome = typeof window !== 'undefined' && window.location.pathname === '/';
+      const hasAuth = typeof window !== 'undefined' && (localStorage.getItem('token') || localStorage.getItem('gatenexa_auth') || localStorage.getItem('gatenexa_token'));
+      if (isHome && !hasAuth) return false;
+    } catch {}
+    return true;
+  });
   const location = useLocation();
   const { openDiagnostics } = useDiagnostics();
+
+  useEffect(() => {
+    if (!initialLoad) {
+      window.dispatchEvent(new Event('gatenexa:ready'));
+    }
+  }, [initialLoad]);
 
   useEffect(() => {
     window.__openDiagnostics = openDiagnostics;
