@@ -72,7 +72,7 @@
       "destination": "https://gatenexa-tycc.onrender.com/resources/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!sitemap\\.xml|robots\\.txt).*)",
       "destination": "/index.html"
     }
   ]
