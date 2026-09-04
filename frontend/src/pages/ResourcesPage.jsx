@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SUBJECT_RESOURCES } from '../data/subjectResources';
+import { useSEO } from '../hooks/useSEO';
 
 const TYPE_META = {
   youtube: { icon: '\u25B6\uFE0F', label: 'YouTube', color: 'text-red-400' },
@@ -38,6 +39,7 @@ function ResourceCard({ resource, meta }) {
 }
 
 export default function ResourcesPage() {
+  useSEO({ title: 'Study Resources', description: 'Browse curated study resources — YouTube playlists, NPTEL courses, textbooks and practice links for GATE preparation.' });
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');

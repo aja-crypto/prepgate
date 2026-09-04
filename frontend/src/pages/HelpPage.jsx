@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSEO } from '../hooks/useSEO';
 
 const FAQ = [
   { q: 'How do I track my GATE preparation?', a: 'Go to Dashboard → Topics to mark syllabus topics as completed. Your progress updates automatically.' },
@@ -11,6 +11,7 @@ const FAQ = [
 ];
 
 export default function HelpPage() {
+  useSEO({ title: 'Help & Support', description: 'Get help with GateNexa — FAQs, guides for tracking preparation, PYQs, mock tests and contacting support.' });
   return (
     <div className="min-h-screen" style={{ background: '#070B1A' }}>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-8">

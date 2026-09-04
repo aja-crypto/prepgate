@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, useInView, AnimatePresence, useSpring, useTransform, useMotionValue, useReducedMotion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useSEO } from '../hooks/useSEO';
 import { Brain, Target, BarChart3, Calendar, BookOpen, CheckCircle2, ArrowRight, ArrowDown, ChevronRight, Award, Zap, Shield, TrendingUp, FileText, MessageCircle, PenTool, Search, Clock, Star, Trophy, Users, BookMarked, Lightbulb, Layers, PieChart, Rocket, ChevronDown, ChevronUp, Eye, MousePointerClick, Sparkles, Activity, Smartphone, Monitor, Gauge, Quote, Play, MessageSquare } from 'lucide-react';
 
 const fadeUp = { initial: { opacity: 0, y: 24 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: '-80px' }, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } };
@@ -437,6 +438,7 @@ const FEATURE_PILLS = [
 ];
 
 export default function PlatformPage() {
+  useSEO({ title: 'Platform', description: 'Explore GateNexa platform — dashboard, AI mentor, study planner, PYQs, mock tests, analytics, revision and college prediction.' });
   const reducedMotion = useReducedMotion();
   const [activeSidebarItem, setActiveSidebarItem] = useState('Dashboard');
   const [activeFeature, setActiveFeature] = useState(0);

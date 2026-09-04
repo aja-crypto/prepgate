@@ -22,6 +22,17 @@ function setMeta(name, content, attr = 'name') {
   el.setAttribute('content', content);
 }
 
+function setCanonical(href) {
+  if (!href) return;
+  let el = document.head.querySelector('link[rel="canonical"]');
+  if (!el) {
+    el = document.createElement('link');
+    el.setAttribute('rel', 'canonical');
+    document.head.appendChild(el);
+  }
+  el.setAttribute('href', href);
+}
+
 export function useSEO({
   title,
   description,
@@ -49,10 +60,12 @@ export function useSEO({
     setMeta('twitter:description', finalDesc);
     setMeta('twitter:image', finalImage);
     setMeta('robots', noindex ? 'noindex, nofollow' : 'index, follow');
+    setCanonical(finalUrl);
     
     return () => {
-      // Reset to default on unmount
       document.title = DEFAULTS.title;
+      setMeta('description', DEFAULTS.description);
+      setCanonical(DEFAULTS.url);
     };
   }, [title, description, image, url, type, noindex]);
 }

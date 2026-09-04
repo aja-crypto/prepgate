@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { BRAND } from '../design/tokens';
 import Icon from '../components/ui/Icon';
+import { useSEO } from '../hooks/useSEO';
 
 function useIntersection(rootMargin = '-80px', threshold = 0.15) {
   const [entries, setEntries] = useState({});
@@ -44,6 +45,7 @@ function ScrollReveal({ children, section, observe, entries, className = '' }) {
 }
 
 export default function AboutPage() {
+  useSEO({ title: 'About', description: 'Learn about GateNexa — mission, founder and AI-powered tools for GATE 2027 preparation and M.Tech admission guidance.' });
   const [readingProgress, setReadingProgress] = useState(0);
   const { entries, observe } = useIntersection();
 

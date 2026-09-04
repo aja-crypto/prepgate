@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useSEO } from '../hooks/useSEO';
 
 const PAGES = {
   'privacy-policy': {
@@ -68,6 +68,10 @@ export default function LegalPage() {
   const { pageId } = useParams();
   const page = PAGES[pageId];
   const currentIdx = LEGAL_LINKS.findIndex(l => l.to === `/legal/${pageId}`);
+  useSEO({
+    title: page ? page.title : 'Legal',
+    description: page ? `${page.title} for GateNexa — ${page.sections[0]?.c.slice(0, 130)}` : 'GateNexa legal information.',
+  });
   if (!page) return <div className="min-h-screen flex items-center justify-center text-slate-400">Page not found.</div>;
 
   return (
