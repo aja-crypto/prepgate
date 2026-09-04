@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
+import { ArrowLeft, Eye, Clock3, Bookmark, Share2, CheckCircle2, Info, FileText, Link2, Bot, CalendarDays } from 'lucide-react';
 import { useAuthData } from '../context/AuthContext';
 import LazyYouTubePlayer from '../components/learning/LazyYouTubePlayer';
 import { TABS, ROADMAP_FILTERS, SUBJECT_FILTERS, STORY_FILTERS, MOTIVATION_FILTERS, RESOURCE_FILTERS, VIDEO_FILTERS } from '../data/filters';
@@ -10,6 +11,21 @@ import { useTrackLearningHub } from '../hooks/useAiMentorTracking';
 import { useYoutubeThumbnail } from '../hooks/useYoutubeThumbnail';
 import { getContinueWatching, getCompletedCount, getInProgressCount, getLessonStatus, getProgress, WATCH_EVENT, markCompleted } from '../lib/watchProgress';
 import { SUBJECT_RESOURCES } from '../data/subjectResources';
+
+function timeAgo(dateStr) {
+  if (!dateStr) return null;
+  const then = new Date(dateStr).getTime();
+  if (Number.isNaN(then)) return null;
+  const diffMs = Date.now() - then;
+  const day = 86400000;
+  if (diffMs < day) return 'Today';
+  const days = Math.floor(diffMs / day);
+  if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+  if (days < 30) { const w = Math.floor(days / 7); return `${w} week${w > 1 ? 's' : ''} ago`; }
+  if (days < 365) { const m = Math.floor(days / 30); return `${m} month${m > 1 ? 's' : ''} ago`; }
+  const y = Math.floor(days / 365);
+  return `${y} year${y > 1 ? 's' : ''} ago`;
+}
 
 function SubjectResourcesTable({ subjectResources = [] }) {
   const [selectedSubject, setSelectedSubject] = useState(null);
@@ -774,7 +790,7 @@ function SearchBar({ onSearch, value, onChange }) {  const inputRef = useRef(nul
   );
 }
 
-function ResourceModal({ selected, setSelected, canAccessPremium, videos = [], subjectResources = [] }) {
+function ResourceDetailView({ selected, setSelected, canAccessPremium, videos = [], subjectResources = [] }) {
   const [activePanel, setActivePanel] = useState('overview');
   const [query, setQuery] = useState('');
   const [isAsking, setIsAsking] = useState(false);
@@ -782,7 +798,7 @@ function ResourceModal({ selected, setSelected, canAccessPremium, videos = [], s
   const [copied, setCopied] = useState(false);
   const [marked, setMarked] = useState(false);
   const messagesEndRef = useRef(null);
-  const panelRef = useRef(null);
+  const containerRef = useRef(null);
   const videoId = selected?.youtubeId || selected?.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1];
   const isVideoResource = !!videoId;
 
@@ -813,6 +829,9 @@ function ResourceModal({ selected, setSelected, canAccessPremium, videos = [], s
     if (!selected?.subject) return [];
     return (videos || []).filter(v => v.subject && v.subject.toLowerCase() === selected.subject.toLowerCase()).slice(0, 4);
   }, [selected, videos]);
+
+  const views = selected?.viewCount ?? selected?.views;
+  const posted = timeAgo(selected?.createdAt);
 
   const handleShare = useCallback(() => {
     navigator.clipboard?.writeText(window.location.origin + '/learning-hub');
@@ -858,285 +877,402 @@ function ResourceModal({ selected, setSelected, canAccessPremium, videos = [], s
     }
   }, [handleAsk]);
 
+  // Bring the detail view into the viewport the moment it opens — never jump to
+  // document top. Skip if the container is already visible (e.g. opened from a
+  // click near the top of the page).
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const alreadyVisible = rect.top >= 0 && rect.top < window.innerHeight * 0.4;
+    if (!alreadyVisible) {
+      requestAnimationFrame(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  }, [selected?._id, selected?.id]);
+
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') setSelected(null); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [setSelected]);
 
-  // Focus the modal panel on open and trap Tab focus inside it.
-  // Exclude iframe from focusable elements to prevent mobile browsers from
-  // forcibly scrolling focused iframes into view (jumps to top/off-screen).
-  useEffect(() => {
-    if (!selected) return;
-    const panel = panelRef.current;
-    if (panel) {
-      const focusable = panel.querySelectorAll('button:not([disabled]), [href], input, textarea, select, [tabindex]:not([tabindex="-1"])');
-      if (focusable.length) focusable[0].focus({ preventScroll: true });
-    }
-    const onTab = (e) => {
-      if (e.key !== 'Tab' || !panel) return;
-      const focusable = Array.from(panel.querySelectorAll('button:not([disabled]), [href], input, textarea, select, [tabindex]:not([tabindex="-1"])'))
-        .filter(el => !el.disabled && el.offsetParent !== null);
-      if (focusable.length === 0) { e.preventDefault(); return; }
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus({ preventScroll: true }); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus({ preventScroll: true }); }
-    };
-    document.addEventListener('keydown', onTab);
-    return () => document.removeEventListener('keydown', onTab);
-  }, [selected]);
-
   if (!selected) return null;
 
   const panels = [
-    { id: 'overview', label: 'Overview', icon: 'ℹ️' },
-    { id: 'notes', label: 'Notes', icon: '📝' },
-    { id: 'resources', label: 'Resources', icon: '📄' },
-    { id: 'related', label: 'Related', icon: '🔗' },
-    { id: 'ai', label: 'AI Mentor', icon: '🤖' },
+    { id: 'overview', label: 'Overview', icon: Info },
+    { id: 'notes', label: 'Notes', icon: FileText },
+    { id: 'resources', label: 'Resources', icon: FileText },
+    { id: 'related', label: 'Related', icon: Link2 },
+    { id: 'ai', label: 'AI Mentor', icon: Bot },
   ];
+
+  const typeBadge = selected.type === 'roadmap' ? 'Roadmap'
+    : selected.type === 'success_story' ? 'Success Story'
+    : selected.type === 'academy' ? 'Academy'
+    : isVideoResource ? 'Video' : 'Resource';
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={() => setSelected(null)}
-      role="dialog"
-      aria-modal="true"
-      aria-label={selected.title || 'Resource'}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6"
-      style={{ background: 'rgba(5,8,18,0.72)', backdropFilter: 'blur(16px)' }}
+      key="resource-detail"
+      ref={containerRef}
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+      className="scroll-mt-24"
     >
-      <motion.div
-        ref={panelRef}
-        tabIndex={-1}
-        initial={{ scale: 0.92, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.92, opacity: 0, y: 20 }}
-        transition={{ type: 'spring', damping: 25 }}
-        onClick={e => e.stopPropagation()}
-        className="w-full max-w-4xl rounded-3xl overflow-hidden max-h-[90vh] flex flex-col"
-        style={{
-          background: 'linear-gradient(180deg, rgba(23,29,48,0.95), #0F1119)',
-          border: '1px solid rgba(139,92,246,0.2)',
-          boxShadow: '0 30px 80px rgba(0,0,0,0.6), 0 0 80px rgba(139,92,246,0.12), inset 0 1px 0 rgba(255,255,255,0.06)'
-        }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-sm">
-              {selected.type === 'roadmap' ? '🗺️' : selected.type === 'success_story' ? '🚀' : selected.type === 'academy' ? '🔥' : '📄'}
-            </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">
-                {selected.type?.replace('_', ' ') || 'Resource'}
-              </span>
-              <h2 className="text-sm font-bold text-white break-word fluid-sm">{selected.title}</h2>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => { const ids = JSON.parse(localStorage.getItem('lh_bookmarks') || '[]'); const id = selected?._id || selected?.id; const idx = ids.indexOf(id); if (idx === -1) ids.push(id); else ids.splice(idx, 1); localStorage.setItem('lh_bookmarks', JSON.stringify(ids)); }} className="w-8 h-8 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all text-sm touch-target-sm button-n-doubletap" aria-label="Bookmark">🔖</button>
-            <button onClick={handleShare} className="w-8 h-8 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all text-sm touch-target-sm button-n-doubletap" aria-label="Share">{copied ? '✅' : '📤'}</button>
-            <button onClick={() => setSelected(null)} className="w-8 h-8 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all text-lg touch-target-sm button-n-doubletap" aria-label="Close">✕</button>
-          </div>
+      {/* Back bar */}
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <button
+          onClick={() => setSelected(null)}
+          className="flex items-center gap-1.5 text-xs font-semibold text-text3/80 hover:text-white transition-colors py-2 pr-2 -ml-1 touch-target button-n-doubletap"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Learning Hub
+        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => {
+              const ids = JSON.parse(localStorage.getItem('lh_bookmarks') || '[]');
+              const id = selected?._id || selected?.id;
+              const idx = ids.indexOf(id);
+              if (idx === -1) ids.push(id); else ids.splice(idx, 1);
+              localStorage.setItem('lh_bookmarks', JSON.stringify(ids));
+            }}
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all touch-target-sm button-n-doubletap"
+            aria-label="Bookmark"
+          >
+            <Bookmark className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleShare}
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all touch-target-sm button-n-doubletap"
+            aria-label="Share"
+          >
+            {copied ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <Share2 className="w-4 h-4" />}
+          </button>
         </div>
+      </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto scroll-container">
-          {videoId && (
-            <div className="aspect-video bg-black anim-gpu">
+      {/* Media row: video (left) + title/meta/actions (right, desktop only) */}
+      <div className="lg:grid lg:grid-cols-[1fr_300px] lg:gap-6 lg:items-start">
+        <div className="min-w-0">
+          {videoId ? (
+            <div className="rounded-2xl lg:rounded-[20px] overflow-hidden bg-black anim-gpu"
+              style={{ boxShadow: '0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(139,92,246,0.28), 0 0 46px rgba(139,92,246,0.16)' }}>
               <LazyYouTubePlayer videoId={videoId} title={selected.title} autoPlay />
             </div>
+          ) : (
+            <div className="aspect-video rounded-2xl overflow-hidden flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.14), rgba(34,211,238,0.06))', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="text-center px-4">
+                <FileText className="w-8 h-8 mx-auto mb-2 text-purple-300/70" />
+                <p className="text-sm font-medium text-text2/80">{selected.title}</p>
+              </div>
+            </div>
           )}
-
-          {/* Panel tabs */}
-          <div className="flex flex-nowrap gap-1 px-6 py-3 border-b border-white/[0.06] overflow-x-auto scroll-container-x gpu-layer"
-            style={{ background: 'rgba(255,255,255,0.02)' }}>
-            {panels.map(panel => (
-              <motion.button
-                key={panel.id}
-                onClick={() => setActivePanel(panel.id)}
-                className="relative flex items-center gap-1.5 shrink-0 text-[11px] px-3 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap"
-                style={{ color: activePanel === panel.id ? '#C4B5FD' : 'rgba(255,255,255,0.4)' }}
-              >
-                {activePanel === panel.id && (
-                  <motion.div
-                    layoutId="modalPanel"
-                    className="absolute inset-0 rounded-lg"
-                    style={{ background: 'rgba(139,92,246,0.12)' }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10">{panel.icon} {panel.label}</span>
-              </motion.button>
-            ))}
-          </div>
-
-          <div className="p-6">
-            {activePanel === 'overview' && (
-              <div className="space-y-4">
-                <p className="text-sm text-text2/80 leading-relaxed break-word">{selected.description || 'No description available.'}</p>
-                <div className="flex flex-wrap gap-2">
-                  {selected.difficulty && <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400">{selected.difficulty}</span>}
-                  {selected.category && <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400">{selected.category}</span>}
-                  {(selected.tags || []).map(tag => (
-                    <span key={tag} className="text-[10px] px-2 py-1 rounded-full bg-white/[0.04] text-text3/60">#{tag}</span>
-                  ))}
-                </div>
-                <button
-                  onClick={handleMarkCompleted}
-                  disabled={!isVideoResource || completed}
-                  className={`w-full py-3 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-2 button-n-doubletap touch-target ${completed ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30'}`}
-                >
-                  {completed ? '✅ Completed' : isVideoResource ? '✅ Mark as Completed' : 'Not a video lesson'}
-                </button>
-                {completed && <p className="text-[11px] text-green-400/70 text-center">Progress saved — it will sync across your devices.</p>}
-              </div>
-            )}
-            {activePanel === 'notes' && (
-              <div className="space-y-3">
-                <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3">Lecture Notes</h4>
-                {subjectVideos.length === 0 ? (
-                  <div className="text-sm text-text3/60 text-center py-8">No notes available for this resource yet.</div>
-                ) : (
-                  <div className="space-y-2">
-                    {subjectVideos.map(v => (
-                      <button key={v._id || v.id} onClick={() => { setSelected(null); }} disabled
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left opacity-80" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <span className="text-base">📝</span>
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[12px] font-semibold text-white truncate">{v.title}</div>
-                          <div className="text-[10px] text-text3/60">{v.channel}</div>
-                        </div>
-                        <span className="text-[10px] text-text3/40">In video player</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3 mt-2">Short Notes & Guides</h4>
-                <div className="rounded-xl p-3 text-[11px] text-text3/70 leading-relaxed" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  📖 Open a lesson and use <span className="text-purple-300">Resources → Notes</span> inside the video player for concise, topic-wise notes for this subject.
-                </div>
-              </div>
-            )}
-            {activePanel === 'resources' && (
-              <div className="space-y-2">
-                <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3 mb-1">Notes · PYQs · Practice</h4>
-                {subjectRes ? (
-                  <a href={subjectRes.playlistUrl} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all hover:bg-purple-500/[0.06]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <span className="text-xl shrink-0">📺</span>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[12px] font-bold text-white">{subjectRes.subject} — {subjectRes.faculty}</div>
-                      <div className="text-[10px] text-text3/60">Complete lecture playlist for this subject</div>
-                    </div>
-                    <span className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0">Open →</span>
-                  </a>
-                ) : (
-                  <div className="rounded-xl p-3 text-[11px] text-text3/70" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    No linked resources for “{selected.subject || 'this resource'}” yet.
-                  </div>
-                )}
-                {subjectVideos.length > 0 && (
-                  <>
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3 pt-2 mb-1">Video lessons in this subject</h4>
-                    {subjectVideos.map(v => (
-                      <button key={v._id || v.id} onClick={() => { setSelected(v); }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-purple-500/[0.06]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <span className="text-base shrink-0">🎬</span>
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[12px] font-semibold text-white truncate">{v.title}</div>
-                          <div className="text-[10px] text-text3/60">{v.channel}</div>
-                        </div>
-                        <span className="text-[10px] text-primary shrink-0">Watch →</span>
-                      </button>
-                    ))}
-                  </>
-                )}
-              </div>
-            )}
-            {activePanel === 'related' && (
-              <div className="space-y-2">
-                <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3 mb-1">Continue Learning</h4>
-                {related.length === 0 ? (
-                  <div className="text-sm text-text3/60 text-center py-8">No related content found yet.</div>
-                ) : (
-                  related.map(v => (
-                    <button key={v._id || v.id} onClick={() => { setSelected(v); }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-purple-500/[0.06]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <span className="w-8 h-8 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0">
-                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 text-purple-300"><path d="M8 5v14l11-7z" /></svg>
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[12px] font-semibold text-white truncate">{v.title}</div>
-                        <div className="text-[10px] text-text3/60 truncate">{[v.subject, v.channel].filter(Boolean).join(' · ')}</div>
-                      </div>
-                      {v.duration && <span className="text-[10px] text-text3/50 shrink-0">{v.duration}</span>}
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-            {activePanel === 'ai' && (
-              <div className="rounded-2xl flex flex-col" style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.1)' }}>
-                <div className="flex-1 overflow-y-auto max-h-[240px] p-4 space-y-3">
-                  {messages.length === 0 && (
-                    <div className="text-center py-8">
-                      <div className="text-3xl mb-2">🤖</div>
-                      <p className="text-xs text-text3/70">Ask a question about this topic</p>
-                    </div>
-                  )}
-                  {messages.map((msg, i) => (
-                    <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed break-word ${msg.role === 'user' ? 'bg-purple-500/20 text-purple-200' : 'bg-white/[0.04] text-text2/90'}`}>
-                        {msg.text}
-                      </div>
-                    </div>
-                  ))}
-                  {isAsking && (
-                    <div className="flex justify-start">
-                      <div className="rounded-2xl px-4 py-2.5 text-xs bg-white/[0.04] text-text3/60 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '300ms' }} />
-                      </div>
-                    </div>
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-                <div className="p-3 border-t border-white/[0.06]">
-                  <div className="flex gap-2">
-                    <input
-                      value={query}
-                      onChange={e => setQuery(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Ask anything..."
-                      className="flex-1 bg-bg-2 border border-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/50 placeholder:text-text3/40"
-                    />
-                    <button onClick={handleAsk} disabled={isAsking}
-                      className="px-4 py-2.5 rounded-xl bg-purple-500 text-white text-xs font-bold hover:bg-purple-600 disabled:opacity-50 transition-all button-n-doubletap">
-                      Ask
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
-        {selected.isPremium && !canAccessPremium && (
-          <div className="px-6 py-3 border-t border-yellow-500/20" style={{ background: 'rgba(245,158,11,0.06)' }}>
-            <p className="text-xs text-yellow-400 text-center">⭐ Premium content — refer 2 friends to unlock</p>
+        {/* Desktop meta sidebar */}
+        <aside className="hidden lg:flex lg:flex-col gap-4 mt-0">
+          <div>
+            <h1 className="text-xl font-bold text-white leading-[1.25] line-clamp-3 break-word">{selected.title}</h1>
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/20">{typeBadge}</span>
+              {selected.category && <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-300">{selected.category}</span>}
+              {selected.duration && (
+                <span className="flex items-center gap-1 text-[10px] font-semibold text-text3/70">
+                  <Clock3 className="w-3 h-3" /> {selected.duration}
+                </span>
+              )}
+              {(views || views === 0) && views > 0 && (
+                <span className="flex items-center gap-1 text-[10px] font-semibold text-text3/70">
+                  <Eye className="w-3 h-3" /> {views >= 1000 ? `${(views / 1000).toFixed(1)}K` : views}
+                </span>
+              )}
+              {posted && (
+                <span className="flex items-center gap-1 text-[10px] font-semibold text-text3/70">
+                  <CalendarDays className="w-3 h-3" /> {posted}
+                </span>
+              )}
+            </div>
+            {selected.channel && <p className="text-xs text-text3/60 mt-2">{selected.channel}</p>}
+          </div>
+
+          <button
+            onClick={handleMarkCompleted}
+            disabled={!isVideoResource || completed}
+            className={`w-full py-3 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-2 button-n-doubletap touch-target ${completed ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30'}`}
+          >
+            {completed ? <><CheckCircle2 className="w-4 h-4" /> Completed</> : isVideoResource ? 'Mark as Completed' : 'Not a video lesson'}
+          </button>
+
+          {subjectRes && (
+            <a href={subjectRes.playlistUrl} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all hover:bg-purple-500/[0.06]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <span className="text-xl shrink-0">📺</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[12px] font-bold text-white truncate">{subjectRes.subject} — {subjectRes.faculty}</div>
+                <div className="text-[10px] text-text3/60">Full lecture playlist</div>
+              </div>
+            </a>
+          )}
+        </aside>
+      </div>
+
+      {/* Mobile title + meta — directly under the video */}
+      <div className="lg:hidden mt-3.5">
+        <h1 className="text-[19px] leading-[1.25] font-bold text-white line-clamp-3 break-word">{selected.title}</h1>
+        <div className="flex flex-nowrap items-center gap-1.5 mt-2.5 overflow-x-auto scrollbar-none pb-0.5">
+          <span className="shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/20">{typeBadge}</span>
+          {selected.category && <span className="shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-300">{selected.category}</span>}
+          {selected.duration && (
+            <span className="shrink-0 flex items-center gap-1 text-[10px] font-semibold text-text3/70 px-1.5">
+              <Clock3 className="w-3 h-3" /> {selected.duration}
+            </span>
+          )}
+          {views > 0 && (
+            <span className="shrink-0 flex items-center gap-1 text-[10px] font-semibold text-text3/70 px-1.5">
+              <Eye className="w-3 h-3" /> {views >= 1000 ? `${(views / 1000).toFixed(1)}K` : views}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Tabs — nowrap, shrink-0, horizontally scrollable, never overlap */}
+      <div className="flex flex-nowrap gap-1 mt-5 p-1 rounded-2xl overflow-x-auto scrollbar-none"
+        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        {panels.map(panel => {
+          const PanelIcon = panel.icon;
+          return (
+            <motion.button
+              key={panel.id}
+              onClick={() => setActivePanel(panel.id)}
+              className="relative flex items-center gap-1.5 shrink-0 whitespace-nowrap text-[11px] sm:text-xs px-3.5 py-2 rounded-xl font-semibold transition-all button-n-doubletap touch-target"
+              style={{ color: activePanel === panel.id ? '#C4B5FD' : 'rgba(255,255,255,0.45)' }}
+            >
+              {activePanel === panel.id && (
+                <motion.div
+                  layoutId="detailActivePanel"
+                  className="absolute inset-0 rounded-xl"
+                  style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.25)' }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1.5">
+                <PanelIcon className="w-3.5 h-3.5" />
+                {panel.label}
+              </span>
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* Panel content */}
+      <div className="mt-4 pb-4">
+        {activePanel === 'overview' && (
+          <div className="space-y-4">
+            <p className="text-sm text-text2/80 leading-relaxed break-word">{selected.description || 'No description available.'}</p>
+            <div className="flex flex-wrap gap-2">
+              {selected.difficulty && <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400">{selected.difficulty}</span>}
+              {(selected.tags || []).map(tag => (
+                <span key={tag} className="text-[10px] px-2 py-1 rounded-full bg-white/[0.04] text-text3/60">#{tag}</span>
+              ))}
+            </div>
+            {/* Mobile-only completion button (desktop shows it in the sidebar) */}
+            <button
+              onClick={handleMarkCompleted}
+              disabled={!isVideoResource || completed}
+              className={`lg:hidden w-full py-3 rounded-2xl text-sm font-bold transition-all flex items-center justify-center gap-2 button-n-doubletap touch-target ${completed ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30'}`}
+            >
+              {completed ? <><CheckCircle2 className="w-4 h-4" /> Completed</> : isVideoResource ? 'Mark as Completed' : 'Not a video lesson'}
+            </button>
+            {completed && <p className="text-[11px] text-green-400/70 text-center">Progress saved — it will sync across your devices.</p>}
+
+            {/* Related resources grid — real data only */}
+            {(related.length > 0 || subjectVideos.length > 0) && (
+              <div className="pt-2">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3 mb-2.5">Related Resources</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {(related.length > 0 ? related : subjectVideos).slice(0, 8).map(v => {
+                    const vId = v.youtubeId || v.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1];
+                    return (
+                      <button
+                        key={v._id || v.id}
+                        onClick={() => setSelected(v)}
+                        className="text-left rounded-xl overflow-hidden transition-all hover:-translate-y-0.5 button-n-doubletap"
+                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                      >
+                        <div className="aspect-video bg-black/40 relative">
+                          {vId && (
+                            <img
+                              src={`https://i.ytimg.com/vi/${vId}/hqdefault.jpg`}
+                              alt={v.title}
+                              loading="lazy"
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                          {v.duration && (
+                            <span className="absolute bottom-1 right-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-black/70 text-white">{v.duration}</span>
+                          )}
+                        </div>
+                        <div className="p-2.5">
+                          <div className="text-[11px] font-semibold text-white line-clamp-2 leading-snug">{v.title}</div>
+                          <div className="text-[9px] text-text3/60 mt-1 truncate">{[v.subject, v.channel].filter(Boolean).join(' · ')}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
-      </motion.div>
+
+        {activePanel === 'notes' && (
+          <div className="space-y-3">
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3">Lecture Notes</h4>
+            {subjectVideos.length === 0 ? (
+              <div className="text-sm text-text3/60 text-center py-8">No notes available for this resource yet.</div>
+            ) : (
+              <div className="space-y-2">
+                {subjectVideos.map(v => (
+                  <div key={v._id || v.id}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl opacity-80" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <FileText className="w-4 h-4 text-text3/60 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[12px] font-semibold text-white truncate">{v.title}</div>
+                      <div className="text-[10px] text-text3/60">{v.channel}</div>
+                    </div>
+                    <span className="text-[10px] text-text3/40 shrink-0">In video player</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3 mt-2">Short Notes & Guides</h4>
+            <div className="rounded-xl p-3 text-[11px] text-text3/70 leading-relaxed" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              Open a lesson and use <span className="text-purple-300">Resources → Notes</span> inside the video player for concise, topic-wise notes for this subject.
+            </div>
+          </div>
+        )}
+
+        {activePanel === 'resources' && (
+          <div className="space-y-2">
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3 mb-1">Notes · PYQs · Practice</h4>
+            {subjectRes ? (
+              <a href={subjectRes.playlistUrl} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all hover:bg-purple-500/[0.06]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <span className="text-xl shrink-0">📺</span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[12px] font-bold text-white">{subjectRes.subject} — {subjectRes.faculty}</div>
+                  <div className="text-[10px] text-text3/60">Complete lecture playlist for this subject</div>
+                </div>
+                <span className="text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 shrink-0">Open →</span>
+              </a>
+            ) : (
+              <div className="rounded-xl p-3 text-[11px] text-text3/70" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                No linked resources for "{selected.subject || 'this resource'}" yet.
+              </div>
+            )}
+            {subjectVideos.length > 0 && (
+              <>
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3 pt-2 mb-1">Video lessons in this subject</h4>
+                {subjectVideos.map(v => (
+                  <button key={v._id || v.id} onClick={() => setSelected(v)}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-purple-500/[0.06]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <span className="text-base shrink-0">🎬</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[12px] font-semibold text-white truncate">{v.title}</div>
+                      <div className="text-[10px] text-text3/60">{v.channel}</div>
+                    </div>
+                    <span className="text-[10px] text-primary shrink-0">Watch →</span>
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
+        )}
+
+        {activePanel === 'related' && (
+          <div className="space-y-2">
+            <h4 className="text-[11px] font-bold uppercase tracking-widest text-text3 mb-1">Continue Learning</h4>
+            {related.length === 0 ? (
+              <div className="text-sm text-text3/60 text-center py-8">No related content found yet.</div>
+            ) : (
+              related.map(v => (
+                <button key={v._id || v.id} onClick={() => setSelected(v)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-purple-500/[0.06]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span className="w-8 h-8 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 text-purple-300"><path d="M8 5v14l11-7z" /></svg>
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[12px] font-semibold text-white truncate">{v.title}</div>
+                    <div className="text-[10px] text-text3/60 truncate">{[v.subject, v.channel].filter(Boolean).join(' · ')}</div>
+                  </div>
+                  {v.duration && <span className="text-[10px] text-text3/50 shrink-0">{v.duration}</span>}
+                </button>
+              ))
+            )}
+          </div>
+        )}
+
+        {activePanel === 'ai' && (
+          <div className="rounded-2xl flex flex-col" style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.1)' }}>
+            <div className="flex-1 overflow-y-auto max-h-[280px] p-4 space-y-3">
+              {messages.length === 0 && (
+                <div className="text-center py-8">
+                  <Bot className="w-7 h-7 mx-auto mb-2 text-purple-300/70" />
+                  <p className="text-xs text-text3/70">Ask a question about this topic</p>
+                </div>
+              )}
+              {messages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed break-word ${msg.role === 'user' ? 'bg-purple-500/20 text-purple-200' : 'bg-white/[0.04] text-text2/90'}`}>
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+              {isAsking && (
+                <div className="flex justify-start">
+                  <div className="rounded-2xl px-4 py-2.5 text-xs bg-white/[0.04] text-text3/60 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+            <div className="p-3 border-t border-white/[0.06]">
+              <div className="flex gap-2">
+                <input
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask anything..."
+                  className="flex-1 bg-bg-2 border border-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500/50 placeholder:text-text3/40"
+                />
+                <button onClick={handleAsk} disabled={isAsking}
+                  className="px-4 py-2.5 rounded-xl bg-purple-500 text-white text-xs font-bold hover:bg-purple-600 disabled:opacity-50 transition-all button-n-doubletap">
+                  Ask
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {selected.isPremium && !canAccessPremium && (
+        <div className="rounded-2xl px-4 py-3 mt-2" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)' }}>
+          <p className="text-xs text-yellow-400 text-center">⭐ Premium content — refer 2 friends to unlock</p>
+        </div>
+      )}
     </motion.div>
   );
 }
+
 
 function Sidebar({ videos, onOpenVideo }) {
   const recommended = [
@@ -1241,6 +1377,14 @@ function Sidebar({ videos, onOpenVideo }) {
   );
 }
 
+// Dev-only fixture data. This must NEVER be used as a silent production
+// fallback — it exists only so the UI can be previewed locally without a
+// working API connection. Flip this to true on your own machine if you need
+// that; it must stay false in every deployed environment. When it's false
+// (the default), a failed load shows the real error UI with Retry instead
+// of masking a broken backend with fake videos.
+const ENABLE_DEV_FIXTURE_DATA = false;
+
 const DEMO_VIDEOS = [
   { _id: 'd1', title: 'GATE CSE 2027 Complete Roadmap', youtubeId: 'dQw4w9WgXcQ', channel: 'GATE Wallah', subject: 'General', category: 'Roadmaps', views: 15230, tags: ['roadmap', 'strategy', 'gate 2027'] },
   { _id: 'd2', title: 'Data Structures - Arrays & Linked Lists', youtubeId: 'dQw4w9WgXcQ', channel: 'Gate Smashers', subject: 'Data Structures', category: 'Subject Resources', views: 8920, tags: ['arrays', 'linked list', 'dsa'] },
@@ -1283,17 +1427,14 @@ export default function LearningHubPage() {
   const savedScrollY = useRef(0);
 
   const openResource = useCallback((item) => {
+    // Only save scroll position here — tracking is handled once, centrally,
+    // by the selectedItem-watching effect below (it also covers in-panel
+    // "related resource" clicks that call setSelectedItem directly, bypassing
+    // this function). Tracking here too would double-fire every open.
     const main = document.querySelector('main');
     savedScrollY.current = main ? main.scrollTop : window.scrollY;
-    if (item.youtubeId || item.youtubeUrl) {
-      if (item.type === 'video' || item.youtubeId) {
-        lhTracking.trackVideoWatched(item);
-      }
-      if (item.resourceType === 'notes') lhTracking.trackNotesOpened(item.subject);
-      if (item.resourceType === 'pdf' || item.type === 'resource') lhTracking.trackPdfOpened(item.subject);
-    }
     setSelectedItem(item);
-  }, [lhTracking]);
+  }, []);
 
   useEffect(() => {
     if (selectedItem === null && prevSelected.current !== null) {
@@ -1321,6 +1462,10 @@ export default function LearningHubPage() {
 
   const clearSearch = useCallback(() => setSearchQuery(''), []);
 
+  // Single source of truth for "resource opened" analytics — fires for every
+  // path that sets selectedItem (card clicks via openResource, and in-panel
+  // related-resource clicks inside ResourceDetailView that call
+  // setSelectedItem directly).
   useEffect(() => {
     if (selectedItem && selectedItem !== prevSelected.current) {
       prevSelected.current = selectedItem;
@@ -1346,10 +1491,16 @@ export default function LearningHubPage() {
       setEditorPicks(picksRes.data?.data || []);
     } catch (err) {
       console.error('Failed to load learning hub videos:', err);
-      setVideos(DEMO_VIDEOS);
-      setSubjectResources(SUBJECT_RESOURCES);
-      setEditorPicks(DEMO_EDITOR_PICKS);
-      setLoadError(null);
+      setSubjectResources(SUBJECT_RESOURCES); // static config, not API data — safe either way
+      if (ENABLE_DEV_FIXTURE_DATA) {
+        setVideos(DEMO_VIDEOS);
+        setEditorPicks(DEMO_EDITOR_PICKS);
+        setLoadError(null);
+      } else {
+        setVideos([]);
+        setEditorPicks([]);
+        setLoadError('Unable to load Learning Hub. Please check your connection and try again.');
+      }
     }
     setLoading(false);
   }, []);
@@ -1513,13 +1664,19 @@ export default function LearningHubPage() {
           style={{ background: 'radial-gradient(ellipse, rgba(139,92,246,0.45), transparent 70%)', filter: 'blur(90px)' }} />
       </div>
 
-      <AnimatePresence>
-        {selectedItem && (
-          <ResourceModal key={selectedItem._id || selectedItem.id} selected={selectedItem} setSelected={setSelectedItem} canAccessPremium={isPremium} videos={videos} subjectResources={subjectResources} />
-        )}
-      </AnimatePresence>
-
       <div className="relative max-w-6xl mx-auto px-4 py-6 space-y-6">
+       <AnimatePresence mode="wait">
+        {selectedItem ? (
+          <ResourceDetailView
+            key={selectedItem._id || selectedItem.id}
+            selected={selectedItem}
+            setSelected={setSelectedItem}
+            canAccessPremium={isPremium}
+            videos={videos}
+            subjectResources={subjectResources}
+          />
+        ) : (
+        <motion.div key="learning-hub-home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="space-y-6">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="gpu-layer">
           <div className="flex items-center justify-between gap-4 mb-4">
@@ -1888,6 +2045,9 @@ export default function LearningHubPage() {
             <Sidebar videos={videos} onOpenVideo={openResource} />
           </div>
         </div>
+        </motion.div>
+        )}
+       </AnimatePresence>
       </div>
     </div>
   );
