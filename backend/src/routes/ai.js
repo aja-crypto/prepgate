@@ -2064,6 +2064,16 @@ async function getAiCoachResponse(message, context, user, modePrompt, onToken) {
 
   // Active mode must be available to both the API path and the local fallback.
   const activeMode = context?.mode || 'auto';
+  if (context.lightweightRequest && activeMode === 'auto') {
+    const { localCoachResponse } = require('../services/localCoachFallback');
+    const response = localCoachResponse(message, {});
+    if (typeof onToken === 'function' && response.text) onToken(response.text);
+    return {
+      ...response,
+      source: 'local-lightweight',
+      provider: null,
+    };
+  }
 
   // Log API key presence (not the actual key!)
   console.log('[AI Coach] OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);

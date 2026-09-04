@@ -342,7 +342,11 @@ export default function AICoachChat({ initialPrompt }) {
 
       if (result?.conversationId) convUpdateSessionId(result.conversationId);
 
-      if (result?.text) {
+      if (result?.authRequired) {
+        const aid = ++msgIdCounter.current;
+        setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', content: result.error || 'Please sign in to use AI Mentor.', source: 'auth-required', thumbs: null }]);
+        setSuggestions(null);
+      } else if (result?.text) {
         const reply = result.text;
         convAddAssistant(reply);
         cache.setCached(cacheKey, { text: reply, suggestions: result.suggestions });

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { ArrowLeft, Eye, Clock3, Bookmark, Share2, CheckCircle2, Info, FileText, Link2, Bot, CalendarDays } from 'lucide-react';
 import { useAuthData } from '../context/AuthContext';
-import LazyYouTubePlayer from '../components/learning/LazyYouTubePlayer';
 import { TABS, ROADMAP_FILTERS, SUBJECT_FILTERS, STORY_FILTERS, MOTIVATION_FILTERS, RESOURCE_FILTERS, VIDEO_FILTERS } from '../data/filters';
 import { learningHubVideoService, learningHubDataService, api } from '../services/api';
 import InsightsDashboard from '../components/gate/InsightsDashboard';
@@ -11,6 +10,7 @@ import { useTrackLearningHub } from '../hooks/useAiMentorTracking';
 import { useYoutubeThumbnail } from '../hooks/useYoutubeThumbnail';
 import { getContinueWatching, getCompletedCount, getInProgressCount, getLessonStatus, getProgress, WATCH_EVENT, markCompleted } from '../lib/watchProgress';
 import { SUBJECT_RESOURCES } from '../data/subjectResources';
+import { useVideoPlayer } from '../components/video/VideoPlayerContext';
 
 function timeAgo(dateStr) {
   if (!dateStr) return null;
@@ -794,6 +794,7 @@ function SearchBar({ onSearch, value, onChange }) {  const inputRef = useRef(nul
 }
 
 function ResourceDetailView({ selected, setSelected, canAccessPremium, videos = [], subjectResources = [] }) {
+  const { player, playVideo } = useVideoPlayer();
   const [activePanel, setActivePanel] = useState('overview');
   const [query, setQuery] = useState('');
   const [isAsking, setIsAsking] = useState(false);
@@ -803,7 +804,8 @@ function ResourceDetailView({ selected, setSelected, canAccessPremium, videos = 
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
   const videoId = selected?.youtubeId || selected?.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1];
-  const isVideoResource = !!videoId;
+  const playableUrl = selected?.videoUrl || selected?.url || selected?.sourceUrl || '';
+  const isVideoResource = !!videoId || !!playableUrl;
 
   const related = useMemo(() => {
     if (!selected) return [];
@@ -880,20 +882,15 @@ function ResourceDetailView({ selected, setSelected, canAccessPremium, videos = 
     }
   }, [handleAsk]);
 
-  // Bring the detail view into the viewport the moment it opens — never jump to
-  // document top. Skip if the container is already visible (e.g. opened from a
-  // click near the top of the page).
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const alreadyVisible = rect.top >= 0 && rect.top < window.innerHeight * 0.4;
-    if (!alreadyVisible) {
-      requestAnimationFrame(() => {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    }
-  }, [selected?._id, selected?.id]);
+    if (!isVideoResource || player?.id === (selected?._id || selected?.id)) return;
+    playVideo({
+      ...selected,
+      videoId,
+      videoUrl: playableUrl,
+      source: selected.source || (videoId ? 'youtube' : 'file'),
+    });
+  }, [isVideoResource, playableUrl, videoId, selected, player?.id, playVideo]);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') setSelected(null); };
@@ -963,9 +960,9 @@ function ResourceDetailView({ selected, setSelected, canAccessPremium, videos = 
       <div className="lg:grid lg:grid-cols-[1fr_300px] lg:gap-6 lg:items-start">
         <div className="min-w-0">
           {videoId ? (
-            <div className="rounded-2xl lg:rounded-[20px] overflow-hidden bg-black anim-gpu"
+            <div className="rounded-2xl lg:rounded-[20px] overflow-hidden bg-black aspect-video flex items-center justify-center text-center p-6"
               style={{ boxShadow: '0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(139,92,246,0.28), 0 0 46px rgba(139,92,246,0.16)' }}>
-              <LazyYouTubePlayer videoId={videoId} title={selected.title} autoPlay />
+              <p className="text-sm text-text3">Playing in the persistent GateNexa video player.</p>
             </div>
           ) : (
             <div className="aspect-video rounded-2xl overflow-hidden flex items-center justify-center"

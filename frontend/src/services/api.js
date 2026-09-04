@@ -81,7 +81,7 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-const refreshAccessToken = async () => {
+const performRefreshAccessToken = async () => {
   const refreshToken = localStorage.getItem('refreshToken');
   if (!refreshToken) {
     throw new Error('No refresh token available');
@@ -92,6 +92,16 @@ const refreshAccessToken = async () => {
   if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken);
   api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
   return accessToken;
+};
+
+let refreshPromise = null;
+export const refreshAccessToken = async () => {
+  if (!refreshPromise) {
+    refreshPromise = performRefreshAccessToken().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
 };
 
 api.interceptors.response.use(

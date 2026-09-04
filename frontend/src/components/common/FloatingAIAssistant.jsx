@@ -609,6 +609,18 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
       return;
     }
 
+    if (result?.authRequired) {
+      placeholderFinalizedRef.current = true;
+      setMessages(prev => prev.map(m => m.id === placeholderId
+        ? { ...m, text: result.error || 'Please sign in to use AI Mentor.', source: 'auth-required', provider: null, offlineInfo: null, cached: false, thumbs: null }
+        : m
+      ));
+      setSuggestions(null);
+      activeAssistantIdRef.current = null;
+      setStatusText('Thinking');
+      return;
+    }
+
     if (result?.remaining != null) {
       setAiQuestionsRemaining(result.remaining.remaining);
       if (result.remaining.limit != null) setLimit(result.remaining.limit);
