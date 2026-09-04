@@ -9,8 +9,6 @@ export default function LazyYouTubePlayer({ videoId, title, onError, autoPlay = 
 
   useEffect(() => {
     if (!loaded) return;
-    const isMobileView = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
-    if (!isMobileView) return;
     const el = containerRef.current;
     if (!el) return;
     let parent = el.parentElement;
@@ -20,11 +18,15 @@ export default function LazyYouTubePlayer({ videoId, title, onError, autoPlay = 
       if (cs.position === 'fixed') { insideFixedModal = true; break; }
       parent = parent.parentElement;
     }
-    if (!insideFixedModal) {
-      requestAnimationFrame(() => {
+    if (insideFixedModal) return;
+    const isMobileView = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+    requestAnimationFrame(() => {
+      if (isMobileView) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-      });
-    }
+      } else {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      }
+    });
   }, [loaded]);
 
   if (!videoId) return null;

@@ -22,14 +22,19 @@ export default function VideoLecturesPage() {
 
   useEffect(() => {
     if (selectedVideo && !prevSelected.current) {
-      savedScrollY.current = window.scrollY;
+      const main = document.querySelector('main');
+      savedScrollY.current = main ? main.scrollTop : window.scrollY;
       prevSelected.current = selectedVideo;
       if (closeBtnRef.current) closeBtnRef.current.focus({ preventScroll: true });
     }
     if (selectedVideo === null && prevSelected.current !== null) {
       const y = savedScrollY.current;
       prevSelected.current = null;
-      requestAnimationFrame(() => window.scrollTo({ top: y, behavior: 'auto' }));
+      requestAnimationFrame(() => {
+        const main = document.querySelector('main');
+        if (main) main.scrollTo({ top: y, behavior: 'auto' });
+        else window.scrollTo({ top: y, behavior: 'auto' });
+      });
     }
   }, [selectedVideo]);
 
@@ -87,11 +92,11 @@ export default function VideoLecturesPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-nowrap gap-3 overflow-x-auto pb-1 -mx-1 px-1 md:flex-wrap md:overflow-visible md:pb-0 md:mx-0 md:px-0">
           <select
             value={filter.subject}
             onChange={(e) => { setFilter(f => ({ ...f, subject: e.target.value })); setPage(1); }}
-            className="bg-bg-2 border border-border rounded-xl px-4 py-2 text-sm text-text focus:outline-none focus:border-primary/60"
+            className="bg-bg-2 border border-border rounded-xl px-4 py-2 text-sm text-text focus:outline-none focus:border-primary/60 shrink-0 whitespace-nowrap"
           >
             <option value="">All Subjects</option>
             {subjects.map(s => <option key={s} value={s}>{s}</option>)}
@@ -99,7 +104,7 @@ export default function VideoLecturesPage() {
           <select
             value={filter.source}
             onChange={(e) => { setFilter(f => ({ ...f, source: e.target.value })); setPage(1); }}
-            className="bg-bg-2 border border-border rounded-xl px-4 py-2 text-sm text-text focus:outline-none focus:border-primary/60"
+            className="bg-bg-2 border border-border rounded-xl px-4 py-2 text-sm text-text focus:outline-none focus:border-primary/60 shrink-0 whitespace-nowrap"
           >
             <option value="">All Sources</option>
             <option value="NPTEL">NPTEL</option>
@@ -109,7 +114,7 @@ export default function VideoLecturesPage() {
           <select
             value={filter.gateRelevance}
             onChange={(e) => { setFilter(f => ({ ...f, gateRelevance: e.target.value })); setPage(1); }}
-            className="bg-bg-2 border border-border rounded-xl px-4 py-2 text-sm text-text focus:outline-none focus:border-primary/60"
+            className="bg-bg-2 border border-border rounded-xl px-4 py-2 text-sm text-text focus:outline-none focus:border-primary/60 shrink-0 whitespace-nowrap"
           >
             <option value="">All Relevance</option>
             <option value="HIGH">High GATE Relevance</option>

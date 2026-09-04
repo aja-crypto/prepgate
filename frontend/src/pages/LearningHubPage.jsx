@@ -954,13 +954,13 @@ function ResourceModal({ selected, setSelected, canAccessPremium, videos = [], s
           )}
 
           {/* Panel tabs */}
-          <div className="flex gap-1 px-6 py-3 border-b border-white/[0.06] overflow-x-auto scroll-container-x gpu-layer"
+          <div className="flex flex-nowrap gap-1 px-6 py-3 border-b border-white/[0.06] overflow-x-auto scroll-container-x gpu-layer"
             style={{ background: 'rgba(255,255,255,0.02)' }}>
             {panels.map(panel => (
               <motion.button
                 key={panel.id}
                 onClick={() => setActivePanel(panel.id)}
-                className="relative flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap"
+                className="relative flex items-center gap-1.5 shrink-0 text-[11px] px-3 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap"
                 style={{ color: activePanel === panel.id ? '#C4B5FD' : 'rgba(255,255,255,0.4)' }}
               >
                 {activePanel === panel.id && (
@@ -1283,7 +1283,8 @@ export default function LearningHubPage() {
   const savedScrollY = useRef(0);
 
   const openResource = useCallback((item) => {
-    savedScrollY.current = window.scrollY;
+    const main = document.querySelector('main');
+    savedScrollY.current = main ? main.scrollTop : window.scrollY;
     if (item.youtubeId || item.youtubeUrl) {
       if (item.type === 'video' || item.youtubeId) {
         lhTracking.trackVideoWatched(item);
@@ -1298,7 +1299,11 @@ export default function LearningHubPage() {
     if (selectedItem === null && prevSelected.current !== null) {
       const y = savedScrollY.current;
       prevSelected.current = null;
-      requestAnimationFrame(() => window.scrollTo({ top: y, behavior: 'auto' }));
+      requestAnimationFrame(() => {
+        const main = document.querySelector('main');
+        if (main) main.scrollTo({ top: y, behavior: 'auto' });
+        else window.scrollTo({ top: y, behavior: 'auto' });
+      });
     }
   }, [selectedItem]);
 
