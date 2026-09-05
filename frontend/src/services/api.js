@@ -72,26 +72,50 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ΓöÇΓöÇΓöÇ Response interceptor (auto token refresh + retry) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-let isRefreshing = false;
-let failedQueue = [];
+// ΓöÇΓöÇΓöÇ Shared single-flight token refresh ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ONE Promise shared by EVERY 401 path (axios interceptor + fetch-based AI
+// streaming alike). The backend rotates refresh tokens — the old token is
+// blacklisted the moment it is used — so two concurrent /auth/refresh calls
+// with the same token make the second fail with TOKEN_REVOKED, which used to
+// wipe freshly-stored valid tokens and log the user out. Awaiting one shared
+// Promise guarantees exactly ONE /auth/refresh per expiry window; every
+// failed request waits for it, then retries ONCE with the new token.
+let sharedRefreshPromise = null;
 
-const processQueue = (error, token = null) => {
-  failedQueue.forEach(p => error ? p.reject(error) : p.resolve(token));
-  failedQueue = [];
+export const sharedRefreshAccessToken = () => {
+  if (!sharedRefreshPromise) {
+    sharedRefreshPromise = (async () => {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+      const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken });
+      const { accessToken, refreshToken: newRefreshToken } = res.data.data;
+      localStorage.setItem('accessToken', accessToken);
+      if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken);
+      api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+      return accessToken;
+    })();
+    // Free the slot once settled so a LATER expiry can start a new refresh.
+    // The cleanup is attached as a side branch — callers still await the
+    // original Promise with its real value/rejection.
+    const clearSlot = () => { sharedRefreshPromise = null; };
+    sharedRefreshPromise.then(clearSlot, clearSlot);
+  }
+  return sharedRefreshPromise;
 };
 
-const refreshAccessToken = async () => {
-  const refreshToken = localStorage.getItem('refreshToken');
-  if (!refreshToken) {
-    throw new Error('No refresh token available');
+// Wipes local session and notifies AuthContext. Only for requests that had a
+// real session (a refresh token present) — guests and anonymous callers must
+// never be logged out by someone else's 401.
+const handleRefreshFailure = () => {
+  if (!localStorage.getItem('refreshToken')) return;
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  delete api.defaults.headers.common['Authorization'];
+  if (typeof window !== 'undefined' && window.location?.pathname !== '/login') {
+    window.dispatchEvent(new CustomEvent('auth:expired'));
   }
-  const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken });
-  const { accessToken, refreshToken: newRefreshToken } = res.data.data;
-  localStorage.setItem('accessToken', accessToken);
-  if (newRefreshToken) localStorage.setItem('refreshToken', newRefreshToken);
-  api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
-  return accessToken;
 };
 
 api.interceptors.response.use(
@@ -128,64 +152,50 @@ api.interceptors.response.use(
       }
     }
 
-    // Handle invalid tokens (wrong secret, malformed, expired without refresh)
-    const isInvalidToken = error.response?.status === 401 && (
-      error.response?.data?.code === 'TOKEN_EXPIRED' ||
-      error.response?.data?.message?.toLowerCase().includes('invalid token') ||
-      error.response?.data?.message?.toLowerCase().includes('token expired')
-    );
-
-    // Force logout on non-refresh 401s where token is fundamentally unusable
-    if (error.response?.status === 401 && !originalRequest._retry &&
-        error.response?.data?.message?.toLowerCase().includes('invalid token') &&
-        !error.config.url?.includes('/auth/refresh') &&
-        !error.config.url?.includes('/auth/login')) {
-      console.error('[AUTH-DEBUG] CLEARING TOKENS: force logout on invalid token');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      delete api.defaults.headers.common['Authorization'];
-      if (window.location.pathname !== '/login') {
-        window.dispatchEvent(new CustomEvent('auth:expired'));
-      }
+    // Guest requests must never enter the refresh flow and must never be
+    // logged out by a 401 — guests have no session to recover or clear.
+    if (error.response?.status === 401 && localStorage.getItem('isGuest') === 'true') {
       return Promise.reject(error);
     }
 
-    if (isInvalidToken && !originalRequest._retry) {
+    // A 401 is refreshable when a new access token could plausibly fix it:
+    // expired/invalid/missing access token, or a revoked/version-mismatched
+    // token (refresh then either recovers or fails cleanly into logout).
+    // Never refresh the refresh endpoint itself (avoids loops).
+    const status401 = error.response?.status === 401;
+    const respCode = error.response?.data?.code || '';
+    const respMsg = (error.response?.data?.message || '').toLowerCase();
+    const isRefreshable = status401 && (
+      respCode === 'TOKEN_EXPIRED' ||
+      respCode === 'TOKEN_REVOKED' ||
+      respCode === 'TOKEN_VERSION_MISMATCH' ||
+      respMsg.includes('invalid token') ||
+      respMsg.includes('token expired') ||
+      respMsg.includes('not authorized') ||
+      respMsg.includes('session expired') ||
+      respMsg.includes('revoked')
+    );
+
+    if (isRefreshable && !originalRequest._retry && !originalRequest.url?.includes('/auth/refresh')) {
       originalRequest._retry = true;
-      console.error('[AUTH-DEBUG] IS_INVALID_TOKEN: attempting refresh for', originalRequest.url);
-
-      if (isRefreshing) {
-        try {
-          const token = await new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
-          });
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        } catch (queueError) {
-          return Promise.reject(queueError);
-        }
+      if (import.meta.env.DEV) {
+        console.error('[AUTH-DEBUG] 401 refreshable — awaiting shared refresh for', originalRequest.url);
       }
-
-      isRefreshing = true;
-
       try {
-        const accessToken = await refreshAccessToken();
-        console.error('[AUTH-DEBUG] REFRESH SUCCESS: new token length', accessToken.length);
-        processQueue(null, accessToken);
+        // Single-flight: concurrent 401s (axios + AI fetch stream) all await
+        // the SAME Promise, so only ONE /auth/refresh is ever in flight.
+        const accessToken = await sharedRefreshAccessToken();
+        if (import.meta.env.DEV) {
+          console.error('[AUTH-DEBUG] REFRESH SUCCESS: new token length', accessToken.length);
+        }
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        console.error('[AUTH-DEBUG] REFRESH FAILED:', refreshError.message, '- CLEARING ALL TOKENS');
-        processQueue(refreshError, null);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        delete api.defaults.headers.common['Authorization'];
-        if (window.location.pathname !== '/login') {
-          window.dispatchEvent(new CustomEvent('auth:expired'));
+        if (import.meta.env.DEV) {
+          console.error('[AUTH-DEBUG] REFRESH FAILED:', refreshError.message);
         }
+        handleRefreshFailure();
         return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
       }
     }
 
@@ -270,10 +280,13 @@ export const aiService = {
       signal,
     });
 
-    // If 401 and we have a refresh token, try to refresh and retry once
-    if (res.status === 401 && !isGuest) {
+    // If 401, recover via the SHARED single-flight refresh (same Promise the
+    // axios interceptor awaits) and retry ONCE with the new token. Never
+    // start an independent refresh — the backend rotates refresh tokens, so
+    // a second concurrent /auth/refresh would be rejected as revoked.
+    if (res.status === 401 && !isGuest && !signal?.aborted) {
       try {
-        const newToken = await refreshAccessToken();
+        const newToken = await sharedRefreshAccessToken();
         headers.Authorization = `Bearer ${newToken}`;
         res = await fetch(`${api.defaults.baseURL}/ai/chat`, {
           method: 'POST',
@@ -282,7 +295,7 @@ export const aiService = {
           signal,
         });
       } catch {
-        // Refresh failed — let caller handle the 401
+        // Refresh failed — let caller handle the 401 (it owns session cleanup)
       }
     }
 
