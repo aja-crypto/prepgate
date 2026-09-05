@@ -1,10 +1,26 @@
 .gx-persistent-player {
+  --gx-safe-bottom: env(safe-area-inset-bottom, 0px);
   position: fixed;
   right: 24px;
   bottom: 24px;
   width: min(420px, calc(100vw - 48px));
   z-index: 90;
   pointer-events: none;
+}
+
+.gx-persistent-player--floating {
+  right: auto;
+  bottom: auto;
+}
+
+.gx-player-drag-handle {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.gx-player-drag-handle:active {
+  cursor: grabbing;
 }
 
 .gx-player-shell {
@@ -135,7 +151,7 @@
 @media (max-width: 767px) {
   .gx-persistent-player {
     right: 12px;
-    bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(78px + var(--gx-safe-bottom));
     left: 12px;
     width: auto;
   }
@@ -160,6 +176,13 @@
   .gx-persistent-player--mini {
     right: 12px;
     left: auto;
+    width: min(220px, calc(100vw - 24px));
+  }
+
+  .gx-persistent-player--floating {
+    left: 12px;
+    right: auto;
+    bottom: auto;
     width: min(220px, calc(100vw - 24px));
   }
 }

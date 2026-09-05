@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { ArrowLeft, Eye, Clock3, Bookmark, Share2, CheckCircle2, Info, FileText, Link2, Bot, CalendarDays, PictureInPicture } from 'lucide-react';
 import { useAuthData } from '../context/AuthContext';
-import LazyYouTubePlayer from '../components/learning/LazyYouTubePlayer';
 import { TABS, ROADMAP_FILTERS, SUBJECT_FILTERS, STORY_FILTERS, MOTIVATION_FILTERS, RESOURCE_FILTERS, VIDEO_FILTERS } from '../data/filters';
 import { learningHubVideoService, learningHubDataService, api } from '../services/api';
 import InsightsDashboard from '../components/gate/InsightsDashboard';
@@ -805,7 +804,8 @@ function ResourceDetailView({ selected, setSelected, canAccessPremium, videos = 
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
   const videoId = selected?.youtubeId || selected?.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1];
-  const isVideoResource = !!videoId;
+  const playableUrl = selected?.videoUrl || selected?.url || selected?.sourceUrl || '';
+  const isVideoResource = !!videoId || !!playableUrl;
   const ownedByFloating = !!videoId && !!player && player.videoId === videoId;
 
   const related = useMemo(() => {
@@ -883,20 +883,15 @@ function ResourceDetailView({ selected, setSelected, canAccessPremium, videos = 
     }
   }, [handleAsk]);
 
-  // Bring the detail view into the viewport the moment it opens — never jump to
-  // document top. Skip if the container is already visible (e.g. opened from a
-  // click near the top of the page).
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const alreadyVisible = rect.top >= 0 && rect.top < window.innerHeight * 0.4;
-    if (!alreadyVisible) {
-      requestAnimationFrame(() => {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    }
-  }, [selected?._id, selected?.id]);
+    if (!isVideoResource || player?.id === (selected?._id || selected?.id)) return;
+    playVideo({
+      ...selected,
+      videoId,
+      videoUrl: playableUrl,
+      source: selected.source || (videoId ? 'youtube' : 'file'),
+    });
+  }, [isVideoResource, playableUrl, videoId, selected, player?.id, playVideo]);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') setSelected(null); };

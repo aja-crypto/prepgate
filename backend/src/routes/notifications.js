@@ -4,6 +4,7 @@ const Notification = require('../models/Notification');
 const NotificationPrefs = require('../models/NotificationPrefs');
 const User = require('../models/User');
 const { generateAndDeliver, ensurePrefs, generateDailyNotifications, generateOnboardingNotifications, seedBaselineNotifications } = require('../services/notificationEngine');
+const { saveUserSubscription, ensureVapidConfigured } = require('../services/webPushService');
 const { isMongoConnected } = require('../config/db');
 
 function requireMongo(res) {
@@ -179,6 +180,48 @@ router.put('/prefs', protect, async (req, res, next) => {
     }
     await prefs.save();
     res.json({ success: true, data: prefs });
+  } catch (e) { next(e); }
+});
+
+router.get('/vapid-public-key', async (req, res) => {
+  const publicKey = process.env.VAPID_PUBLIC_KEY || process.env.VITE_VAPID_PUBLIC_KEY;
+  if (!publicKey) {
+    return res.status(503).json({ success: false, message: 'VAPID public key is not configured.' });
+  }
+  return res.json({ success: true, publicKey });
+});
+
+router.post('/subscribe', protect, async (req, res, next) => {
+  try {
+    if (requireMongo(res)) return;
+    const mongoUserId = await resolveMongoUserId(req.user);
+    if (!mongoUserId) return res.status(400).json({ success: false, message: 'Cannot resolve user.' });
+
+    const subscription = req.body?.subscription || req.body;
+    if (!subscription || !subscription.endpoint) {
+      return res.status(400).json({ success: false, message: 'Valid push subscription required.' });
+    }
+
+    const record = await saveUserSubscription(mongoUserId, subscription);
+    if (!record) {
+      return res.status(400).json({ success: false, message: 'Failed to save subscription.' });
+    }
+
+    return res.json({ success: true, data: { id: record._id, active: record.isActive, endpoint: record.endpoint } });
+  } catch (e) { next(e); }
+});
+
+router.delete('/subscribe', protect, async (req, res, next) => {
+  try {
+    if (requireMongo(res)) return;
+    const mongoUserId = await resolveMongoUserId(req.user);
+    if (!mongoUserId) return res.json({ success: true, message: 'No active subscription.' });
+
+    const { endpoint } = req.body || {};
+    if (!endpoint) return res.status(400).json({ success: false, message: 'endpoint is required.' });
+
+    await require('../models/PushSubscription').updateOne({ user: mongoUserId, endpoint }, { $set: { isActive: false, lastSeen: new Date() } });
+    return res.json({ success: true, message: 'Subscription removed.' });
   } catch (e) { next(e); }
 });
 

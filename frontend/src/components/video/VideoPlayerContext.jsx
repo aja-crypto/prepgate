@@ -4,6 +4,8 @@ const VideoPlayerContext = createContext(null);
 
 export function VideoPlayerProvider({ children }) {
   const [player, setPlayer] = useState(null);
+  const [floatingPip, setFloatingPip] = useState(false);
+  const [pipPosition, setPipPosition] = useState(null);
 
   const playVideo = useCallback((video) => {
     if (!video) return;
@@ -27,10 +29,21 @@ export function VideoPlayerProvider({ children }) {
 
   const closeVideo = useCallback(() => {
     setPlayer(null);
+    setFloatingPip(false);
+    setPipPosition(null);
   }, []);
 
   const updatePlayer = useCallback((updates) => {
     setPlayer((current) => (current ? { ...current, ...updates } : current));
+  }, []);
+
+  const updatePip = useCallback((updates) => {
+    if (typeof updates === 'boolean') {
+      setFloatingPip(updates);
+      return;
+    }
+    if (updates.position) setPipPosition(updates.position);
+    if (typeof updates.floating === 'boolean') setFloatingPip(updates.floating);
   }, []);
 
   const value = useMemo(() => ({
@@ -38,7 +51,10 @@ export function VideoPlayerProvider({ children }) {
     playVideo,
     closeVideo,
     updatePlayer,
-  }), [player, playVideo, closeVideo, updatePlayer]);
+    floatingPip,
+    pipPosition,
+    updatePip,
+  }), [player, playVideo, closeVideo, updatePlayer, floatingPip, pipPosition, updatePip]);
 
   return (
     <VideoPlayerContext.Provider value={value}>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useVideoPlayer } from './VideoPlayerContext';
 import './PersistentVideoPlayer.css';
 
@@ -16,7 +16,7 @@ function clampToViewport(left, top, width, height) {
 }
 
 export default function PersistentVideoPlayer() {
-  const { player, closeVideo, updatePlayer } = useVideoPlayer();
+  const { player, closeVideo, updatePlayer, floatingPip, pipPosition, updatePip } = useVideoPlayer();
   const videoRef = useRef(null);
   const shellRef = useRef(null);
   const loadedIdRef = useRef(null);
@@ -86,11 +86,78 @@ export default function PersistentVideoPlayer() {
     closeVideo();
   };
 
+  const clampPosition = useCallback((x, y) => {
+    const rect = shellRef.current?.getBoundingClientRect();
+    const margin = 12;
+    const safeInset = parseFloat(getComputedStyle(shellRef.current || document.documentElement)
+      .getPropertyValue('--gx-safe-bottom')) || 0;
+    const bottomSafeArea = window.matchMedia('(max-width: 767px)').matches ? 78 + safeInset : margin;
+    const width = rect?.width || Math.min(420, window.innerWidth - margin * 2);
+    const height = rect?.height || 280;
+    return {
+      x: Math.max(margin, Math.min(x, window.innerWidth - width - margin)),
+      y: Math.max(margin, Math.min(y, window.innerHeight - height - bottomSafeArea)),
+    };
+  }, []);
+
+  const setInitialPipPosition = useCallback(() => {
+    const rect = shellRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const margin = 12;
+    const safeInset = parseFloat(getComputedStyle(shellRef.current || document.documentElement)
+      .getPropertyValue('--gx-safe-bottom')) || 0;
+    const bottomSafeArea = window.matchMedia('(max-width: 767px)').matches ? 78 + safeInset : margin;
+    updatePip({
+      position: clampPosition(window.innerWidth - rect.width - margin, window.innerHeight - rect.height - bottomSafeArea),
+    });
+  }, [clampPosition, updatePip]);
+
+  useEffect(() => {
+    if (!floatingPip) return undefined;
+    if (!pipPosition) setInitialPipPosition();
+    const onResize = () => {
+      if (pipPosition) updatePip({ position: clampPosition(pipPosition.x, pipPosition.y) });
+    };
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, [floatingPip, pipPosition, setInitialPipPosition, clampPosition, updatePip]);
+
+  const handlePointerDown = (event) => {
+    if (!floatingPip || event.button !== 0 || event.target.closest('button')) return;
+    const rect = shellRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragRef.current = { pointerId: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
+  };
+
+  const handlePointerMove = (event) => {
+    if (!dragRef.current || dragRef.current.pointerId !== event.pointerId) return;
+    updatePip({ position: clampPosition(
+      event.clientX - dragRef.current.offsetX,
+      event.clientY - dragRef.current.offsetY,
+    ) });
+  };
+
+  const handlePointerUp = (event) => {
+    if (dragRef.current?.pointerId === event.pointerId) {
+      dragRef.current = null;
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    }
+  };
+
   const handleMinimize = () => {
     setMinimized((v) => !v);
   };
 
   const handlePictureInPicture = async () => {
+    if (!isNativeVideo) {
+      updatePip({ floating: !floatingPip });
+      return;
+    }
     if (!videoRef.current) return;
     try {
       if (document.pictureInPictureElement) {
@@ -151,10 +218,10 @@ export default function PersistentVideoPlayer() {
 
   return (
     <div
-      className={`gx-persistent-player${minimized ? ' gx-persistent-player--mini' : ''}${dragging ? ' gx-persistent-player--dragging' : ''}`}
+      className={`gx-persistent-player${minimized ? ' gx-persistent-player--mini' : ''}${dragging ? ' gx-persistent-player--dragging' : ''}${floatingPip ? ' gx-persistent-player--floating' : ''}`}
       role="dialog"
       aria-label={`Playing ${player.title}`}
-      style={pos ? { left: pos.left, top: pos.top, right: 'auto', bottom: 'auto', width: pos.width, maxWidth: 'calc(100vw - 16px)' } : undefined}
+      style={floatingPip && pipPosition ? { left: pipPosition.x, top: pipPosition.y, right: 'auto', bottom: 'auto', width: pipPosition.width || undefined, maxWidth: 'calc(100vw - 16px)' } : pos ? { left: pos.left, top: pos.top, right: 'auto', bottom: 'auto', width: pos.width, maxWidth: 'calc(100vw - 16px)' } : undefined}
     >
       <div className="gx-player-shell" ref={shellRef}>
         <div className="gx-player-media">
@@ -201,11 +268,9 @@ export default function PersistentVideoPlayer() {
             <button type="button" onClick={handleMinimize} aria-label={minimized ? 'Expand video' : 'Minimize video'}>
               {minimized ? '↗' : '—'}
             </button>
-            {isNativeVideo && (
-              <button type="button" onClick={handlePictureInPicture} aria-label="Picture in Picture">
-                ⧉
-              </button>
-            )}
+            <button type="button" onClick={handlePictureInPicture} aria-label={floatingPip ? 'Exit Picture in Picture' : 'Picture in Picture'}>
+              {floatingPip ? '↙' : '⧉'}
+            </button>
             <button type="button" onClick={handleClose} aria-label="Close video">×</button>
           </div>
         </div>

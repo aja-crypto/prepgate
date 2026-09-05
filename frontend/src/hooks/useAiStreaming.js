@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { aiService } from '../services/api';
+import { aiService, refreshAccessToken } from '../services/api';
 
 export default function useAiStreaming() {
   const [streaming, setStreaming] = useState(false);
@@ -9,6 +9,12 @@ export default function useAiStreaming() {
   const partialRef = useRef('');
 
   const startStream = useCallback(async (message, context = {}, sessionId = 'default') => {
+    const accessToken = localStorage.getItem('accessToken');
+    const isGuest = localStorage.getItem('isGuest') === 'true';
+    if (import.meta.env.PROD && isGuest && !accessToken) {
+      return { text: null, source: 'auth-required', authRequired: true, error: 'Please sign in to use AI Mentor.' };
+    }
+
     setStreaming(true);
     setPartialText('');
     setError(null);
@@ -32,7 +38,21 @@ export default function useAiStreaming() {
 
     try {
       const modePrompt = context?.modePrompt || null;
-      const res = await aiService.streamCoach(message, context, sessionId, controller.signal, modePrompt);
+      let res = await aiService.streamCoach(message, context, sessionId, controller.signal, modePrompt);
+      if (res.status === 401 && accessToken && !controller.signal.aborted) {
+        try {
+          await refreshAccessToken();
+          res = await aiService.streamCoach(message, context, sessionId, controller.signal, modePrompt);
+        } catch (refreshError) {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          window.dispatchEvent(new CustomEvent('auth:expired'));
+          clearTimers();
+          setStreaming(false);
+          abortRef.current = null;
+          return { text: null, source: 'auth-required', authRequired: true, error: 'Please sign in to use AI Mentor.' };
+        }
+      }
       if (!res.ok) {
         clearTimers();
         if (res.status === 429) {
@@ -52,10 +72,8 @@ export default function useAiStreaming() {
           }
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
-          if (window.location.pathname !== '/login') {
-            window.dispatchEvent(new CustomEvent('auth:expired'));
-          }
-          throw new Error('auth');
+          window.dispatchEvent(new CustomEvent('auth:expired'));
+          return { text: null, source: 'auth-required', authRequired: true, error: 'Please sign in to use AI Mentor.' };
         }
         if (res.status >= 500) throw new Error('server');
         throw new Error(`http_${res.status}`);

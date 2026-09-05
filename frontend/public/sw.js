@@ -106,3 +106,47 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  let payload = {};
+  try {
+    payload = event.data.json();
+  } catch (error) {
+    payload = { title: 'GateNexa', body: event.data.text() || 'You have a new notification.' };
+  }
+
+  const title = payload.title || 'GateNexa';
+  const body = payload.body || 'You have a new notification';
+  const tag = payload.tag || 'gatenexa-notification';
+  const url = payload.url || '/';
+
+  const options = {
+    body,
+    tag,
+    data: { url },
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-192x192.png',
+    vibrate: [100, 50, 100],
+    requireInteraction: true,
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/';
+  const resolvedUrl = new URL(targetUrl, self.location.origin).toString();
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      const matchedClient = clientList.find((client) => client.url.startsWith(self.location.origin));
+      if (matchedClient) {
+        return matchedClient.focus();
+      }
+      return clients.openWindow(resolvedUrl);
+    })
+  );
+});

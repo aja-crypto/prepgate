@@ -1,33 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useYoutubeThumbnail } from '../../hooks/useYoutubeThumbnail';
 
 export default function LazyYouTubePlayer({ videoId, title, onError, autoPlay = false }) {
   const [loaded, setLoaded] = useState(autoPlay);
   const [failed, setFailed] = useState(false);
   const { src: thumbnail, onError: onThumbError, exhausted: thumbExhausted } = useYoutubeThumbnail(videoId, '');
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    if (!loaded) return;
-    const el = containerRef.current;
-    if (!el) return;
-    let parent = el.parentElement;
-    let insideFixedModal = false;
-    while (parent) {
-      const cs = getComputedStyle(parent);
-      if (cs.position === 'fixed') { insideFixedModal = true; break; }
-      parent = parent.parentElement;
-    }
-    if (insideFixedModal) return;
-    const isMobileView = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
-    requestAnimationFrame(() => {
-      if (isMobileView) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-      } else {
-        el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-      }
-    });
-  }, [loaded]);
 
   if (!videoId) return null;
 
@@ -82,7 +59,7 @@ export default function LazyYouTubePlayer({ videoId, title, onError, autoPlay = 
   }
 
   return (
-    <div ref={containerRef} className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black">
+    <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black">
       <iframe
         src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
         title={title || 'YouTube video player'}

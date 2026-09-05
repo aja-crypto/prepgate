@@ -433,6 +433,7 @@ async function callAiApiSingle(providerCfg, messages, options = {}) {
 
       if (!res.ok) {
         const errorBody = json.raw ? { message: json.raw } : json;
+        logProviderError(providerName, activeModel, raw || JSON.stringify(errorBody), status);
         captureAiExchange(requestPayload, errorBody, false, {
           model: activeModel,
           provider: providerName,
@@ -645,6 +646,8 @@ async function streamAiApi(messages, options = {}, onDelta) {
 
       if (!result || result.status < 200 || result.status >= 300) {
         const detail = `HTTP ${result?.status}`;
+        const providerError = extractProviderErrorDetails(result?.raw, result?.status);
+        logProviderError(providerName, model, result?.raw, result?.status);
         console.error(`[streamAiApi] ${providerName} failed: ${detail}`);
         if (result?.status === 402) {
           lastError = `AI quota exceeded for ${providerName}. Please check billing.`;
@@ -652,7 +655,15 @@ async function streamAiApi(messages, options = {}, onDelta) {
           lastError = `AI request failed (HTTP ${result?.status}). Please try again.`;
         }
         lastAiError = lastError;
-        lastAiMeta = { provider: providerName, model, status: result?.status, reason: lastError, ts: new Date().toISOString() };
+        lastAiMeta = {
+          provider: providerName,
+          model,
+          status: result?.status ?? null,
+          code: providerError.code ?? null,
+          reason: lastError,
+          detail: providerError.message || result?.raw || detail,
+          ts: new Date().toISOString(),
+        };
         // quota/timeout/auth on primary → try next online provider in the chain
         continue;
       }
@@ -2133,6 +2144,16 @@ async function getAiCoachResponse(message, context, user, modePrompt, onToken) {
 
   // Active mode must be available to both the API path and the local fallback.
   const activeMode = context?.mode || 'auto';
+  if (context.lightweightRequest && activeMode === 'auto') {
+    const { localCoachResponse } = require('../services/localCoachFallback');
+    const response = localCoachResponse(message, {});
+    if (typeof onToken === 'function' && response.text) onToken(response.text);
+    return {
+      ...response,
+      source: 'local-lightweight',
+      provider: null,
+    };
+  }
 
   // Log API key presence (not the actual key!)
   console.log('[AI Coach] OPENAI_API_KEY present:', !!process.env.OPENAI_API_KEY);

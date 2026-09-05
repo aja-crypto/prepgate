@@ -118,6 +118,8 @@ const handleRefreshFailure = () => {
   }
 };
 
+export const refreshAccessToken = async () => sharedRefreshAccessToken();
+
 api.interceptors.response.use(
   (response) => {
     if (response.config?.method === 'get' && !NO_CACHE_PATTERNS.some(p => response.config?.url?.includes(p))) {
