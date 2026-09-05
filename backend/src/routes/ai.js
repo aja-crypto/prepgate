@@ -218,6 +218,27 @@ function httpsPostJson(urlStr, payload, headers, timeoutMs) {
  * SSE (`data: {...}` lines terminated by `data: [DONE]`). Forwards each content
  * delta to `onDelta` as it arrives so time-to-first-token reaches the browser.
  */
+function extractProviderErrorDetails(rawBody, fallbackStatus = null) {
+  const text = typeof rawBody === 'string' ? rawBody.trim() : '';
+  let parsed = null;
+  if (text) {
+    try { parsed = JSON.parse(text); } catch (e) { parsed = null; }
+  }
+
+  const errorPayload = parsed?.error || parsed?.detail || parsed?.errors?.[0] || parsed || {};
+  const code = errorPayload?.code || parsed?.code || null;
+  const message = errorPayload?.message || parsed?.message || (typeof errorPayload === 'string' ? errorPayload : text) || 'Unknown provider error';
+  const status = fallbackStatus ?? parsed?.status ?? null;
+
+  return { status, code, message };
+}
+
+function logProviderError(providerName, modelName, rawBody, fallbackStatus = null) {
+  const { status, code, message } = extractProviderErrorDetails(rawBody, fallbackStatus);
+  const safeMessage = String(message || 'Unknown provider error').replace(/\s+/g, ' ').trim().slice(0, 500);
+  console.error(`[AI Provider Error] provider=${providerName} model=${modelName} status=${status ?? 'n/a'} code=${code ?? 'UNKNOWN'} message=${safeMessage}`);
+}
+
 function httpsPostStream(urlStr, payload, headers, timeoutMs, onDelta) {
   return new Promise((resolve, reject) => {
     let u;
@@ -225,6 +246,7 @@ function httpsPostStream(urlStr, payload, headers, timeoutMs, onDelta) {
     const lib = u.protocol === 'https:' ? https : http;
     const body = JSON.stringify(payload);
     let collected = '';
+    let rawBody = '';
     const req = lib.request(u, {
       method: 'POST',
       headers: {
@@ -236,6 +258,7 @@ function httpsPostStream(urlStr, payload, headers, timeoutMs, onDelta) {
     }, (res) => {
       const disposed = { done: false };
       const flushLines = (chunk) => {
+        rawBody += chunk.toString('utf8');
         collected += chunk;
         let idx;
         while ((idx = collected.indexOf('\n')) !== -1) {
@@ -248,7 +271,7 @@ function httpsPostStream(urlStr, payload, headers, timeoutMs, onDelta) {
       res.on('end', () => {
         if (collected.trim()) handleLine(collected.trim(), disposed);
         clearTimeout(hardTimer);
-        resolve({ status: res.statusCode, headers: res.headers });
+        resolve({ status: res.statusCode, headers: res.headers, raw: rawBody });
       });
       res.on('error', (err) => { clearTimeout(hardTimer); reject(err); });
     });
@@ -2295,14 +2318,15 @@ COACHING RULES:
     }
   }
 
-  const isQuotaError = /402|quota|billing|payment required/i.test(lastAiError || '');
-  if (isQuotaError) {
+  if (lastAiError) {
     try {
       const { localCoachResponse } = require('../services/localCoachFallback');
       const fallback = localCoachResponse(message, context || {});
       if (fallback?.text) {
-        console.log('[AI Coach] Quota/billing failure — serving local fallback');
-        return { text: fallback.text + '\n\n*Note: Live AI is temporarily unavailable due to quota limits. This is an offline answer.*', suggestions: fallback.suggestions, source: 'fallback', provider: 'Local', offlineInfo: lastAiMeta || null };
+        const isQuota = /402|quota|billing|payment required/i.test(lastAiError);
+        const note = isQuota ? '\n\n*Note: Live AI is temporarily unavailable due to quota limits. This is an offline answer.*' : '\n\n*Note: Live AI is temporarily unavailable. This is an offline answer.*';
+        console.log('[AI Coach] Provider failure — serving local fallback:', lastAiError);
+        return { text: fallback.text + note, suggestions: fallback.suggestions, source: 'fallback', provider: 'Local', offlineInfo: lastAiMeta || null };
       }
     } catch (e) { console.error('[AI Coach] Fallback failed:', e.message); }
   }
