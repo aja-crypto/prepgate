@@ -435,6 +435,10 @@ async function callAiApiSingle(providerCfg, messages, options = {}) {
           console.error(`[callAiApi] Auth error (${status}): ${errorDetail}`);
           lastAiError = 'AI API authentication failed. Check your API key.';
           lastAiMeta = { provider: providerName, model: activeModel, status, reason: lastAiError, detail: errorDetail, ts: new Date().toISOString() };
+        } else if (status === 402) {
+          console.error(`[callAiApi] Quota/billing error (402) on ${activeModel}: ${errorDetail}`);
+          lastAiError = 'AI quota exceeded. Please check billing.';
+          lastAiMeta = { provider: providerName, model: activeModel, status, reason: lastAiError, detail: errorDetail, ts: new Date().toISOString() };
         } else if (status === 404) {
           console.error(`[callAiApi] Model not found (404) on ${activeModel}, trying fallback...`);
           lastAiError = 'AI model unavailable. Trying fallback.';
@@ -620,7 +624,11 @@ async function streamAiApi(messages, options = {}, onDelta) {
       if (!result || result.status < 200 || result.status >= 300) {
         const detail = `HTTP ${result?.status}`;
         console.error(`[streamAiApi] ${providerName} failed: ${detail}`);
-        lastError = `AI request failed (HTTP ${result?.status}). Please try again.`;
+        if (result?.status === 402) {
+          lastError = `AI quota exceeded for ${providerName}. Please check billing.`;
+        } else {
+          lastError = `AI request failed (HTTP ${result?.status}). Please try again.`;
+        }
         lastAiError = lastError;
         lastAiMeta = { provider: providerName, model, status: result?.status, reason: lastError, ts: new Date().toISOString() };
         // quota/timeout/auth on primary → try next online provider in the chain
@@ -2287,9 +2295,17 @@ COACHING RULES:
     }
   }
 
-  // STRICT online-only: never answer from a local heuristic / offline fallback.
-  // If the external AI failed, surface an error so the UI shows a real failure
-  // instead of a fabricated offline answer (product requirement).
+  const isQuotaError = /402|quota|billing|payment required/i.test(lastAiError || '');
+  if (isQuotaError) {
+    try {
+      const { localCoachResponse } = require('../services/localCoachFallback');
+      const fallback = localCoachResponse(message, context || {});
+      if (fallback?.text) {
+        console.log('[AI Coach] Quota/billing failure — serving local fallback');
+        return { text: fallback.text + '\n\n*Note: Live AI is temporarily unavailable due to quota limits. This is an offline answer.*', suggestions: fallback.suggestions, source: 'fallback', provider: 'Local', offlineInfo: lastAiMeta || null };
+      }
+    } catch (e) { console.error('[AI Coach] Fallback failed:', e.message); }
+  }
   console.log('[AI Coach] External AI unavailable:', lastAiError, '— returning explicit error (no offline fallback)');
   return {
     text: null,
