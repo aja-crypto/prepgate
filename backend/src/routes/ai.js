@@ -1286,7 +1286,18 @@ router.post('/chat', validateFields([
         });
       } catch (err) {
         console.error('[AI Coach] SSE unhandled error:', err.message);
-        response = { text: null, source: 'error', offlineError: 'AI chat error. Please try again.' };
+        try {
+          const { localCoachResponse } = require('../services/localCoachFallback');
+          const fb = localCoachResponse(message, context || {});
+          if (fb?.text) {
+            console.log('[AI Coach] SSE catch fallback');
+            response = { text: fb.text + '\n\n*Note: Live AI is temporarily unavailable. This is an offline answer.*', suggestions: fb.suggestions, source: 'fallback', provider: 'Local' };
+          } else {
+            response = { text: null, source: 'error', offlineError: 'AI chat error. Please try again.' };
+          }
+        } catch (_) {
+          response = { text: null, source: 'error', offlineError: 'AI chat error. Please try again.' };
+        }
       }
 
       if (response?.text) {
