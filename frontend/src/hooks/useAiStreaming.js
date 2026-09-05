@@ -42,6 +42,14 @@ export default function useAiStreaming() {
           return { text: null, suggestions: null, source: 'quota', quotaExceeded: true, limit: errorData?.data?.limit, resetAt: errorData?.data?.resetAt };
         }
         if (res.status === 401) {
+          const isGuest = localStorage.getItem('isGuest') === 'true';
+          if (isGuest) {
+            // Guest users are blocked from AI in production — show sign-in prompt, don't log out
+            clearTimers();
+            setStreaming(false);
+            abortRef.current = null;
+            return { text: null, suggestions: null, source: 'auth', error: 'Please sign in to use the AI assistant.' };
+          }
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
           if (window.location.pathname !== '/login') {
