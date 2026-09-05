@@ -391,6 +391,7 @@ router.get('/download/:folder/:filename', protect, async (req, res) => {
 });
 
 // GET /api/short-notes/local-file/:token — serve local file with short-lived token
+// View → inline (viewer), Download → attachment (force download)
 router.get('/local-file/:token', async (req, res) => {
   const tokenData = localFileTokens.get(req.params.token);
   if (!tokenData || tokenData.expires < Date.now()) {
@@ -398,8 +399,10 @@ router.get('/local-file/:token', async (req, res) => {
     return res.status(404).json({ success: false, message: 'Token expired or invalid' });
   }
   localFileTokens.delete(req.params.token);
+  const isDownload = req.query.download === '1' || req.query.force === '1';
+  const disposition = isDownload ? 'attachment' : 'inline';
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `inline; filename="${path.basename(tokenData.filePath)}"`);
+  res.setHeader('Content-Disposition', `${disposition}; filename="${path.basename(tokenData.filePath)}"`);
   fs.createReadStream(tokenData.filePath).pipe(res);
 });
 

@@ -36,8 +36,11 @@ function fetchBuffer(url, redirects = 3) {
 }
 
 // Serve PDF files — Cloudinary proxy with correct MIME, local fallback
+// View → inline (browser PDF viewer), Download → attachment (force download)
 router.get('/file/:path(*)', protect, async (req, res) => {
   const relPath = req.params.path;
+  const isDownload = req.query.download === '1' || req.query.force === '1';
+  const disposition = isDownload ? 'attachment' : 'inline';
   
   // Try Cloudinary first via MediaFile lookup — proxy with application/pdf
   if (isMongoConnected()) {
@@ -56,14 +59,19 @@ router.get('/file/:path(*)', protect, async (req, res) => {
             if (buf && buf.length > 0) {
               res.setHeader('Content-Type', 'application/pdf');
               res.setHeader('Content-Length', buf.length);
-              res.setHeader('Content-Disposition', `inline; filename="${path.basename(relPath)}"`);
+              res.setHeader('Content-Disposition', `${disposition}; filename="${path.basename(relPath)}"`);
               res.setHeader('Cache-Control', 'private, max-age=3600');
               return res.send(buf);
             }
           } catch (_) { /* fall through to JSON URL redirect */ }
         }
         // Return JSON with secure URL (frontend will window.open it)
-        return res.json({ success: true, url: doc.secure_url, type: doc.type || (isPdf ? 'pdf' : 'other') });
+        // For download, append fl_attachment to Cloudinary URL
+        let url = doc.secure_url;
+        if (isDownload && isPdf) {
+          url += (url.includes('?') ? '&' : '?') + 'fl_attachment';
+        }
+        return res.json({ success: true, url, type: doc.type || (isPdf ? 'pdf' : 'other') });
       }
     } catch (e) { /* fall through to local */ }
   }
