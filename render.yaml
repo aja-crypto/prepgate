@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: gatenexa-api
+    name: gatenexa-tycc
     runtime: node
     plan: free
     buildCommand: cd backend && npm install
@@ -30,11 +30,15 @@ services:
       - key: FRONTEND_URL
         value: https://gatenexa.vercel.app
       - key: BACKEND_URL
-        value: https://gatenexa-api.onrender.com
+        value: https://gatenexa-tycc.onrender.com
       - key: OPENROUTER_API_KEY
         sync: false
       - key: OPENROUTER_MODEL
         value: openai/gpt-4o-mini
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash-lite
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY

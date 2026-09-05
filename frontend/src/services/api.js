@@ -249,22 +249,44 @@ export const aiService = {
   generatePlan: (payload) => api.post('/ai/planner', payload),
   getRecommendations: (payload) => api.post('/ai/recommendations', payload),
   askCoach: (message, context, sessionId) => api.post('/ai/chat', { message, context, sessionId, conversationId: sessionId }),
-  streamCoach: (message, context, sessionId, signal, modePrompt) => {
+  streamCoach: async (message, context, sessionId, signal, modePrompt) => {
     const headers = { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' };
     const token = localStorage.getItem('accessToken');
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    } else if (localStorage.getItem('isGuest') === 'true') {
+    const isGuest = localStorage.getItem('isGuest') === 'true';
+
+    if (isGuest) {
       headers['X-Demo-User'] = 'true';
+    } else if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
+
     const body = { message, context, sessionId, conversationId: sessionId, stream: true };
     if (modePrompt) body.modePrompt = modePrompt;
-    return fetch(`${api.defaults.baseURL}/ai/chat`, {
+
+    let res = await fetch(`${api.defaults.baseURL}/ai/chat`, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
       signal,
     });
+
+    // If 401 and we have a refresh token, try to refresh and retry once
+    if (res.status === 401 && !isGuest) {
+      try {
+        const newToken = await refreshAccessToken();
+        headers.Authorization = `Bearer ${newToken}`;
+        res = await fetch(`${api.defaults.baseURL}/ai/chat`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+          signal,
+        });
+      } catch {
+        // Refresh failed — let caller handle the 401
+      }
+    }
+
+    return res;
   },
   doubtSolve: (payload) => api.post('/ai/doubt-solver', payload),
   getQuota: () => api.get('/ai/quota'),

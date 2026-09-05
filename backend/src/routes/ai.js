@@ -1,4 +1,4 @@
-﻿// AI study planner — GPT when OPENAI_API_KEY is set, heuristic fallback otherwise
+﻿// AI study planner — Gemini (primary) → OpenRouter → OpenAI → DashScope fallback chain
 const router = require('express').Router();
 const fs = require('fs');
 const path = require('path');
@@ -22,7 +22,7 @@ let lastAiMeta = null;      // { provider, model, status, reason, detail, ts } �
 function getIstDateKeyAI(date = new Date()) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
 }
-let lastProviderUsed = null; // provider that last succeeded (OpenRouter/OpenAI/DashScope)
+let lastProviderUsed = null; // provider that last succeeded (Gemini/OpenRouter/OpenAI/DashScope)
 
 // ─── Internal AI request instrumentation (debug-only, never exposed to users) ───
 const aiRequestLog = {
@@ -277,14 +277,56 @@ function httpsPostStream(urlStr, payload, headers, timeoutMs, onDelta) {
 }
 
 /**
+ * Validates that a URL is absolute and uses HTTPS.
+ * Returns the URL string if valid, null otherwise.
+ */
+function validateAbsoluteUrl(url) {
+  if (!url || typeof url !== 'string') return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') return null;
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Builds the ordered provider chain (all online — no offline/local source).
- * OpenAI is always preferred per product requirement (the AI assistant answers
- * from OpenAI online); OpenRouter and DashScope act as ONLINE fallbacks when a
+ * Gemini is the primary provider (free tier eligible, cost-effective).
+ * OpenRouter, OpenAI, and DashScope act as ONLINE fallbacks when a
  * higher-priority provider is unavailable/rate-limited, so real answers always
  * reach the user. Skips providers whose key is absent.
  */
 function buildProviderChain() {
   const chain = [];
+
+  // 1. Gemini (primary — Google AI Studio free tier)
+  if (process.env.GEMINI_API_KEY) {
+    chain.push({
+      name: 'Gemini',
+      key: process.env.GEMINI_API_KEY,
+      endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+      model: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
+      extraHeaders: {},
+      isOpenRouter: false,
+    });
+  }
+
+  // 2. OpenRouter (fallback)
+  if (process.env.OPENROUTER_API_KEY) {
+    const configuredUrl = validateAbsoluteUrl(process.env.OPENROUTER_BASE_URL);
+    chain.push({
+      name: 'OpenRouter',
+      key: process.env.OPENROUTER_API_KEY,
+      endpoint: configuredUrl || 'https://openrouter.ai/api/v1/chat/completions',
+      model: process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini',
+      extraHeaders: { 'HTTP-Referer': 'https://GateNexa.app', 'X-Title': 'GateNexa' },
+      isOpenRouter: true,
+    });
+  }
+
+  // 3. OpenAI (direct, if configured)
   if (process.env.OPENAI_API_KEY) {
     chain.push({
       name: 'OpenAI',
@@ -295,26 +337,8 @@ function buildProviderChain() {
       isOpenRouter: false,
     });
   }
-  if (process.env.GEMINI_API_KEY) {
-    chain.push({
-      name: 'Gemini',
-      key: process.env.GEMINI_API_KEY,
-      endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-      model: process.env.GEMINI_MODEL || 'gemini-flash-lite-latest',
-      extraHeaders: {},
-      isOpenRouter: false,
-    });
-  }
-  if (process.env.OPENROUTER_API_KEY) {
-    chain.push({
-      name: 'OpenRouter',
-      key: process.env.OPENROUTER_API_KEY,
-      endpoint: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1/chat/completions',
-      model: process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini',
-      extraHeaders: { 'HTTP-Referer': 'https://GateNexa.app', 'X-Title': 'GateNexa' },
-      isOpenRouter: true,
-    });
-  }
+
+  // 4. DashScope / Aliyun (last resort)
   if (process.env.DASHSCOPE_API_KEY) {
     chain.push({
       name: 'DashScope',
@@ -325,6 +349,7 @@ function buildProviderChain() {
       isOpenRouter: false,
     });
   }
+
   return chain;
 }
 
