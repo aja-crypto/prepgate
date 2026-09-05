@@ -1,0 +1,234 @@
+// PYQ Practice — topic/subject/year-wise browse, practice, bookmarks, revision
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useProgress } from '../context/ProgressContext';
+import { pyqService } from '../services/api';
+import { computePyqStats } from '../utils/gateUtils';
+import QuestionPractice from '../components/pyq/QuestionPractice';
+import Modal from '../components/common/Modal';
+import toast from 'react-hot-toast';
+
+const DIFF_STYLE = {
+  easy: 'bg-green-500/10 border-green-500/20 text-green-400',
+  medium: 'bg-orange-500/10 border-orange-500/20 text-orange-400',
+  hard: 'bg-red-500/10 border-red-500/20 text-red-400',
+};
+const STATUS_FILTERS = ['All', 'Solved', 'Unsolved', 'Revision Needed', 'Bookmarked', 'Difficult'];
+
+export default function PYQPage() {
+  const { pyqs, updatePyqs, refreshPyqs, mongoAvailable } = useProgress();
+  const [filter, setFilter] = useState('All');
+  const [topicFilter, setTopicFilter] = useState('All');
+  const [yearFilter, setYearFilter] = useState('All');
+  const [diff, setDiff] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [showStats, setShowStats] = useState(true);
+  const [practiceId, setPracticeId] = useState(null);
+  const [globalStats, setGlobalStats] = useState(null);
+  const [browse, setBrowse] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      refreshPyqs?.(),
+      pyqService.getStats().then((r) => setGlobalStats(r.data.data)).catch(() => {}),
+      pyqService.getBrowse().then((r) => setBrowse(r.data.data)).catch(() => {}),
+    ]).finally(() => setLoading(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const subjects = useMemo(() => ['All', ...new Set(pyqs.map((q) => q.subject))], [pyqs]);
+  const topics = useMemo(() => ['All', ...new Set(pyqs.map((q) => q.topic).filter(Boolean))], [pyqs]);
+  const years = useMemo(() => ['All', ...new Set(pyqs.map((q) => q.year))].sort((a, b) => (b === 'All' ? 1 : a === 'All' ? -1 : b - a)), [pyqs]);
+  const stats = useMemo(() => computePyqStats(pyqs), [pyqs]);
+
+  const filtered = pyqs.filter((q) => {
+    if (filter !== 'All' && q.subject !== filter) return false;
+    if (topicFilter !== 'All' && q.topic !== topicFilter) return false;
+    if (yearFilter !== 'All' && q.year !== yearFilter) return false;
+    if (diff !== 'All' && q.difficulty !== diff) return false;
+    if (statusFilter === 'Solved' && !q.solved) return false;
+    if (statusFilter === 'Unsolved' && q.solved) return false;
+    if (statusFilter === 'Revision Needed' && !q.revisionNeeded) return false;
+    if (statusFilter === 'Bookmarked' && !q.bookmarked) return false;
+    if (statusFilter === 'Difficult' && !q.markedDifficult) return false;
+    return true;
+  });
+
+  const toggle = useCallback(async (q, field) => {
+    const next = !q[field];
+    updatePyqs((d) => d.map((item) => (item.id === q.id ? { ...item, [field]: next } : item)));
+
+    if (!q.mongoId || !mongoAvailable) return;
+
+    try {
+      if (field === 'bookmarked') {
+        await pyqService.toggleBookmark(q.mongoId, next);
+      } else if (field === 'revisionNeeded' || field === 'markedDifficult') {
+        await pyqService.updateFlags(q.mongoId, { [field]: next });
+      } else if (field === 'solved') {
+        await pyqService.toggleSolved(q.mongoId, next);
+      }
+    } catch {
+      toast.error('Sync failed — saved locally');
+    }
+  }, [updatePyqs, mongoAvailable]);
+
+  const handleAttempt = () => {
+    refreshPyqs?.();
+    setPracticeId(null);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-xl font-bold text-text">PYQ Practice</h1>
+          <p className="text-sm text-text3 mt-0.5">
+            {stats.solved}/{stats.total} solved · {stats.bookmarked} bookmarked · {stats.revisionNeeded} need revision
+            {mongoAvailable ? ' · API synced' : ' · Local mode'}
+          </p>
+        </div>
+        <button type="button" onClick={() => setShowStats(!showStats)} className="text-xs bg-bg-2 border border-border text-text2 px-3 py-1.5 rounded-lg hover:border-white/15">
+          {showStats ? 'Hide Stats' : 'Show Stats'}
+        </button>
+      </div>
+
+      {showStats && globalStats && (
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          {[
+            { label: 'Community Correct %', value: globalStats.correctPct, color: 'text-green-400' },
+            { label: 'Community Incorrect %', value: globalStats.incorrectPct, color: 'text-red-400' },
+            { label: 'Community Skip %', value: globalStats.skipPct, color: 'text-orange-400' },
+          ].map((s) => (
+            <div key={s.label} className="bg-surface border border-border rounded-xl p-4 text-center">
+              <div className={`text-xl font-bold font-mono ${s.color}`}>{s.value}%</div>
+              <div className="text-[10px] text-text3 uppercase">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showStats && (
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <div className="text-xs font-semibold text-text mb-2">Topic-wise</div>
+            {Object.entries(stats.byTopic).slice(0, 8).map(([topic, s]) => (
+              <button key={topic} type="button" onClick={() => setTopicFilter(topic)} className="flex justify-between w-full text-[11px] text-text3 mb-1 hover:text-primary">
+                <span className="truncate mr-2 text-left">{topic}</span>
+                <span className="text-text2 font-mono">{s.solved}/{s.total}</span>
+              </button>
+            ))}
+          </div>
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <div className="text-xs font-semibold text-text mb-2">Subject-wise</div>
+            {Object.entries(stats.bySubject).map(([sub, s]) => (
+              <button key={sub} type="button" onClick={() => setFilter(sub)} className="flex justify-between w-full text-[11px] text-text3 mb-1 hover:text-primary">
+                <span className="truncate mr-2 text-left">{sub.split(' ').slice(-1)[0]}</span>
+                <span className="text-text2 font-mono">{s.solved}/{s.total}</span>
+              </button>
+            ))}
+          </div>
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <div className="text-xs font-semibold text-text mb-2">Year-wise</div>
+            {Object.entries(stats.byYear).sort(([a], [b]) => b - a).map(([yr, s]) => (
+              <button key={yr} type="button" onClick={() => setYearFilter(+yr)} className="flex justify-between w-full text-[11px] text-text3 mb-1 hover:text-primary">
+                <span>GATE {yr}</span>
+                <span className="text-text2 font-mono">{s.solved}/{s.total}</span>
+              </button>
+            ))}
+          </div>
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <div className="text-xs font-semibold text-text mb-2">Difficulty</div>
+            {Object.entries(stats.byDifficulty).map(([d, count]) => (
+              <button key={d} type="button" onClick={() => setDiff(d)} className="flex justify-between w-full text-[11px] text-text3 mb-1 capitalize hover:text-primary">
+                <span>{d}</span>
+                <span className="text-text2 font-mono">{count}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {browse && !pyqs.length && !loading && (
+        <div className="bg-surface border border-border rounded-xl p-6 mb-5 text-center">
+          <p className="text-sm text-text2 mb-2">No PYQs loaded yet.</p>
+          <p className="text-xs text-text3">
+            {browse.total > 0
+              ? `${browse.total} questions in database — refresh or check connection.`
+              : 'Admin: import PYQs via Admin Panel → PYQs (CSV/JSON). Run npm run seed for samples.'}
+          </p>
+        </div>
+      )}
+
+      <div className="flex gap-2 flex-wrap mb-2">
+        {subjects.map((s) => (
+          <button key={s} type="button" onClick={() => setFilter(s)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${filter === s ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>
+            {s === 'All' ? 'All Subjects' : s.split(' ').slice(-1)[0]}
+          </button>
+        ))}
+      </div>
+      <div className="flex gap-2 mb-2 flex-wrap">
+        {topics.slice(0, 12).map((t) => (
+          <button key={t} type="button" onClick={() => setTopicFilter(t)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${topicFilter === t ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>
+            {t === 'All' ? 'All Topics' : t}
+          </button>
+        ))}
+      </div>
+      <div className="flex gap-2 mb-2 flex-wrap">
+        {years.map((y) => (
+          <button key={y} type="button" onClick={() => setYearFilter(y)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${yearFilter === y ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>
+            {y === 'All' ? 'All Years' : `GATE ${y}`}
+          </button>
+        ))}
+        {['All', 'easy', 'medium', 'hard'].map((d) => (
+          <button key={d} type="button" onClick={() => setDiff(d)} className={`text-xs px-3 py-1.5 rounded-lg border capitalize transition-all ${diff === d ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>{d}</button>
+        ))}
+      </div>
+      <div className="flex gap-2 mb-5 flex-wrap">
+        {STATUS_FILTERS.map((s) => (
+          <button key={s} type="button" onClick={() => setStatusFilter(s)} className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${statusFilter === s ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3 hover:border-white/10'}`}>{s}</button>
+        ))}
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {filtered.map((q) => (
+          <div key={q.id} className="bg-surface border border-border rounded-xl p-4 hover:border-white/10 transition-colors">
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="text-sm font-medium text-text flex items-center gap-1">
+                {q.bookmarked && <span className="text-yellow-400">★</span>}
+                {q.title}
+              </div>
+              <span className={`text-[10px] px-2 py-1 rounded border whitespace-nowrap flex-shrink-0 capitalize ${DIFF_STYLE[q.difficulty]}`}>{q.difficulty}</span>
+            </div>
+            <div className="text-[11px] text-text3 mb-1">{q.subject} · GATE {q.year}{q.topic ? ` · ${q.topic}` : ''}</div>
+            {q.questionText && <p className="text-[10px] text-text3 mb-2 line-clamp-2">{q.questionText}</p>}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {q.revisionNeeded && <span className="text-[9px] px-2 py-0.5 rounded bg-orange-500/10 border border-orange-500/20 text-orange-400">Revision</span>}
+              {q.markedDifficult && <span className="text-[9px] px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400">Difficult</span>}
+              {q.solved && <span className="text-[9px] px-2 py-0.5 rounded bg-green-500/10 border border-green-500/20 text-green-400">Solved</span>}
+            </div>
+            <div className="flex gap-1.5">
+              {q.mongoId && q.questionText ? (
+                <button type="button" onClick={() => setPracticeId(q.mongoId)} className="flex-1 text-[10px] px-2 py-1.5 rounded-lg border bg-primary/10 border-primary/20 text-primary">
+                  Practice
+                </button>
+              ) : (
+                <button type="button" onClick={() => toggle(q, 'solved')} className={`flex-1 text-[10px] px-2 py-1.5 rounded-lg border transition-all ${q.solved ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-bg-2 border-border text-text3'}`}>
+                  {q.solved ? '✓ Solved' : 'Mark Solved'}
+                </button>
+              )}
+              <button type="button" onClick={() => toggle(q, 'bookmarked')} className={`text-[10px] px-2 py-1.5 rounded-lg border transition-all ${q.bookmarked ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' : 'bg-bg-2 border-border text-text3'}`}>★</button>
+              <button type="button" onClick={() => toggle(q, 'revisionNeeded')} className={`text-[10px] px-2 py-1.5 rounded-lg border transition-all ${q.revisionNeeded ? 'bg-orange-500/10 border-orange-500/20 text-orange-400' : 'bg-bg-2 border-border text-text3'}`}>↻</button>
+              <button type="button" onClick={() => toggle(q, 'markedDifficult')} className={`text-[10px] px-2 py-1.5 rounded-lg border transition-all ${q.markedDifficult ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-bg-2 border-border text-text3'}`}>!</button>
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && !loading && <div className="col-span-3 text-center py-16 text-text3 text-sm">No PYQs match this filter</div>}
+      </div>
+
+      <Modal open={!!practiceId} onClose={() => setPracticeId(null)} title="Practice Question" maxWidth="max-w-2xl">
+        {practiceId && <QuestionPractice pyqId={practiceId} onClose={() => setPracticeId(null)} onAttempt={handleAttempt} />}
+      </Modal>
+    </div>
+  );
+}

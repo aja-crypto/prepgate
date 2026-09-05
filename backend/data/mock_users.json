@@ -1,0 +1,1544 @@
+[
+  {
+    "_id": "444450f1-6d75-4815-a570-e25009dfc573",
+    "name": "Demo Student",
+    "email": "demo@gate2027.in",
+    "password": "$2a$12$raBdU6HT285ReBBKQQ2Kd.cAbtIcblr1uvvRY5Tq8SzyC4MKYyQYS",
+    "role": "user",
+    "authProvider": "local",
+    "isVerified": true,
+    "googleId": null,
+    "streak": {
+      "current": 1,
+      "longest": 1,
+      "lastStudyDate": "2026-08-29T05:48:36.064Z"
+    },
+    "preferences": {
+      "theme": "dark",
+      "notifications": true
+    },
+    "targetYear": 2027,
+    "studyGoalHours": 8,
+    "progressBackup": {
+      "data": {
+        "topics": [
+          {
+            "id": 1,
+            "name": "Linear Algebra",
+            "subject": "Engineering Mathematics",
+            "done": false
+          },
+          {
+            "id": 2,
+            "name": "Calculus & Differential Equations",
+            "subject": "Engineering Mathematics",
+            "done": false
+          },
+          {
+            "id": 3,
+            "name": "Boolean Algebra",
+            "subject": "Digital Logic",
+            "done": false
+          },
+          {
+            "id": 4,
+            "name": "Pipelining & Hazards",
+            "subject": "Computer Organization",
+            "done": false
+          },
+          {
+            "id": 5,
+            "name": "Dynamic Programming",
+            "subject": "Algorithms",
+            "done": false
+          },
+          {
+            "id": 6,
+            "name": "Process Scheduling",
+            "subject": "Operating Systems",
+            "done": false
+          },
+          {
+            "id": 7,
+            "name": "SQL Joins & Subqueries",
+            "subject": "DBMS",
+            "done": false
+          },
+          {
+            "id": 8,
+            "name": "TCP/IP Stack",
+            "subject": "Computer Networks",
+            "done": false
+          },
+          {
+            "id": 9,
+            "name": "Turing Machines",
+            "subject": "TOC",
+            "done": false
+          },
+          {
+            "id": 10,
+            "name": "LL & LR Parsing",
+            "subject": "Compiler Design",
+            "done": false
+          }
+        ],
+        "notes": [],
+        "pyqs": [],
+        "mocks": [],
+        "studyStats": {
+          "todayHours": 0,
+          "weekHours": 0,
+          "streak": {
+            "current": 0,
+            "longest": 0
+          },
+          "weeklyHours": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "subjects": [
+            {
+              "name": "Engineering Mathematics",
+              "icon": "🔢",
+              "progress": 0,
+              "color": "#4f8dff"
+            },
+            {
+              "name": "Digital Logic",
+              "icon": "💻",
+              "progress": 0,
+              "color": "#7c5cfc"
+            },
+            {
+              "name": "Computer Organization",
+              "icon": "🖥",
+              "progress": 0,
+              "color": "#06d6a0"
+            },
+            {
+              "name": "Programming & DS",
+              "icon": "🐍",
+              "progress": 0,
+              "color": "#ff9f43"
+            },
+            {
+              "name": "Algorithms",
+              "icon": "⚡",
+              "progress": 0,
+              "color": "#ff6b6b"
+            },
+            {
+              "name": "Operating Systems",
+              "icon": "⚙️",
+              "progress": 0,
+              "color": "#a855f7"
+            },
+            {
+              "name": "DBMS",
+              "icon": "🗄",
+              "progress": 0,
+              "color": "#06b6d4"
+            },
+            {
+              "name": "Computer Networks",
+              "icon": "🌐",
+              "progress": 0,
+              "color": "#ffd166"
+            },
+            {
+              "name": "Theory of Computation",
+              "icon": "🤖",
+              "progress": 0,
+              "color": "#f72585"
+            },
+            {
+              "name": "Compiler Design",
+              "icon": "🔧",
+              "progress": 0,
+              "color": "#4cc9f0"
+            },
+            {
+              "name": "Aptitude",
+              "icon": "🧮",
+              "progress": 0,
+              "color": "#43aa8b"
+            }
+          ]
+        },
+        "gateFeatures": {
+          "examDate": "2027-02-07T09:00:00",
+          "dailyTarget": {
+            "hours": 8,
+            "topicsToComplete": 3
+          },
+          "weeklyGoal": {
+            "hours": 50,
+            "topics": 15,
+            "mocks": 1
+          },
+          "monthlyGoal": {
+            "hours": 200,
+            "topics": 60,
+            "mocks": 4
+          },
+          "todayProgress": {
+            "hours": 0,
+            "topicsCompleted": 0,
+            "date": "2026-08-29"
+          },
+          "studyPlans": {},
+          "streak": {
+            "current": 0,
+            "longest": 0,
+            "activityLog": {}
+          },
+          "monthlyHours": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "weeklyAccuracy": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "gamification": {
+          "xp": 0,
+          "level": 1,
+          "badges": [],
+          "badgeDates": {}
+        },
+        "revisionSchedule": [],
+        "resources": [],
+        "productivity": {
+          "journal": [],
+          "tasks": [],
+          "pomodoroSessions": 0,
+          "focusModeEnabled": false
+        },
+        "notifications": {
+          "dailyStudy": {
+            "enabled": true,
+            "time": "08:00"
+          },
+          "revision": {
+            "enabled": true,
+            "time": "18:00"
+          },
+          "mockTest": {
+            "enabled": false,
+            "time": "10:00",
+            "day": "sunday"
+          },
+          "goalCompletion": {
+            "enabled": true
+          },
+          "pushEnabled": false
+        },
+        "lastSaved": null,
+        "initialized": true
+      },
+      "updatedAt": "2026-08-29T05:46:09.087Z"
+    },
+    "fcmToken": null
+  },
+  {
+    "_id": "8e57e608-9cb9-4b37-acc2-23c4ddf1cbde",
+    "name": "Test User 2027",
+    "email": "test2027@example.com",
+    "password": "$2a$12$1qn9nTVWhMTHrMLAaATBNODEPbGVJDYaah7XfxtVqYZYzeuDXMtzC",
+    "role": "user",
+    "authProvider": "local",
+    "isVerified": true,
+    "googleId": null,
+    "streak": {
+      "current": 0,
+      "longest": 0,
+      "lastStudyDate": null
+    },
+    "preferences": {
+      "theme": "dark",
+      "notifications": true
+    },
+    "targetYear": 2027,
+    "studyGoalHours": 8,
+    "progressBackup": {
+      "data": {
+        "topics": [
+          {
+            "id": 1,
+            "name": "Linear Algebra",
+            "subject": "Engineering Mathematics",
+            "done": false
+          },
+          {
+            "id": 2,
+            "name": "Calculus & Differential Equations",
+            "subject": "Engineering Mathematics",
+            "done": false
+          },
+          {
+            "id": 3,
+            "name": "Boolean Algebra",
+            "subject": "Digital Logic",
+            "done": false
+          },
+          {
+            "id": 4,
+            "name": "Pipelining & Hazards",
+            "subject": "Computer Organization",
+            "done": false
+          },
+          {
+            "id": 5,
+            "name": "Dynamic Programming",
+            "subject": "Algorithms",
+            "done": false
+          },
+          {
+            "id": 6,
+            "name": "Process Scheduling",
+            "subject": "Operating Systems",
+            "done": false
+          },
+          {
+            "id": 7,
+            "name": "SQL Joins & Subqueries",
+            "subject": "DBMS",
+            "done": false
+          },
+          {
+            "id": 8,
+            "name": "TCP/IP Stack",
+            "subject": "Computer Networks",
+            "done": false
+          },
+          {
+            "id": 9,
+            "name": "Turing Machines",
+            "subject": "TOC",
+            "done": false
+          },
+          {
+            "id": 10,
+            "name": "LL & LR Parsing",
+            "subject": "Compiler Design",
+            "done": false
+          }
+        ],
+        "notes": [],
+        "pyqs": [],
+        "mocks": [],
+        "studyStats": {
+          "todayHours": 0,
+          "weekHours": 0,
+          "streak": {
+            "current": 0,
+            "longest": 0
+          },
+          "weeklyHours": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "subjects": [
+            {
+              "name": "Engineering Mathematics",
+              "icon": "🔢",
+              "progress": 0,
+              "color": "#4f8dff"
+            },
+            {
+              "name": "Digital Logic",
+              "icon": "💻",
+              "progress": 0,
+              "color": "#7c5cfc"
+            },
+            {
+              "name": "Computer Organization",
+              "icon": "🖥",
+              "progress": 0,
+              "color": "#06d6a0"
+            },
+            {
+              "name": "Programming & DS",
+              "icon": "🐍",
+              "progress": 0,
+              "color": "#ff9f43"
+            },
+            {
+              "name": "Algorithms",
+              "icon": "⚡",
+              "progress": 0,
+              "color": "#ff6b6b"
+            },
+            {
+              "name": "Operating Systems",
+              "icon": "⚙️",
+              "progress": 0,
+              "color": "#a855f7"
+            },
+            {
+              "name": "DBMS",
+              "icon": "🗄",
+              "progress": 0,
+              "color": "#06b6d4"
+            },
+            {
+              "name": "Computer Networks",
+              "icon": "🌐",
+              "progress": 0,
+              "color": "#ffd166"
+            },
+            {
+              "name": "Theory of Computation",
+              "icon": "🤖",
+              "progress": 0,
+              "color": "#f72585"
+            },
+            {
+              "name": "Compiler Design",
+              "icon": "🔧",
+              "progress": 0,
+              "color": "#4cc9f0"
+            },
+            {
+              "name": "Aptitude",
+              "icon": "🧮",
+              "progress": 0,
+              "color": "#43aa8b"
+            }
+          ]
+        },
+        "gateFeatures": {
+          "examDate": "2027-02-07T09:00:00",
+          "dailyTarget": {
+            "hours": 8,
+            "topicsToComplete": 3
+          },
+          "weeklyGoal": {
+            "hours": 50,
+            "topics": 15,
+            "mocks": 1
+          },
+          "monthlyGoal": {
+            "hours": 200,
+            "topics": 60,
+            "mocks": 4
+          },
+          "todayProgress": {
+            "hours": 0,
+            "topicsCompleted": 0,
+            "date": "2026-08-29"
+          },
+          "studyPlans": {},
+          "streak": {
+            "current": 0,
+            "longest": 0,
+            "activityLog": {}
+          },
+          "monthlyHours": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "weeklyAccuracy": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "gamification": {
+          "xp": 0,
+          "level": 1,
+          "badges": [],
+          "badgeDates": {}
+        },
+        "revisionSchedule": [],
+        "resources": [],
+        "productivity": {
+          "journal": [],
+          "tasks": [],
+          "pomodoroSessions": 0,
+          "focusModeEnabled": false
+        },
+        "notifications": {
+          "dailyStudy": {
+            "enabled": true,
+            "time": "08:00"
+          },
+          "revision": {
+            "enabled": true,
+            "time": "18:00"
+          },
+          "mockTest": {
+            "enabled": false,
+            "time": "10:00",
+            "day": "sunday"
+          },
+          "goalCompletion": {
+            "enabled": true
+          },
+          "pushEnabled": false
+        },
+        "lastSaved": null,
+        "initialized": true
+      },
+      "updatedAt": "2026-08-29T05:47:26.222Z"
+    },
+    "fcmToken": null
+  },
+  {
+    "_id": "469b42a9-b706-43f7-849d-efbd7c38b799",
+    "name": "Rate Test 1",
+    "email": "rate1@test.com",
+    "password": "$2a$12$Gd9AjZqxiv54.BoJ.4I3Auynkr2xyU6G6DYUApjLeXpkZem98ncPe",
+    "role": "user",
+    "authProvider": "local",
+    "isVerified": true,
+    "googleId": null,
+    "streak": {
+      "current": 0,
+      "longest": 0,
+      "lastStudyDate": null
+    },
+    "preferences": {
+      "theme": "dark",
+      "notifications": true
+    },
+    "targetYear": 2027,
+    "studyGoalHours": 8,
+    "progressBackup": {
+      "data": {
+        "topics": [
+          {
+            "id": 1,
+            "name": "Linear Algebra",
+            "subject": "Engineering Mathematics",
+            "done": false
+          },
+          {
+            "id": 2,
+            "name": "Calculus & Differential Equations",
+            "subject": "Engineering Mathematics",
+            "done": false
+          },
+          {
+            "id": 3,
+            "name": "Boolean Algebra",
+            "subject": "Digital Logic",
+            "done": false
+          },
+          {
+            "id": 4,
+            "name": "Pipelining & Hazards",
+            "subject": "Computer Organization",
+            "done": false
+          },
+          {
+            "id": 5,
+            "name": "Dynamic Programming",
+            "subject": "Algorithms",
+            "done": false
+          },
+          {
+            "id": 6,
+            "name": "Process Scheduling",
+            "subject": "Operating Systems",
+            "done": false
+          },
+          {
+            "id": 7,
+            "name": "SQL Joins & Subqueries",
+            "subject": "DBMS",
+            "done": false
+          },
+          {
+            "id": 8,
+            "name": "TCP/IP Stack",
+            "subject": "Computer Networks",
+            "done": false
+          },
+          {
+            "id": 9,
+            "name": "Turing Machines",
+            "subject": "TOC",
+            "done": false
+          },
+          {
+            "id": 10,
+            "name": "LL & LR Parsing",
+            "subject": "Compiler Design",
+            "done": false
+          }
+        ],
+        "notes": [],
+        "pyqs": [],
+        "mocks": [],
+        "studyStats": {
+          "todayHours": 0,
+          "weekHours": 0,
+          "streak": {
+            "current": 0,
+            "longest": 0
+          },
+          "weeklyHours": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "subjects": [
+            {
+              "name": "Engineering Mathematics",
+              "icon": "🔢",
+              "progress": 0,
+              "color": "#4f8dff"
+            },
+            {
+              "name": "Digital Logic",
+              "icon": "💻",
+              "progress": 0,
+              "color": "#7c5cfc"
+            },
+            {
+              "name": "Computer Organization",
+              "icon": "🖥",
+              "progress": 0,
+              "color": "#06d6a0"
+            },
+            {
+              "name": "Programming & DS",
+              "icon": "🐍",
+              "progress": 0,
+              "color": "#ff9f43"
+            },
+            {
+              "name": "Algorithms",
+              "icon": "⚡",
+              "progress": 0,
+              "color": "#ff6b6b"
+            },
+            {
+              "name": "Operating Systems",
+              "icon": "⚙️",
+              "progress": 0,
+              "color": "#a855f7"
+            },
+            {
+              "name": "DBMS",
+              "icon": "🗄",
+              "progress": 0,
+              "color": "#06b6d4"
+            },
+            {
+              "name": "Computer Networks",
+              "icon": "🌐",
+              "progress": 0,
+              "color": "#ffd166"
+            },
+            {
+              "name": "Theory of Computation",
+              "icon": "🤖",
+              "progress": 0,
+              "color": "#f72585"
+            },
+            {
+              "name": "Compiler Design",
+              "icon": "🔧",
+              "progress": 0,
+              "color": "#4cc9f0"
+            },
+            {
+              "name": "Aptitude",
+              "icon": "🧮",
+              "progress": 0,
+              "color": "#43aa8b"
+            }
+          ]
+        },
+        "gateFeatures": {
+          "examDate": "2027-02-07T09:00:00",
+          "dailyTarget": {
+            "hours": 8,
+            "topicsToComplete": 3
+          },
+          "weeklyGoal": {
+            "hours": 50,
+            "topics": 15,
+            "mocks": 1
+          },
+          "monthlyGoal": {
+            "hours": 200,
+            "topics": 60,
+            "mocks": 4
+          },
+          "todayProgress": {
+            "hours": 0,
+            "topicsCompleted": 0,
+            "date": "2026-08-29"
+          },
+          "studyPlans": {},
+          "streak": {
+            "current": 0,
+            "longest": 0,
+            "activityLog": {}
+          },
+          "monthlyHours": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "weeklyAccuracy": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "gamification": {
+          "xp": 0,
+          "level": 1,
+          "badges": [],
+          "badgeDates": {}
+        },
+        "revisionSchedule": [],
+        "resources": [],
+        "productivity": {
+          "journal": [],
+          "tasks": [],
+          "pomodoroSessions": 0,
+          "focusModeEnabled": false
+        },
+        "notifications": {
+          "dailyStudy": {
+            "enabled": true,
+            "time": "08:00"
+          },
+          "revision": {
+            "enabled": true,
+            "time": "18:00"
+          },
+          "mockTest": {
+            "enabled": false,
+            "time": "10:00",
+            "day": "sunday"
+          },
+          "goalCompletion": {
+            "enabled": true
+          },
+          "pushEnabled": false
+        },
+        "lastSaved": null,
+        "initialized": true
+      },
+      "updatedAt": "2026-08-29T05:49:44.941Z"
+    },
+    "fcmToken": null
+  },
+  {
+    "_id": "d89fbf83-8235-44ae-97d8-779afb5d1cab",
+    "name": "Test User",
+    "email": "test3@test.com",
+    "password": "$2a$12$V3gZpube8Ih5W22z7/1pzubNJJhRCmyQ8i9AhvKE9ozkKNvpniGgK",
+    "role": "user",
+    "authProvider": "local",
+    "isVerified": true,
+    "googleId": null,
+    "streak": {
+      "current": 0,
+      "longest": 0,
+      "lastStudyDate": null
+    },
+    "preferences": {
+      "theme": "dark",
+      "notifications": true
+    },
+    "targetYear": 2027,
+    "studyGoalHours": 8,
+    "progressBackup": {
+      "data": {
+        "topics": [
+          {
+            "id": 1,
+            "name": "Linear Algebra",
+            "subject": "Engineering Mathematics",
+            "done": false
+          },
+          {
+            "id": 2,
+            "name": "Calculus & Differential Equations",
+            "subject": "Engineering Mathematics",
+            "done": false
+          },
+          {
+            "id": 3,
+            "name": "Boolean Algebra",
+            "subject": "Digital Logic",
+            "done": false
+          },
+          {
+            "id": 4,
+            "name": "Pipelining & Hazards",
+            "subject": "Computer Organization",
+            "done": false
+          },
+          {
+            "id": 5,
+            "name": "Dynamic Programming",
+            "subject": "Algorithms",
+            "done": false
+          },
+          {
+            "id": 6,
+            "name": "Process Scheduling",
+            "subject": "Operating Systems",
+            "done": false
+          },
+          {
+            "id": 7,
+            "name": "SQL Joins & Subqueries",
+            "subject": "DBMS",
+            "done": false
+          },
+          {
+            "id": 8,
+            "name": "TCP/IP Stack",
+            "subject": "Computer Networks",
+            "done": false
+          },
+          {
+            "id": 9,
+            "name": "Turing Machines",
+            "subject": "TOC",
+            "done": false
+          },
+          {
+            "id": 10,
+            "name": "LL & LR Parsing",
+            "subject": "Compiler Design",
+            "done": false
+          }
+        ],
+        "notes": [],
+        "pyqs": [],
+        "mocks": [],
+        "studyStats": {
+          "todayHours": 0,
+          "weekHours": 0,
+          "streak": {
+            "current": 0,
+            "longest": 0
+          },
+          "weeklyHours": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "subjects": [
+            {
+              "name": "Engineering Mathematics",
+              "icon": "🔢",
+              "progress": 0,
+              "color": "#4f8dff"
+            },
+            {
+              "name": "Digital Logic",
+              "icon": "💻",
+              "progress": 0,
+              "color": "#7c5cfc"
+            },
+            {
+              "name": "Computer Organization",
+              "icon": "🖥",
+              "progress": 0,
+              "color": "#06d6a0"
+            },
+            {
+              "name": "Programming & DS",
+              "icon": "🐍",
+              "progress": 0,
+              "color": "#ff9f43"
+            },
+            {
+              "name": "Algorithms",
+              "icon": "⚡",
+              "progress": 0,
+              "color": "#ff6b6b"
+            },
+            {
+              "name": "Operating Systems",
+              "icon": "⚙️",
+              "progress": 0,
+              "color": "#a855f7"
+            },
+            {
+              "name": "DBMS",
+              "icon": "🗄",
+              "progress": 0,
+              "color": "#06b6d4"
+            },
+            {
+              "name": "Computer Networks",
+              "icon": "🌐",
+              "progress": 0,
+              "color": "#ffd166"
+            },
+            {
+              "name": "Theory of Computation",
+              "icon": "🤖",
+              "progress": 0,
+              "color": "#f72585"
+            },
+            {
+              "name": "Compiler Design",
+              "icon": "🔧",
+              "progress": 0,
+              "color": "#4cc9f0"
+            },
+            {
+              "name": "Aptitude",
+              "icon": "🧮",
+              "progress": 0,
+              "color": "#43aa8b"
+            }
+          ]
+        },
+        "gateFeatures": {
+          "examDate": "2027-02-07T09:00:00",
+          "dailyTarget": {
+            "hours": 8,
+            "topicsToComplete": 3
+          },
+          "weeklyGoal": {
+            "hours": 50,
+            "topics": 15,
+            "mocks": 1
+          },
+          "monthlyGoal": {
+            "hours": 200,
+            "topics": 60,
+            "mocks": 4
+          },
+          "todayProgress": {
+            "hours": 0,
+            "topicsCompleted": 0,
+            "date": "2026-08-29"
+          },
+          "studyPlans": {},
+          "streak": {
+            "current": 0,
+            "longest": 0,
+            "activityLog": {}
+          },
+          "monthlyHours": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "weeklyAccuracy": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "gamification": {
+          "xp": 0,
+          "level": 1,
+          "badges": [],
+          "badgeDates": {}
+        },
+        "revisionSchedule": [],
+        "resources": [],
+        "productivity": {
+          "journal": [],
+          "tasks": [],
+          "pomodoroSessions": 0,
+          "focusModeEnabled": false
+        },
+        "notifications": {
+          "dailyStudy": {
+            "enabled": true,
+            "time": "08:00"
+          },
+          "revision": {
+            "enabled": true,
+            "time": "18:00"
+          },
+          "mockTest": {
+            "enabled": false,
+            "time": "10:00",
+            "day": "sunday"
+          },
+          "goalCompletion": {
+            "enabled": true
+          },
+          "pushEnabled": false
+        },
+        "lastSaved": null,
+        "initialized": true
+      },
+      "updatedAt": "2026-08-29T07:03:03.919Z"
+    },
+    "fcmToken": null
+  },
+  {
+    "_id": "c750a929-d231-4050-82c6-4f5998520570",
+    "name": "Test User2",
+    "email": "test4@test.com",
+    "password": "$2a$12$sYW9PkZ0yE9Xxx6LwoJk1uVo03cYbec8Txs08sPOEOV1RU847mpPm",
+    "role": "user",
+    "authProvider": "local",
+    "isVerified": true,
+    "googleId": null,
+    "streak": {
+      "current": 0,
+      "longest": 0,
+      "lastStudyDate": null
+    },
+    "preferences": {
+      "theme": "dark",
+      "notifications": true
+    },
+    "targetYear": 2027,
+    "studyGoalHours": 8,
+    "progressBackup": {
+      "data": {
+        "topics": [
+          {
+            "id": 1,
+            "name": "Linear Algebra",
+            "subject": "Engineering Mathematics",
+            "done": false
+          },
+          {
+            "id": 2,
+            "name": "Calculus & Differential Equations",
+            "subject": "Engineering Mathematics",
+            "done": false
+          },
+          {
+            "id": 3,
+            "name": "Boolean Algebra",
+            "subject": "Digital Logic",
+            "done": false
+          },
+          {
+            "id": 4,
+            "name": "Pipelining & Hazards",
+            "subject": "Computer Organization",
+            "done": false
+          },
+          {
+            "id": 5,
+            "name": "Dynamic Programming",
+            "subject": "Algorithms",
+            "done": false
+          },
+          {
+            "id": 6,
+            "name": "Process Scheduling",
+            "subject": "Operating Systems",
+            "done": false
+          },
+          {
+            "id": 7,
+            "name": "SQL Joins & Subqueries",
+            "subject": "DBMS",
+            "done": false
+          },
+          {
+            "id": 8,
+            "name": "TCP/IP Stack",
+            "subject": "Computer Networks",
+            "done": false
+          },
+          {
+            "id": 9,
+            "name": "Turing Machines",
+            "subject": "TOC",
+            "done": false
+          },
+          {
+            "id": 10,
+            "name": "LL & LR Parsing",
+            "subject": "Compiler Design",
+            "done": false
+          }
+        ],
+        "notes": [],
+        "pyqs": [],
+        "mocks": [],
+        "studyStats": {
+          "todayHours": 0,
+          "weekHours": 0,
+          "streak": {
+            "current": 0,
+            "longest": 0
+          },
+          "weeklyHours": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "subjects": [
+            {
+              "name": "Engineering Mathematics",
+              "icon": "🔢",
+              "progress": 0,
+              "color": "#4f8dff"
+            },
+            {
+              "name": "Digital Logic",
+              "icon": "💻",
+              "progress": 0,
+              "color": "#7c5cfc"
+            },
+            {
+              "name": "Computer Organization",
+              "icon": "🖥",
+              "progress": 0,
+              "color": "#06d6a0"
+            },
+            {
+              "name": "Programming & DS",
+              "icon": "🐍",
+              "progress": 0,
+              "color": "#ff9f43"
+            },
+            {
+              "name": "Algorithms",
+              "icon": "⚡",
+              "progress": 0,
+              "color": "#ff6b6b"
+            },
+            {
+              "name": "Operating Systems",
+              "icon": "⚙️",
+              "progress": 0,
+              "color": "#a855f7"
+            },
+            {
+              "name": "DBMS",
+              "icon": "🗄",
+              "progress": 0,
+              "color": "#06b6d4"
+            },
+            {
+              "name": "Computer Networks",
+              "icon": "🌐",
+              "progress": 0,
+              "color": "#ffd166"
+            },
+            {
+              "name": "Theory of Computation",
+              "icon": "🤖",
+              "progress": 0,
+              "color": "#f72585"
+            },
+            {
+              "name": "Compiler Design",
+              "icon": "🔧",
+              "progress": 0,
+              "color": "#4cc9f0"
+            },
+            {
+              "name": "Aptitude",
+              "icon": "🧮",
+              "progress": 0,
+              "color": "#43aa8b"
+            }
+          ]
+        },
+        "gateFeatures": {
+          "examDate": "2027-02-07T09:00:00",
+          "dailyTarget": {
+            "hours": 8,
+            "topicsToComplete": 3
+          },
+          "weeklyGoal": {
+            "hours": 50,
+            "topics": 15,
+            "mocks": 1
+          },
+          "monthlyGoal": {
+            "hours": 200,
+            "topics": 60,
+            "mocks": 4
+          },
+          "todayProgress": {
+            "hours": 0,
+            "topicsCompleted": 0,
+            "date": "2026-08-29"
+          },
+          "studyPlans": {},
+          "streak": {
+            "current": 0,
+            "longest": 0,
+            "activityLog": {}
+          },
+          "monthlyHours": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "weeklyAccuracy": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "gamification": {
+          "xp": 0,
+          "level": 1,
+          "badges": [],
+          "badgeDates": {}
+        },
+        "revisionSchedule": [],
+        "resources": [],
+        "productivity": {
+          "journal": [],
+          "tasks": [],
+          "pomodoroSessions": 0,
+          "focusModeEnabled": false
+        },
+        "notifications": {
+          "dailyStudy": {
+            "enabled": true,
+            "time": "08:00"
+          },
+          "revision": {
+            "enabled": true,
+            "time": "18:00"
+          },
+          "mockTest": {
+            "enabled": false,
+            "time": "10:00",
+            "day": "sunday"
+          },
+          "goalCompletion": {
+            "enabled": true
+          },
+          "pushEnabled": false
+        },
+        "lastSaved": null,
+        "initialized": true
+      },
+      "updatedAt": "2026-08-29T07:03:26.942Z"
+    },
+    "fcmToken": null
+  },
+  {
+    "_id": "f7d7cd71-f4c1-4460-b085-42d2fd6084c1",
+    "name": "Test User3",
+    "email": "test5@test.com",
+    "password": "$2a$12$Ex23SivZTsIUUg.E2xePVOwy2ByjvwUHsRxvTItbE/29OUJJMIafe",
+    "role": "user",
+    "authProvider": "local",
+    "isVerified": true,
+    "googleId": null,
+    "streak": {
+      "current": 0,
+      "longest": 0,
+      "lastStudyDate": null
+    },
+    "preferences": {
+      "theme": "dark",
+      "notifications": true
+    },
+    "targetYear": 2027,
+    "studyGoalHours": 8,
+    "progressBackup": {
+      "data": {
+        "topics": [
+          {
+            "id": 1,
+            "name": "Linear Algebra",
+            "subject": "Engineering Mathematics",
+            "done": false
+          },
+          {
+            "id": 2,
+            "name": "Calculus & Differential Equations",
+            "subject": "Engineering Mathematics",
+            "done": false
+          },
+          {
+            "id": 3,
+            "name": "Boolean Algebra",
+            "subject": "Digital Logic",
+            "done": false
+          },
+          {
+            "id": 4,
+            "name": "Pipelining & Hazards",
+            "subject": "Computer Organization",
+            "done": false
+          },
+          {
+            "id": 5,
+            "name": "Dynamic Programming",
+            "subject": "Algorithms",
+            "done": false
+          },
+          {
+            "id": 6,
+            "name": "Process Scheduling",
+            "subject": "Operating Systems",
+            "done": false
+          },
+          {
+            "id": 7,
+            "name": "SQL Joins & Subqueries",
+            "subject": "DBMS",
+            "done": false
+          },
+          {
+            "id": 8,
+            "name": "TCP/IP Stack",
+            "subject": "Computer Networks",
+            "done": false
+          },
+          {
+            "id": 9,
+            "name": "Turing Machines",
+            "subject": "TOC",
+            "done": false
+          },
+          {
+            "id": 10,
+            "name": "LL & LR Parsing",
+            "subject": "Compiler Design",
+            "done": false
+          }
+        ],
+        "notes": [],
+        "pyqs": [],
+        "mocks": [],
+        "studyStats": {
+          "todayHours": 0,
+          "weekHours": 0,
+          "streak": {
+            "current": 0,
+            "longest": 0
+          },
+          "weeklyHours": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "subjects": [
+            {
+              "name": "Engineering Mathematics",
+              "icon": "🔢",
+              "progress": 0,
+              "color": "#4f8dff"
+            },
+            {
+              "name": "Digital Logic",
+              "icon": "💻",
+              "progress": 0,
+              "color": "#7c5cfc"
+            },
+            {
+              "name": "Computer Organization",
+              "icon": "🖥",
+              "progress": 0,
+              "color": "#06d6a0"
+            },
+            {
+              "name": "Programming & DS",
+              "icon": "🐍",
+              "progress": 0,
+              "color": "#ff9f43"
+            },
+            {
+              "name": "Algorithms",
+              "icon": "⚡",
+              "progress": 0,
+              "color": "#ff6b6b"
+            },
+            {
+              "name": "Operating Systems",
+              "icon": "⚙️",
+              "progress": 0,
+              "color": "#a855f7"
+            },
+            {
+              "name": "DBMS",
+              "icon": "🗄",
+              "progress": 0,
+              "color": "#06b6d4"
+            },
+            {
+              "name": "Computer Networks",
+              "icon": "🌐",
+              "progress": 0,
+              "color": "#ffd166"
+            },
+            {
+              "name": "Theory of Computation",
+              "icon": "🤖",
+              "progress": 0,
+              "color": "#f72585"
+            },
+            {
+              "name": "Compiler Design",
+              "icon": "🔧",
+              "progress": 0,
+              "color": "#4cc9f0"
+            },
+            {
+              "name": "Aptitude",
+              "icon": "🧮",
+              "progress": 0,
+              "color": "#43aa8b"
+            }
+          ]
+        },
+        "gateFeatures": {
+          "examDate": "2027-02-07T09:00:00",
+          "dailyTarget": {
+            "hours": 8,
+            "topicsToComplete": 3
+          },
+          "weeklyGoal": {
+            "hours": 50,
+            "topics": 15,
+            "mocks": 1
+          },
+          "monthlyGoal": {
+            "hours": 200,
+            "topics": 60,
+            "mocks": 4
+          },
+          "todayProgress": {
+            "hours": 0,
+            "topicsCompleted": 0,
+            "date": "2026-08-29"
+          },
+          "studyPlans": {},
+          "streak": {
+            "current": 0,
+            "longest": 0,
+            "activityLog": {}
+          },
+          "monthlyHours": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "weeklyAccuracy": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "gamification": {
+          "xp": 0,
+          "level": 1,
+          "badges": [],
+          "badgeDates": {}
+        },
+        "revisionSchedule": [],
+        "resources": [],
+        "productivity": {
+          "journal": [],
+          "tasks": [],
+          "pomodoroSessions": 0,
+          "focusModeEnabled": false
+        },
+        "notifications": {
+          "dailyStudy": {
+            "enabled": true,
+            "time": "08:00"
+          },
+          "revision": {
+            "enabled": true,
+            "time": "18:00"
+          },
+          "mockTest": {
+            "enabled": false,
+            "time": "10:00",
+            "day": "sunday"
+          },
+          "goalCompletion": {
+            "enabled": true
+          },
+          "pushEnabled": false
+        },
+        "lastSaved": null,
+        "initialized": true
+      },
+      "updatedAt": "2026-08-29T07:07:49.961Z"
+    },
+    "fcmToken": null
+  }
+]

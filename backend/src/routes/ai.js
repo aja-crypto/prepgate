@@ -1,0 +1,563 @@
+// AI study planner — Gemini (primary) → OpenRouter → DashScope fallback chain
+const router = require('express').Router();
+const { protect } = require('../middleware/auth');
+
+const AI_PROVIDER_TIMEOUT_MS = 30000;
+const CHAT_ROUTE_TIMEOUT_MS = 35000;
+
+function withTimeout(promise, ms, label = 'Request') {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`${label} timed out after ${ms}ms`));
+    }, ms);
+    promise
+      .then((value) => { clearTimeout(timer); resolve(value); })
+      .catch((err) => { clearTimeout(timer); reject(err); });
+  });
+}
+
+/**
+ * Validate that a URL is absolute and uses HTTPS.
+ * Returns the URL string if valid, null otherwise.
+ */
+function validateAbsoluteUrl(url) {
+  if (!url || typeof url !== 'string') return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') return null;
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build the AI provider chain.
+ * Order: Gemini → OpenRouter → OpenAI → DashScope
+ * Each provider is only included if its API key is configured.
+ */
+function buildProviderChain() {
+  const chain = [];
+
+  // 1. Gemini (primary — Google AI Studio free tier)
+  if (process.env.GEMINI_API_KEY) {
+    chain.push({
+      name: 'Gemini',
+      key: process.env.GEMINI_API_KEY,
+      endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+      model: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
+      extraHeaders: {},
+      isOpenRouter: false,
+    });
+  }
+
+  // 2. OpenRouter (fallback)
+  if (process.env.OPENROUTER_API_KEY) {
+    const configuredUrl = validateAbsoluteUrl(process.env.OPENROUTER_BASE_URL);
+    chain.push({
+      name: 'OpenRouter',
+      key: process.env.OPENROUTER_API_KEY,
+      endpoint: configuredUrl || 'https://openrouter.ai/api/v1/chat/completions',
+      model: process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini',
+      extraHeaders: {
+        'HTTP-Referer': process.env.SITE_URL || 'https://gatenexa.vercel.app',
+        'X-Title': 'GateNexa AI',
+      },
+      isOpenRouter: true,
+    });
+  }
+
+  // 3. OpenAI (direct, if configured)
+  if (process.env.OPENAI_API_KEY) {
+    chain.push({
+      name: 'OpenAI',
+      key: process.env.OPENAI_API_KEY,
+      endpoint: 'https://api.openai.com/v1/chat/completions',
+      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+      extraHeaders: {},
+      isOpenRouter: false,
+    });
+  }
+
+  // 4. DashScope / Aliyun (last resort)
+  if (process.env.DASHSCOPE_API_KEY) {
+    chain.push({
+      name: 'DashScope',
+      key: process.env.DASHSCOPE_API_KEY,
+      endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+      model: process.env.DASHSCOPE_MODEL || 'qwen-plus',
+      extraHeaders: {},
+      isOpenRouter: false,
+    });
+  }
+
+  return chain;
+}
+
+let lastProviderUsed = null;
+
+/**
+ * Generic AI API caller with provider chain fallback.
+ * Tries providers in order: Gemini → OpenRouter → OpenAI → DashScope.
+ * Falls back to the next provider on failure.
+ */
+async function callAiApi(messages, options = {}) {
+  const chain = buildProviderChain();
+
+  if (chain.length === 0) {
+    console.warn('No AI provider API keys configured');
+    return null;
+  }
+
+  for (const provider of chain) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), AI_PROVIDER_TIMEOUT_MS);
+
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${provider.key}`,
+        ...provider.extraHeaders,
+      };
+
+      const res = await fetch(provider.endpoint, {
+        method: 'POST',
+        headers,
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: provider.model,
+          messages,
+          temperature: options.temperature || 0.7,
+          max_tokens: options.max_tokens || 1500,
+          response_format: options.response_format || { type: 'text' },
+        }),
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ message: 'Unknown error' }));
+        console.error(`[${provider.name}] AI API Error:`, error.message || res.status);
+        continue; // Try next provider
+      }
+
+      const json = await res.json();
+      const content = json.choices?.[0]?.message?.content || '';
+      if (content) {
+        lastProviderUsed = provider.name;
+        return content;
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        console.error(`[${provider.name}] Request timed out after ${AI_PROVIDER_TIMEOUT_MS}ms`);
+      } else {
+        console.error(`[${provider.name}] AI API Error:`, err.message);
+      }
+      continue; // Try next provider
+    }
+  }
+
+  console.error('All AI providers failed');
+  return null;
+}
+
+function buildHeuristicPlan(body) {
+  const { subjects = [], topics = [], dailyHours = 8 } = body;
+  const incomplete = topics.filter((t) => !t.done);
+  const weakSubjects = [...subjects].sort((a, b) => (a.progress || 0) - (b.progress || 0));
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  if (weakSubjects.length === 0 && incomplete.length === 0) {
+    return days.map(day => ({
+      day,
+      subject: 'Mixed Review',
+      topic: 'General Revision',
+      hours: dailyHours,
+      tasks: ['Review core concepts', 'Solve 5 PYQs', 'Mock analysis']
+    }));
+  }
+
+  return days.map((day, i) => {
+    const sub = weakSubjects[i % Math.max(weakSubjects.length, 1)];
+    const topic = (incomplete.filter(t => t.subject === sub?.name) || [])[0] || incomplete[i % Math.max(incomplete.length, 1)];
+    return {
+      day,
+      subject: sub?.name || 'Mixed Review',
+      topic: topic?.name || 'Revision',
+      hours: dailyHours,
+      tasks: [
+        topic ? `Study: ${topic.name}` : 'Review core concepts',
+        'Solve 2–3 PYQs',
+        i % 2 === 0 ? 'Formula revision (30 min)' : 'Mock analysis / weak area drill',
+      ],
+    };
+  });
+}
+
+async function buildGptPlan(body) {
+  const { subjects, topics, pyqs, mocks, dailyHours = 8, period = 'week' } = body;
+  const incomplete = topics.filter((t) => !t.done).slice(0, 15);
+  const unsolvedPyqs = pyqs.filter((p) => !p.solved).slice(0, 10);
+  const recentMock = mocks[mocks.length - 1];
+
+  const prompt = `You are a GATE CSE 2027 study coach. Create a ${period}ly study plan as JSON array.
+Each item: { "day": "Monday", "subject": "...", "topic": "...", "hours": number, "tasks": ["...", "..."] }
+Daily target: ${dailyHours} hours. Focus weak subjects first.
+
+Weak subjects: ${subjects.filter((s) => s.progress < 60).map((s) => `${s.name} (${s.progress}%)`).join(', ') || 'none'}
+Incomplete topics: ${incomplete.map((t) => `${t.name} (${t.subject})`).join(', ') || 'none'}
+Unsolved PYQs: ${unsolvedPyqs.map((p) => p.title).join(', ') || 'none'}
+Latest mock: ${recentMock ? `${recentMock.name} — ${recentMock.score} marks, notes: ${recentMock.notes || 'none'}` : 'none'}
+
+Return ONLY valid JSON array, 7 items for a week.`;
+
+  const messages = [
+    { role: 'system', content: 'You output only valid JSON arrays for GATE study plans.' },
+    { role: 'user', content: prompt },
+  ];
+
+  try {
+    const text = await callAiApi(messages);
+    if (!text) throw new Error('AI Response empty');
+
+    const match = text.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('No JSON array found in response');
+    
+    return JSON.parse(match[0]);
+  } catch (e) {
+    console.error('Failed to build GPT plan, falling back to heuristic:', e.message);
+    return buildHeuristicPlan(body);
+  }
+}
+
+router.post('/planner', protect, async (req, res, next) => {
+  try {
+    let plan;
+    let source = 'heuristic';
+
+    try {
+      plan = await buildGptPlan(req.body);
+      if (plan?.length) source = 'ai';
+    } catch {
+      plan = null;
+    }
+
+    if (!plan?.length) {
+      plan = buildHeuristicPlan(req.body);
+      source = 'heuristic';
+    }
+
+    res.json({ success: true, data: { plan, source } });
+  } catch (e) {
+    next(e);
+  }
+});
+
+function buildHeuristicRecommendations(data) {
+  const recommendations = [];
+  const { subjects = [], topics = [], pyqs = [], mocks = [], gateFeatures = {}, studyStats = {} } = data;
+
+  const incompleteTopics = topics.filter(t => !t.done);
+  const completedTopics = topics.filter(t => t.done);
+  const overallProgress = data.overall?.percentage || 0;
+
+  // 1. What Should I Study Next?
+  if (incompleteTopics.length > 0) {
+    const nextTopic = incompleteTopics[0];
+    recommendations.push({
+      type: 'next_study',
+      title: 'Next High-Impact Topic',
+      content: `Based on your progress, you should tackle "${nextTopic.name}" in ${nextTopic.subject}. It's a high-impact topic for GATE.`,
+      action: '/topics'
+    });
+  }
+
+  // 2. Revision Suggestions
+  const dueForRevision = pyqs.filter(p => p.revisionNeeded);
+  if (dueForRevision.length > 0) {
+    recommendations.push({
+      type: 'revision',
+      title: 'Revision Due',
+      content: `You have ${dueForRevision.length} questions marked for revision. Spaced repetition is key to retention.`,
+      action: '/revision'
+    });
+  }
+
+  // 3. Weak Subject Detection & Score Improvement
+  const weakSubjects = subjects.filter(s => s.progress > 0 && s.progress < 50).sort((a, b) => a.progress - b.progress);
+  if (weakSubjects.length > 0) {
+    const s = weakSubjects[0];
+    recommendations.push({
+      type: 'weak_area',
+      title: `Improve ${s.name}`,
+      content: `Your progress in ${s.name} is ${s.progress}%. Focusing on its core topics could boost your score by 4-6 marks.`,
+      action: '/subjects'
+    });
+  }
+
+  // 4. Mock Test Suggestions
+  if (mocks.length === 0 && overallProgress > 20) {
+    recommendations.push({
+      type: 'mock_test',
+      title: 'Time for a Mock Test',
+      content: "You've covered significant ground. Take a subject-wise mock test to validate your learning.",
+      action: '/mocks'
+    });
+  } else if (mocks.length > 0) {
+    const avgScore = mocks.reduce((acc, m) => acc + (m.score || 0), 0) / mocks.length;
+    if (avgScore < 60) {
+      recommendations.push({
+        type: 'mock_test',
+        title: 'Strategy Shift',
+        content: "Your average mock score is below 60%. Try analyzing your mistake patterns before the next test.",
+        action: '/analytics'
+      });
+    }
+  }
+
+  // 5. Daily Plan Generator (Simulated)
+  recommendations.push({
+    type: 'plan',
+    title: "Today's Focus Plan",
+    content: `1. 2 hours: ${incompleteTopics[0]?.name || 'New Topic'} | 2. 1 hour: Revision | 3. 30 mins: Practice 5 PYQs.`,
+    action: '/dashboard'
+  });
+
+  // 6. Mistake Pattern Analysis (Heuristic)
+  const accuracy = pyqs.length > 0 ? (pyqs.filter(p => p.status === 'correct').length / pyqs.length) * 100 : 100;
+  if (accuracy < 70) {
+    recommendations.push({
+      type: 'mistake_analysis',
+      title: 'Accuracy Alert',
+      content: "Your PYQ accuracy is below 70%. You might be making silly mistakes or have conceptual gaps in core areas.",
+      action: '/pyq'
+    });
+  }
+
+  // 7. Study Health
+  const weeklyHours = studyStats.weeklyHours || [0, 0, 0, 0, 0, 0, 0];
+  const totalHours = weeklyHours.reduce((a, b) => a + b, 0);
+  if (totalHours > 50) {
+    recommendations.push({
+      type: 'health',
+      title: 'Burnout Risk',
+      content: "High study volume detected. Ensure you're taking adequate breaks to maintain long-term focus.",
+      action: '/productivity'
+    });
+  } else if (totalHours < 10 && totalHours > 0) {
+     recommendations.push({
+      type: 'health',
+      title: 'Consistency Check',
+      content: "Study hours are lower than usual. Try to aim for at least 3-4 hours daily for consistent growth.",
+      action: '/productivity'
+    });
+  }
+
+  // 8. Exam Readiness
+  let status = 'Beginner';
+  if (overallProgress > 75) status = 'Exam Ready';
+  else if (overallProgress > 40) status = 'Intermediate';
+
+  recommendations.push({
+    type: 'readiness',
+    title: 'Milestone: ' + status,
+    content: `You've completed ${overallProgress}% of the syllabus. You are moving towards the ${status === 'Beginner' ? 'Intermediate' : 'Advanced'} phase.`,
+    action: '/analytics'
+  });
+
+  return recommendations;
+}
+
+async function buildGptRecommendations(data) {
+  const prompt = `You are a GATE CSE 2027 AI Mentor. Analyze the following student data and provide 6-8 personalized, actionable recommendations and "Smart Messages".
+Return ONLY a JSON array of objects: { "type": "string", "title": "string", "content": "string", "action": "string" }
+
+Categories to cover:
+1. What Should I Study Next? (Based on weightage/dependency)
+2. Revision Suggestions (Spaced repetition)
+3. Weak Subject Detection (Low accuracy/progress)
+4. Mock Test Suggestions (When to take, what to focus on)
+5. Daily/Weekly Plan (A concise roadmap)
+6. Score Improvement (Specific topics to gain marks)
+7. Mistake Pattern Analysis (Silly mistakes vs Concept gaps)
+8. Study Health (Burnout, consistency)
+9. Exam Readiness (Level: Beginner, Intermediate, Pro)
+
+Types: next_study, revision, weak_area, mock_test, insight, health, readiness, plan, mistake_analysis.
+Actions: /topics, /revision, /subjects, /mocks, /dashboard, /productivity, /analytics, /pyq.
+
+Data:
+- Subjects: ${JSON.stringify(data.subjects?.map(s => ({ name: s.name, progress: s.progress })))
+}
+- Recent Mocks: ${JSON.stringify(data.mocks?.slice(-5))}
+- Streak: ${data.gateFeatures?.streak?.current || 0}
+- Total Progress: ${data.overall?.percentage || 0}%
+- Study Hours (Mon-Sun): ${JSON.stringify(data.studyStats?.weeklyHours)}
+
+Provide specific, professional, and highly motivating advice for a GATE aspirant. Use technical terms like "Normalization", "Paging", "Asymptotic Analysis" if relevant to weak areas.`;
+
+  const messages = [
+    { role: 'system', content: 'You are a helpful GATE CSE 2027 mentor that outputs recommendations as JSON arrays.' },
+    { role: 'user', content: prompt },
+  ];
+
+  const text = await callAiApi(messages);
+  if (!text) return null;
+
+  const match = text.match(/\[[\s\S]*\]/);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[0]);
+  } catch (e) {
+    console.error('Failed to parse AI recommendations:', e);
+    return null;
+  }
+}
+
+router.post('/recommendations', protect, async (req, res, next) => {
+  try {
+    let recommendations;
+    let analysis;
+    let source = 'heuristic';
+
+    try {
+      const result = await buildGptAnalysis(req.body);
+      if (result) {
+        recommendations = result.recommendations;
+        analysis = result.analysis;
+        source = 'ai';
+      }
+    } catch (e) {
+      console.error('AI Analysis Error:', e);
+    }
+
+    if (!recommendations) {
+      recommendations = buildHeuristicRecommendations(req.body);
+      analysis = buildHeuristicAnalysis(req.body);
+      source = 'heuristic';
+    }
+
+    res.json({ success: true, data: { recommendations, analysis, source } });
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.post('/chat', protect, async (req, res, next) => {
+  try {
+    const { message, context } = req.body;
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      return res.status(400).json({ success: false, message: 'Message is required.' });
+    }
+
+    const response = await withTimeout(
+      getAiCoachResponse(message.trim(), context || {}, req.user),
+      CHAT_ROUTE_TIMEOUT_MS,
+      'AI chat'
+    );
+
+    res.json({ success: true, data: response });
+  } catch (e) {
+    if (e.message?.includes('timed out')) {
+      return res.status(504).json({
+        success: false,
+        message: 'AI response timed out. Please try again.',
+      });
+    }
+    next(e);
+  }
+});
+
+function buildHeuristicAnalysis(data) {
+  const { subjects = [], topics = [], pyqs = [], mocks = [], studyStats = {} } = data;
+  const overallProgress = data.overall?.percentage || 0;
+  
+  const mockAvg = mocks.length > 0 ? mocks.reduce((a, b) => a + (b.score || 0), 0) / mocks.length : 0;
+  const pyqAccuracy = pyqs.length > 0 ? (pyqs.filter(p => p.status === 'correct').length / pyqs.length) * 100 : 0;
+  
+  const predictedScore = Math.min(100, Math.max(0, (overallProgress * 0.4) + (mockAvg * 0.4) + (pyqAccuracy * 0.2)));
+  const predictedRank = Math.round(Math.pow(10, (100 - predictedScore) / 25) * 100);
+
+  const consistency = Math.min(100, (studyStats.weeklyHours?.filter(h => h > 0).length / 7) * 100 || 0);
+  const revisionHealth = Math.min(100, (pyqs.filter(p => !p.revisionNeeded).length / (pyqs.length || 1)) * 100);
+  
+  return {
+    scores: {
+      mentor: Math.round((predictedScore + consistency) / 2),
+      readiness: Math.round(predictedScore),
+      consistency: Math.round(consistency),
+      revisionHealth: Math.round(revisionHealth),
+      mockPerformance: Math.round(mockAvg)
+    },
+    predictions: {
+      score: Math.round(predictedScore),
+      rank: predictedRank,
+      admissions: predictedScore > 70 ? 'High chance for Top IITs' : predictedScore > 50 ? 'Good chance for NITs' : 'Focus on core subjects'
+    },
+    riskLevel: consistency < 40 ? 'High' : consistency < 70 ? 'Medium' : 'Low'
+  };
+}
+
+async function getAiCoachResponse(message, context, user) {
+  const chain = buildProviderChain();
+  if (chain.length === 0) {
+    return {
+      text: "I am currently in Offline Mode. I can help you with study plans and progress analysis based on your data, but for deep conceptual discussions, please enable an AI Model API key (Gemini, OpenRouter, or OpenAI).",
+      suggestions: ["What should I study today?", "Am I on track?", "Show my weak topics"]
+    };
+  }
+
+  const prompt = `You are the "GATE 2027 AI Mentor", a personal coach for a student preparing for the GATE Computer Science exam. 
+  
+User Question: "${message}"
+
+Student Context:
+- Current Syllabus Progress: ${context.overallProgress}%
+- Recent Mock Avg: ${context.mockAvg}% mark
+- Weak Subjects: ${context.weakSubjects?.join(', ')}
+- Current Streak: ${context.streak} days
+- Study Hours this week: ${context.weeklyHours}h
+- Spaced Repetition: ${context.overdueTopics || 0} topics due for revision.
+- Accuracy Trend: Recent accuracy is ${context.recentAccuracy || 0}% (Target: >75%).
+
+Guidelines:
+1. Be professional, strategic, and highly motivating.
+2. If accuracy is dropping, give a "Reality Check" - suggest specific drills.
+3. Identify topics not revised in 14+ days if overdueTopics > 0.
+4. Use technical GATE terms (e.g., "Paging in OS", "NP-Completeness in TOC").
+5. Suggest 3 specific tasks (e.g., "Solve 15 PYQs on DBMS", "Revise Deadlocks").
+
+Return a JSON: { "text": "your response", "suggestions": ["q1", "q2", "q3"] }`;
+
+  try {
+    const text = await callAiApi([{ role: 'user', content: prompt }], {
+      response_format: { type: 'json_object' }
+    });
+
+    if (!text) throw new Error('AI Response empty');
+
+    const match = text.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(match ? match[0] : text);
+    const reply = typeof parsed.text === 'string' ? parsed.text.trim() : '';
+    if (!reply) throw new Error('AI response missing text');
+
+    return {
+      text: reply,
+      suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
+    };
+  } catch (e) {
+    console.error('Coach Chat Error:', e);
+    return { text: 'Error connecting to AI. How can I help with your data?', suggestions: [] };
+  }
+}
+
+async function buildGptAnalysis(data) {
+  const chain = buildProviderChain();
+  if (chain.length === 0) return null;
+
+  // Full dashboard analysis using AI provider chain
+  return null; 
+}
+
+module.exports = router;

@@ -1,0 +1,50 @@
+// Hook for fetching live GATE data
+import { useState, useEffect, useCallback } from 'react';
+import { liveDataService } from '../services/api';
+
+export function useLiveData(refreshInterval = 900000) { // Default to 15 mins
+  const [data, setData] = useState(() => {
+    const cached = localStorage.getItem('cachedLiveData');
+    return cached ? JSON.parse(cached) : null;
+  });
+  const [loading, setLoading] = useState(!data);
+  const [error, setError] = useState(null);
+
+  const fetchData = useCallback(async (showLoading = false) => {
+    try {
+      if (showLoading) setLoading(true);
+      const res = await liveDataService.getDashboard();
+      const freshData = res.data.data;
+      
+      setData(prevData => {
+        // Check for new updates to notify user
+        if (prevData && freshData) {
+          const hasNewAnnouncements = freshData.announcements?.length > prevData.announcements?.length ||
+            (freshData.announcements?.[0]?.contentHash !== prevData.announcements?.[0]?.contentHash);
+          
+          if (hasNewAnnouncements) {
+            console.log('New GATE updates available!');
+          }
+        }
+        
+        localStorage.setItem('cachedLiveData', JSON.stringify(freshData));
+        return freshData;
+      });
+      setError(null);
+    } catch (err) {
+      setError(err.message || 'Failed to load live data');
+    } finally {
+      setLoading(false);
+    }
+  }, []); // Remove data from dependencies to prevent loop
+
+  useEffect(() => {
+    fetchData(true);
+    const interval = setInterval(() => fetchData(false), 15 * 60 * 1000); // Auto-refresh every 15 mins
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  return { data, loading, error, refresh: () => fetchData(true) };
+}
+
+export default useLiveData;
