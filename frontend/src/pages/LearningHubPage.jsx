@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
-import { ArrowLeft, Eye, Clock3, Bookmark, Share2, CheckCircle2, Info, FileText, Link2, Bot, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Eye, Clock3, Bookmark, Share2, CheckCircle2, Info, FileText, Link2, Bot, CalendarDays, PictureInPicture } from 'lucide-react';
 import { useAuthData } from '../context/AuthContext';
 import LazyYouTubePlayer from '../components/learning/LazyYouTubePlayer';
 import { TABS, ROADMAP_FILTERS, SUBJECT_FILTERS, STORY_FILTERS, MOTIVATION_FILTERS, RESOURCE_FILTERS, VIDEO_FILTERS } from '../data/filters';
 import { learningHubVideoService, learningHubDataService, api } from '../services/api';
 import InsightsDashboard from '../components/gate/InsightsDashboard';
 import { useTrackLearningHub } from '../hooks/useAiMentorTracking';
+import { useVideoPlayer } from '../components/video/VideoPlayerContext';
 import { useYoutubeThumbnail } from '../hooks/useYoutubeThumbnail';
 import { getContinueWatching, getCompletedCount, getInProgressCount, getLessonStatus, getProgress, WATCH_EVENT, markCompleted } from '../lib/watchProgress';
 import { SUBJECT_RESOURCES } from '../data/subjectResources';
@@ -956,6 +957,15 @@ function ResourceDetailView({ selected, setSelected, canAccessPremium, videos = 
           >
             {copied ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <Share2 className="w-4 h-4" />}
           </button>
+          {videoId && (
+            <button
+              onClick={() => playVideo({ youtubeId: videoId, title: selected.title, subject: selected.subject })}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all touch-target-sm button-n-doubletap"
+              aria-label="Picture in Picture"
+            >
+              <PictureInPicture className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -1426,6 +1436,7 @@ export default function LearningHubPage() {
   const [subjectResources, setSubjectResources] = useState([]);
   const [editorPicks, setEditorPicks] = useState([]);
   const lhTracking = useTrackLearningHub();
+  const { playVideo } = useVideoPlayer();
   const prevSelected = useRef(null);
   const savedScrollY = useRef(0);
 
