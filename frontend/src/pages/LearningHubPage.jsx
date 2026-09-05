@@ -795,6 +795,7 @@ function SearchBar({ onSearch, value, onChange }) {  const inputRef = useRef(nul
 }
 
 function ResourceDetailView({ selected, setSelected, canAccessPremium, videos = [], subjectResources = [] }) {
+  const { playVideo } = useVideoPlayer();
   const [activePanel, setActivePanel] = useState('overview');
   const [query, setQuery] = useState('');
   const [isAsking, setIsAsking] = useState(false);
@@ -959,7 +960,7 @@ function ResourceDetailView({ selected, setSelected, canAccessPremium, videos = 
           </button>
           {videoId && (
             <button
-              onClick={() => playVideo({ youtubeId: videoId, title: selected.title, subject: selected.subject })}
+              onClick={() => playVideo({ youtubeId: videoId, videoId, id: selected?._id || selected?.id, title: selected?.title, subject: selected?.subject, thumbnail: selected?.thumbnail, youtubeUrl: selected?.youtubeUrl })}
               className="w-9 h-9 rounded-xl flex items-center justify-center text-text3/60 hover:text-white hover:bg-white/[0.06] transition-all touch-target-sm button-n-doubletap"
               aria-label="Picture in Picture"
             >
@@ -1436,7 +1437,6 @@ export default function LearningHubPage() {
   const [subjectResources, setSubjectResources] = useState([]);
   const [editorPicks, setEditorPicks] = useState([]);
   const lhTracking = useTrackLearningHub();
-  const { playVideo } = useVideoPlayer();
   const prevSelected = useRef(null);
   const savedScrollY = useRef(0);
 
