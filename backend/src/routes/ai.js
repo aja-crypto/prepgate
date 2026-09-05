@@ -1285,18 +1285,21 @@ router.post('/chat', validateFields([
           send({ type: 'delta', content: delta });
         });
       } catch (err) {
-        console.error('[AI Coach] SSE unhandled error:', err.message);
+        console.error('[AI Coach] SSE unhandled error:', err.message, err.stack);
         try {
           const { localCoachResponse } = require('../services/localCoachFallback');
-          const fb = localCoachResponse(message, context || {});
+          let fb = null;
+          try { fb = localCoachResponse(message, context || {}); } catch (e) { console.error('[AI Coach] local fallback throw:', e.message); }
           if (fb?.text) {
-            console.log('[AI Coach] SSE catch fallback');
+            console.log('[AI Coach] SSE catch fallback success');
             response = { text: fb.text + '\n\n*Note: Live AI is temporarily unavailable. This is an offline answer.*', suggestions: fb.suggestions, source: 'fallback', provider: 'Local' };
           } else {
-            response = { text: null, source: 'error', offlineError: 'AI chat error. Please try again.' };
+            console.log('[AI Coach] SSE catch fallback empty, using generic');
+            response = { text: 'I’m currently offline due to high demand. Based on your GATE prep, focus on your weak areas, revise with spaced repetition, and solve PYQs. Ask me a specific topic and I’ll give a detailed offline plan.', suggestions: ["What should I study today?", "Am I on track?", "Which subject should I prioritize?"], source: 'fallback', provider: 'Local' };
           }
-        } catch (_) {
-          response = { text: null, source: 'error', offlineError: 'AI chat error. Please try again.' };
+        } catch (e2) {
+          console.error('[AI Coach] SSE catch outer fail:', e2.message);
+          response = { text: 'I’m currently offline due to high demand. Here’s a quick plan: Revise your weak subjects, solve 5 PYQs, and review formulas. Ask a specific topic for details.', suggestions: ["What should I study today?", "Am I on track?", "Which subject should I prioritize?"], source: 'fallback', provider: 'Local' };
         }
       }
 
