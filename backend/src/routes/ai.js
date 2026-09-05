@@ -316,27 +316,14 @@ function validateAbsoluteUrl(url) {
 
 /**
  * Builds the ordered provider chain (all online — no offline/local source).
- * Gemini is the primary provider (free tier eligible, cost-effective).
- * OpenRouter, OpenAI, and DashScope act as ONLINE fallbacks when a
- * higher-priority provider is unavailable/rate-limited, so real answers always
- * reach the user. Skips providers whose key is absent.
+ * OpenRouter is primary (restored working config), Gemini is fallback.
+ * OpenAI and DashScope act as further ONLINE fallbacks. Skips providers
+ * whose key is absent.
  */
 function buildProviderChain() {
   const chain = [];
 
-  // 1. Gemini (primary — Google AI Studio free tier)
-  if (process.env.GEMINI_API_KEY) {
-    chain.push({
-      name: 'Gemini',
-      key: process.env.GEMINI_API_KEY,
-      endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-      model: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
-      extraHeaders: {},
-      isOpenRouter: false,
-    });
-  }
-
-  // 2. OpenRouter (fallback)
+  // 1. OpenRouter (primary — restored)
   if (process.env.OPENROUTER_API_KEY) {
     const configuredUrl = validateAbsoluteUrl(process.env.OPENROUTER_BASE_URL);
     chain.push({
@@ -346,6 +333,18 @@ function buildProviderChain() {
       model: process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini',
       extraHeaders: { 'HTTP-Referer': 'https://GateNexa.app', 'X-Title': 'GateNexa' },
       isOpenRouter: true,
+    });
+  }
+
+  // 2. Gemini (fallback)
+  if (process.env.GEMINI_API_KEY) {
+    chain.push({
+      name: 'Gemini',
+      key: process.env.GEMINI_API_KEY,
+      endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+      model: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
+      extraHeaders: {},
+      isOpenRouter: false,
     });
   }
 
