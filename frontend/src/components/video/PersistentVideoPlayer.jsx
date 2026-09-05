@@ -2,17 +2,67 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useVideoPlayer } from './VideoPlayerContext';
 import './PersistentVideoPlayer.css';
 
+const DRAG_THRESHOLD = 6;
+const VIEWPORT_MARGIN = 8;
+const LOAD_FALLBACK_MS = 8000;
+
+function clampToViewport(left, top, width, height) {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  return {
+    left: Math.min(Math.max(left, VIEWPORT_MARGIN), Math.max(VIEWPORT_MARGIN, vw - width - VIEWPORT_MARGIN)),
+    top: Math.min(Math.max(top, VIEWPORT_MARGIN), Math.max(VIEWPORT_MARGIN, vh - height - VIEWPORT_MARGIN)),
+  };
+}
+
 export default function PersistentVideoPlayer() {
   const { player, closeVideo, updatePlayer } = useVideoPlayer();
   const videoRef = useRef(null);
+  const shellRef = useRef(null);
+  const loadedIdRef = useRef(null);
+  const dragRef = useRef(null);
+  const loadTimerRef = useRef(null);
   const [minimized, setMinimized] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [pos, setPos] = useState(null);
+  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     if (!player) return;
     setMinimized(false);
-    setLoading(true);
+    setPos(null);
+    setLoading(loadedIdRef.current === player.id ? false : true);
+    if (loadTimerRef.current) clearTimeout(loadTimerRef.current);
+    loadTimerRef.current = setTimeout(() => setLoading(false), LOAD_FALLBACK_MS);
+    return () => {
+      if (loadTimerRef.current) clearTimeout(loadTimerRef.current);
+    };
   }, [player?.id]);
+
+  useEffect(() => {
+    if (!player) return;
+    const onResize = () => {
+      setPos((p) => {
+        if (!p) return p;
+        const rect = shellRef.current?.getBoundingClientRect();
+        const w = p.width || rect?.width || 320;
+        const h = rect?.height || 200;
+        return { ...clampToViewport(p.left, p.top, w, h), width: p.width };
+      });
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [player?.id]);
+
+  useEffect(() => {
+    setPos((p) => {
+      if (!p) return p;
+      const rect = shellRef.current?.getBoundingClientRect();
+      const w = p.width || rect?.width || 320;
+      const h = rect?.height || 200;
+      return { ...clampToViewport(p.left, p.top, w, h), width: p.width };
+    });
+  }, [minimized]);
 
   if (!player) return null;
 
@@ -21,6 +71,12 @@ export default function PersistentVideoPlayer() {
   const handleTimeUpdate = () => {
     if (!videoRef.current) return;
     updatePlayer({ currentTime: videoRef.current.currentTime });
+  };
+
+  const handleLoaded = () => {
+    loadedIdRef.current = player.id;
+    if (loadTimerRef.current) clearTimeout(loadTimerRef.current);
+    setLoading(false);
   };
 
   const handleClose = () => {
@@ -49,9 +105,58 @@ export default function PersistentVideoPlayer() {
     }
   };
 
+  const handleDragStart = (e) => {
+    if (e.target.closest('button')) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const shell = shellRef.current;
+    if (!shell) return;
+    const rect = shell.getBoundingClientRect();
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      baseLeft: rect.left,
+      baseTop: rect.top,
+      width: rect.width,
+      height: rect.height,
+      active: false,
+    };
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      /* pointer capture unavailable — drag still works via bubbled moves */
+    }
+  };
+
+  const handleDragMove = (e) => {
+    const d = dragRef.current;
+    if (!d || e.pointerId !== d.pointerId) return;
+    const dx = e.clientX - d.startX;
+    const dy = e.clientY - d.startY;
+    if (!d.active) {
+      if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+      d.active = true;
+      setDragging(true);
+    }
+    const p = clampToViewport(d.baseLeft + dx, d.baseTop + dy, d.width, d.height);
+    setPos({ ...p, width: d.width });
+  };
+
+  const handleDragEnd = (e) => {
+    const d = dragRef.current;
+    if (!d || e.pointerId !== d.pointerId) return;
+    dragRef.current = null;
+    if (d.active) setDragging(false);
+  };
+
   return (
-    <div className={`gx-persistent-player ${minimized ? 'gx-persistent-player--mini' : ''}`} role="dialog" aria-label={`Playing ${player.title}`}>
-      <div className="gx-player-shell">
+    <div
+      className={`gx-persistent-player${minimized ? ' gx-persistent-player--mini' : ''}${dragging ? ' gx-persistent-player--dragging' : ''}`}
+      role="dialog"
+      aria-label={`Playing ${player.title}`}
+      style={pos ? { left: pos.left, top: pos.top, right: 'auto', bottom: 'auto', width: pos.width, maxWidth: 'calc(100vw - 16px)' } : undefined}
+    >
+      <div className="gx-player-shell" ref={shellRef}>
         <div className="gx-player-media">
           {loading && (
             <div className="gx-player-loading">
@@ -61,27 +166,36 @@ export default function PersistentVideoPlayer() {
           )}
           {isNativeVideo ? (
             <video
+              key={player.id}
               ref={videoRef}
               src={player.rawUrl || player.videoUrl}
               poster={player.thumbnail || undefined}
               controls
               playsInline
               autoPlay
-              onLoadedData={() => setLoading(false)}
+              onLoadedData={handleLoaded}
               onTimeUpdate={handleTimeUpdate}
-              onError={() => setLoading(false)}
+              onError={handleLoaded}
             />
           ) : (
             <iframe
+              key={player.id}
               src={player.videoUrl}
               title={player.title}
               allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
               allowFullScreen
-              onLoad={() => setLoading(false)}
+              onLoad={handleLoaded}
+              onError={handleLoaded}
             />
           )}
         </div>
-        <div className="gx-player-info">
+        <div
+          className="gx-player-info gx-player-handle"
+          onPointerDown={handleDragStart}
+          onPointerMove={handleDragMove}
+          onPointerUp={handleDragEnd}
+          onPointerCancel={handleDragEnd}
+        >
           <div className="gx-player-title" title={player.title}>{player.title}</div>
           <div className="gx-player-actions">
             <button type="button" onClick={handleMinimize} aria-label={minimized ? 'Expand video' : 'Minimize video'}>

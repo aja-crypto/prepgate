@@ -795,7 +795,7 @@ function SearchBar({ onSearch, value, onChange }) {  const inputRef = useRef(nul
 }
 
 function ResourceDetailView({ selected, setSelected, canAccessPremium, videos = [], subjectResources = [] }) {
-  const { playVideo } = useVideoPlayer();
+  const { player, playVideo } = useVideoPlayer();
   const [activePanel, setActivePanel] = useState('overview');
   const [query, setQuery] = useState('');
   const [isAsking, setIsAsking] = useState(false);
@@ -806,6 +806,7 @@ function ResourceDetailView({ selected, setSelected, canAccessPremium, videos = 
   const containerRef = useRef(null);
   const videoId = selected?.youtubeId || selected?.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1];
   const isVideoResource = !!videoId;
+  const ownedByFloating = !!videoId && !!player && player.videoId === videoId;
 
   const related = useMemo(() => {
     if (!selected) return [];
@@ -974,10 +975,20 @@ function ResourceDetailView({ selected, setSelected, canAccessPremium, videos = 
       <div className="lg:grid lg:grid-cols-[1fr_300px] lg:gap-6 lg:items-start">
         <div className="min-w-0">
           {videoId ? (
-            <div className="rounded-2xl lg:rounded-[20px] overflow-hidden bg-black anim-gpu"
-              style={{ boxShadow: '0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(139,92,246,0.28), 0 0 46px rgba(139,92,246,0.16)' }}>
-              <LazyYouTubePlayer videoId={videoId} title={selected.title} autoPlay />
-            </div>
+            ownedByFloating ? (
+              <div className="aspect-video rounded-2xl lg:rounded-[20px] overflow-hidden flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.14), rgba(34,211,238,0.06))', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div className="text-center px-4">
+                  <p className="text-sm font-medium text-text2/80">Playing in floating player</p>
+                  <p className="text-xs text-text3/60 mt-1">Close the floating player to restore inline playback.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl lg:rounded-[20px] overflow-hidden bg-black anim-gpu"
+                style={{ boxShadow: '0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(139,92,246,0.28), 0 0 46px rgba(139,92,246,0.16)' }}>
+                <LazyYouTubePlayer videoId={videoId} title={selected.title} autoPlay />
+              </div>
+            )
           ) : (
             <div className="aspect-video rounded-2xl overflow-hidden flex items-center justify-center"
               style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.14), rgba(34,211,238,0.06))', border: '1px solid rgba(255,255,255,0.08)' }}>

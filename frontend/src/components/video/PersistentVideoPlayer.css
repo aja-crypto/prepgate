@@ -69,6 +69,25 @@
   padding: 10px 12px;
 }
 
+.gx-persistent-player .gx-player-handle {
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.gx-persistent-player .gx-player-handle:active {
+  cursor: grabbing;
+}
+
+.gx-persistent-player--dragging {
+  z-index: 95;
+}
+
+.gx-persistent-player--dragging .gx-player-shell {
+  transition: none;
+}
+
 .gx-player-title {
   min-width: 0;
   color: #fff;
