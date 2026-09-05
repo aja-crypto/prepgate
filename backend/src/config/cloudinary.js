@@ -33,6 +33,25 @@ async function uploadPdf(fileBuffer, fileName, folder = 'GateNexa/pdfs') {
   });
 }
 
+async function uploadImage(fileBuffer, fileName, folder = 'GateNexa/feedback') {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: 'image',
+        folder,
+        public_id: fileName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_'),
+        use_filename: true,
+        unique_filename: true,
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+    stream.end(fileBuffer);
+  });
+}
+
 async function deletePdf(publicId) {
   return cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
 }
@@ -84,7 +103,7 @@ function generateSignedPdfPageUrls(publicId, totalPages, userId, userEmail) {
 }
 
 module.exports = {
-  cloudinary, isCloudinaryConfigured, uploadPdf, deletePdf,
+  cloudinary, isCloudinaryConfigured, uploadPdf, uploadImage, deletePdf,
   getPdfPageCount, generateSignedPdfPageUrls,
 };
 

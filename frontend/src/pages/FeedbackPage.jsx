@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { feedbackService, getApiErrorMessage, userFeedbackService } from '../services/api';
+import { api, feedbackService, getApiErrorMessage, userFeedbackService } from '../services/api';
 import toast from 'react-hot-toast';
 import { useSEO } from '../hooks/useSEO';
 
@@ -96,10 +96,23 @@ export default function FeedbackPage() {
         setUploadProgress((i + 1) * 25);
         await new Promise(r => setTimeout(r, 400));
       }
+      let screenshotUrl = null;
+      if (screenshot instanceof File) {
+        setSubmitPhase('Uploading...');
+        const form = new FormData();
+        form.append('screenshot', screenshot);
+        const up = await api.post('/feedback/upload', form, {
+          headers: { 'Content-Type': undefined },
+          timeout: 60000,
+        });
+        screenshotUrl = up.data?.data?.screenshotUrl || null;
+        if (!screenshotUrl) throw new Error('Image upload failed. Please try again.');
+      }
       await feedbackService.submit({
         category: category || 'general', description: description.trim(), ratings: { overall: rating },
         recommendation: recommend ? { wouldRecommend: recommend } : undefined,
         page: window.location.pathname,
+        screenshotUrl,
       });
       clearDraft();
       go('done');

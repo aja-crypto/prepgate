@@ -1,9 +1,20 @@
 // src/routes/feedback.js – Feedback & Suggestions API
 const router = require('express').Router();
+const multer = require('multer');
 const { protect, adminOnly } = require('../middleware/auth');
 const { isMongoConnected, isMockAuthEnabled } = require('../config/db');
 const Feedback = require('../models/Feedback');
 const { createFeedbackNotification } = require('../services/notificationEngine');
+const { createFileFilter, sanitizeFilename } = require('../utils/uploadValidator');
+const { isCloudinaryConfigured, uploadImage } = require('../config/cloudinary');
+
+// Feedback screenshots: memory-only buffer → Cloudinary (never local disk,
+// which is ephemeral on Render). 10 MB max, images only.
+const screenshotUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: createFileFilter('image'),
+});
 
 function getStore() {
   return require('../store/localDataStore');
@@ -31,6 +42,25 @@ router.get('/', protect, async (req, res, next) => {
     const store = getStore();
     const feedback = store.getLocalFeedback(req.user._id);
     res.json({ success: true, data: feedback });
+  } catch (e) { next(e); }
+});
+
+// POST /api/feedback/upload – Upload a feedback screenshot to Cloudinary.
+// Returns { screenshotUrl } which the client includes in the submit payload.
+router.post('/upload', protect, screenshotUpload.single('screenshot'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image file provided.' });
+    }
+    if (!isCloudinaryConfigured()) {
+      return res.status(503).json({ success: false, message: 'Image upload is not configured. Please try again later.' });
+    }
+    const safeName = sanitizeFilename(req.file.originalname);
+    const result = await uploadImage(req.file.buffer, safeName, 'GateNexa/feedback');
+    if (!result?.secure_url) {
+      return res.status(502).json({ success: false, message: 'Image upload failed. Please try again.' });
+    }
+    return res.json({ success: true, data: { screenshotUrl: result.secure_url } });
   } catch (e) { next(e); }
 });
 
@@ -88,6 +118,7 @@ router.post('/', protect, async (req, res, next) => {
       const rawUserId = req.user?._id || req.user?.id;
       const userId = rawUserId && mongoose.isValidObjectId(rawUserId) ? rawUserId : null;
       const FeedbackTicket = require('../models/FeedbackTicket');
+      const screenshotUrl = typeof req.body.screenshotUrl === 'string' && req.body.screenshotUrl.startsWith('https://') ? req.body.screenshotUrl.slice(0, 2000) : null;
       const ticket = await FeedbackTicket.create({
         user: userId,
         userName: req.user?.name || 'Anonymous',
@@ -96,6 +127,7 @@ router.post('/', protect, async (req, res, next) => {
         subject: req.body.category || category,
         title: (req.body.title || description || 'New feedback').slice(0, 200),
         message: description || (ratings?.overall ? `Rating: ${ratings.overall}/5` : 'No message provided.'),
+        screenshotUrl,
         priority: 'medium',
         deviceInfo: req.body.deviceInfo || {},
       });
