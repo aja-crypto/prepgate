@@ -218,6 +218,27 @@ function httpsPostJson(urlStr, payload, headers, timeoutMs) {
  * SSE (`data: {...}` lines terminated by `data: [DONE]`). Forwards each content
  * delta to `onDelta` as it arrives so time-to-first-token reaches the browser.
  */
+function extractProviderErrorDetails(rawBody, fallbackStatus = null) {
+  const text = typeof rawBody === 'string' ? rawBody.trim() : '';
+  let parsed = null;
+  if (text) {
+    try { parsed = JSON.parse(text); } catch (e) { parsed = null; }
+  }
+
+  const errorPayload = parsed?.error || parsed?.detail || parsed?.errors?.[0] || parsed || {};
+  const code = errorPayload?.code || parsed?.code || null;
+  const message = errorPayload?.message || parsed?.message || (typeof errorPayload === 'string' ? errorPayload : text) || 'Unknown provider error';
+  const status = fallbackStatus ?? parsed?.status ?? null;
+
+  return { status, code, message };
+}
+
+function logProviderError(providerName, modelName, rawBody, fallbackStatus = null) {
+  const { status, code, message } = extractProviderErrorDetails(rawBody, fallbackStatus);
+  const safeMessage = String(message || 'Unknown provider error').replace(/\s+/g, ' ').trim().slice(0, 500);
+  console.error(`[AI Provider Error] provider=${providerName} model=${modelName} status=${status ?? 'n/a'} code=${code ?? 'UNKNOWN'} message=${safeMessage}`);
+}
+
 function httpsPostStream(urlStr, payload, headers, timeoutMs, onDelta) {
   return new Promise((resolve, reject) => {
     let u;
@@ -225,6 +246,7 @@ function httpsPostStream(urlStr, payload, headers, timeoutMs, onDelta) {
     const lib = u.protocol === 'https:' ? https : http;
     const body = JSON.stringify(payload);
     let collected = '';
+    let rawBody = '';
     const req = lib.request(u, {
       method: 'POST',
       headers: {
@@ -236,6 +258,7 @@ function httpsPostStream(urlStr, payload, headers, timeoutMs, onDelta) {
     }, (res) => {
       const disposed = { done: false };
       const flushLines = (chunk) => {
+        rawBody += chunk.toString('utf8');
         collected += chunk;
         let idx;
         while ((idx = collected.indexOf('\n')) !== -1) {
@@ -248,7 +271,7 @@ function httpsPostStream(urlStr, payload, headers, timeoutMs, onDelta) {
       res.on('end', () => {
         if (collected.trim()) handleLine(collected.trim(), disposed);
         clearTimeout(hardTimer);
-        resolve({ status: res.statusCode, headers: res.headers });
+        resolve({ status: res.statusCode, headers: res.headers, raw: rawBody });
       });
       res.on('error', (err) => { clearTimeout(hardTimer); reject(err); });
     });
@@ -386,6 +409,7 @@ async function callAiApiSingle(providerCfg, messages, options = {}) {
 
       if (!res.ok) {
         const errorBody = json.raw ? { message: json.raw } : json;
+        logProviderError(providerName, activeModel, raw || JSON.stringify(errorBody), status);
         captureAiExchange(requestPayload, errorBody, false, {
           model: activeModel,
           provider: providerName,
@@ -594,10 +618,20 @@ async function streamAiApi(messages, options = {}, onDelta) {
 
       if (!result || result.status < 200 || result.status >= 300) {
         const detail = `HTTP ${result?.status}`;
+        const providerError = extractProviderErrorDetails(result?.raw, result?.status);
+        logProviderError(providerName, model, result?.raw, result?.status);
         console.error(`[streamAiApi] ${providerName} failed: ${detail}`);
         lastError = `AI request failed (HTTP ${result?.status}). Please try again.`;
         lastAiError = lastError;
-        lastAiMeta = { provider: providerName, model, status: result?.status, reason: lastError, ts: new Date().toISOString() };
+        lastAiMeta = {
+          provider: providerName,
+          model,
+          status: result?.status ?? null,
+          code: providerError.code ?? null,
+          reason: lastError,
+          detail: providerError.message || result?.raw || detail,
+          ts: new Date().toISOString(),
+        };
         // quota/timeout/auth on primary → try next online provider in the chain
         continue;
       }
