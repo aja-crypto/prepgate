@@ -4,7 +4,7 @@ const notificationSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
+    default: null,
     index: true,
   },
   type: {
@@ -32,16 +32,46 @@ const notificationSchema = new mongoose.Schema({
       'resource_update', 'gate_update',
       'feedback_received', 'feedback_reply', 'feedback_status',
     ],
-    required: true,
+    default: 'feature_update',
   },
   title: { type: String, required: true },
   body: { type: String },
   message: { type: String },
   emoji: { type: String, default: '🔔' },
+  category: { type: String, default: 'announcement', index: true },
+  priority: { type: String, enum: ['low', 'normal', 'high', 'urgent'], default: 'normal' },
+  targetAudience: {
+    type: String,
+    enum: ['all', 'new_users', 'active_users', 'inactive_users', 'premium_users', 'free_users'],
+    default: 'all',
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'scheduled', 'sent', 'failed'],
+    default: 'draft',
+  },
+  imageUrl: { type: String, default: '' },
+  actionButtonText: { type: String, default: '' },
+  actionUrl: { type: String, default: '' },
   action: {
-    label: { type: String, required: true },
+    label: { type: String, default: 'View' },
     path: { type: String },
     href: { type: String },
+  },
+  recurrence: { type: mongoose.Schema.Types.Mixed, default: { type: 'none' } },
+  analytics: {
+    sent: { type: Number, default: 0 },
+    delivered: { type: Number, default: 0 },
+    opened: { type: Number, default: 0 },
+    clicked: { type: Number, default: 0 },
+    dismissed: { type: Number, default: 0 },
+  },
+  sentAt: { type: Date, default: null },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Admin',
+    default: null,
+    index: true,
   },
   metadata: {
     videoId: String,
@@ -70,9 +100,7 @@ const notificationSchema = new mongoose.Schema({
 
 notificationSchema.index({ user: 1, isRead: 1, scheduledAt: -1 });
 notificationSchema.index({ user: 1, type: 1, scheduledAt: -1 });
-// Compound index for the most common query pattern: filter by user, isRead, type, sort by scheduledAt
 notificationSchema.index({ user: 1, isRead: 1, type: 1, scheduledAt: -1 });
-// Index for count queries with user + isRead filter
 notificationSchema.index({ user: 1, isRead: 1 });
 notificationSchema.index({ user: 1, createdAt: -1 });
 notificationSchema.index({ user: 1, scheduledAt: -1 });

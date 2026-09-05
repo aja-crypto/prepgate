@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { adminProtect } = require('../middleware/adminAuth');
 const { isMongoConnected } = require('../config/db');
+const { sendToAudience, sendToUsers, getEligibleUsers } = require('../services/webPushService');
 
 // All routes require admin auth
 router.use(adminProtect);
@@ -96,17 +97,52 @@ router.post('/', async (req, res, next) => {
 
     if (!title || !message) return res.status(400).json({ success: false, message: 'Title and message are required' });
 
+    const audience = targetAudience || 'all';
+    const safeActionUrl = actionUrl || '/dashboard';
+
     if (isMongoConnected()) {
       const Notification = require('../models/Notification');
+      const User = require('../models/User');
+
+      const userFilter = {};
+      if (audience === 'new_users') {
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        userFilter.createdAt = { $gte: weekAgo };
+      } else if (audience === 'inactive_users') {
+        const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        userFilter.lastLogin = { $lt: monthAgo };
+      } else if (audience === 'active_users') {
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        userFilter.lastLogin = { $gte: weekAgo };
+      } else if (audience === 'premium_users') {
+        userFilter.isPremium = true;
+      } else if (audience === 'free_users') {
+        userFilter.isPremium = false;
+      }
+
+      const eligibleUsers = await User.find(userFilter).select('_id').lean();
       const doc = await Notification.create({
-        title, message, category, priority, imageUrl, actionButtonText, actionUrl,
-        targetAudience, status: status || 'draft', scheduledAt: scheduledAt || null,
+        title,
+        message,
+        body: message,
+        category: category || 'announcement',
+        priority: priority || 'normal',
+        imageUrl: imageUrl || '',
+        actionButtonText: actionButtonText || 'View',
+        actionUrl: safeActionUrl,
+        action: { label: actionButtonText || 'View', href: safeActionUrl },
+        targetAudience: audience,
+        status: status || 'draft',
+        scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
         recurrence: recurrence || { type: 'none' },
         createdBy: req.admin._id,
+        analytics: { sent: eligibleUsers.length, delivered: 0, opened: 0, clicked: 0, dismissed: 0 },
       });
-      return res.status(201).json({ success: true, data: doc });
+
+      return res.status(201).json({ success: true, data: doc, targetUsers: eligibleUsers.length });
     }
-    res.status(201).json({ success: true, data: { _id: Date.now().toString(), title, message, category, priority, status: 'draft', createdAt: new Date().toISOString() } });
+
+    res.status(201).json({ success: true, data: { _id: Date.now().toString(), title, message, category: category || 'announcement', priority: priority || 'normal', status: 'draft', createdAt: new Date().toISOString() } });
   } catch (e) { next(e); }
 });
 
@@ -141,33 +177,41 @@ router.post('/:id/send', async (req, res, next) => {
   try {
     if (isMongoConnected()) {
       const Notification = require('../models/Notification');
-      const User = require('../models/User');
       const doc = await Notification.findById(req.params.id);
       if (!doc) return res.status(404).json({ success: false, message: 'Not found' });
       if (doc.status === 'sent') return res.status(400).json({ success: false, message: 'Already sent' });
 
-      // Count matching users
-      const userFilter = {};
-      if (doc.targetAudience === 'new_users') {
-        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        userFilter.createdAt = { $gte: weekAgo };
-      } else if (doc.targetAudience === 'inactive_users') {
-        const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        userFilter.lastLogin = { $lt: monthAgo };
-      } else if (doc.targetAudience === 'active_users') {
-        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        userFilter.lastLogin = { $gte: weekAgo };
-      }
+      const targetAudience = doc.targetAudience || 'all';
+      const eligibleUsers = await getEligibleUsers(targetAudience);
+      const userIds = eligibleUsers.map((user) => user._id.toString());
 
-      const count = await User.countDocuments(userFilter);
+      const pushResult = await sendToAudience({
+        targetAudience,
+        title: doc.title,
+        body: doc.body || doc.message,
+        url: doc.actionUrl || doc.action?.href || '/dashboard',
+        data: {
+          notificationId: String(doc._id),
+          category: doc.category,
+          actionButtonText: doc.actionButtonText,
+        },
+      });
 
-      doc.status = 'sent';
+      const notificationStatus = pushResult.sent > 0 ? 'sent' : pushResult.reason === 'No subscribers' ? 'failed' : 'failed';
+
+      doc.status = notificationStatus;
       doc.sentAt = new Date();
-      doc.analytics.sent = count;
-      doc.analytics.delivered = Math.round(count * 0.95);
+      doc.analytics = doc.analytics || { sent: 0, delivered: 0, opened: 0, clicked: 0, dismissed: 0 };
+      doc.analytics.sent = userIds.length;
+      doc.analytics.delivered = pushResult.sent || 0;
       await doc.save();
 
-      return res.json({ success: true, data: doc, message: `Sent to ${count} users` });
+      return res.json({
+        success: true,
+        data: doc,
+        result: pushResult,
+        message: pushResult.sent > 0 ? `Sent to ${pushResult.sent} subscribers` : pushResult.reason || 'No subscribers',
+      });
     }
     res.json({ success: true, message: 'Sent (mock mode)' });
   } catch (e) { next(e); }

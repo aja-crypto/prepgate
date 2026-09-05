@@ -113,10 +113,56 @@ function ReminderScheduler() {
   return null;
 }
 
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const output = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i += 1) {
+    output[i] = raw.charCodeAt(i);
+  }
+  return output;
+}
+
+async function registerWebPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!localStorage.getItem('accessToken')) return;
+  if (Notification.permission !== 'granted') return;
+
+  try {
+    const registration = await navigator.serviceWorker.register('/sw.js');
+    const publicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || import.meta.env.VITE_FIREBASE_VAPID_KEY;
+    if (!publicKey) return;
+
+    const vapidResponse = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/notifications/vapid-public-key`, { headers: { Accept: 'application/json' } });
+    const vapidData = vapidResponse.ok ? await vapidResponse.json() : null;
+    const keyToUse = vapidData?.publicKey || publicKey;
+
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(keyToUse),
+    });
+
+    await fetch(`${import.meta.env.VITE_API_URL || '/api'}/notifications/subscribe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+      body: JSON.stringify({ subscription }),
+    });
+  } catch (error) {
+    console.warn('[PUSH] Browser push registration failed:', error);
+  }
+}
+
 function PwaSetup() {
   useEffect(() => {
     if ('serviceWorker' in navigator && import.meta.env.PROD) {
       navigator.serviceWorker.register('/sw.js').catch(silentCatch('Service worker registration'));
+    }
+    if (Notification.permission === 'granted') {
+      registerWebPush().catch(silentCatch('Web push registration'));
     }
     if (isFirebaseConfigured()) {
       initFirebasePush().catch(silentCatch('Firebase push init'));
