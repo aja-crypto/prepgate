@@ -221,6 +221,7 @@ export const authService = {
   changePassword: (currentPassword, newPassword) => api.put('/auth/change-password', { currentPassword, newPassword }),
   deleteAccount: (password) => api.delete('/auth/account', { data: { password } }),
   verifyEmail: (token) => api.get(`/auth/verify-email/${token}`),
+  verifyNewEmail: (token) => api.get(`/auth/verify-new-email/${token}`),
   resendVerification: () => api.post('/auth/resend-verification'),
 };
 

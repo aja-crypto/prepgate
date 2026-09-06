@@ -28,6 +28,26 @@ router.post('/ticket', protect, async (req, res, next) => {
         message: `Your feedback "${title}" was submitted successfully.`,
         ticketId: doc._id,
       });
+      // Confirmation email — one per created ticket, never blocking submit.
+      if (req.user?.email) {
+        const emailTemplates = require('../utils/emailTemplates');
+        const t = emailTemplates.feedbackReceived({
+          title: doc.title,
+          category: doc.category,
+          rating: null,
+          message: doc.message,
+          ticketId: doc._id,
+        });
+        const { sendTransactionalEmail } = require('../services/emailDeliveryService');
+        sendTransactionalEmail({
+          type: 'feedback-received',
+          eventId: String(doc._id),
+          to: req.user.email,
+          subject: t.subject,
+          html: t.html,
+          text: t.text,
+        });
+      }
       return res.status(201).json({ success: true, data: doc });
     }
     res.status(201).json({ success: true, data: { _id: Date.now().toString(), title, message, status: 'unread' } });

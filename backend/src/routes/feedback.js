@@ -138,6 +138,29 @@ router.post('/', protect, async (req, res, next) => {
         message: `Your ${req.body.category || 'general'} feedback was submitted successfully and is ready for review.`,
         ticketId: ticket._id,
       });
+      // Confirmation email — one per created ticket, never blocking submit.
+      {
+        const to = req.user?.email || '';
+        if (to) {
+          const emailTemplates = require('../utils/emailTemplates');
+          const t = emailTemplates.feedbackReceived({
+            title: ticket.title,
+            category,
+            rating: ratings?.overall,
+            message: ticket.message,
+            ticketId: ticket._id,
+          });
+          const { sendTransactionalEmail } = require('../services/emailDeliveryService');
+          sendTransactionalEmail({
+            type: 'feedback-received',
+            eventId: String(ticket._id),
+            to,
+            subject: t.subject,
+            html: t.html,
+            text: t.text,
+          });
+        }
+      }
       const Admin = require('../models/Admin');
       const admins = await Admin.find({ isActive: true }).select('_id').lean();
       await Promise.all(admins.map(admin => createFeedbackNotification({

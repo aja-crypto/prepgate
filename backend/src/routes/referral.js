@@ -2,7 +2,24 @@ const router = require('express').Router();
 const { protect } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
 const localReferralStore = require('../store/localReferralStore');
+const { sendTransactionalEmail } = require('../services/emailDeliveryService');
+const emailTemplates = require('../utils/emailTemplates');
 const User = require('../models/User');
+
+function sendPremiumActivatedEmail(user) {
+  if (!user?.email) return;
+  const t = emailTemplates.premiumActivated(user.name);
+  sendTransactionalEmail({
+    type: 'premium-activation',
+    eventId: String(user._id),
+    to: user.email,
+    subject: t.subject,
+    html: t.html,
+    text: t.text,
+  });
+}
+
+
 
 // ─── Helper: generate referral code ─────────────────────────────
 function genCode() {
@@ -124,15 +141,21 @@ router.post('/complete', protect, async (req, res, next) => {
         const referrer = await User.findById(currentUser.referredBy);
         if (referrer) {
           referrer.pendingReferrals = (referrer.pendingReferrals || []).filter(id => id.toString() !== userId);
-          if (!referrer.referredUsers?.includes(req.user._id)) {
+          const alreadyCounted = (referrer.referredUsers || []).some(id => id.toString() === userId);
+          const wasPremium = referrer.isPremium === true;
+          if (!alreadyCounted) {
             referrer.referralCount = (referrer.referralCount || 0) + 1;
+            referrer.referredUsers = [...(referrer.referredUsers || []), req.user._id];
           }
           if (referrer.referralCount >= 2 && !referrer.isPremium) {
             referrer.isPremium = true;
             referrer.premiumUnlockedViaReferral = true;
           }
           referrer.markModified('pendingReferrals');
+          referrer.markModified('referredUsers');
           await referrer.save();
+          // Premium mail only on the false→true flip; never blocks the response.
+          if (!wasPremium && referrer.isPremium) sendPremiumActivatedEmail(referrer);
           return res.json({ success: true, referralCount: referrer.referralCount, isPremium: !!referrer.isPremium });
         }
       }
@@ -141,12 +164,14 @@ router.post('/complete', protect, async (req, res, next) => {
       if (referrer2) {
         referrer2.pendingReferrals = referrer2.pendingReferrals.filter(id => id.toString() !== userId);
         referrer2.referralCount = (referrer2.referralCount || 0) + 1;
+        const wasPremium2 = referrer2.isPremium === true;
         if (referrer2.referralCount >= 2 && !referrer2.isPremium) {
           referrer2.isPremium = true;
           referrer2.premiumUnlockedViaReferral = true;
         }
         referrer2.markModified('pendingReferrals');
         await referrer2.save();
+        if (!wasPremium2 && referrer2.isPremium) sendPremiumActivatedEmail(referrer2);
         return res.json({ success: true, referralCount: referrer2.referralCount, isPremium: !!referrer2.isPremium });
       }
     }

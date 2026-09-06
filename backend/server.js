@@ -42,6 +42,20 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
+if (process.env.NODE_ENV === 'production') {
+  let frontendUrl;
+  try {
+    frontendUrl = new URL(process.env.FRONTEND_URL);
+  } catch {
+    console.error('[STARTUP FAIL] FRONTEND_URL must be an absolute HTTPS URL in production.');
+    process.exit(1);
+  }
+  if (frontendUrl.protocol !== 'https:' || /^(localhost|127\.0\.0\.1)$/i.test(frontendUrl.hostname)) {
+    console.error('[STARTUP FAIL] FRONTEND_URL must be a non-local HTTPS URL in production.');
+    process.exit(1);
+  }
+}
+
 // Warn about optional but recommended env vars
 const RECOMMENDED_ENV = ['OPENROUTER_API_KEY', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'FROM_EMAIL', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET', 'GOOGLE_CLIENT_ID', 'CRON_SECRET'];
 RECOMMENDED_ENV.forEach(key => {
@@ -451,6 +465,10 @@ app.use('/api/cron', require('./src/routes/cron'));
 app.use('/api/ai', require('./src/routes/ai'));
 app.use('/api/resources', require('./src/routes/resources'));
 app.use('/api/feedback', require('./src/routes/feedback'));
+// Development-only email template preview — never mounted in production.
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api/email-preview', require('./src/routes/emailPreview'));
+}
 app.use('/api/weekly-tests', require('./src/routes/weeklyTests'));
 app.use('/api/short-notes', require('./src/routes/shortNotes'));
 app.use('/api/mock-tests', require('./src/routes/mockTests'));

@@ -8,7 +8,7 @@ import Layout from './components/common/Layout';
 import DiagnosticsModal from './components/common/DiagnosticsModal';
 import { useDiagnostics } from './context/DiagnosticsContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
-import PremiumLoadingScreen from './components/common/PremiumLoadingScreen';
+import GateNexaLoader from './components/GateNexaLoader/GateNexaLoader';
 import FloatingAIAssistant from './components/common/FloatingAIAssistant';
 import AmbientBackground from './components/common/AmbientBackground';
 import InstallPrompt from './components/common/InstallPrompt';
@@ -18,6 +18,7 @@ import CelebrationAnimation from './components/referral/CelebrationAnimation';
 import BrandIntroModal from './components/common/BrandIntroModal';
 import AiIntroModal, { shouldShowAiIntro } from './components/common/AiIntroModal';
 import { SkeletonDashboard, SkeletonSubjectGrid, SkeletonTable } from './components/ui/SkeletonLoader';
+import { PlannerProvider } from './context/PlannerContext';
 
 import LandingPage from './pages/LandingPage';
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -25,6 +26,7 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
+const VerifyNewEmailPage = lazy(() => import('./pages/VerifyNewEmailPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const SubjectsPage = lazy(() => import('./pages/SubjectsPage'));
 const TopicsPage = lazy(() => import('./pages/TopicsPage'));
@@ -240,6 +242,10 @@ export default function App() {
   });
   const location = useLocation();
   const { openDiagnostics } = useDiagnostics();
+  const { loading: authLoading } = useAuthData();
+  const bootProgress = initialLoad ? (authLoading ? 35 : 100) : 100;
+  const bootIsReady = initialLoad ? !authLoading : true;
+  const bootStatus = authLoading ? 'Restoring session' : undefined;
 
   useEffect(() => {
     if (!initialLoad) {
@@ -265,7 +271,14 @@ export default function App() {
 
   return (
     <ErrorBoundary name="App">
-      {initialLoad && <PremiumLoadingScreen onComplete={handleLoadComplete} />}
+      {initialLoad && (
+        <GateNexaLoader
+          progress={bootProgress}
+          status={bootStatus}
+          isReady={bootIsReady}
+          onComplete={handleLoadComplete}
+        />
+      )}
       <RoutePrefetcher />
       <AppFloatingWidgets />
       <WelcomeManager>
@@ -278,6 +291,7 @@ export default function App() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+      <Route path="/verify-new-email/:token" element={<VerifyNewEmailPage />} />
 
       {/* Protected layout */}
       <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
@@ -294,7 +308,7 @@ export default function App() {
         <Route path="mentor" element={<ErrorBoundary key="ai"><GateNexaAIPage /></ErrorBoundary>} />
         <Route path="ai-coach" element={<AICoachPage />} />
         <Route path="notes" element={<ErrorBoundary key="notes"><NotesPage /></ErrorBoundary>} />
-        <Route path="planner" element={<StudyPlannerPage />} />
+        <Route path="planner" element={<PlannerProvider><StudyPlannerPage /></PlannerProvider>} />
         <Route path="formulas" element={<FormulaSheetPage />} />
         <Route path="revision" element={<RevisionPage />} />
         <Route path="productivity" element={<ProductivityPage />} />
@@ -390,4 +404,3 @@ export default function App() {
     </ErrorBoundary>
   );
 }
-

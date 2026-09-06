@@ -3,12 +3,14 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addMo
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useProgress } from '../context/ProgressContext';
+import { usePlanner } from '../context/PlannerContext';
 import { aiService } from '../services/api';
 import { GATE_SUBJECTS } from '../data/gateSubjectsData';
 import { computeSubjectCompletion, getCountdown } from '../utils/gateUtils';
 import Modal from '../components/common/Modal';
+import PlannerCustomizer from '../components/planner/PlannerCustomizer';
 import toast from 'react-hot-toast';
-import { Sparkles, ChevronLeft, ChevronRight, Clock, BookOpen, Target, CheckCircle, Play, BarChart3, Brain, AlertCircle, GripVertical, X, Plus, Layers } from 'lucide-react';
+import { Sparkles, ChevronLeft, ChevronRight, Clock, BookOpen, Target, CheckCircle, Play, BarChart3, Brain, AlertCircle, GripVertical, X, Plus, Layers, RefreshCw, Settings } from 'lucide-react';
 
 const HOURS = Array.from({ length: 16 }, (_, i) => i + 6); // 6 AM – 9 PM
 const COLORS_BY_NAME = Object.fromEntries(GATE_SUBJECTS.map(s => [s.name, { color: s.color, icon: s.icon }]));
@@ -181,6 +183,7 @@ function generateSmartSchedule(topics, pyqs, studyStats, dailyHours = 8) {
 
 export default function StudyPlannerPage() {
   const { gateFeatures, updateGateFeatures, syncToCloud, topics, pyqs, mocks, studyStats } = useProgress();
+  const { isWidgetVisible } = usePlanner();
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -192,6 +195,8 @@ export default function StudyPlannerPage() {
   const [form, setForm] = useState({ subject: '', topic: '', hours: 2, notes: '' });
   const [editId, setEditId] = useState(null);
   const [aiGenerating, setAiGenerating] = useState(false);
+  const [customizerOpen, setCustomizerOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const timelineRef = useRef(null);
   const seededRef = useRef(false);
 
@@ -392,6 +397,19 @@ export default function StudyPlannerPage() {
     setDraggingId(null);
   };
 
+  // Refresh planner — sync to cloud
+  const refreshPlanner = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await syncToCloud();
+      toast.success('Planner refreshed');
+    } catch {
+      toast.error('Refresh failed');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [syncToCloud]);
+
   // Scroll to current hour on mount
   useEffect(() => {
     if (timelineRef.current) {
@@ -401,7 +419,32 @@ export default function StudyPlannerPage() {
   }, [activeDay]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-80px)] lg:h-[calc(100vh-140px)] min-h-0 lg:min-h-[600px]">
+    <>
+      {/* ===== MOBILE HEADER (mobile only) ===== */}
+      <div className="lg:hidden flex items-center justify-between px-4 py-3 mb-2">
+        <h1 className="text-lg font-bold text-text">Planner</h1>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={refreshPlanner}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-bg-2 border border-border text-text2 hover:bg-hover transition-colors disabled:opacity-50"
+            aria-label="Refresh planner"
+          >
+            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+            <span className="text-xs font-medium">Refresh</span>
+          </button>
+          <button
+            onClick={() => setCustomizerOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-bg-2 border border-border text-text2 hover:bg-hover transition-colors"
+            aria-label="Customize planner widgets"
+          >
+            <Settings size={16} />
+            <span className="text-xs font-medium">Customize</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-132px)] lg:h-[calc(100vh-140px)] min-h-0 lg:min-h-[600px]">
       {/* ===== LEFT SIDEBAR ===== */}
       <div className="hidden lg:flex flex-col w-56 shrink-0 gap-3">
         <div className="bg-surface border border-border rounded-xl p-4">
@@ -897,7 +940,11 @@ export default function StudyPlannerPage() {
           </button>
         </div>
       </Modal>
-    </div>
+
+      {/* Planner Customizer — mobile bottom sheet */}
+      <PlannerCustomizer open={customizerOpen} onClose={() => setCustomizerOpen(false)} />
+      </div>
+    </>
   );
 }
 
