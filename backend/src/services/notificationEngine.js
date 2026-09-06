@@ -781,7 +781,11 @@ async function createIfAbsent(payload) {
       return { created: false, duplicate: true, notification: dup };
     }
 
-    console.error('[NotificationEngine] create failed');
+    console.error(
+      '[NotificationEngine] create failed',
+      err?.code || err?.name || 'unknown_error',
+      String(err?.message || 'notification creation failed').replace(/[\r\n]+/g, ' ').slice(0, 240)
+    );
     return { created: false, duplicate: false, error: true };
   }
 
