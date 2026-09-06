@@ -4,6 +4,7 @@ import { useAdminAuth } from '../../context/AdminAuthContext';
 import ErrorBoundary from '../common/ErrorBoundary';
 import Icon from '../ui/Icon';
 import BrandText from '../ui/BrandText';
+import '../../styles/admin-mobile.css';
 
 function AdminSectionFallback() {
   return (
@@ -59,7 +60,7 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-bg flex">
+    <div className="admin-layout min-h-screen bg-bg flex">
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}

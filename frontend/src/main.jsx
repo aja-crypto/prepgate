@@ -79,7 +79,6 @@ window.addEventListener('unhandledrejection', (event) => {
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
-import GateNexaBootManager from './boot/GateNexaBootManager';
 import { AuthProvider } from './context/AuthContext';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -190,29 +189,27 @@ function ProgressProviderWrapper() {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <GateNexaBootManager>
-      <ThemeProvider>
-        <AuthProvider>
-          <VideoPlayerProvider>
-            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <AdminAuthProvider>
-                <DiagnosticsProvider>
-                <NotificationProvider>
-              <ProgressProviderWrapper />
-            </NotificationProvider>
-                </DiagnosticsProvider>
-                <Toaster position="top-right" />
-                {import.meta.env.PROD && window.location.hostname === 'gatenexa.vercel.app' && (
-      <Suspense fallback={null}>
-        <AnalyticsLazy />
-        <SpeedInsightsLazy />
-      </Suspense>
-    )}
-              </AdminAuthProvider>
-            </BrowserRouter>
-          </VideoPlayerProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </GateNexaBootManager>
+    <ThemeProvider>
+      <AuthProvider>
+        <VideoPlayerProvider>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <AdminAuthProvider>
+              <DiagnosticsProvider>
+              <NotificationProvider>
+            <ProgressProviderWrapper />
+          </NotificationProvider>
+              </DiagnosticsProvider>
+              <Toaster position="top-right" />
+              {import.meta.env.PROD && window.location.hostname === 'gatenexa.vercel.app' && (
+    <Suspense fallback={null}>
+      <AnalyticsLazy />
+      <SpeedInsightsLazy />
+    </Suspense>
+  )}
+            </AdminAuthProvider>
+          </BrowserRouter>
+        </VideoPlayerProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </React.StrictMode>
 );

@@ -486,27 +486,27 @@ export default function AdminFeedbackCenterPage() {
                       const pr = PRIORITIES.find(p => p.value === t.priority);
                       return (
                         <tr key={t._id} className="border-b border-border hover:bg-bg/50 transition-colors cursor-pointer" onClick={() => setSelectedTicket(t)}>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3" data-label="User">
                             <div className="text-xs font-medium text-text">{t.userName}</div>
                             <div className="text-[10px] text-text3">{t.userEmail}</div>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3" data-label="Category">
                             <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${cat?.color}`}>{cat?.label}</span>
                           </td>
-                          <td className="px-4 py-3 text-xs text-text max-w-[200px] truncate">{t.title}</td>
-                          <td className="px-4 py-3 text-[10px] text-text3">{new Date(t.createdAt).toLocaleDateString()}</td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3 text-xs text-text max-w-[200px] truncate" data-label="Title">{t.title}</td>
+                          <td className="px-4 py-3 text-[10px] text-text3" data-label="Date">{new Date(t.createdAt).toLocaleDateString()}</td>
+                          <td className="px-4 py-3" data-label="Status">
                             <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${st?.color}`}>{st?.label}</span>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3" data-label="Priority">
                             <span className={`text-[10px] font-medium ${pr?.color}`}>{pr?.label}</span>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3" data-label="Actions">
                             <div className="flex gap-1">
                               <button onClick={e => { e.stopPropagation(); setSelectedTicket(t); }}
-                                className="text-[10px] px-2 py-1 text-primary hover:bg-primary/10 rounded-lg">View</button>
+                                className="text-[10px] px-3 py-2 text-primary hover:bg-primary/10 rounded-lg min-h-[36px]">View</button>
                               <button onClick={e => { e.stopPropagation(); handleDeleteTicket(t._id); }}
-                                className="text-[10px] px-2 py-1 text-red-400 hover:bg-red-500/10 rounded-lg">Del</button>
+                                className="text-[10px] px-3 py-2 text-red-400 hover:bg-red-500/10 rounded-lg min-h-[36px]">Del</button>
                             </div>
                           </td>
                         </tr>
