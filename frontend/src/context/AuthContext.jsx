@@ -47,19 +47,31 @@ export const AuthProvider = ({ children }) => {
   const refreshReferralStatus = useCallback(async () => {
     const gen = authGenRef.current;
     try {
-      const res = await referralService.getStatus();
+      const [referralRes, quotaRes] = await Promise.allSettled([
+        referralService.getStatus(),
+        api.get('/ai/quota'),
+      ]);
       if (gen !== authGenRef.current) return;
-      const d = res.data.data;
-      setReferralCode(d.referralCode);
-      setReferralCount(d.referralCount || 0);
-      setReferralProgress(d.progress || 0);
-      setIsPremium(d.isPremium || false);
-      await refreshAiQuota();
-      if (d.isPremium && d.premiumUnlockedViaReferral) setShowCelebration(true);
+      if (referralRes.status === 'fulfilled') {
+        const d = referralRes.value.data.data;
+        setReferralCode(d.referralCode);
+        setReferralCount(d.referralCount || 0);
+        setReferralProgress(d.progress || 0);
+        setIsPremium(d.isPremium || false);
+        if (d.isPremium && d.premiumUnlockedViaReferral) setShowCelebration(true);
+      }
+      if (quotaRes.status === 'fulfilled') {
+        const d = quotaRes.value.data.data;
+        setAiQuestionsRemaining(d.remaining);
+        setAiQuestionLimit(d.limit);
+        if (d.isPremium) setIsPremium(true);
+      } else {
+        setAiQuestionsRemaining(0);
+      }
     } catch {
       // Silent fail — referral system is optional
     }
-  }, [refreshAiQuota]);
+  }, []);
 
   const refreshPremiumStatus = useCallback(async () => {
     const gen = authGenRef.current;
@@ -181,7 +193,7 @@ export const AuthProvider = ({ children }) => {
     const { user: u, accessToken, refreshToken } = res.data.data;
     storeSession(u, accessToken, refreshToken);
     setIsPremium(u.isPremium || false);
-    refreshReferralStatus();
+    setTimeout(() => refreshReferralStatus().catch(() => {}), 0);
     toast.success(`Welcome back, ${u.name.split(' ')[0]}! 🎓`);
     return u;
   }, [storeSession, refreshReferralStatus]);
@@ -195,7 +207,7 @@ export const AuthProvider = ({ children }) => {
     const { user: u, accessToken, refreshToken } = res.data.data;
     localStorage.removeItem(progressKey(u.id || u._id));
     storeSession(u, accessToken, refreshToken);
-    refreshReferralStatus();
+    setTimeout(() => refreshReferralStatus().catch(() => {}), 0);
     toast.success('Account created! Start tracking your GATE prep from 0%. 🚀');
     return u;
   }, [storeSession, refreshReferralStatus]);
@@ -208,7 +220,7 @@ export const AuthProvider = ({ children }) => {
     if (isNewUser) localStorage.removeItem(progressKey(u.id || u._id));
     storeSession(u, accessToken, refreshToken);
     setIsPremium(u.isPremium || false);
-    refreshReferralStatus();
+    setTimeout(() => refreshReferralStatus().catch(() => {}), 0);
     toast.success(isNewUser ? 'Welcome! Your progress starts at 0%.' : `Welcome back, ${u.name.split(' ')[0]}!`);
     return u;
   }, [storeSession, refreshReferralStatus]);

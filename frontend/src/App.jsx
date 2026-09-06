@@ -114,49 +114,20 @@ const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage'));
 // Protected route wrapper
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuthData();
-  if (loading) return (
-    <div className="flex items-center justify-center h-screen bg-bg mesh-bg">
-      <div className="text-center animate-fade-in">
-        <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}>
-          <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        </div>
-        <div className="text-text2 text-sm font-medium">Loading GateNexa...</div>
-      </div>
-    </div>
-  );
+  if (loading) return null;
   return user ? children : <Navigate to="/login" replace />;
 };
 
 // Admin route wrapper
 const AdminPrivateRoute = ({ children }) => {
   const { admin, loading } = useAdminAuth();
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-bg mesh-bg">
-        <div className="text-center animate-fade-in">
-          <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}>
-            <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </div>
-          <div className="text-text2 text-sm font-medium">Loading Admin...</div>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return null;
   return admin ? children : <Navigate to="/admin/login" replace />;
 };
 
 const AdminPublicRoute = ({ children }) => {
   const { admin, loading } = useAdminAuth();
-  if (loading) return (
-    <div className="flex items-center justify-center h-screen bg-bg mesh-bg">
-      <div className="text-center animate-fade-in">
-        <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}>
-          <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7"><path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        </div>
-        <div className="text-text2 text-sm font-medium">Loading...</div>
-      </div>
-    </div>
-  );
+  if (loading) return null;
   return admin ? <Navigate to="/admin/dashboard" replace /> : children;
 };
 
@@ -234,20 +205,23 @@ const HomePageWrapper = () => {
   return <LandingPage />;
 };
 
-// Route prefetching - only for authenticated users, deferred to idle
 function RoutePrefetcher() {
   const { user } = useAuthData();
   useEffect(() => {
     if (!user) return;
-    const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 2000));
-    const id = idle(() => {
+    const prefetch = () => {
       import('./pages/DashboardPage');
       import('./pages/SubjectsPage');
       import('./pages/AIMentorPage');
-      import('./pages/OpportunityPredictorPage');
       import('./pages/LearningHubPage');
+    };
+    const t = setTimeout(prefetch, 100);
+    const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 2000));
+    const id = idle(() => {
+      import('./pages/OpportunityPredictorPage');
     }, { timeout: 4000 });
     return () => {
+      clearTimeout(t);
       if (window.cancelIdleCallback) window.cancelIdleCallback(id);
       else clearTimeout(id);
     };
@@ -287,14 +261,7 @@ export default function App() {
     if (initialLoad) document.body.classList.add('app-loading');
   }, [initialLoad]);
 
-  const routeFallback = useMemo(() => (
-    <div className="min-h-screen flex items-center justify-center bg-bg">
-      <div className="flex flex-col items-center gap-3 animate-fade-in">
-        <div className="w-8 h-8 rounded-xl border-2 border-primary/20 border-t-primary animate-spin" />
-        <p className="text-xs text-text3 font-medium">Loading GateNexa...</p>
-      </div>
-    </div>
-  ), []);
+  const routeFallback = useMemo(() => null, []);
 
   return (
     <ErrorBoundary name="App">

@@ -178,6 +178,16 @@ export default function DashboardPage() {
   const { data: liveData, loading: liveLoading, refresh: refreshLive } = useLiveData(1800000, true);
   const { visibleWidgets, editMode, setEditMode } = useDashboard();
   const [customizerOpen, setCustomizerOpen] = useState(false);
+
+  const openCustomizer = () => {
+    setCustomizerOpen(true);
+    setEditMode(true);
+  };
+
+  const closeCustomizer = () => {
+    setCustomizerOpen(false);
+    setEditMode(false);
+  };
   const [interruptedSession, setInterruptedSession] = useState(null);
 
   useEffect(() => {
@@ -598,6 +608,10 @@ export default function DashboardPage() {
           </div>
         </section>
 
+        <div className="space-y-4">
+          {renderedSections}
+        </div>
+
         {/* ── Daily GATE Content ── */}
         <section className="mobile-daily">
           <DailyContentCards dailyContent={liveData?.dailyContent || []} />
@@ -745,14 +759,22 @@ export default function DashboardPage() {
             <p className="text-sm text-text3/70 mt-1">Guided by Nexa AI · live progress · smart recommendations</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button onClick={refreshLive} className="btn-ghost text-xs">↻ Refresh</button>
+            <button onClick={() => refreshLive().catch(() => {})} className="btn-ghost text-xs" aria-label="Refresh command center data">
+              {liveLoading ? 'Refreshing...' : '↻ Refresh'}
+            </button>
             <button
-              onClick={() => setEditMode(!editMode)}
+              onClick={() => {
+                if (customizerOpen) {
+                  closeCustomizer();
+                  return;
+                }
+                openCustomizer();
+              }}
               className={`text-xs px-4 py-2 rounded-xl border transition-all ${editMode ? 'bg-primary/15 border-primary/30 text-primary' : 'btn-ghost'}`}
             >
               {editMode ? 'Done editing' : 'Customize'}
             </button>
-            <button onClick={() => setCustomizerOpen(true)} className="btn-ghost text-xs">Widgets</button>
+            <button onClick={() => { setCustomizerOpen(true); setEditMode(false); }} className="btn-ghost text-xs">Widgets</button>
             <Link to="/planner" className="btn-primary text-xs">Planner</Link>
           </div>
         </div>
@@ -988,7 +1010,7 @@ export default function DashboardPage() {
           </p>
         )}
 
-        <DashboardCustomizer open={customizerOpen} onClose={() => setCustomizerOpen(false)} />
+        <DashboardCustomizer open={customizerOpen} onClose={closeCustomizer} />
       </div>
     </div>
     </div>
