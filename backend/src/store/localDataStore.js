@@ -34,7 +34,9 @@ function loadLocalFlashcards() {
     if (fs.existsSync(FLASHCARDS_FILE)) {
       localFlashcards = JSON.parse(fs.readFileSync(FLASHCARDS_FILE, 'utf8'));
     }
-  } catch {}
+  } catch (error) {
+    console.error('[LocalData] Failed to load flashcards:', error.message);
+  }
 }
 
 function loadLocalMockAttempts() {
@@ -43,7 +45,9 @@ function loadLocalMockAttempts() {
       const arr = JSON.parse(fs.readFileSync(MOCK_ATTEMPTS_FILE, 'utf8'));
       arr.forEach(a => localMockAttempts.set(`${a.user}:${a.test}:${a.attemptNumber}`, a));
     }
-  } catch {}
+  } catch (error) {
+    console.error('[LocalData] Failed to load mock attempts:', error.message);
+  }
 }
 
 function loadLocalExternalMocks() {
@@ -51,7 +55,9 @@ function loadLocalExternalMocks() {
     if (fs.existsSync(EXTERNAL_MOCKS_FILE)) {
       localExternalMocks = JSON.parse(fs.readFileSync(EXTERNAL_MOCKS_FILE, 'utf8'));
     }
-  } catch {}
+  } catch (error) {
+    console.error('[LocalData] Failed to load external mocks:', error.message);
+  }
 }
 
 function loadLocalCalendarEvents() {
@@ -59,7 +65,9 @@ function loadLocalCalendarEvents() {
     if (fs.existsSync(CALENDAR_EVENTS_FILE)) {
       localCalendarEvents = JSON.parse(fs.readFileSync(CALENDAR_EVENTS_FILE, 'utf8'));
     }
-  } catch {}
+  } catch (error) {
+    console.error('[LocalData] Failed to load calendar events:', error.message);
+  }
 }
 
 function saveLocalMockAttemptsToDisk() {

@@ -13,7 +13,11 @@ const NOTES_DIR = path.join(__dirname, '../../../resources/short-notes');
 
 // Ensure NOTES_DIR exists for local fallback
 if (!fs.existsSync(NOTES_DIR)) {
-  try { fs.mkdirSync(NOTES_DIR, { recursive: true }); } catch {}
+  try {
+    fs.mkdirSync(NOTES_DIR, { recursive: true });
+  } catch (error) {
+    console.error('[ShortNotes] Failed to create notes directory:', error.message);
+  }
 }
 
 // Short-lived token store for local file access

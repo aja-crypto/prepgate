@@ -6,6 +6,7 @@ const {
 const { isMockAuthEnabled } = require('../config/devMode');
 const seed = require('../data/liveDataSeed');
 const { startOfDay } = require('../services/fetchers/analysisService');
+const { parseBoundedLimit } = require('../utils/pagination');
 
 function mockResponse(res, data) {
   return res.json({ success: true, data, mock: true });
@@ -60,7 +61,8 @@ router.get('/dashboard', async (req, res, next) => {
 // GET announcements by type
 router.get('/updates', async (req, res, next) => {
   try {
-    const { type, category, limit = 20 } = req.query;
+    const { type, category } = req.query;
+    const limit = parseBoundedLimit(req.query.limit, 20);
     if (isMockAuthEnabled()) {
       const items = filterMockUpdates(type, category, Number(limit));
       return mockResponse(res, items);
@@ -70,7 +72,7 @@ router.get('/updates', async (req, res, next) => {
     if (type) filter.type = type;
     if (category) filter.category = new RegExp(category, 'i');
 
-    const items = await LiveUpdate.find(filter).sort('-publishedAt').limit(Number(limit)).lean();
+    const items = await LiveUpdate.find(filter).sort('-publishedAt').limit(limit).lean();
     res.json({ success: true, count: items.length, data: items });
   } catch (e) { next(e); }
 });

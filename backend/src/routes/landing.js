@@ -1,4 +1,5 @@
 ﻿const router = require('express').Router();
+const { parseBoundedLimit } = require('../utils/pagination');
 const mongoose = require('mongoose');
 const { protect } = require('../middleware/auth');
 const { isMongoConnected } = require('../config/db');
@@ -152,14 +153,15 @@ router.get('/motivation', asyncHandler(async (req, res) => {
 // GET FEATURED RESOURCES
 // ============================================
 router.get('/featured', asyncHandler(async (req, res) => {
-  const { type, limit = 5 } = req.query;
+  const { type } = req.query;
+  const limit = parseBoundedLimit(req.query.limit, 5);
 
   if (!isMongoConnected()) {
     const notes = [
       { title: 'Complete Engineering Mathematics Notes', description: 'Comprehensive notes covering all topics', category: 'notes', thumbnail: '', url: '/study-hub' },
       { title: 'PYQ Solutions 2020-2024', description: 'Previous year question solutions with explanations', category: 'pyq', thumbnail: '', url: '/pyq' },
     ];
-    return res.json({ success: true, data: notes.slice(0, parseInt(limit)) });
+    return res.json({ success: true, data: notes.slice(0, limit) });
   }
 
   const filter = { isActive: true };
@@ -167,7 +169,7 @@ router.get('/featured', asyncHandler(async (req, res) => {
 
   const resources = await FeaturedResource.find(filter)
     .sort({ priority: -1, createdAt: -1 })
-    .limit(parseInt(limit))
+    .limit(limit)
     .lean();
 
   res.json({ success: true, data: resources });

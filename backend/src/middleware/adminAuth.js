@@ -19,7 +19,7 @@ exports.adminProtect = async (req, res, next) => {
 
     if (!isMongoConnected()) {
       const local = localAdminStore.findAdminById(decoded.id);
-      if (!local || !local.isActive) {
+      if (!local || !local.isActive || (decoded.v || 0) !== (local.tokenVersion || 0)) {
         return res.status(401).json({ success: false, message: 'Admin not found or deactivated.' });
       }
       localAdminStore.updateAdminLastLogin(decoded.id);
@@ -31,6 +31,9 @@ exports.adminProtect = async (req, res, next) => {
 
     if (!admin || !admin.isActive) {
       return res.status(401).json({ success: false, message: 'Admin not found or deactivated.' });
+    }
+    if (decoded.v !== undefined && decoded.v !== (admin.tokenVersion || 0)) {
+      return res.status(401).json({ success: false, message: 'Admin session expired. Please login again.' });
     }
 
     admin.lastLogin = new Date();

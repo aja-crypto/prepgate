@@ -56,8 +56,8 @@ router.get('/stats', async (req, res, next) => {
 // ─── List Notifications ──────────────────────────────────────
 router.get('/', async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
     const { status, category, search } = req.query;
 
     if (isMongoConnected()) {
@@ -151,7 +151,14 @@ router.put('/:id', async (req, res, next) => {
   try {
     if (isMongoConnected()) {
       const Notification = require('../models/Notification');
-      const doc = await Notification.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+      const editableFields = ['title', 'message', 'category', 'priority', 'imageUrl', 'actionButtonText', 'actionUrl', 'targetAudience', 'status', 'scheduledAt', 'recurrence'];
+      const update = Object.fromEntries(editableFields
+        .filter((field) => Object.prototype.hasOwnProperty.call(req.body, field))
+        .map((field) => [field, req.body[field]]));
+      if (!Object.keys(update).length) {
+        return res.status(400).json({ success: false, message: 'No editable notification fields supplied.' });
+      }
+      const doc = await Notification.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true });
       if (!doc) return res.status(404).json({ success: false, message: 'Not found' });
       return res.json({ success: true, data: doc });
     }

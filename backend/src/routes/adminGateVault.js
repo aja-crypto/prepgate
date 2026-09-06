@@ -6,12 +6,14 @@ const { adminProtect, requirePermission } = require('../middleware/adminAuth');
 const { isMongoConnected } = require('../config/db');
 const { Flashcard, MonthlySet } = require('../models/GateVault');
 const { getLocalFlashcards, saveLocalFlashcard, updateLocalFlashcard, deleteLocalFlashcard, bulkSaveLocalFlashcards } = require('../store/localDataStore');
+const { parsePagination, parseBoundedLimit } = require('../utils/pagination');
 
 // GET all flashcards with pagination, search, filter
 router.get('/flashcards', adminProtect, async (req, res, next) => {
   try {
     if (isMongoConnected()) {
-      const { page = 1, limit = 50, subject, difficulty, search } = req.query;
+      const { subject, difficulty, search } = req.query;
+      const { page, limit, skip } = parsePagination(req.query, { limit: 50 });
       const filter = {};
       if (subject) filter.subject = subject;
       if (difficulty) filter.difficulty = difficulty;
@@ -20,9 +22,9 @@ router.get('/flashcards', adminProtect, async (req, res, next) => {
       const total = await Flashcard.countDocuments(filter);
       const cards = await Flashcard.find(filter)
         .sort('-importanceScore -createdAt')
-        .skip((parseInt(page) - 1) * parseInt(limit))
-        .limit(parseInt(limit));
-      return res.json({ success: true, count: cards.length, total, page: parseInt(page), totalPages: Math.ceil(total / parseInt(limit)), data: cards });
+        .skip(skip)
+        .limit(limit);
+      return res.json({ success: true, count: cards.length, total, page, totalPages: Math.ceil(total / limit), data: cards });
     }
     const cards = getLocalFlashcards(req.query);
     res.json({ success: true, count: cards.length, total: cards.length, page: 1, totalPages: 1, data: cards });
@@ -193,7 +195,7 @@ router.post('/monthly-sets', adminProtect, requirePermission('content.manage'), 
     };
 
     for (const [subject, count] of Object.entries(dist)) {
-      const cards = await Flashcard.find({ subject }).sort('-importanceScore').limit(count);
+      const cards = await Flashcard.find({ subject }).sort('-importanceScore').limit(parseBoundedLimit(count));
       flashcardIds.push(...cards.map(c => c._id));
     }
 

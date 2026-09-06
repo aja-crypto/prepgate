@@ -18,7 +18,8 @@ async function addAdmin() {
     await mongoose.connect(process.env.MONGO_URI);
     const Admin = mongoose.model('Admin', AdminSchema);
     
-    const passwordHash = await bcrypt.hash('ajay0911', 12);
+    if (!process.env.ADMIN_PASSWORD) throw new Error('ADMIN_PASSWORD is required');
+    const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
     
     const admin = await Admin.findOneAndUpdate(
       { email: 'apex@admin' },

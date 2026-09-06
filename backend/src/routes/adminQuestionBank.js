@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { adminProtect, requirePermission } = require('../middleware/adminAuth');
 const { isMongoConnected } = require('../config/db');
+const { parsePagination } = require('../utils/pagination');
 const { MockTestQuestion } = require('../models/MockTest');
 const { getLocalMockQuestionsAll, saveLocalMockQuestion, updateLocalMockQuestion, deleteLocalMockQuestion } = require('../store/localDataStore');
 
@@ -67,7 +68,8 @@ function localGetGrouped(params = {}) {
 router.get('/', adminProtect, requirePermission('mocks.manage'), async (req, res, next) => {
   try {
     if (isMongoConnected()) {
-      const { page = 1, limit = 50, search, subject, difficulty, topic, questionType, marks, sort = '-createdAt' } = req.query;
+      const { search, subject, difficulty, topic, questionType, marks, sort = '-createdAt' } = req.query;
+      const { page, limit, skip } = parsePagination(req.query, { limit: 50 });
       const filter = { isActive: { $ne: false } };
       if (search) filter.$or = [{ questionText: { $regex: search, $options: 'i' } }, { topic: { $regex: search, $options: 'i' } }, { subject: { $regex: search, $options: 'i' } }];
       if (subject) filter.subject = subject;
@@ -76,8 +78,8 @@ router.get('/', adminProtect, requirePermission('mocks.manage'), async (req, res
       if (questionType) filter.questionType = questionType;
       if (marks) filter.marks = parseInt(marks);
       const total = await MockTestQuestion.countDocuments(filter);
-      const questions = await MockTestQuestion.find(filter).sort(sort).skip((parseInt(page) - 1) * parseInt(limit)).limit(parseInt(limit)).lean();
-      return res.json({ success: true, data: questions, total, page: parseInt(page), totalPages: Math.ceil(total / parseInt(limit)) });
+      const questions = await MockTestQuestion.find(filter).sort(sort).skip(skip).limit(limit).lean();
+      return res.json({ success: true, data: questions, total, page, totalPages: Math.ceil(total / limit) });
     }
     const result = localGetQuestions(req.query);
     res.json({ success: true, ...result });

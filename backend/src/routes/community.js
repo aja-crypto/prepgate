@@ -12,8 +12,8 @@ const { Question, Answer, Comment } = require('../models/Community');
 // Get all questions with filters
 router.get('/questions', protect, async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
     const skip = (page - 1) * limit;
     
     const filter = { isFlagged: false, isLocked: false };
@@ -32,7 +32,7 @@ router.get('/questions', protect, async (req, res, next) => {
 
     const [questions, total] = await Promise.all([
       Question.find(filter)
-        .populate('user', 'name email avatar')
+        .populate('user', 'name avatar')
         .sort(sort)
         .skip(skip)
         .limit(limit),
@@ -59,12 +59,12 @@ router.get('/questions/:id', protect, async (req, res, next) => {
       req.params.id,
       { $inc: { viewCount: 1 } },
       { new: true }
-    ).populate('user', 'name email avatar');
+    ).populate('user', 'name avatar');
 
     if (!question) return res.status(404).json({ success: false, message: 'Question not found' });
 
     const answers = await Answer.find({ question: question._id, isFlagged: false })
-      .populate('user', 'name email avatar')
+      .populate('user', 'name avatar')
       .sort('-isAccepted upvotes -createdAt');
 
     res.json({ success: true, data: { ...question.toObject(), answers } });
@@ -160,7 +160,7 @@ router.post('/questions/:id/answers', protect, async (req, res, next) => {
     // Update question answer count
     await Question.findByIdAndUpdate(req.params.id, { $inc: { answerCount: 1 } });
 
-    const populated = await Answer.findById(answer._id).populate('user', 'name email avatar');
+    const populated = await Answer.findById(answer._id).populate('user', 'name avatar');
     res.status(201).json({ success: true, message: 'Answer posted!', data: populated });
   } catch (e) { next(e); }
 });
@@ -258,7 +258,7 @@ router.post('/comments', protect, async (req, res, next) => {
       refModel: referenceType === 'question' ? 'Question' : 'Answer',
     });
 
-    const populated = await Comment.findById(comment._id).populate('user', 'name email avatar');
+    const populated = await Comment.findById(comment._id).populate('user', 'name avatar');
     res.status(201).json({ success: true, message: 'Comment added!', data: populated });
   } catch (e) { next(e); }
 });
@@ -279,7 +279,7 @@ router.get('/comments', protect, async (req, res, next) => {
       referenceType,
       referenceId,
     })
-      .populate('user', 'name email avatar')
+      .populate('user', 'name avatar')
       .sort('createdAt');
 
     res.json({ success: true, count: comments.length, data: comments });

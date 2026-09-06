@@ -6,6 +6,7 @@ const {
   CmsFeaturedResource, FeaturedContent, Announcement,
 } = require('../models/CmsContent');
 const { isMongoConnected } = require('../config/db');
+const { parsePagination } = require('../utils/pagination');
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
@@ -24,9 +25,10 @@ function createCrudRoutes(basePath, Model, options = {}) {
     }
 
     const {
-      page = 1, limit = 20, search = '', sort = '-createdAt',
+      search = '', sort = '-createdAt',
       isPublished, isDeleted, ...filters
     } = req.query;
+    const { page, limit, skip } = parsePagination(req.query, { limit: 20 });
 
     const query = {};
 
@@ -53,12 +55,11 @@ function createCrudRoutes(basePath, Model, options = {}) {
     const sortField = sort.startsWith('-') ? sort.slice(1) : sort;
     const sortOrder = sort.startsWith('-') ? -1 : 1;
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
     const [items, total] = await Promise.all([
       Model.find(query)
         .sort({ [sortField]: sortOrder })
         .skip(skip)
-        .limit(parseInt(limit))
+        .limit(limit)
         .populate(populateFields)
         .lean(),
       Model.countDocuments(query),

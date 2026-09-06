@@ -2,9 +2,12 @@
 const cron = require('node-cron');
 const { isMockAuthEnabled } = require('../../config/devMode');
 const { runJob, runAllJobs, getJobList } = require('../fetchOrchestrator');
-const { startNotificationScheduler } = require('./notificationScheduler');
+const { startNotificationScheduler, stopNotificationScheduler } = require('./notificationScheduler');
 
 let started = false;
+let initialFetchTimer = null;
+const scheduledTasks = [];
+const runningJobs = new Set();
 
 const SCHEDULES = [
   { cron: '*/15 * * * *', jobs: ['rss_feeds', 'gate_notifications'] }, // Every 15 mins
@@ -26,20 +29,26 @@ function startScheduler() {
   console.log('⏰ Live data scheduler started');
 
   // Initial fetch 30s after server boot
-  setTimeout(() => {
+  initialFetchTimer = setTimeout(() => {
+    initialFetchTimer = null;
     runAllJobs().catch((err) => console.error('Initial fetch failed:', err.message));
   }, 30000);
 
   for (const schedule of SCHEDULES) {
-    cron.schedule(schedule.cron, async () => {
+    const task = cron.schedule(schedule.cron, async () => {
       for (const jobName of schedule.jobs) {
+        if (runningJobs.has(jobName)) continue;
+        runningJobs.add(jobName);
         try {
           await runJob(jobName);
         } catch {
           // logged in runJob
+        } finally {
+          runningJobs.delete(jobName);
         }
       }
     });
+    scheduledTasks.push(task);
   }
 
   // Log schedule summary
@@ -55,4 +64,18 @@ function startScheduler() {
   }
 }
 
-module.exports = { startScheduler, runAllJobs, runJob, getJobList };
+function stopScheduler() {
+  if (initialFetchTimer) {
+    clearTimeout(initialFetchTimer);
+    initialFetchTimer = null;
+  }
+  for (const task of scheduledTasks) {
+    task.stop();
+  }
+  scheduledTasks.length = 0;
+  runningJobs.clear();
+  stopNotificationScheduler();
+  started = false;
+}
+
+module.exports = { startScheduler, stopScheduler, runAllJobs, runJob, getJobList };

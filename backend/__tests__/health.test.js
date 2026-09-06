@@ -83,6 +83,11 @@ describe('Protected routes (X-Demo-User)', () => {
     expect(res.statusCode).toBe(401);
   });
 
+  test('GET /api/subjects does not accept access tokens in query strings', async () => {
+    const res = await request(app).get('/api/subjects?token=not-a-bearer-token');
+    expect(res.statusCode).toBe(401);
+  });
+
   test('GET /api/subjects returns data with demo auth', async () => {
     const res = await request(app)
       .get('/api/subjects')

@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { parsePagination, parseBoundedLimit } = require('../utils/pagination');
 const fs = require('fs');
 const path = require('path');
 const { protect } = require('../middleware/auth');
@@ -487,7 +488,9 @@ router.post('/predict', protect, predictRateLimit, requireMongo, validateFields(
         { cacheKey },
         { $set: { cacheKey, input: req.body, output: responseData, expiresAt: new Date(Date.now() + CACHE_TTL_MINUTES * 60 * 1000) } },
         { upsert: true, new: false }
-      ).catch(() => {});
+      ).catch((error) => {
+        console.warn('[Predictor] Cache write failed:', error.message);
+      });
     }
 
     res.json({ success: true, data: responseData });
@@ -560,7 +563,8 @@ router.get('/ccmt', protect, requirePremium, requireMongo, async (req, res, next
 router.get('/insights/top-closing-scores', protect, async (req, res, next) => {
   try {
     if (!isMongoConnected()) return res.json({ success: true, count: 0, data: [] });
-    const { category = 'General', year, limit = 20, instituteType = 'IIT' } = req.query;
+    const { category = 'General', year, instituteType = 'IIT' } = req.query;
+    const limit = parseBoundedLimit(req.query.limit, 20);
     const filter = {
       dataStatus: { $ne: 'placeholder' },
       closingScore: { $gt: 0, $lte: 1000 },
@@ -918,7 +922,9 @@ router.get('/unlock-status', protect, async (req, res, next) => {
           const testingUnlocked = testUses < TESTING_PREDICT_LIMIT;
           if (testingUnlocked) isUnlocked = true;
         }
-      } catch (dbErr) {}
+      } catch (dbErr) {
+        console.warn('[Predictor] Premium status lookup failed:', dbErr.message);
+      }
     }
     res.json({
       success: true,

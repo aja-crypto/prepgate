@@ -18,6 +18,7 @@ const adminSchema = new mongoose.Schema({
   role: { type: String, enum: ROLES, default: 'admin' },
   permissions: [{ type: String, enum: PERMISSIONS }],
   isActive: { type: Boolean, default: true },
+  tokenVersion: { type: Number, default: 0 },
   lastLogin: { type: Date },
 }, { timestamps: true });
 

@@ -59,7 +59,7 @@ router.get('/', protect, async (req, res, next) => {
     } catch (_) { /* non-fatal — continue to read whatever exists */ }
 
     const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
     const skip = (page - 1) * limit;
     const { unreadOnly, type, includePrefs } = req.query;
     const filter = { user: mongoUserId };

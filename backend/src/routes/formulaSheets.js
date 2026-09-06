@@ -9,7 +9,7 @@ const FormulaSheet = require('../models/FormulaSheet');
 router.get('/', protect, async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
     const skip = (page - 1) * limit;
     
     const filter = { isPublished: true };

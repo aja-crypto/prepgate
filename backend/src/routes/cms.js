@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { parseBoundedLimit } = require('../utils/pagination');
 const mongoose = require('mongoose');
 const { isMongoConnected } = require('../config/db');
 const { CmsFeaturedResource } = require('../models/CmsContent');
@@ -94,12 +95,13 @@ router.get('/motivation', asyncHandler(async (req, res) => {
 
 // ─── GET Featured Resources ─────────────────────────────────
 router.get('/featured-resources', asyncHandler(async (req, res) => {
-  const { type, limit = 6 } = req.query;
+  const { type } = req.query;
+  const limit = parseBoundedLimit(req.query.limit, 6);
 
   if (!isMongoConnected()) {
     let data = FALLBACK_RESOURCES;
     if (type) data = data.filter(r => r.resourceType === type);
-    return res.json({ success: true, data: data.slice(0, parseInt(limit)) });
+    return res.json({ success: true, data: data.slice(0, limit) });
   }
 
   if (!CmsFeaturedResource) return res.json({ success: true, data: FALLBACK_RESOURCES.slice(0, parseInt(limit)) });
@@ -109,7 +111,7 @@ router.get('/featured-resources', asyncHandler(async (req, res) => {
 
   const resources = await CmsFeaturedResource.find(filter)
     .sort({ isFeatured: -1, priority: -1 })
-    .limit(parseInt(limit))
+    .limit(limit)
     .lean();
 
   res.json({ success: true, data: resources.length ? resources : FALLBACK_RESOURCES.slice(0, parseInt(limit)) });

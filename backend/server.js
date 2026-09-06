@@ -35,6 +35,11 @@ function isPlaceholder(val) {
   return !val || PLACEHOLDER_PATTERNS.some(p => val.includes(p));
 }
 const missing = REQUIRED_ENV.filter(key => isPlaceholder(process.env[key]));
+if (process.env.NODE_ENV === 'production') {
+  for (const key of ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS']) {
+    if (isPlaceholder(process.env[key])) missing.push(key);
+  }
+}
 if (missing.length > 0) {
   console.error(`[STARTUP FAIL] Missing or placeholder env vars: ${missing.join(', ')}`);
   console.error('  Copy .env.example to .env and fill in your values:');
@@ -55,14 +60,22 @@ let httpServer = null;
 process.on('unhandledRejection', (reason) => {
   console.error('Unhandled Rejection:', reason instanceof Error ? reason.message : reason);
   if (reason instanceof Error) console.error(reason.stack);
-  try { Sentry.captureException(reason); } catch {}
+  try {
+    Sentry.captureException(reason);
+  } catch (sentryError) {
+    console.error('[Sentry] Failed to capture unhandled rejection:', sentryError.message);
+  }
   setTimeout(() => { process.exit(1); }, 1000);
 });
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err.message);
   console.error(err.stack);
-  try { Sentry.captureException(err); } catch {}
+  try {
+    Sentry.captureException(err);
+  } catch (sentryError) {
+    console.error('[Sentry] Failed to capture uncaught exception:', sentryError.message);
+  }
   isShuttingDown = true;
   if (httpServer) {
     httpServer.close(() => process.exit(1));
@@ -516,7 +529,7 @@ if (!isMongoConnected() && !isProduction) {
         email: 'admin@gatenexa.dev',
         password: DEV_ADMIN_PASSWORD,
         role: 'super_admin',
-      }).then(() => console.log('[DEV] Local dev admin seeded: admin@gatenexa.dev (password from ADMIN_PASSWORD env, or dev fallback "admin123" in non-production).'))
+      }).then(() => console.log('[DEV] Local dev admin seeded: admin@gatenexa.dev (development credentials only).'))
       .catch((e) => console.error('Admin seed failed:', e.message));
     }
     if (!localAdminStore.findAdminByEmail('purruajaykumar@gmail.com')) {
@@ -525,7 +538,7 @@ if (!isMongoConnected() && !isProduction) {
         email: 'purruajaykumar@gmail.com',
         password: OWNER_PASSWORD,
         role: 'super_admin',
-      }).then(() => console.log('[DEV] Local owner seeded: purruajaykumar@gmail.com (password from OWNER_PASSWORD env, or dev fallback "owner123" in non-production).'))
+      }).then(() => console.log('[DEV] Local owner seeded: purruajaykumar@gmail.com (development credentials only).'))
       .catch((e) => console.error('Owner seed failed:', e.message));
     }
   } catch (e) {
@@ -566,7 +579,7 @@ connectDB().then(async () => {
           role: 'super_admin',
           isActive: true,
         });
-        if (!isProduction) console.log('[DEV] Dev admin seeded in MongoDB: admin@gatenexa.dev (password from ADMIN_PASSWORD env, or dev fallback "admin123" in non-production).');
+        if (!isProduction) console.log('[DEV] Dev admin seeded in MongoDB: admin@gatenexa.dev (development credentials only).');
         else console.log('Dev admin seeded in MongoDB: admin@gatenexa.dev');
       } else if (DEV_ADMIN_PASSWORD) {
         existing.passwordHash = DEV_ADMIN_PASSWORD;
@@ -645,6 +658,13 @@ connectDB().then(async () => {
     if (isShuttingDown) return;
     isShuttingDown = true;
     console.log(`\n?? ${signal} received � shutting down gracefully...`);
+
+    try {
+      const { stopScheduler } = require('./src/services/scheduler/cronJobs');
+      stopScheduler();
+    } catch (e) {
+      console.error('?? Error stopping scheduler:', e.message);
+    }
 
     // Stop accepting new connections
     if (server) {

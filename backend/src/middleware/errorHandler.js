@@ -23,7 +23,7 @@ const errorHandler = (err, req, res, next) => {
 
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {
-    return res.status(400).json({ success: false, message: `Invalid ${err.path}: ${err.value}` });
+    return res.status(400).json({ success: false, message: `Invalid ${err.path}.` });
   }
 
   // JWT errors
@@ -31,10 +31,14 @@ const errorHandler = (err, req, res, next) => {
     return res.status(401).json({ success: false, message: 'Invalid token' });
   }
 
-  // Default
-  res.status(error.statusCode || 500).json({
+  // Preserve intentional client errors, but never expose provider/database details in production.
+  const statusCode = error.statusCode || 500;
+  const message = process.env.NODE_ENV === 'production' && statusCode >= 500
+    ? 'Internal Server Error'
+    : (error.message || 'Internal Server Error');
+  res.status(statusCode).json({
     success: false,
-    message: error.message || 'Internal Server Error',
+    message,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };

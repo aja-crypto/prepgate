@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { adminProtect, requirePermission } = require('../middleware/adminAuth');
+const { parsePagination } = require('../utils/pagination');
 const { validateFields } = require('../middleware/validateInput');
 const { isMongoConnected } = require('../config/db');
 const { logAction } = require('../services/auditLog');
@@ -39,7 +40,8 @@ function buildListRoutes(basePath, Model, label, searchFields = [], sortDefault 
     method: 'get', path: `/${basePath}`,
     handler: async (req, res, next) => {
       try {
-        const { page = 1, limit = 100, year, ...filters } = req.query;
+        const { year, ...filters } = req.query;
+        const { page, limit, skip } = parsePagination(req.query, { limit: 100 });
         const filter = {};
         if (year) filter.year = parseInt(year);
         if (searchFields.length > 0 && req.query.search) {
@@ -50,10 +52,9 @@ function buildListRoutes(basePath, Model, label, searchFields = [], sortDefault 
             filter[k] = isNaN(v) ? { $regex: v, $options: 'i' } : parseInt(v) || v;
           }
         });
-        const skip = (parseInt(page) - 1) * parseInt(limit);
-        const data = await Model.find(filter).sort(sortDefault).skip(skip).limit(parseInt(limit)).lean();
+        const data = await Model.find(filter).sort(sortDefault).skip(skip).limit(limit).lean();
         const total = await Model.countDocuments(filter);
-        res.json({ success: true, count: data.length, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)), data });
+        res.json({ success: true, count: data.length, total, page, pages: Math.ceil(total / limit), data });
       } catch (e) { next(e); }
     },
   });
@@ -382,7 +383,7 @@ router.get('/dataset-counts', adminProtect, requirePermission('content.manage'),
 router.get('/feedback', adminProtect, requirePermission('content.manage'), requireMongo, async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const { limit } = parsePagination(req.query, { limit: 50 });
     const skip = (page - 1) * limit;
     const data = await PredictionFeedback.find().populate('user', 'name email').sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
     const total = await PredictionFeedback.countDocuments();

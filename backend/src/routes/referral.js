@@ -14,6 +14,23 @@ function genCode() {
 
 // ─── Helper: get or create referral record ─────────────────────
 const mongoose = require('mongoose');
+const { sendTransactionalEmail } = require('../services/emailDeliveryService');
+const emailTemplates = require('../utils/emailTemplates');
+
+function sendPremiumActivatedEmail(user) {
+  if (!user?.email) return;
+  const t = emailTemplates.premiumActivated(user.name);
+  sendTransactionalEmail({
+    type: 'premium-activation',
+    eventId: String(user._id),
+    to: user.email,
+    subject: t.subject,
+    html: t.html,
+    text: t.text,
+  }).catch((error) => {
+    console.error('[Referral] Premium email failed:', error.message);
+  });
+}
 
 async function getOrCreate(user) {
   const userId = user._id?.toString() || user.id;
@@ -120,35 +137,48 @@ router.post('/complete', protect, async (req, res, next) => {
     if (isMongoConnected() && mongoose.Types.ObjectId.isValid(userId)) {
       const currentUser = await User.findById(req.user._id);
       if (currentUser && currentUser.referredBy) {
-        // Found referrer via user's referredBy field
-        const referrer = await User.findById(currentUser.referredBy);
+        // Claim the pending referral atomically; only the first concurrent request can match.
+        const referrer = await User.findOneAndUpdate(
+          { _id: currentUser.referredBy, pendingReferrals: req.user._id },
+          {
+            $pull: { pendingReferrals: req.user._id },
+            $addToSet: { referredUsers: req.user._id },
+            $inc: { referralCount: 1 },
+          },
+          { new: true },
+        );
         if (referrer) {
-          referrer.pendingReferrals = (referrer.pendingReferrals || []).filter(id => id.toString() !== userId);
-          if (!referrer.referredUsers?.includes(req.user._id)) {
-            referrer.referralCount = (referrer.referralCount || 0) + 1;
-          }
           if (referrer.referralCount >= 2 && !referrer.isPremium) {
-            referrer.isPremium = true;
-            referrer.premiumUnlockedViaReferral = true;
+            const premiumUpdate = await User.updateOne(
+              { _id: referrer._id, isPremium: false },
+              { $set: { isPremium: true, premiumUnlockedViaReferral: true } },
+            );
+            if (premiumUpdate.modifiedCount === 1) sendPremiumActivatedEmail(referrer);
           }
-          referrer.markModified('pendingReferrals');
-          await referrer.save();
-          return res.json({ success: true, referralCount: referrer.referralCount, isPremium: !!referrer.isPremium });
+          return res.json({ success: true, referralCount: referrer.referralCount, isPremium: referrer.referralCount >= 2 || !!referrer.isPremium });
         }
       }
       // Also try finding referrer by pendingReferrals array
-      const referrer2 = await User.findOne({ pendingReferrals: req.user._id });
+      const referrer2 = await User.findOneAndUpdate(
+        { pendingReferrals: req.user._id },
+        {
+          $pull: { pendingReferrals: req.user._id },
+          $addToSet: { referredUsers: req.user._id },
+          $inc: { referralCount: 1 },
+        },
+        { new: true },
+      );
       if (referrer2) {
-        referrer2.pendingReferrals = referrer2.pendingReferrals.filter(id => id.toString() !== userId);
-        referrer2.referralCount = (referrer2.referralCount || 0) + 1;
         if (referrer2.referralCount >= 2 && !referrer2.isPremium) {
-          referrer2.isPremium = true;
-          referrer2.premiumUnlockedViaReferral = true;
+          const premiumUpdate = await User.updateOne(
+            { _id: referrer2._id, isPremium: false },
+            { $set: { isPremium: true, premiumUnlockedViaReferral: true } },
+          );
+          if (premiumUpdate.modifiedCount === 1) sendPremiumActivatedEmail(referrer2);
         }
-        referrer2.markModified('pendingReferrals');
-        await referrer2.save();
-        return res.json({ success: true, referralCount: referrer2.referralCount, isPremium: !!referrer2.isPremium });
+        return res.json({ success: true, referralCount: referrer2.referralCount, isPremium: referrer2.referralCount >= 2 || !!referrer2.isPremium });
       }
+      return res.json({ success: true, message: 'Referral already completed or no pending referral was found.' });
     }
 
     // Local store fallback (mock mode) — pass null to auto-lookup referrer
@@ -208,7 +238,7 @@ router.get('/validate/:code', async (req, res, next) => {
     const referrer = await User.findOne({ referralCode: code.toUpperCase() });
     if (!referrer) return res.json({ success: true, data: { valid: false } });
 
-    res.json({ success: true, data: { valid: true, name: referrer.name, code: referrer.referralCode } });
+    res.json({ success: true, data: { valid: true, code: referrer.referralCode } });
   } catch (e) { next(e); }
 });
 

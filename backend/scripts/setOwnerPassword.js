@@ -6,7 +6,8 @@ async function main() {
   console.log('Connected');
   
   const bcrypt = require('bcryptjs');
-  const hash = await bcrypt.hash(process.env.OWNER_PASSWORD || 'change-me', 12);
+  if (!process.env.OWNER_PASSWORD) throw new Error('OWNER_PASSWORD is required');
+  const hash = await bcrypt.hash(process.env.OWNER_PASSWORD, 12);
   console.log('Hash:', hash.substring(0, 30) + '...');
   
   const coll = mongoose.connection.collection('admins');
@@ -19,9 +20,7 @@ async function main() {
     );
     console.log('Updated owner password');
     
-    const verify = await coll.findOne({ email: 'purruajaykumar@gmail.com' });
-    const match = await bcrypt.compare('GateNexa@Owner2026', verify.passwordHash);
-    console.log('Verify bcrypt match:', match ? 'YES' : 'NO');
+    console.log('Owner password updated and hash stored.');
   } else {
     await coll.insertOne({
       email: 'purruajaykumar@gmail.com',

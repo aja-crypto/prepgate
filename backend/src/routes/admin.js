@@ -7,6 +7,7 @@ const Subject = require('../models/Subject');
 const AdminPdf = require('../models/AdminPdf');
 const aiUsage = require('../services/aiUsageTracker');
 const { Topic, Note, MockTest, PYQ } = require('../models');
+const { parsePagination } = require('../utils/pagination');
 
 // Local user helpers (mock store)
 const localAdminStore = require('../store/localAdminStore');
@@ -18,7 +19,10 @@ function getAllLocalUsers() {
     if (!fs.existsSync(file)) return [];
     const data = JSON.parse(fs.readFileSync(file, 'utf8'));
     return data.map(u => ({ ...u, password: undefined }));
-  } catch { return []; }
+  } catch (error) {
+    console.error('[Admin] Failed to load local users:', error.message);
+    return [];
+  }
 }
 
 function updateLocalUser(id, updates) {
@@ -184,8 +188,8 @@ router.get('/stats', adminProtect, async (req, res, next) => {
 // GET all users (admin) — with pagination & search
 router.get('/users', adminProtect, async (req, res, next) => {
   try {
-    const { page = 1, limit = 50, search, status, sort = '-createdAt' } = req.query;
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const { search, status, sort = '-createdAt' } = req.query;
+    const { page, limit, skip } = parsePagination(req.query, { limit: 50 });
 
     if (!isMongoConnected()) {
       let users = getAllLocalUsers();
@@ -235,7 +239,7 @@ router.get('/users', adminProtect, async (req, res, next) => {
       }));
 
       const total = deduplicated.length;
-      const paginated = deduplicated.slice(skip, skip + parseInt(limit));
+      const paginated = deduplicated.slice(skip, skip + limit);
       return res.json({
         success: true,
         count: total,
@@ -257,7 +261,7 @@ router.get('/users', adminProtect, async (req, res, next) => {
     if (status === 'deleted') filter.deletedAt = { $ne: null };
 
     const [users, total] = await Promise.all([
-      User.find(filter).select('-password').sort(sort).skip(skip).limit(parseInt(limit)),
+      User.find(filter).select('-password').sort(sort).skip(skip).limit(limit),
       User.countDocuments(filter),
     ]);
 

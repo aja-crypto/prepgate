@@ -99,6 +99,27 @@ router.post('/', protect, async (req, res, next) => {
         priority: 'medium',
         deviceInfo: req.body.deviceInfo || {},
       });
+      if (req.user?.email) {
+        const emailTemplates = require('../utils/emailTemplates');
+        const t = emailTemplates.feedbackReceived({
+          title: ticket.title,
+          category,
+          rating: ratings?.overall,
+          message: ticket.message,
+          ticketId: ticket._id,
+        });
+        const { sendTransactionalEmail } = require('../services/emailDeliveryService');
+        sendTransactionalEmail({
+          type: 'feedback-received',
+          eventId: String(ticket._id),
+          to: req.user.email,
+          subject: t.subject,
+          html: t.html,
+          text: t.text,
+        }).catch((error) => {
+          console.error('[Feedback] Confirmation email failed:', error.message);
+        });
+      }
       await createFeedbackNotification({
         userId: userId || req.user._id,
         type: 'feedback_received',
@@ -199,8 +220,8 @@ router.get('/admin/stats', protect, adminOnly, async (req, res, next) => {
 router.get('/admin/all', protect, adminOnly, async (req, res, next) => {
   try {
     if (isMongoConnected()) {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 20;
+      const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
       const feedbacks = await Feedback.find({})
         .populate('user', 'name email')
         .sort('-createdAt')

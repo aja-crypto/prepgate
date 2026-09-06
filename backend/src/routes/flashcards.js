@@ -17,7 +17,7 @@ router.get('/', protect, async (req, res, next) => {
   try {
     const userId = req.user._id;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
     const skip = (page - 1) * limit;
     
     const filter = { user: userId, reviewStatus: 'due' };
@@ -74,7 +74,7 @@ router.get('/', protect, async (req, res, next) => {
 router.get('/bank', protect, requirePremium, async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
     const skip = (page - 1) * limit;
     
     const filter = {};
@@ -120,7 +120,7 @@ router.get('/bank', protect, requirePremium, async (req, res, next) => {
 router.get('/review/queue', protect, requirePremium, async (req, res, next) => {
   try {
     const userId = req.user._id;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 10));
 
     if (!isMongoConnected() || isMockAuthEnabled()) {
       return res.json({

@@ -187,7 +187,12 @@ function buildIndex() {
   const start = Date.now();
   
   if (!fs.existsSync(RESOURCES_DIR)) {
-    try { fs.mkdirSync(RESOURCES_DIR, { recursive: true }); } catch (_) {}
+    try {
+      fs.mkdirSync(RESOURCES_DIR, { recursive: true });
+    } catch (error) {
+      console.error('[ResourceScanner] Failed to create resources directory:', error.message);
+      throw error;
+    }
     console.log('[ResourceScanner] Created resources directory at', RESOURCES_DIR);
   }
 

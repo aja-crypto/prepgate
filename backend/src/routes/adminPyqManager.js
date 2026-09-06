@@ -6,6 +6,7 @@ const { adminProtect, requirePermission } = require('../middleware/adminAuth');
 const { extractTextFromPdf } = require('../services/ocrService');
 const { parseQuestions } = require('../services/questionParser');
 const { isCloudinaryConfigured, uploadPdf: cloudinaryUpload } = require('../config/cloudinary');
+const { parsePagination } = require('../utils/pagination');
 
 const pdfUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 }, fileFilter: createFileFilter('pdf') });
 
@@ -24,7 +25,8 @@ function requireMongo(req, res, next) {
 router.get('/pyq', adminProtect, requirePermission('mocks.manage'), requireMongo, async (req, res, next) => {
   try {
     const PYQ = mongoose.model('PYQ');
-    const { subject, topic, year, difficulty, questionType, isActive, page = 1, limit = 50 } = req.query;
+    const { subject, topic, year, difficulty, questionType, isActive } = req.query;
+    const { page, limit, skip } = parsePagination(req.query, { limit: 50 });
     const filter = {};
     if (subject) filter.subject = subject;
     if (topic) filter.topic = topic;
@@ -33,13 +35,12 @@ router.get('/pyq', adminProtect, requirePermission('mocks.manage'), requireMongo
     if (questionType) filter.questionType = questionType;
     if (isActive !== undefined) filter.isActive = isActive === 'true';
 
-    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
     const [data, total] = await Promise.all([
-      PYQ.find(filter).populate('subject', 'name code').populate('topic', 'name').sort({ year: -1, subject: 1 }).skip(skip).limit(parseInt(limit, 10)),
+      PYQ.find(filter).populate('subject', 'name code').populate('topic', 'name').sort({ year: -1, subject: 1 }).skip(skip).limit(limit),
       PYQ.countDocuments(filter),
     ]);
 
-    res.json({ success: true, count: data.length, total, page: parseInt(page, 10), pages: Math.ceil(total / parseInt(limit, 10)), data });
+    res.json({ success: true, count: data.length, total, page, pages: Math.ceil(total / limit), data });
   } catch (e) {
     next(e);
   }
@@ -332,4 +333,3 @@ router.post('/pyq/save-extracted', adminProtect, requirePermission('mocks.manage
 });
 
 module.exports = router;
-

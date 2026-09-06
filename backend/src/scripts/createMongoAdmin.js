@@ -17,7 +17,8 @@ async function main() {
   }
   
   // Use collection.insertOne to bypass pre-save hook (avoids double hashing)
-  const passwordHash = await bcrypt.hash('QaAdmin123!', 12);
+  if (!process.env.ADMIN_PASSWORD) throw new Error('ADMIN_PASSWORD is required');
+  const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
   const result = await Admin.collection.insertOne({
     name: 'QA Admin',
     email: 'qaadmin@test.com',

@@ -131,44 +131,6 @@ router.get('/context', protect, async (req, res) => {
   }
 });
 
-async function incrementAiUsage(userId) {
-  if (!userId) return;
-  try {
-    const { isMockAuthEnabled } = require('../config/devMode');
-    if (isMockAuthEnabled()) {
-      const mockStore = require('../store/mockStore');
-      const user = mockStore.findById(userId);
-      if (!user) return;
-      const guest = isDemoUser(user);
-      if (guest) {
-        user.aiQuestionsUsed = (user.aiQuestionsUsed || 0) + 1;
-        await user.save();
-        return;
-      }
-      const today = getIstDateKeyAI();
-      const lastDate = user.aiQuestionsDate ? getIstDateKeyAI(new Date(user.aiQuestionsDate)) : null;
-      user.aiQuestionsUsed = lastDate === today ? (user.aiQuestionsUsed || 0) + 1 : 1;
-      user.aiQuestionsDate = new Date();
-      await user.save();
-      return;
-    }
-    const User = require('../models/User');
-    const user = await User.findById(userId).select('email aiQuestionsDate aiQuestionsUsed');
-    const guest = user && isDemoUser(user);
-    if (guest) {
-      await User.updateOne({ _id: userId }, { $inc: { aiQuestionsUsed: 1 } });
-      return;
-    }
-    const today = getIstDateKeyAI();
-    const lastDate = user?.aiQuestionsDate ? getIstDateKeyAI(new Date(user.aiQuestionsDate)) : null;
-    if (lastDate !== today) {
-      await User.updateOne({ _id: userId }, { $inc: { aiQuestionsUsed: 1 }, $set: { aiQuestionsDate: new Date() } });
-    } else {
-      await User.updateOne({ _id: userId }, { $inc: { aiQuestionsUsed: 1 } });
-    }
-  } catch (e) { /* silent */ }
-}
-
 // Last error is now declared at the top of this file
 
 /**
@@ -861,7 +823,6 @@ router.post('/planner', validateFields([
     }
 
     aiUsage.increment(true, Date.now() - planStart);
-    await incrementAiUsage(req.user?._id?.toString());
     res.json({ success: true, data: { plan, source, aiError } });
   } catch (e) {
     aiUsage.increment(false, Date.now() - planStart);
@@ -1068,7 +1029,6 @@ router.post('/recommendations', validateFields([
     }
 
     aiUsage.increment(true, Date.now() - recStart);
-    await incrementAiUsage(req.user?._id?.toString());
     res.json({ success: true, data: { recommendations, analysis, source, aiError } });
   } catch (e) {
     aiUsage.increment(false, Date.now() - recStart);
@@ -1289,7 +1249,6 @@ router.post('/chat', validateFields([
           remaining = { remaining: quotaCheck.remaining, limit: quotaCheck.limit, isPremium: quotaCheck.isPremium };
         }
         aiUsage.increment(true, Date.now() - chatStart);
-        await incrementAiUsage(req.user?._id?.toString());
         send({
           type: 'done',
           content: response.text,
@@ -1336,7 +1295,6 @@ router.post('/chat', validateFields([
     }
 
     aiUsage.increment(true, Date.now() - chatStart);
-    await incrementAiUsage(req.user?._id?.toString());
     res.json({ success: true, data: { ...response, remaining } });
   } catch (e) {
     aiUsage.increment(false, Date.now() - chatStart);
@@ -1347,7 +1305,9 @@ router.post('/chat', validateFields([
         if (!res.writableEnded) {
           res.write(`data: ${JSON.stringify({ type: 'error', content: 'AI chat error' })}\n\n`);
         }
-      } catch (_) {}
+      } catch (writeError) {
+        console.warn('[AI Coach] Failed to write terminal SSE error:', writeError.message);
+      }
       return res.end();
     }
     res.status(500).json({
@@ -2488,7 +2448,7 @@ router.post('/doubt-solver', validateFields([
     }
 
     aiUsage.increment(true, Date.now() - doubtStart);
-    await incrementAiUsage(req.user?._id?.toString());
+
     res.json({ success: true, data: { ...response, source, aiError, doubt } });
   } catch (e) {
     aiUsage.increment(false, Date.now() - doubtStart);
@@ -2508,8 +2468,8 @@ router.get('/conversations', async (req, res, next) => {
   try {
     const userId = req.user?._id;
     if (!userId) return res.json({ success: true, data: [] });
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
     const skip = (page - 1) * limit;
     const conversations = await Conversation.find({ user: userId, isArchived: false })
       .sort({ lastMessageAt: -1 }).skip(skip).limit(limit).lean();
@@ -2527,8 +2487,8 @@ router.get('/conversations/:id/messages', async (req, res, next) => {
     if (!userId) return res.json({ success: true, data: [] });
     const conv = await Conversation.findOne({ _id: req.params.id, user: userId });
     if (!conv) return res.status(404).json({ success: false, message: 'Conversation not found.' });
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
     const skip = (page - 1) * limit;
     const messages = await Message.find({ conversation: conv._id })
       .sort({ createdAt: -1 }).skip(skip).limit(limit).lean();

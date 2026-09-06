@@ -6,7 +6,9 @@ const ProgressSnapshot = require('../models/ProgressSnapshot');
 const { MockTest, Note } = require('../models');
 const { generateTokens } = require('../middleware/auth');
 const { add: blacklistToken, has: isTokenBlacklisted, blacklistAllForUser } = require('../middleware/tokenBlacklist');
-const { sendEmail, isSmtpConfigured } = require('../utils/email');
+const { isSmtpConfigured } = require('../utils/email');
+const { sendTransactionalEmail, tokenEventId } = require('../services/emailDeliveryService');
+const emailTemplates = require('../utils/emailTemplates');
 const { isMockAuthEnabled } = require('../config/devMode');
 const { isDemoUser } = require('../utils/permissions');
 const { getEmptyProgressData } = require('../utils/emptyProgress');
@@ -69,19 +71,26 @@ async function verifyGoogleToken(idToken) {
 }
 
 async function sendVerificationEmail(user, rawToken) {
-  const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${rawToken}`;
-  await sendEmail({
+  const t = emailTemplates.verification(user.name, `${process.env.FRONTEND_URL}/verify-email/${rawToken}`);
+  return sendTransactionalEmail({
+    type: 'verification',
+    eventId: tokenEventId(rawToken),
     to: user.email,
-    subject: 'GATE 2027 – Verify Your Email',
-    html: `
-      <h2>Welcome to GATE 2027!</h2>
-      <p>Hi ${user.name},</p>
-      <p>Please verify your email address to secure your account.</p>
-      <a href="${verifyUrl}" style="background:#4f8dff;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;margin:16px 0">
-        Verify Email
-      </a>
-      <p>This link expires in 24 hours.</p>
-    `,
+    subject: t.subject,
+    html: t.html,
+    text: t.text,
+  });
+}
+
+async function sendWelcomeEmail(user) {
+  const t = emailTemplates.welcome(user.name);
+  return sendTransactionalEmail({
+    type: 'welcome',
+    eventId: String(user._id),
+    to: user.email,
+    subject: t.subject,
+    html: t.html,
+    text: t.text,
   });
 }
 
@@ -104,7 +113,9 @@ exports.register = async (req, res, next) => {
         try {
           const localReferralStore = require('../store/localReferralStore');
           localReferralStore.claimReferral(refCode.toUpperCase(), user._id.toString(), email);
-        } catch (e) {}
+        } catch (e) {
+          console.warn('[Auth] Local referral claim failed:', e.message);
+        }
       }
       return res.status(201).json({
         success: true,
@@ -149,8 +160,9 @@ exports.register = async (req, res, next) => {
         user.verifyEmailExpire = undefined;
         await user.save({ validateBeforeSave: false });
       }
-    } catch {
+    } catch (error) {
       // Email optional — account still created
+      console.error('[Auth] Verification email failed:', error.message);
       if (process.env.NODE_ENV === 'development' && !isSmtpConfigured()) {
         user.isVerified = true;
         await user.save({ validateBeforeSave: false });
@@ -171,7 +183,9 @@ exports.register = async (req, res, next) => {
           await referrer.save();
           await user.save();
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('[Auth] Referral association failed:', e.message);
+      }
     }
 
     // Generate tokens
@@ -243,7 +257,9 @@ exports.googleAuth = async (req, res, next) => {
         try {
           const payload = JSON.parse(Buffer.from(idToken.split('.')[1], 'base64url').toString());
           email = payload.email || email;
-        } catch {}
+        } catch (parseError) {
+          console.warn('[Google Auth] Mock token payload was not decodable:', parseError.message);
+        }
       }
       const name = email.split('@')[0];
       let user = mockStore.findByEmail(email);
@@ -336,6 +352,7 @@ exports.verifyEmail = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Invalid or expired verification link.' });
     }
 
+    const isEmailChange = Boolean(user.pendingNewEmail);
     user.isVerified = true;
     user.verifyEmailToken = undefined;
     user.verifyEmailExpire = undefined;
@@ -346,6 +363,11 @@ exports.verifyEmail = async (req, res, next) => {
     }
 
     await user.save({ validateBeforeSave: false });
+    if (!isEmailChange) {
+      sendWelcomeEmail(user).catch((error) => {
+        console.error('[Auth] Welcome email failed:', error.message);
+      });
+    }
 
     res.json({ success: true, message: 'Email verified successfully!' });
   } catch (error) {
@@ -735,19 +757,24 @@ exports.changeEmail = async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-new-email/${verifyToken}`;
-    await sendEmail({
-      to: newEmail,
-      subject: 'GATE 2027 – Confirm Your New Email',
-      html: `
-        <h2>Email Change Request</h2>
-        <p>Hi ${user.name},</p>
-        <p>Click the link below to confirm your new email address:</p>
-        <a href="${verifyUrl}" style="background:#4f8dff;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;margin:16px 0">
-          Confirm New Email
-        </a>
-        <p>This link expires in 24 hours.</p>
-      `,
-    });
+    const t = emailTemplates.changeEmailConfirm(user.name, verifyUrl);
+    try {
+      await sendTransactionalEmail({
+        type: 'change-email',
+        eventId: tokenEventId(verifyToken),
+        to: newEmail,
+        subject: t.subject,
+        html: t.html,
+        text: t.text,
+        propagateError: true,
+      });
+    } catch (emailError) {
+      user.verifyEmailToken = undefined;
+      user.verifyEmailExpire = undefined;
+      user.pendingNewEmail = undefined;
+      await user.save({ validateBeforeSave: false });
+      throw emailError;
+    }
 
     if (process.env.NODE_ENV === 'development' && !isSmtpConfigured()) {
       user.email = newEmail;
@@ -848,18 +875,15 @@ exports.forgotPassword = async (req, res, next) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     try {
-      await sendEmail({
+      const t = emailTemplates.passwordReset(user.name, resetUrl);
+      await sendTransactionalEmail({
+        type: 'password-reset',
+        eventId: tokenEventId(resetToken),
         to: user.email,
-        subject: 'GATE 2027 – Password Reset Request',
-        html: `
-          <h2>Password Reset</h2>
-          <p>Hi ${user.name},</p>
-          <p>You requested a password reset for your GATE 2027 account.</p>
-          <a href="${resetUrl}" style="background:#4f8dff;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;margin:16px 0">
-            Reset Password
-          </a>
-          <p>This link expires in 30 minutes. If you didn't request this, ignore this email.</p>
-        `,
+        subject: t.subject,
+        html: t.html,
+        text: t.text,
+        propagateError: true,
       });
 
       res.json({ success: true, message: 'Reset email sent!' });
@@ -1026,4 +1050,3 @@ exports.checkMilestones = async (req, res, next) => {
     res.json({ success: true, data: { milestones: newMilestones } });
   } catch (e) { next(e); }
 };
-

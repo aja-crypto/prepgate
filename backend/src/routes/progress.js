@@ -270,8 +270,12 @@ router.get('/sync', protect, async (req, res, next) => {
       ]);
       if (results[0].status === 'fulfilled') mocks = results[0].value;
       if (results[1].status === 'fulfilled') notes = results[1].value;
-    } catch {}
-    try { syncStreakToProgress(req.user); } catch {}
+    } catch (error) {
+      console.warn('[Progress] Failed to load Mongo progress data:', error.message);
+    }
+    try { syncStreakToProgress(req.user); } catch (error) {
+      console.warn('[Progress] Failed to sync streak:', error.message);
+    }
     res.json({
       success: true,
       data: {
@@ -282,7 +286,9 @@ router.get('/sync', protect, async (req, res, next) => {
       },
     });
   } catch (e) {
-    try { syncStreakToProgress(req.user); } catch {}
+    try { syncStreakToProgress(req.user); } catch (error) {
+      console.warn('[Progress] Failed to sync streak:', error.message);
+    }
     return res.json({
       success: true,
       data: {

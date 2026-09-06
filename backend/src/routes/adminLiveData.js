@@ -6,6 +6,7 @@ const {
   LiveUpdate, ExamSchedule, FetchJobLog,
 } = require('../models/LiveData');
 const { runJob, runAllJobs, getJobList } = require('../services/fetchOrchestrator');
+const { parsePagination, parseBoundedLimit } = require('../utils/pagination');
 
 function requireMongo(req, res, next) {
   if (!isMongoConnected()) {
@@ -17,11 +18,12 @@ function requireMongo(req, res, next) {
 // GET pending updates for admin review
 router.get('/live/pending', adminProtect, requireMongo, async (req, res, next) => {
   try {
-    const { type, limit = 50 } = req.query;
+    const { type } = req.query;
+    const limit = parseBoundedLimit(req.query.limit, 50);
     const filter = { status: 'pending' };
     if (type) filter.type = type;
 
-    const items = await LiveUpdate.find(filter).sort('-fetchedAt').limit(Number(limit)).lean();
+    const items = await LiveUpdate.find(filter).sort('-fetchedAt').limit(limit).lean();
     res.json({ success: true, count: items.length, data: items });
   } catch (e) { next(e); }
 });
@@ -29,14 +31,14 @@ router.get('/live/pending', adminProtect, requireMongo, async (req, res, next) =
 // GET all live updates (any status)
 router.get('/live/updates', adminProtect, requireMongo, async (req, res, next) => {
   try {
-    const { status, type, limit = 50, page = 1 } = req.query;
+    const { status, type } = req.query;
+    const { page, limit, skip } = parsePagination(req.query, { limit: 50 });
     const filter = {};
     if (status) filter.status = status;
     if (type) filter.type = type;
 
-    const skip = (Number(page) - 1) * Number(limit);
     const [items, total] = await Promise.all([
-      LiveUpdate.find(filter).sort('-fetchedAt').skip(skip).limit(Number(limit)).lean(),
+      LiveUpdate.find(filter).sort('-fetchedAt').skip(skip).limit(limit).lean(),
       LiveUpdate.countDocuments(filter),
     ]);
     res.json({ success: true, count: items.length, total, data: items });

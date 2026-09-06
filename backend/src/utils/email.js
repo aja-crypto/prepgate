@@ -15,11 +15,13 @@ const isSmtpConfigured = () => {
 };
 
 const logDevEmail = ({ to, subject, html }) => {
+  const maskedRecipient = typeof to === 'string' && to.includes('@')
+    ? `${to[0]}***@${to.split('@')[1]}`
+    : '[invalid-recipient]';
   console.log('\n📧 [DEV] SMTP not configured — email logged instead of sent');
-  console.log(`   To: ${to}`);
+  console.log(`   To: ${maskedRecipient}`);
   console.log(`   Subject: ${subject}`);
-  const link = html?.match(/href="([^"]+)"/)?.[1];
-  if (link) console.log(`   Link: ${link}`);
+  if (html?.includes('href=')) console.log('   Link: included in email template (not logged)');
 };
 
 const createTransporter = () => {
@@ -27,6 +29,10 @@ const createTransporter = () => {
     host: process.env.SMTP_HOST || 'smtp.sendgrid.net',
     port: parseInt(process.env.SMTP_PORT || '587'),
     secure: false,
+    requireTLS: true,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 20000,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,

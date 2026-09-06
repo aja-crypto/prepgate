@@ -43,8 +43,8 @@ router.get('/stats', async (req, res, next) => {
 // ─── List Tickets ────────────────────────────────────────────
 router.get('/', async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
     const { status, category, priority, search } = req.query;
 
     if (isMongoConnected()) {
@@ -53,7 +53,14 @@ router.get('/', async (req, res, next) => {
       if (status) filter.status = statusFilter(status);
       if (category) filter.category = category;
       if (priority) filter.priority = priority;
-      if (search) filter.$or = [{ title: { $regex: search, $options: 'i' } }, { message: { $regex: search, $options: 'i' } }, { userName: { $regex: search, $options: 'i' } }];
+      if (search) {
+        const escapedSearch = String(search).slice(0, 100).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        filter.$or = [
+          { title: { $regex: escapedSearch, $options: 'i' } },
+          { message: { $regex: escapedSearch, $options: 'i' } },
+          { userName: { $regex: escapedSearch, $options: 'i' } },
+        ];
+      }
 
       const [data, total] = await Promise.all([
         FeedbackTicket.find(filter).sort('-createdAt').skip((page - 1) * limit).limit(limit).lean(),

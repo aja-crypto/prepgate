@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { parsePagination } = require('../utils/pagination');
 const { protect } = require('../middleware/auth');
 const { adminProtect } = require('../middleware/adminAuth');
 const { isMongoConnected } = require('../config/db');
@@ -25,7 +26,8 @@ router.get('/', protect, async (req, res, next) => {
   try {
     if (!isMongoConnected()) {
       let videos = readLocalVideos();
-      const { category, subject, difficulty, language, featured, search, page = 1, limit = 50, sort } = req.query;
+      const { category, subject, difficulty, language, featured, search, sort } = req.query;
+      const { page, limit, skip } = parsePagination(req.query, { limit: 50 });
       if (category && category !== 'All') videos = videos.filter(v => v.category === category);
       if (subject) videos = videos.filter(v => v.subject === subject);
       if (difficulty) videos = videos.filter(v => v.difficulty === difficulty);
@@ -45,11 +47,11 @@ router.get('/', protect, async (req, res, next) => {
       else if (sort === 'views') videos.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
       else videos.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
       const total = videos.length;
-      const skip = (parseInt(page) - 1) * parseInt(limit);
-      const paged = videos.slice(skip, skip + parseInt(limit));
-      return res.json({ success: true, count: paged.length, data: paged, pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) } });
+      const paged = videos.slice(skip, skip + limit);
+      return res.json({ success: true, count: paged.length, data: paged, pagination: { page, limit, total, pages: Math.ceil(total / limit) } });
     }
-    const { category, subject, difficulty, language, featured, search, page = 1, limit = 50, sort } = req.query;
+    const { category, subject, difficulty, language, featured, search, sort } = req.query;
+    const { page, limit, skip } = parsePagination(req.query, { limit: 50 });
 
     const filter = {};
     if (category && category !== 'All') filter.category = category;
@@ -72,9 +74,8 @@ router.get('/', protect, async (req, res, next) => {
     else if (sort === 'oldest') sortOption = { createdAt: 1 };
     else if (sort === 'views') sortOption = { viewCount: -1 };
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
     const [videos, total] = await Promise.all([
-      LearningHubVideo.find(filter).sort(sortOption).skip(skip).limit(parseInt(limit)).lean(),
+      LearningHubVideo.find(filter).sort(sortOption).skip(skip).limit(limit).lean(),
       LearningHubVideo.countDocuments(filter),
     ]);
 
