@@ -45,10 +45,12 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-      - key: RESEND_API_KEY
+      - key: BREVO_API_KEY
         sync: false
       - key: FROM_EMAIL
-        value: noreply@gatenexa.in
+        sync: false
+      - key: EMAIL_REPLY_TO
+        sync: false
       - key: CRON_SECRET
         generateValue: true
       - key: GOOGLE_CLIENT_ID

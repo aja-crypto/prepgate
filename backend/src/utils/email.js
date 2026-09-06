@@ -1,27 +1,33 @@
-const RESEND_API_URL = 'https://api.resend.com/emails';
-const EMAIL_TIMEOUT_MS = 15000;
-const RESEND_PLACEHOLDERS = new Set([
+// src/utils/email.js – Brevo HTTPS transactional email transport
+// Public contract is intentionally kept stable:
+//   exports.isSmtpConfigured() – boolean (name preserved for callers)
+//   exports.sendEmail({ to, subject, html, text, type, eventId }) -> { messageId }
+// Replaces the old Nodemailer SMTP transport. Does not touch templates,
+// EmailDelivery idempotency, or any business caller.
+
+const BREVO_PLACEHOLDERS = new Set([
   '',
-  'your_resend_api_key',
-  're_your_api_key',
+  'your_brevo_api_key',
+  'your_sendgrid_api_key',
+  'your_smtp_password',
   'changeme',
 ]);
 
-const isEmailConfigured = () => {
-  const apiKey = String(process.env.RESEND_API_KEY || '').trim();
-  const fromEmail = String(process.env.FROM_EMAIL || '').trim();
-  return Boolean(
-    apiKey &&
-    fromEmail &&
-    !RESEND_PLACEHOLDERS.has(apiKey) &&
-    !RESEND_PLACEHOLDERS.has(fromEmail)
-  );
+const BREVO_ENDPOINT = 'https://api.brevo.com/v3/smtp/email';
+const SENDER_NAME = 'GateNexa';
+
+const isSmtpConfigured = () => {
+  const key = process.env.BREVO_API_KEY?.trim();
+  const from = process.env.FROM_EMAIL?.trim();
+  return Boolean(key && from && !BREVO_PLACEHOLDERS.has(key));
 };
 
-const logDevEmail = ({ to, subject }) => {
-  console.log('\n[DEV] Resend is not configured - email logged instead of sent');
-  console.log(`To: ${maskEmail(to)}`);
-  console.log(`Subject: ${subject}`);
+const logDevEmail = ({ to, subject, html }) => {
+  console.log('\n📧 [DEV] Brevo not configured — email logged instead of sent');
+  console.log(`   To: ${to}`);
+  console.log(`   Subject: ${subject}`);
+  const link = html?.match(/href="([^"]+)"/)?.[1];
+  if (link) console.log(`   Link: ${link}`);
 };
 
 function maskEmail(to) {
@@ -31,110 +37,100 @@ function maskEmail(to) {
   return `${addr[0]}***${addr.slice(at)}`;
 }
 
-function safeProviderText(value, secrets = []) {
-  let text = String(value || 'Email provider request failed')
-    .replace(/[\r\n]+/g, ' ')
-    .slice(0, 240);
-  secrets.filter(Boolean).forEach(secret => {
-    text = text.split(secret).join('[redacted]');
-  });
-  return text;
+function parseEmailAddress(address) {
+  const raw = String(address || '').trim();
+  const m = raw.match(/<([^>]+)>\s*$/);
+  const email = (m ? m[1] : raw).trim();
+  const name = m ? raw.replace(/<[^>]+>\s*$/, '').trim().replace(/^["']|["']$/g, '') : SENDER_NAME;
+  return { email, name: name || SENDER_NAME };
 }
 
-function providerError(code, message, details = {}) {
-  const error = new Error(message || 'Email provider request failed');
-  error.code = code;
-  error.httpStatus = details.httpStatus;
-  error.providerCode = details.providerCode;
-  error.providerMessage = details.providerMessage;
-  return error;
-}
-
-exports.isEmailConfigured = isEmailConfigured;
-exports.isSmtpConfigured = isEmailConfigured;
+exports.isSmtpConfigured = isSmtpConfigured;
 
 exports.sendEmail = async ({ to, subject, html, text, type, eventId }) => {
-  if (!isEmailConfigured()) {
+  if (!isSmtpConfigured()) {
     if (process.env.NODE_ENV === 'development') {
-      logDevEmail({ to, subject });
+      logDevEmail({ to, subject, html });
       return { messageId: 'dev-console-log' };
     }
-    throw providerError('EMAIL_NOT_CONFIGURED', 'Email provider is not configured.');
+    throw new Error('Brevo email transport is not configured (missing BREVO_API_KEY or FROM_EMAIL).');
   }
 
-  const apiKey = String(process.env.RESEND_API_KEY || '').trim();
-  const fromEmail = String(process.env.FROM_EMAIL || '').trim();
-  const replyTo = String(process.env.EMAIL_REPLY_TO || '').trim();
-  const maskedRecipient = maskEmail(to);
-  const startedAt = Date.now();
-  console.log(
-    `[email] type=${type || 'unknown'} status=attempted to=${maskedRecipient} ` +
-    `provider=resend apiKeyConfigured=${Boolean(apiKey)} fromConfigured=${Boolean(fromEmail)} ` +
-    `replyToConfigured=${Boolean(replyTo)} url=${RESEND_API_URL}`
-  );
+  const apiKey = process.env.BREVO_API_KEY.trim();
+  const fromRaw = process.env.FROM_EMAIL.trim();
+  const { email: fromEmail, name: fromName } = parseEmailAddress(fromRaw);
+  const replyToRaw = (process.env.EMAIL_REPLY_TO || '').trim();
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), EMAIL_TIMEOUT_MS);
+  const payload = {
+    sender: { name: fromName, email: fromEmail },
+    to: [{ email: String(to).trim() }],
+    subject: String(subject || '(no subject)'),
+  };
+  if (html) payload.htmlContent = html;
+  if (text) payload.textContent = text;
+  if (replyToRaw) {
+    const r = parseEmailAddress(replyToRaw);
+    payload.replyTo = { name: r.name, email: r.email };
+  }
+
+  const startedAt = Date.now();
+  let httpStatus = null;
+  let brevoCode = null;
+  let brevoMessage = null;
   try {
-    const response = await fetch(RESEND_API_URL, {
+    const res = await fetch(BREVO_ENDPOINT, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        'api-key': apiKey,
         'Content-Type': 'application/json',
-        ...(eventId ? { 'Idempotency-Key': String(eventId).slice(0, 256) } : {}),
+        'Accept': 'application/json',
       },
-      body: JSON.stringify({
-        from: `GateNexa <${fromEmail}>`,
-        to: [to],
-        subject,
-        text,
-        html,
-        ...(replyTo ? { reply_to: replyTo } : {}),
-      }),
-      signal: controller.signal,
+      body: JSON.stringify(payload),
     });
+    httpStatus = res.status;
 
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      const providerCode = payload?.name || payload?.code || payload?.statusCode;
-      const providerMessage = safeProviderText(
-        payload?.message || payload?.error || 'Email provider rejected the request',
-        [apiKey, fromEmail, replyTo]
-      );
-      throw providerError(
-        `RESEND_HTTP_${response.status}`,
-        providerMessage,
-        {
-          httpStatus: response.status,
-          providerCode: safeProviderText(providerCode, [apiKey]),
-          providerMessage,
-        }
-      );
+    let body = null;
+    const textResp = await res.text();
+    try { body = textResp ? JSON.parse(textResp) : null; } catch { /* ignore non-JSON */ }
+
+    if (!res.ok) {
+      brevoCode = String(body?.code || body?.error?.code || '').slice(0, 80) || null;
+      brevoMessage = String(body?.message || body?.error?.message || textResp || res.statusText)
+        .replace(/[\r\n]+/g, ' ')
+        .slice(0, 240);
+      const err = new Error(`Brevo request failed (HTTP ${httpStatus})`);
+      err.code = brevoCode || `brevo_http_${httpStatus}`;
+      err.httpStatus = httpStatus;
+      throw err;
     }
 
-    const messageId = payload?.id;
-    if (!messageId) {
-      throw providerError('RESEND_INVALID_RESPONSE', 'Email provider returned no message ID');
-    }
+    const providerMessageId = String(body?.messageId || '').slice(0, 240);
 
     console.log(
-      `[email] type=${type || 'unknown'} status=sent to=${maskedRecipient} ` +
-      `event=${eventId ? String(eventId).slice(0, 120) : 'n/a'} ms=${Date.now() - startedAt}`
+      `[email] provider=brevo type=${type || 'unknown'} status=sent to=${maskEmail(to)} ` +
+      `event=${eventId ? String(eventId).slice(0, 120) : 'n/a'} ` +
+      `apiKeyConfigured=${Boolean(apiKey)} fromConfigured=${Boolean(fromEmail)} ` +
+      `httpStatus=${httpStatus} messageId=${providerMessageId || 'n/a'} ms=${Date.now() - startedAt}`
     );
-    return { messageId };
+
+    return { messageId: providerMessageId };
   } catch (err) {
-    const error = err?.name === 'AbortError'
-      ? providerError('RESEND_TIMEOUT', 'Email provider request timed out')
-      : err;
+    const safeHttp = httpStatus != null ? String(httpStatus) : 'n/a';
+    const safeCode = brevoCode || (err?.code ? String(err.code).slice(0, 80) : 'send_failed');
+    const safeMsg = brevoMessage
+      ? brevoMessage
+      : (err?.message ? String(err.message).replace(/[\r\n]+/g, ' ').slice(0, 240) : 'Email delivery failed');
+
     console.error(
-      `[email] provider=resend status=failed type=${type || 'unknown'} ` +
-      `to=${maskedRecipient} event=${eventId ? String(eventId).slice(0, 120) : 'n/a'} ` +
-      `httpStatus=${error?.httpStatus || 'n/a'} ` +
-      `providerCode=${safeProviderText(error?.providerCode || error?.code || error?.name || 'send_failed', [apiKey])} ` +
-      `providerMessage=${safeProviderText(error?.providerMessage || error?.message, [apiKey, fromEmail, replyTo])}`
+      `[email] provider=brevo type=${type || 'unknown'} status=failed to=${maskEmail(to)} ` +
+      `event=${eventId ? String(eventId).slice(0, 120) : 'n/a'} ` +
+      `apiKeyConfigured=${Boolean(apiKey)} fromConfigured=${Boolean(fromEmail)} ` +
+      `httpStatus=${safeHttp} error=${safeCode}`
     );
-    throw error;
-  } finally {
-    clearTimeout(timeout);
+    // Preserve a concise error message for callers; never attach raw body or keys.
+    err.code = safeCode;
+    err.message = `Brevo delivery failed: ${safeMsg}`.slice(0, 240);
+    err.httpStatus = httpStatus;
+    throw err;
   }
 };
