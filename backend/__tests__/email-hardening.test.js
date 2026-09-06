@@ -86,4 +86,34 @@ describe('email delivery idempotency', () => {
     expect(results.filter(result => result.sent).length).toBe(1);
     expect(results.filter(result => result.duplicate).length).toBe(1);
   });
+
+  test('marks a provider failure as failed in the delivery ledger', async () => {
+    jest.resetModules();
+    const providerError = Object.assign(new Error('provider rejected request'), { code: 'RESEND_HTTP_422' });
+    const sendEmail = jest.fn().mockRejectedValue(providerError);
+    const updateOne = jest.fn().mockResolvedValue({ acknowledged: true });
+
+    jest.doMock('../src/config/db', () => ({ isMongoConnected: () => true }));
+    jest.doMock('../src/models/EmailDelivery', () => ({
+      findOneAndUpdate: jest.fn().mockResolvedValue({ _id: 'delivery-2', status: 'sending' }),
+      updateOne,
+    }));
+    jest.doMock('../src/utils/email', () => ({ sendEmail }));
+
+    const { sendTransactionalEmail } = require('../src/services/emailDeliveryService');
+    const result = await sendTransactionalEmail({
+      type: 'welcome',
+      eventId: 'user-2',
+      to: 'asha@example.com',
+      subject: 'Welcome',
+      html: '<p>Welcome</p>',
+      text: 'Welcome',
+    });
+
+    expect(result).toMatchObject({ sent: false, error: 'RESEND_HTTP_422' });
+    expect(updateOne).toHaveBeenCalledWith(
+      { _id: 'delivery-2' },
+      { $set: { status: 'failed', errorCode: 'RESEND_HTTP_422', errorMessage: 'provider rejected request' } }
+    );
+  });
 });

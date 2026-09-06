@@ -57,7 +57,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Warn about optional but recommended env vars
-const RECOMMENDED_ENV = ['OPENROUTER_API_KEY', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'FROM_EMAIL', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET', 'GOOGLE_CLIENT_ID', 'CRON_SECRET'];
+const RECOMMENDED_ENV = ['OPENROUTER_API_KEY', 'RESEND_API_KEY', 'FROM_EMAIL', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET', 'GOOGLE_CLIENT_ID', 'CRON_SECRET'];
 RECOMMENDED_ENV.forEach(key => {
   if (isPlaceholder(process.env[key])) {
     console.warn(`[STARTUP WARNING] ${key} is missing or still a placeholder. Set it for full functionality.`);

@@ -1,83 +1,28 @@
-// src/utils/email.js – Nodemailer Email Utility
-const nodemailer = require('nodemailer');
-
-const SMTP_PLACEHOLDERS = new Set([
+const RESEND_API_URL = 'https://api.resend.com/emails';
+const EMAIL_TIMEOUT_MS = 15000;
+const RESEND_PLACEHOLDERS = new Set([
   '',
-  'your_sendgrid_api_key',
-  'your_smtp_password',
+  'your_resend_api_key',
+  're_your_api_key',
   'changeme',
 ]);
 
-const isSmtpConfigured = () => {
-  const pass = process.env.SMTP_PASS?.trim();
-  const user = process.env.SMTP_USER?.trim();
-  return Boolean(pass && user && !SMTP_PLACEHOLDERS.has(pass));
+const isEmailConfigured = () => {
+  const apiKey = String(process.env.RESEND_API_KEY || '').trim();
+  const fromEmail = String(process.env.FROM_EMAIL || '').trim();
+  return Boolean(
+    apiKey &&
+    fromEmail &&
+    !RESEND_PLACEHOLDERS.has(apiKey) &&
+    !RESEND_PLACEHOLDERS.has(fromEmail)
+  );
 };
 
-const logDevEmail = ({ to, subject, html }) => {
-  console.log('\n📧 [DEV] SMTP not configured — email logged instead of sent');
-  console.log(`   To: ${to}`);
-  console.log(`   Subject: ${subject}`);
-  const link = html?.match(/href="([^"]+)"/)?.[1];
-  if (link) console.log(`   Link: ${link}`);
+const logDevEmail = ({ to, subject }) => {
+  console.log('\n[DEV] Resend is not configured - email logged instead of sent');
+  console.log(`To: ${maskEmail(to)}`);
+  console.log(`Subject: ${subject}`);
 };
-
-const createTransporter = () => {
-  const host = process.env.SMTP_HOST || 'smtp.sendgrid.net';
-  const port = parseInt(process.env.SMTP_PORT || '587');
-  const startedAt = Date.now();
-  let stage = 'transport_start';
-
-  const diagnostic = (nextStage, elapsedMs = Date.now() - startedAt) => {
-    stage = nextStage;
-    console.log(
-      `[email-diagnostic] stage=${nextStage} host=${host} port=${port} ` +
-      `secure=false requireTLS=true elapsedMs=${elapsedMs}`
-    );
-  };
-
-  const logger = {
-    trace: () => {},
-    debug: (data, message) => {
-      if (data?.tnx === 'dns') diagnostic('dns_resolved');
-      if (data?.tnx === 'smtp' && /handshake finished/i.test(String(message || ''))) {
-        diagnostic('greeting');
-      }
-    },
-    info: (data, message) => {
-      if (data?.tnx === 'network' && /established/i.test(String(message || ''))) {
-        diagnostic('connection');
-      } else if (data?.tnx === 'smtp' && data.action === 'authenticated') {
-        diagnostic('authenticated');
-      } else if (data?.tnx === 'smtp' && /STARTTLS|upgraded with STARTTLS/i.test(String(message || ''))) {
-        diagnostic('tls');
-      }
-    },
-    warn: () => {},
-    error: () => {},
-    fatal: () => {},
-  };
-
-  diagnostic('transport_start');
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: false,
-    requireTLS: true,
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 20000,
-    logger,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-  transporter.__diagnosticStage = () => stage;
-  return transporter;
-};
-
-exports.isSmtpConfigured = isSmtpConfigured;
 
 function maskEmail(to) {
   const addr = String(to || '');
@@ -86,74 +31,110 @@ function maskEmail(to) {
   return `${addr[0]}***${addr.slice(at)}`;
 }
 
+function safeProviderText(value, secrets = []) {
+  let text = String(value || 'Email provider request failed')
+    .replace(/[\r\n]+/g, ' ')
+    .slice(0, 240);
+  secrets.filter(Boolean).forEach(secret => {
+    text = text.split(secret).join('[redacted]');
+  });
+  return text;
+}
+
+function providerError(code, message, details = {}) {
+  const error = new Error(message || 'Email provider request failed');
+  error.code = code;
+  error.httpStatus = details.httpStatus;
+  error.providerCode = details.providerCode;
+  error.providerMessage = details.providerMessage;
+  return error;
+}
+
+exports.isEmailConfigured = isEmailConfigured;
+exports.isSmtpConfigured = isEmailConfigured;
+
 exports.sendEmail = async ({ to, subject, html, text, type, eventId }) => {
-  if (!isSmtpConfigured()) {
+  if (!isEmailConfigured()) {
     if (process.env.NODE_ENV === 'development') {
-      logDevEmail({ to, subject, html });
+      logDevEmail({ to, subject });
       return { messageId: 'dev-console-log' };
     }
-    throw new Error('SMTP is not configured.');
+    throw providerError('EMAIL_NOT_CONFIGURED', 'Email provider is not configured.');
   }
 
-  const transporter = createTransporter();
-
-  // Only use a Reply-To address that is explicitly configured and exists.
-  const replyTo = (process.env.EMAIL_REPLY_TO || '').trim();
-
+  const apiKey = String(process.env.RESEND_API_KEY || '').trim();
+  const fromEmail = String(process.env.FROM_EMAIL || '').trim();
+  const replyTo = String(process.env.EMAIL_REPLY_TO || '').trim();
+  const maskedRecipient = maskEmail(to);
   const startedAt = Date.now();
-  const host = process.env.SMTP_HOST || 'smtp.sendgrid.net';
-  const port = parseInt(process.env.SMTP_PORT || '587');
   console.log(
-    `[email] type=${type || 'unknown'} status=attempted to=${maskEmail(to)} ` +
-    `host=${host} port=${port}`
+    `[email] type=${type || 'unknown'} status=attempted to=${maskedRecipient} ` +
+    `provider=resend apiKeyConfigured=${Boolean(apiKey)} fromConfigured=${Boolean(fromEmail)} ` +
+    `replyToConfigured=${Boolean(replyTo)} url=${RESEND_API_URL}`
   );
-  console.log(`[email-diagnostic] stage=send_started host=${host} port=${port} elapsedMs=0`);
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), EMAIL_TIMEOUT_MS);
   try {
-    const info = await transporter.sendMail({
-      from: `"GateNexa" <${process.env.FROM_EMAIL || 'noreply@gatenexa.in'}>`,
-      ...(replyTo ? { replyTo } : {}),
-      to,
-      subject,
-      text,
-      html,
+    const response = await fetch(RESEND_API_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        ...(eventId ? { 'Idempotency-Key': String(eventId).slice(0, 256) } : {}),
+      },
+      body: JSON.stringify({
+        from: `GateNexa <${fromEmail}>`,
+        to: [to],
+        subject,
+        text,
+        html,
+        ...(replyTo ? { reply_to: replyTo } : {}),
+      }),
+      signal: controller.signal,
     });
 
-    // Delivery log: type + masked recipient + status + timestamp only.
-    // Never: SMTP_PASS, passwords, raw tokens, app passwords.
-    console.log(
-      `[email] type=${type || 'unknown'} status=sent to=${maskEmail(to)} ` +
-      `event=${eventId ? String(eventId).slice(0, 120) : 'n/a'} ` +
-      `messageId=${info?.messageId || 'n/a'} ms=${Date.now() - startedAt}`
-    );
-    console.log(
-      `[email-diagnostic] stage=send_completed host=${host} port=${port} ` +
-      `elapsedMs=${Date.now() - startedAt}`
-    );
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const providerCode = payload?.name || payload?.code || payload?.statusCode;
+      const providerMessage = safeProviderText(
+        payload?.message || payload?.error || 'Email provider rejected the request',
+        [apiKey, fromEmail, replyTo]
+      );
+      throw providerError(
+        `RESEND_HTTP_${response.status}`,
+        providerMessage,
+        {
+          httpStatus: response.status,
+          providerCode: safeProviderText(providerCode, [apiKey]),
+          providerMessage,
+        }
+      );
+    }
 
-    return info;
+    const messageId = payload?.id;
+    if (!messageId) {
+      throw providerError('RESEND_INVALID_RESPONSE', 'Email provider returned no message ID');
+    }
+
+    console.log(
+      `[email] type=${type || 'unknown'} status=sent to=${maskedRecipient} ` +
+      `event=${eventId ? String(eventId).slice(0, 120) : 'n/a'} ms=${Date.now() - startedAt}`
+    );
+    return { messageId };
   } catch (err) {
-    const failureStage = err?.code === 'EDNS'
-      ? 'dns'
-      : err?.code === 'ETLS'
-        ? 'tls'
-        : err?.code === 'EAUTH'
-          ? 'authentication'
-          : err?.command === 'MAIL'
-            ? 'mail_from'
-            : err?.command === 'RCPT'
-              ? 'rcpt_to'
-              : err?.command === 'DATA'
-                ? 'data'
-                : transporter.__diagnosticStage?.() || 'transport_or_smtp';
+    const error = err?.name === 'AbortError'
+      ? providerError('RESEND_TIMEOUT', 'Email provider request timed out')
+      : err;
     console.error(
-      `[email-diagnostic] stage=${failureStage} errorCode=${err?.code || 'send_failed'} ` +
-      `errorName=${err?.name || 'Error'} host=${host} port=${port} elapsedMs=${Date.now() - startedAt}`
+      `[email] provider=resend status=failed type=${type || 'unknown'} ` +
+      `to=${maskedRecipient} event=${eventId ? String(eventId).slice(0, 120) : 'n/a'} ` +
+      `httpStatus=${error?.httpStatus || 'n/a'} ` +
+      `providerCode=${safeProviderText(error?.providerCode || error?.code || error?.name || 'send_failed', [apiKey])} ` +
+      `providerMessage=${safeProviderText(error?.providerMessage || error?.message, [apiKey, fromEmail, replyTo])}`
     );
-    console.error(
-      `[email] type=${type || 'unknown'} status=failed to=${maskEmail(to)} ` +
-      `event=${eventId ? String(eventId).slice(0, 120) : 'n/a'} ` +
-      `error=${err?.code || err?.name || 'send_failed'}`
-    );
-    throw err;
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
 };
