@@ -78,8 +78,8 @@ const PAGE_TTL = 2 * 60 * 1000;
 function pageKey(deps) {
   try { return JSON.stringify(deps); } catch { return String(deps); }
 }
-export function usePageState(loadFn, deps = []) {
-  const key = pageKey(deps);
+export function usePageState(loadFn, deps = [], cacheKey = null) {
+  const key = cacheKey || pageKey(deps);
   const cached = pageCache.get(key);
   const hasFreshCache = cached && Date.now() - cached.ts < PAGE_TTL;
   const [state, setState] = useState(hasFreshCache ? 'success' : 'loading');

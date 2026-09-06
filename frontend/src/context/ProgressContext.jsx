@@ -109,14 +109,17 @@ export const ProgressProvider = ({ children }) => {
       }
 
       if (ma ?? mongo) {
-        pyqService.getAll({ limit: 500 }).then((pyqRes) => {
-          const apiPyqs = pyqRes.data?.data || [];
-          if (apiPyqs.length && !controller.signal.aborted) {
-            const withPyqs = { ...merged, pyqs: mergePyqLists(apiPyqs, merged.pyqs) };
-            setData(withPyqs);
-            localStorage.setItem(storageKey(userId), JSON.stringify(withPyqs));
-          }
-        }).catch(() => {});
+        setTimeout(() => {
+          if (controller.signal.aborted) return;
+          pyqService.getAll({ limit: 500 }).then((pyqRes) => {
+            const apiPyqs = pyqRes.data?.data || [];
+            if (apiPyqs.length && !controller.signal.aborted) {
+              const withPyqs = { ...merged, pyqs: mergePyqLists(apiPyqs, merged.pyqs) };
+              setData(withPyqs);
+              localStorage.setItem(storageKey(userId), JSON.stringify(withPyqs));
+            }
+          }).catch(() => {});
+        }, 2000);
       }
     })();
 

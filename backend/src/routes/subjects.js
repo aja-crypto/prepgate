@@ -45,9 +45,11 @@ router.get('/analytics/overview', protect, async (req, res, next) => {
       return res.json({ success: true, data: buildAnalyticsFromLocal(req.user._id) });
     }
     const { Topic, Progress } = require('../models');
-    const subjects = await Subject.find({ isActive: true }).sort('order').lean();
-    const topics = await Topic.find({ isDefault: true }).lean();
-    const progressList = await Progress.find({ user: req.user._id }).lean();
+    const [subjects, topics, progressList] = await Promise.all([
+      Subject.find({ isActive: true }).sort('order').lean(),
+      Topic.find({ isDefault: true }).select('subject').lean(),
+      Progress.find({ user: req.user._id }).select('subject isCompleted').lean(),
+    ]);
     const overview = subjects.map((sub) => {
       const subTopics = topics.filter((t) => t.subject.toString() === sub._id.toString());
       const subProgress = progressList.filter((p) => p.subject?.toString() === sub._id.toString());
@@ -106,8 +108,10 @@ router.get('/', protect, async (req, res, next) => {
     if (req.query.hierarchy !== 'true') {
       return res.json({ success: true, count: subjects.length, data: subjects });
     }
-    const topics = await Topic.find({ isDefault: true }).sort('order').lean();
-    const progressList = await Progress.find({ user: req.user._id }).lean();
+    const [topics, progressList] = await Promise.all([
+      Topic.find({ isDefault: true }).select('name difficulty weightage order subject').sort('order').lean(),
+      Progress.find({ user: req.user._id }).select('topic isCompleted isBookmarked revisionNeeded markedDifficult accuracy').lean(),
+    ]);
     const pmap = {};
     progressList.forEach((p) => { pmap[p.topic.toString()] = p; });
     const data = subjects.map((sub) => {

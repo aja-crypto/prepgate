@@ -114,7 +114,7 @@ export default function SubjectsPage() {
     };
   };
 
-  const { state, data, error, retry } = usePageState(loadData, []);
+  const { state, data, error, retry } = usePageState(loadData, [], 'subjects-hierarchy');
 
   // Must call useState before any early return (React Hooks rule)
   const [expandedIds, setExpandedIds] = useState(new Set());

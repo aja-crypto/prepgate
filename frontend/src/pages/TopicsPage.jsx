@@ -99,7 +99,7 @@ export default function TopicsPage() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, []); // load uses Promise.all for topics+subjects, cached via apiCache
   useEffect(() => {
     if (topics.length > 0) {
       publish('page:navigated', { page: 'topics', topicCount: topics.length, timestamp: Date.now() });
