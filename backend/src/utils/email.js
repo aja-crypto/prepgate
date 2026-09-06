@@ -62,6 +62,10 @@ exports.sendEmail = async ({ to, subject, html, text, type, eventId }) => {
   const replyTo = (process.env.EMAIL_REPLY_TO || '').trim();
 
   const startedAt = Date.now();
+  console.log(
+    `[email] type=${type || 'unknown'} status=attempted to=${maskEmail(to)} ` +
+    `host=${process.env.SMTP_HOST || 'smtp.sendgrid.net'} port=${process.env.SMTP_PORT || '587'}`
+  );
   try {
     const info = await transporter.sendMail({
       from: `"GateNexa" <${process.env.FROM_EMAIL || 'noreply@gatenexa.in'}>`,

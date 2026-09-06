@@ -7,7 +7,7 @@ const { MockTest, Note } = require('../models');
 const { generateTokens } = require('../middleware/auth');
 const { add: blacklistToken, has: isTokenBlacklisted, blacklistAllForUser } = require('../middleware/tokenBlacklist');
 const { isSmtpConfigured } = require('../utils/email');
-const { sendTransactionalEmail, tokenEventId } = require('../services/emailDeliveryService');
+const { sendTransactionalEmail, tokenEventId, maskRecipient } = require('../services/emailDeliveryService');
 const { isMockAuthEnabled } = require('../config/devMode');
 const { isDemoUser } = require('../utils/permissions');
 const { getEmptyProgressData } = require('../utils/emptyProgress');
@@ -362,7 +362,9 @@ exports.verifyEmail = async (req, res, next) => {
 
     if (isFirstVerification) {
       // Non-blocking: verification must succeed even if the welcome email fails.
-      sendWelcomeEmail(user);
+      sendWelcomeEmail(user).catch((error) => {
+        console.error(`[email] type=welcome status=trigger_failed recipient=${maskRecipient(user.email)} error=${error?.code || error?.name || 'send_failed'}`);
+      });
     }
 
     res.json({ success: true, message: 'Email verified successfully!' });
@@ -848,6 +850,7 @@ exports.updateBadges = async (req, res, next) => {
  */
 exports.forgotPassword = async (req, res, next) => {
   try {
+    console.log(`[email] type=password-reset status=requested recipient=${maskRecipient(req.body.email)}`);
     if (isMockAuthEnabled()) {
       return res.json({
         success: true,
@@ -858,6 +861,7 @@ exports.forgotPassword = async (req, res, next) => {
     const user = await User.findOne({ email: req.body.email });
 
     if (!user) {
+      console.log(`[email] type=password-reset status=account_not_found recipient=${maskRecipient(req.body.email)}`);
       // Don't reveal if email exists (security)
       return res.json({
         success: true,
@@ -865,6 +869,7 @@ exports.forgotPassword = async (req, res, next) => {
       });
     }
 
+    console.log(`[email] type=password-reset status=account_found recipient=${maskRecipient(user.email)}`);
     const resetToken = user.generateResetToken();
     await user.save({ validateBeforeSave: false });
 
