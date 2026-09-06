@@ -10,6 +10,8 @@ import {
   ShieldCheck, Sparkles, FileText, Clock, Award, Brain,
 } from 'lucide-react';
 
+const REDUCED_MOTION = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
 const TOTAL_STEPS = 4;
 const STEPS = [
   { icon: ShieldCheck, label: 'EARLY ACCESS', title: "You're Early - Welcome to GateNexa", subtitle: "You're among the early learners helping shape GateNexa for GATE 2027." },
@@ -113,7 +115,13 @@ export default function OnboardingFlow() {
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    return () => {
+      document.body.style.overflow = prev;
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
   }, []);
 
   useEffect(() => {
@@ -153,9 +161,9 @@ export default function OnboardingFlow() {
   const currentTip = useMemo(() => TIPS[step % TIPS.length], [step]);
 
   const stepVariants = {
-    enter: (dir) => ({ opacity: 0, x: dir > 0 ? 24 : -24 }),
+    enter: (dir) => ({ opacity: 0, x: dir > 0 ? 20 : -20 }),
     center: { opacity: 1, x: 0 },
-    exit: (dir) => ({ opacity: 0, x: dir > 0 ? -24 : 24 }),
+    exit: (dir) => ({ opacity: 0, x: dir > 0 ? -20 : 20 }),
   };
 
   const renderStep = () => {
@@ -463,53 +471,53 @@ export default function OnboardingFlow() {
 
   return (
     <div
-      className="onb-root fixed inset-0 z-[9999] overflow-hidden"
+      className="onb-root fixed inset-0 z-[9999]"
+      style={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}
       role="dialog"
       aria-modal="true"
       aria-label="Welcome to GateNexa"
     >
-      <motion.div
-        className="absolute pointer-events-none"
-        style={{
-          top: '-25%', left: '-12%',
-          width: '65vw', height: '65vw',
-          maxWidth: 850, maxHeight: 850,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(139,92,246,0.22), transparent 60%)',
-          filter: 'blur(80px)',
-          willChange: 'transform, opacity',
-        }}
-        animate={{ scale: [1, 1.06, 1], opacity: [0.7, 1, 0.7] }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.div
-        className="absolute pointer-events-none"
-        style={{
-          bottom: '-22%', right: '-12%',
-          width: '58vw', height: '58vw',
-          maxWidth: 750, maxHeight: 750,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(6,182,212,0.16), transparent 60%)',
-          filter: 'blur(70px)',
-          willChange: 'transform, opacity',
-        }}
-        animate={{ scale: [1, 1.08, 1], opacity: [0.6, 0.9, 0.6] }}
-        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-      />
+      {/* Static background — no continuous animation on mobile */}
+      <div className="absolute inset-0 pointer-events-none" style={{ overflow: 'hidden' }}>
+        <div
+          className="absolute"
+          style={{
+            top: '-25%', left: '-12%',
+            width: '65vw', height: '65vw',
+            maxWidth: 850, maxHeight: 850,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(139,92,246,0.18), transparent 60%)',
+            filter: 'blur(80px)',
+          }}
+        />
+        <div
+          className="absolute"
+          style={{
+            bottom: '-22%', right: '-12%',
+            width: '58vw', height: '58vw',
+            maxWidth: 750, maxHeight: 750,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(6,182,212,0.12), transparent 60%)',
+            filter: 'blur(70px)',
+          }}
+        />
+      </div>
 
       <div className="absolute inset-0 pointer-events-none"
         style={{ background: 'radial-gradient(ellipse 80% 75% at 50% 45%, transparent 35%, rgba(3,4,13,0.65) 100%)' }} />
 
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-        style={{ opacity: 0.04 }}
-        animate={{ y: [0, -6, 0] }}
-        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <div style={{ filter: 'blur(32px)', mixBlendMode: 'soft-light' }}>
-          <img src="/images/logo.png" alt="" className="w-[380px] h-auto object-contain" />
-        </div>
-      </motion.div>
+      {!REDUCED_MOTION && (
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{ opacity: 0.04 }}
+          animate={{ y: [0, -6, 0] }}
+          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <div style={{ filter: 'blur(32px)', mixBlendMode: 'soft-light' }}>
+            <img src="/images/logo.png" alt="" className="w-[380px] h-auto object-contain" />
+          </div>
+        </motion.div>
+      )}
 
       <AnimatePresence mode="wait">
         {!exiting ? (
@@ -519,9 +527,9 @@ export default function OnboardingFlow() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.4, ease: EASE_OUT }}
-            className="onb-shell relative h-full flex items-center justify-center p-4 md:p-6"
+            className="onb-shell relative flex-1 flex items-center justify-center p-4 md:p-6 min-h-0"
           >
-            <div className="onb-grid w-full max-w-[880px] grid md:grid-cols-[1fr,260px] gap-4 max-h-[92vh]">
+            <div className="onb-grid w-full max-w-[880px] grid md:grid-cols-[1fr,260px] gap-4" style={{ maxHeight: '92dvh' }}>
               <div
                 className="onb-panel relative rounded-[28px] border border-white/[0.08] overflow-hidden flex flex-col"
                 style={{
@@ -535,7 +543,8 @@ export default function OnboardingFlow() {
                   background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.02) 100%)',
                 }} />
 
-                <div className="relative px-6 md:px-7 pt-6 md:pt-7 pb-0">
+                {/* HEADER / PROGRESS — fixed at top of panel */}
+                <div className="relative px-6 md:px-7 pt-6 md:pt-7 pb-0 shrink-0">
                   <div className="flex items-center gap-3 mb-4">
                     <LogoIcon size={40} />
                     <div className="flex-1 min-w-0">
@@ -553,17 +562,12 @@ export default function OnboardingFlow() {
                     </div>
                     <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
                       <motion.div
-                        className="h-full rounded-full relative"
+                        className="h-full rounded-full"
                         style={{ background: 'linear-gradient(90deg, #8B5CF6, #6366F1, #3B82F6)' }}
                         initial={{ width: 0 }}
                         animate={{ width: progress + '%' }}
-                        transition={{ duration: 0.5, ease: EASE_OUT }}
-                      >
-                        <div className="absolute inset-0 rounded-full" style={{
-                          background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
-                          animation: 'onb-shimmer 2s infinite',
-                        }} />
-                      </motion.div>
+                        transition={{ duration: 0.4, ease: EASE_OUT }}
+                      />
                     </div>
                     <div className="flex items-center gap-0 mt-2.5">
                       {STEPS.map((s, i) => {
@@ -571,21 +575,20 @@ export default function OnboardingFlow() {
                         const isCurrent = i === step;
                         return (
                           <div key={i} className="flex items-center flex-1">
-                            <motion.div
+                            <div
                               className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 relative"
                               style={{
                                 background: isComplete ? 'rgba(34,197,94,0.15)' : isCurrent ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.04)',
                                 border: isCurrent ? '1.5px solid rgba(139,92,246,0.4)' : '1.5px solid transparent',
+                                transition: 'background 0.3s, border-color 0.3s',
                               }}
-                              animate={isCurrent ? { boxShadow: ['0 0 0px rgba(139,92,246,0)', '0 0 14px rgba(139,92,246,0.3)', '0 0 0px rgba(139,92,246,0)'] } : undefined}
-                              transition={{ duration: 2.5, repeat: Infinity }}
                             >
                               {isComplete ? (
                                 <Check size={12} strokeWidth={3} style={{ color: '#22C55E' }} />
                               ) : (
                                 <s.icon size={12} style={{ color: isCurrent ? '#A855F7' : 'rgba(255,255,255,0.2)' }} />
                               )}
-                            </motion.div>
+                            </div>
                             {i < STEPS.length - 1 && (
                               <div className="flex-1 h-px mx-1.5" style={{
                                 background: isComplete ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)',
@@ -611,10 +614,10 @@ export default function OnboardingFlow() {
                     <AnimatePresence mode="wait">
                       <motion.h2
                         key={step}
-                        initial={{ opacity: 0, y: 6 }}
+                        initial={{ opacity: 0, y: 4 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.28 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.22 }}
                         className="text-[22px] md:text-[28px] font-bold tracking-tight text-white leading-tight"
                       >
                         {STEPS[step].title}
@@ -623,10 +626,10 @@ export default function OnboardingFlow() {
                     <AnimatePresence mode="wait">
                       <motion.p
                         key={step}
-                        initial={{ opacity: 0, y: 4 }}
+                        initial={{ opacity: 0, y: 3 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                        transition={{ duration: 0.28, delay: 0.03 }}
+                        exit={{ opacity: 0, y: -3 }}
+                        transition={{ duration: 0.22, delay: 0.02 }}
                         className="text-[13px] mt-1.5 font-medium leading-relaxed"
                         style={{ color: '#7A7F98' }}
                       >
@@ -636,7 +639,8 @@ export default function OnboardingFlow() {
                   </div>
                 </div>
 
-                <div className="onb-content flex-1 overflow-y-auto px-6 md:px-7 pb-3" style={{ maxHeight: '48vh' }}>
+                {/* SCROLLABLE CONTENT — flex-1 with proper scroll */}
+                <div className="onb-content flex-1 min-h-0 overflow-y-auto px-6 md:px-7 pb-3" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
                   <AnimatePresence mode="wait" custom={direction}>
                     <motion.div
                       key={step}
@@ -645,48 +649,46 @@ export default function OnboardingFlow() {
                       initial="enter"
                       animate="center"
                       exit="exit"
-                      transition={{ duration: 0.28 }}
+                      transition={{ duration: 0.25 }}
                     >
                       {renderStep()}
                     </motion.div>
                   </AnimatePresence>
                 </div>
 
-                <div className="relative px-6 md:px-7 py-4 border-t border-white/[0.05]" style={{ background: 'rgba(255,255,255,0.01)' }}>
+                {/* STICKY FOOTER — always visible, never scrolls */}
+                <div className="relative px-6 md:px-7 py-4 border-t border-white/[0.05] shrink-0" style={{ background: 'rgba(255,255,255,0.01)' }}>
                   <div className="flex items-center gap-2.5">
                     {step > 0 ? (
-                      <motion.button
-                        whileTap={{ scale: 0.97 }}
+                      <button
+                        type="button"
                         onClick={goBack}
                         className="h-11 min-h-[44px] px-4 rounded-2xl text-[13px] font-semibold flex items-center gap-1.5 shrink-0"
                         style={{
                           background: 'rgba(255,255,255,0.04)',
-                          backdropFilter: 'blur(12px)',
                           border: '1px solid rgba(255,255,255,0.08)',
                           color: 'rgba(255,255,255,0.55)',
                         }}
                       >
                         <ArrowLeft size={14} /> Back
-                      </motion.button>
+                      </button>
                     ) : (
-                      <motion.button
-                        whileTap={{ scale: 0.97 }}
+                      <button
+                        type="button"
                         onClick={() => finish(true)}
                         disabled={submitting}
                         className="h-11 min-h-[44px] px-4 rounded-2xl text-[13px] font-semibold shrink-0"
                         style={{
                           background: 'rgba(255,255,255,0.04)',
-                          backdropFilter: 'blur(12px)',
                           border: '1px solid rgba(255,255,255,0.08)',
                           color: 'rgba(255,255,255,0.55)',
                         }}
                       >
                         Skip
-                      </motion.button>
+                      </button>
                     )}
-                    <motion.button
-                      whileTap={{ scale: 0.97 }}
-                      whileHover={{ y: -1 }}
+                    <button
+                      type="button"
                       onClick={isLast ? () => finish(false) : goNext}
                       disabled={submitting}
                       className="flex-1 h-11 min-h-[44px] rounded-2xl px-5 text-[13px] font-semibold flex items-center justify-center gap-2 text-white relative overflow-hidden"
@@ -701,7 +703,7 @@ export default function OnboardingFlow() {
                       <span className="relative z-10 flex items-center gap-2">
                         {CTA_LABELS[step]} <ArrowRight size={14} />
                       </span>
-                    </motion.button>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -746,32 +748,48 @@ export default function OnboardingFlow() {
             className="flex items-center justify-center h-full"
           >
             <div className="flex flex-col items-center gap-4">
-              <motion.div
+              <div
                 className="w-14 h-14 rounded-2xl flex items-center justify-center"
                 style={{ background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)' }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
               >
                 <img src="/images/logo.png" alt="" className="w-7 h-7 object-contain" />
-              </motion.div>
-              <p className="text-[13px] font-medium text-white/45">Launching GateNexa\u2026</p>
+              </div>
+              <p className="text-[13px] font-medium text-white/45">Launching GateNexa...</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <style>{`
-        @keyframes onb-shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
         .onb-content::-webkit-scrollbar { width: 4px; }
         .onb-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 999px; }
         @media (max-width: 768px) {
-          .onb-grid { grid-template-columns: 1fr !important; max-width: 100% !important; }
+          .onb-root {
+            height: 100dvh;
+            height: 100vh;
+            height: 100dvh;
+          }
+          .onb-grid {
+            grid-template-columns: 1fr !important;
+            max-width: 100% !important;
+            max-height: none !important;
+            height: 100%;
+          }
           .onb-sidebar { display: none !important; }
-          .onb-panel { border-radius: 20px !important; }
-          .onb-content { max-height: calc(100vh - 320px) !important; }
+          .onb-panel {
+            border-radius: 20px !important;
+            height: 100%;
+          }
+          .onb-content {
+            max-height: none !important;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
         }
       `}</style>
     </div>

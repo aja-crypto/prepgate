@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, Shield, Zap, Globe } from 'lucide-react';
 import GoogleSignInButton from '../auth/GoogleSignInButton';
 import { useAuthActions } from '../../context/AuthContext';
@@ -259,6 +260,15 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                   isVisible={showPassword}
                   index={1}
                 />
+
+                <div className="flex justify-end -mt-1">
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs text-purple-400/70 hover:text-purple-300 transition-colors rounded-md px-1 py-1"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
 
                 {/* Sign In button */}
                 <motion.div
