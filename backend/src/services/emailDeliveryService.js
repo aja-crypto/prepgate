@@ -82,10 +82,7 @@ async function sendTransactionalEmail({
     return { sent: false, duplicate: true, record: claim.record };
   }
 
-<<<<<<< HEAD
-=======
   console.log(`[email] type=${type} status=claimed recipient=${maskRecipient(to)} event=${String(eventId).slice(0, 120)}`);
->>>>>>> c8db0c0 (fix: repair email delivery claim)
   try {
     const info = await sendEmail({ to, subject, html, text, type, eventId });
     if (claim.record) {
