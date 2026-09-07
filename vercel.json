@@ -1,7 +1,11 @@
 {
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/dist",
   "services": {
+    "frontend": {
+      "root": ".",
+      "framework": "vite",
+      "buildCommand": "cd frontend && npm install && npm run build",
+      "outputDirectory": "frontend/dist"
+    },
     "backend": {
       "root": "backend",
       "runtime": "nodejs20.x",
