@@ -1,6 +1,12 @@
 {
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
+  "services": [
+    {
+      "src": "backend",
+      "use": "@vercel/node"
+    }
+  ],
   "trailingSlash": false,
   "headers": [
     {
