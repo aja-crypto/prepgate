@@ -116,20 +116,47 @@ const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage'));
 // Protected route wrapper
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuthData();
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg text-text3" aria-live="polite" aria-busy="true">
+        <div className="text-center">
+          <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+          <div className="text-xs font-medium uppercase tracking-[0.24em] text-text3/80">Restoring session</div>
+        </div>
+      </div>
+    );
+  }
   return user ? children : <Navigate to="/login" replace />;
 };
 
 // Admin route wrapper
 const AdminPrivateRoute = ({ children }) => {
   const { admin, loading } = useAdminAuth();
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg text-text3" aria-live="polite" aria-busy="true">
+        <div className="text-center">
+          <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+          <div className="text-xs font-medium uppercase tracking-[0.24em] text-text3/80">Checking admin session</div>
+        </div>
+      </div>
+    );
+  }
   return admin ? children : <Navigate to="/admin/login" replace />;
 };
 
 const AdminPublicRoute = ({ children }) => {
   const { admin, loading } = useAdminAuth();
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg text-text3" aria-live="polite" aria-busy="true">
+        <div className="text-center">
+          <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+          <div className="text-xs font-medium uppercase tracking-[0.24em] text-text3/80">Loading</div>
+        </div>
+      </div>
+    );
+  }
   return admin ? <Navigate to="/admin/dashboard" replace /> : children;
 };
 

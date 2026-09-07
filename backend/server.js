@@ -451,6 +451,7 @@ app.use('/api/admin/notifications', require('./src/routes/adminNotifications'));
 app.use('/api/admin/feedback', require('./src/routes/adminFeedback'));
 app.use('/api/learning-hub/videos', require('./src/routes/learningHubVideos'));
 app.use('/api/insights', require('./src/routes/insights'));
+app.use('/api/diagnostics', require('./src/routes/brevoDiagnostic'));
 
 // Admin audit log endpoint
 app.get('/api/admin/audit-logs', adminProtect, requirePermission('settings.manage'), (req, res) => {

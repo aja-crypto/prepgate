@@ -1,5 +1,14 @@
 import { Component } from 'react';
 
+const safeReadStorage = (key) => {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return null;
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
 export class ErrorBoundary extends Component {
   state = { hasError: false, error: null, errorInfo: null, retried: 0 };
   retryTimer = null;
@@ -13,12 +22,12 @@ export class ErrorBoundary extends Component {
     this.errorCount = (this.errorCount || 0) + 1;
     console.error('========== [ErrorBoundary] Caught Error ==========');
     console.error('Timestamp:', new Date().toISOString());
-    console.error('Current route:', window.location.href);
+    console.error('Current route:', typeof window !== 'undefined' ? window.location.href : '(unknown)');
     console.error('Message:', error?.message || error?.toString?.() || '(no message)');
     console.error('Error name:', error?.name);
     console.error('Stack:', error?.stack || '(no stack)');
     console.error('Component Stack:', errorInfo?.componentStack || '(no component stack)');
-    console.error('Has user token:', !!localStorage.getItem('accessToken'));
+    console.error('Has user token:', !!safeReadStorage('accessToken'));
     console.error('Context:', this.props.name || '(unnamed boundary)');
     console.error('==================================================');
 

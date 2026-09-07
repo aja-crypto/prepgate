@@ -113,18 +113,6 @@ export default function OnboardingFlow() {
   const [highContrast, setHighContrast] = useState(false);
 
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    return () => {
-      document.body.style.overflow = prev;
-      document.body.style.position = '';
-      document.body.style.width = '';
-    };
-  }, []);
-
-  useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape' && !submitting) finish(true);
       if (e.key === 'ArrowRight' && !submitting && step < TOTAL_STEPS - 1) goNext();
@@ -471,8 +459,8 @@ export default function OnboardingFlow() {
 
   return (
     <div
-      className="onb-root fixed inset-0 z-[9999]"
-      style={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}
+      className="onb-root relative min-h-[100dvh] w-full overflow-y-auto overflow-x-hidden z-[9999]"
+      style={{ display: 'flex', flexDirection: 'column', touchAction: 'pan-y' }}
       role="dialog"
       aria-modal="true"
       aria-label="Welcome to GateNexa"
@@ -527,7 +515,7 @@ export default function OnboardingFlow() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.4, ease: EASE_OUT }}
-            className="onb-shell relative flex-1 flex items-center justify-center p-4 md:p-6 min-h-0"
+            className="onb-shell relative flex-none md:flex-1 flex items-start md:items-center justify-center p-4 md:p-6 md:min-h-0"
           >
             <div className="onb-grid w-full max-w-[880px] grid md:grid-cols-[1fr,260px] gap-4" style={{ maxHeight: '92dvh' }}>
               <div
@@ -765,23 +753,25 @@ export default function OnboardingFlow() {
         .onb-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 999px; }
         @media (max-width: 768px) {
           .onb-root {
-            height: 100dvh;
-            height: 100vh;
-            height: 100dvh;
+            min-height: 100dvh;
+            height: auto;
+            overflow-y: auto;
           }
           .onb-grid {
             grid-template-columns: 1fr !important;
             max-width: 100% !important;
             max-height: none !important;
-            height: 100%;
+            height: auto !important;
           }
           .onb-sidebar { display: none !important; }
           .onb-panel {
             border-radius: 20px !important;
-            height: 100%;
+            height: auto !important;
           }
           .onb-content {
             max-height: none !important;
+            overflow-y: visible !important;
+            flex: none !important;
           }
         }
         @media (prefers-reduced-motion: reduce) {
@@ -795,5 +785,4 @@ export default function OnboardingFlow() {
     </div>
   );
 }
-
 

@@ -173,6 +173,26 @@ function VideoSkeleton() {
   );
 }
 
+const safeReadArray = (key) => {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return [];
+    const value = window.localStorage.getItem(key);
+    const parsed = value ? JSON.parse(value) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const safeWriteArray = (key, values) => {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    window.localStorage.setItem(key, JSON.stringify(Array.isArray(values) ? values : []));
+  } catch {
+    // Ignore storage errors to avoid crashing the page when browser storage is unavailable.
+  }
+};
+
 const CATEGORY_STYLES = {
   'Success Stories': { accent: '#F59E0B', badge: '🏆 Topper', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.25)' },
   'Roadmaps': { accent: '#3B82F6', badge: '🗺️ Roadmap', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.25)' },
@@ -203,8 +223,8 @@ const isVerifiedChannel = (name) => !!(name && name !== 'Unknown' && VERIFIED_CH
 const ResourceCard = memo(function ResourceCard({ item, onClick, index }) {
   const [isHovered, setIsHovered] = useState(false);
   const id = item._id || item.id;
-  const [isBookmarked, setIsBookmarked] = useState(() => { try { return JSON.parse(localStorage.getItem('lh_bookmarks') || '[]').includes(id); } catch { return false; } });
-  const [isFavorited, setIsFavorited] = useState(() => { try { return JSON.parse(localStorage.getItem('lh_favorites') || '[]').includes(id); } catch { return false; } });
+  const [isBookmarked, setIsBookmarked] = useState(() => safeReadArray('lh_bookmarks').includes(id));
+  const [isFavorited, setIsFavorited] = useState(() => safeReadArray('lh_favorites').includes(id));
   const videoId = item.youtubeId || item.youtubeUrl?.match(/(?:v=|\/)([\w-]{11})/)?.[1];
   const { src: thumbnail, onError: onThumbError, exhausted: thumbExhausted } = useYoutubeThumbnail(videoId, item.thumbnail);
   const cat = CATEGORY_STYLES[item.category] || CATEGORY_STYLES['Resources'];
@@ -213,19 +233,19 @@ const ResourceCard = memo(function ResourceCard({ item, onClick, index }) {
 
   const toggleBookmark = (e) => {
     e.stopPropagation();
-    const ids = JSON.parse(localStorage.getItem('lh_bookmarks') || '[]');
+    const ids = safeReadArray('lh_bookmarks');
     const idx = ids.indexOf(id);
     if (idx === -1) ids.push(id); else ids.splice(idx, 1);
-    localStorage.setItem('lh_bookmarks', JSON.stringify(ids));
+    safeWriteArray('lh_bookmarks', ids);
     setIsBookmarked(idx === -1);
   };
 
   const toggleFavorite = (e) => {
     e.stopPropagation();
-    const ids = JSON.parse(localStorage.getItem('lh_favorites') || '[]');
+    const ids = safeReadArray('lh_favorites');
     const idx = ids.indexOf(id);
     if (idx === -1) ids.push(id); else ids.splice(idx, 1);
-    localStorage.setItem('lh_favorites', JSON.stringify(ids));
+    safeWriteArray('lh_favorites', ids);
     setIsFavorited(idx === -1);
   };
 

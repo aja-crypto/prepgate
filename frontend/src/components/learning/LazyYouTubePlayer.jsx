@@ -6,6 +6,19 @@ export default function LazyYouTubePlayer({ videoId, title, onError, autoPlay = 
   const [failed, setFailed] = useState(false);
   const { src: thumbnail, onError: onThumbError, exhausted: thumbExhausted } = useYoutubeThumbnail(videoId, '');
 
+  const embedUrl = (() => {
+    if (!videoId) return '';
+    const url = new URL(`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}`);
+    url.searchParams.set('autoplay', '1');
+    url.searchParams.set('controls', '1');
+    url.searchParams.set('playsinline', '1');
+    url.searchParams.set('rel', '0');
+    url.searchParams.set('modestbranding', '1');
+    url.searchParams.set('enablejsapi', '1');
+    url.searchParams.set('origin', window.location.origin);
+    return url.toString();
+  })();
+
   if (!videoId) return null;
 
   if (failed) {
@@ -61,10 +74,12 @@ export default function LazyYouTubePlayer({ videoId, title, onError, autoPlay = 
   return (
     <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black">
       <iframe
-        src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+        key={videoId}
+        src={embedUrl}
         title={title || 'YouTube video player'}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
         allowFullScreen
+        referrerPolicy="strict-origin-when-cross-origin"
         className="w-full h-full"
         loading="lazy"
         onError={() => { setFailed(true); onError?.(); }}

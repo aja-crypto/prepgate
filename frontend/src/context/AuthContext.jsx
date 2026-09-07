@@ -102,6 +102,15 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }, 30000);
 
+    const clearUserSession = () => {
+      setUser(null);
+      setIsPremium(false);
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('isGuest');
+      delete api.defaults.headers.common['Authorization'];
+    };
+
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       const attempt = () => {
@@ -114,7 +123,13 @@ export const AuthProvider = ({ children }) => {
             setIsPremium(userData?.isPremium || false);
             return true;
           })
-          .catch(() => false);
+          .catch((error) => {
+            const status = error?.response?.status;
+            if (status === 401 || status === 403) {
+              clearUserSession();
+            }
+            return false;
+          });
       };
       attempt().then((ok) => {
         if (!ok) {

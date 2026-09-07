@@ -7,12 +7,25 @@ export function VideoPlayerProvider({ children }) {
   const [floatingPip, setFloatingPip] = useState(false);
   const [pipPosition, setPipPosition] = useState(null);
 
+  const buildYoutubeEmbedUrl = useCallback((videoId) => {
+    if (!videoId) return '';
+    const url = new URL(`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}`);
+    url.searchParams.set('autoplay', '1');
+    url.searchParams.set('controls', '1');
+    url.searchParams.set('playsinline', '1');
+    url.searchParams.set('rel', '0');
+    url.searchParams.set('modestbranding', '1');
+    url.searchParams.set('enablejsapi', '1');
+    url.searchParams.set('origin', window.location.origin);
+    return url.toString();
+  }, []);
+
   const playVideo = useCallback((video) => {
     if (!video) return;
     const videoId = video.videoId || video.youtubeId || null;
     const rawUrl = video.videoUrl || video.youtubeUrl || video.url || video.sourceUrl || '';
     const isYoutubeId = !!videoId;
-    const youtubeUrl = isYoutubeId ? `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1` : rawUrl;
+    const youtubeUrl = isYoutubeId ? buildYoutubeEmbedUrl(videoId) : rawUrl;
     const thumbnail = video.thumbnail || video.youtubeThumbnail || video.thumbnailUrl || video.image || '';
     setPlayer({
       id: video.id || video._id || videoId || String(Date.now()),
@@ -25,7 +38,7 @@ export function VideoPlayerProvider({ children }) {
       currentTime: 0,
       isPlaying: true,
     });
-  }, []);
+  }, [buildYoutubeEmbedUrl]);
 
   const closeVideo = useCallback(() => {
     setPlayer(null);
