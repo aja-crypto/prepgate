@@ -1682,7 +1682,6 @@ export default function LearningHubPage() {
       </div>
 
       <div className="relative max-w-6xl mx-auto px-4 py-6 space-y-6">
-       <AnimatePresence mode="wait">
         {selectedItem ? (
           <ResourceDetailView
             key={selectedItem._id || selectedItem.id}
@@ -2064,7 +2063,6 @@ export default function LearningHubPage() {
         </div>
         </motion.div>
         )}
-       </AnimatePresence>
       </div>
     </div>
   );
