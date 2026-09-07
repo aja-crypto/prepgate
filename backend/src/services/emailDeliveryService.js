@@ -27,11 +27,29 @@ async function claimDelivery({ type, eventId, to }) {
 
   const key = eventKey(type, eventId);
   try {
+    let existing = null;
+    try {
+      if (typeof EmailDelivery.findOne === 'function') {
+        const q1 = EmailDelivery.findOne({ eventKey: key });
+        existing = await (q1?.lean ? q1.lean() : q1);
+      }
+    } catch {}
+
+    // Already being sent by another process — don't claim.
+    if (existing?.status === 'sending') {
+      return { claimed: false, record: existing };
+    }
+    // Already delivered — don't re-send.
+    if (existing?.status === 'sent') {
+      return { claimed: false, record: existing };
+    }
+
+    // Step 2: Upsert — insert if new, or update if failed.
+    // No $or in the filter — avoids MongoDB WriteConflict (error 40) with
+    // the unique index on eventKey. The pre-check above already filtered out
+    // 'sending' and 'sent' statuses, so we can safely set status='sending'.
     const record = await EmailDelivery.findOneAndUpdate(
-      {
-        eventKey: key,
-        $or: [{ status: 'failed' }, { status: { $exists: false } }],
-      },
+      { eventKey: key },
       {
         $setOnInsert: {
           eventKey: key,
@@ -47,9 +65,17 @@ async function claimDelivery({ type, eventId, to }) {
     if (record?.status !== 'sending') return { claimed: false, record };
     return { claimed: true, record };
   } catch (error) {
-    if (error?.code === 11000) {
-      const existing = await EmailDelivery.findOne({ eventKey: key }).lean();
-      return { claimed: false, record: existing };
+    // 11000 = duplicate key (concurrent upsert raced and lost)
+    // 40    = WriteConflict from WiredTiger (upsert + unique index conflict)
+    if (error?.code === 11000 || error?.code === 40) {
+      try {
+        if (typeof EmailDelivery.findOne === 'function') {
+          const qf = EmailDelivery.findOne({ eventKey: key });
+          const fallback = await (qf?.lean ? qf.lean() : qf);
+          return { claimed: false, record: fallback };
+        }
+      } catch {}
+      return { claimed: false, record: null };
     }
     throw error;
   }
@@ -82,7 +108,6 @@ async function sendTransactionalEmail({
     return { sent: false, duplicate: true, record: claim.record };
   }
 
-  console.log(`[email] type=${type} status=claimed recipient=${maskRecipient(to)} event=${String(eventId).slice(0, 120)}`);
   try {
     const info = await sendEmail({ to, subject, html, text, type, eventId });
     if (claim.record) {
@@ -120,4 +145,4 @@ function tokenEventId(token) {
   return crypto.createHash('sha256').update(String(token)).digest('hex');
 }
 
-module.exports = { sendTransactionalEmail, tokenEventId, maskRecipient };
+module.exports = { sendTransactionalEmail, claimDelivery, tokenEventId, maskRecipient };

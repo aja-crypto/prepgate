@@ -47,6 +47,7 @@ const NO_CACHE_PATTERNS = ['/auth/me', '/auth/refresh', '/auth/demo', '/ai/quota
 
 api.interceptors.request.use(
   (config) => {
+    config.metadata = { start: performance.now() };
     const token = localStorage.getItem('accessToken');
     const isGuest = localStorage.getItem('isGuest') === 'true';
 
@@ -60,6 +61,7 @@ api.interceptors.request.use(
       const cacheKey = cacheKeyFor(config);
       const cached = getCached(cacheKey);
       if (cached) {
+        if (import.meta.env.DEV) console.debug(`[api-cache HIT] ${config.url} ~0ms`);
         config.adapter = () => Promise.resolve({ data: cached, status: 200, statusText: 'OK', headers: {}, config });
       } else {
         const stale = getStale(cacheKey);
@@ -122,6 +124,12 @@ export const refreshAccessToken = async () => sharedRefreshAccessToken();
 
 api.interceptors.response.use(
   (response) => {
+    if (response.config?.metadata?.start) {
+      const ms = Math.round(performance.now() - response.config.metadata.start);
+      const bytes = (() => { try { return new Blob([JSON.stringify(response.data)]).size; } catch { return 0; } })();
+      if (import.meta.env.DEV) console.debug(`[api] ${response.config.method?.toUpperCase()} ${response.config.url} → ${ms}ms ${bytes}B ${response.status}`);
+      response.headers['x-client-duration-ms'] = String(ms);
+    }
     if (response.config?.method === 'get' && !NO_CACHE_PATTERNS.some(p => response.config?.url?.includes(p))) {
       const cacheKey = cacheKeyFor(response.config);
       setCache(cacheKey, response.data);

@@ -7,7 +7,9 @@ const { MockTest, Note } = require('../models');
 const { generateTokens } = require('../middleware/auth');
 const { add: blacklistToken, has: isTokenBlacklisted, blacklistAllForUser } = require('../middleware/tokenBlacklist');
 const { isSmtpConfigured } = require('../utils/email');
-const { sendTransactionalEmail, tokenEventId, maskRecipient } = require('../services/emailDeliveryService');
+const { sendTransactionalEmail, claimDelivery, tokenEventId } = require('../services/emailDeliveryService');
+const { sendEmail } = require('../utils/email');
+const EmailDelivery = require('../models/EmailDelivery');
 const { isMockAuthEnabled } = require('../config/devMode');
 const { isDemoUser } = require('../utils/permissions');
 const { getEmptyProgressData } = require('../utils/emptyProgress');
@@ -132,7 +134,6 @@ exports.register = async (req, res, next) => {
       });
     }
 
-    // Create user with empty progress — no demo data
     const emptyData = getEmptyProgressData();
     function genRefCode() {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -148,43 +149,17 @@ exports.register = async (req, res, next) => {
       progressBackup: { data: emptyData, updatedAt: new Date() },
     });
 
-    // Send verification email (non-blocking)
+    const verifyToken = user.generateVerifyToken();
+    await user.save({ validateBeforeSave: false });
+
+    let verifyEventId = null;
+    let verifyClaimed = false;
     try {
-      const verifyToken = user.generateVerifyToken();
-      await user.save({ validateBeforeSave: false });
-      await sendVerificationEmail(user, verifyToken);
-      if (process.env.NODE_ENV === 'development' && !isSmtpConfigured()) {
-        user.isVerified = true;
-        user.verifyEmailToken = undefined;
-        user.verifyEmailExpire = undefined;
-        await user.save({ validateBeforeSave: false });
-      }
-    } catch {
-      // Email optional — account still created
-      if (process.env.NODE_ENV === 'development' && !isSmtpConfigured()) {
-        user.isVerified = true;
-        await user.save({ validateBeforeSave: false });
-      }
-    }
+      verifyEventId = tokenEventId(verifyToken);
+      const claim = await claimDelivery({ type: 'verification', eventId: verifyEventId, to: user.email });
+      verifyClaimed = claim.claimed;
+    } catch {}
 
-    // Process referral code if present
-    if (refCode) {
-      try {
-        const referrer = await User.findOne({ referralCode: refCode.toUpperCase() });
-        if (referrer && referrer._id.toString() !== user._id.toString()) {
-          user.referredBy = referrer._id;
-          referrer.pendingReferrals = referrer.pendingReferrals || [];
-          if (!referrer.pendingReferrals.some(id => id.toString() === user._id.toString())) {
-            referrer.pendingReferrals.push(user._id);
-          }
-          referrer.markModified('pendingReferrals');
-          await referrer.save();
-          await user.save();
-        }
-      } catch (e) {}
-    }
-
-    // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user._id, user.tokenVersion || 0);
 
     res.status(201).json({
@@ -196,6 +171,43 @@ exports.register = async (req, res, next) => {
         refreshToken,
       },
     });
+
+    if (verifyClaimed && verifyEventId) {
+      setImmediate(async () => {
+        try {
+          const t = emailTemplates.verification(user.name, `${process.env.FRONTEND_URL}/verify-email/${verifyToken}`);
+          const info = await sendEmail({ to: user.email, subject: t.subject, html: t.html, text: t.text, type: 'verification', eventId: verifyEventId });
+          await EmailDelivery.updateOne({ eventKey: `verification:${verifyEventId}` }, { $set: { status: 'sent', providerMessageId: String(info?.messageId || '').slice(0, 240), sentAt: new Date() } }).catch(() => {});
+        } catch (e) {
+          const code = String(e?.code || e?.name || 'send_failed').slice(0, 80);
+          const msg = String(e?.message || 'Email delivery failed').replace(/[\r\n]+/g, ' ').slice(0, 240);
+          await EmailDelivery.updateOne({ eventKey: `verification:${verifyEventId}` }, { $set: { status: 'failed', errorCode: code, errorMessage: msg } }).catch(() => {});
+        }
+        if (process.env.NODE_ENV === 'development' && !isSmtpConfigured()) {
+          try { user.isVerified = true; user.verifyEmailToken = undefined; user.verifyEmailExpire = undefined; await user.save({ validateBeforeSave: false }); } catch {}
+        }
+      });
+    } else if (process.env.NODE_ENV === 'development' && !isSmtpConfigured()) {
+      setImmediate(async () => { try { user.isVerified = true; user.verifyEmailToken = undefined; user.verifyEmailExpire = undefined; await user.save({ validateBeforeSave: false }); } catch {} });
+    }
+
+    if (refCode) {
+      setImmediate(async () => {
+        try {
+          const referrer = await User.findOne({ referralCode: refCode.toUpperCase() }).select('_id pendingReferrals');
+          if (referrer && referrer._id.toString() !== user._id.toString()) {
+            const freshUser = await User.findById(user._id).select('_id referredBy');
+            if (freshUser && !freshUser.referredBy) {
+              freshUser.referredBy = referrer._id;
+              await freshUser.save({ validateBeforeSave: false });
+            }
+            if (!referrer.pendingReferrals?.some(id => id.toString() === user._id.toString())) {
+              await User.updateOne({ _id: referrer._id }, { $addToSet: { pendingReferrals: user._id } });
+            }
+          }
+        } catch {}
+      });
+    }
   } catch (error) {
     next(error);
   }
@@ -362,9 +374,7 @@ exports.verifyEmail = async (req, res, next) => {
 
     if (isFirstVerification) {
       // Non-blocking: verification must succeed even if the welcome email fails.
-      sendWelcomeEmail(user).catch((error) => {
-        console.error(`[email] type=welcome status=trigger_failed recipient=${maskRecipient(user.email)} error=${error?.code || error?.name || 'send_failed'}`);
-      });
+      sendWelcomeEmail(user);
     }
 
     res.json({ success: true, message: 'Email verified successfully!' });
@@ -543,8 +553,7 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    // Find user (include password for comparison)
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select('+password tokenVersion streak lastLogin firstLoginAt isVerified role isPremium premiumUnlockedViaReferral preferences targetYear studyGoalHours name avatar badges nexaPredictorTestUses');
 
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({
@@ -552,12 +561,6 @@ exports.login = async (req, res, next) => {
         message: 'Invalid email or password.',
       });
     }
-
-    // Update streak
-    user.updateStreak();
-    user.lastLogin = new Date();
-    if (!user.firstLoginAt) user.firstLoginAt = new Date();
-    await user.save({ validateBeforeSave: false });
 
     const { accessToken, refreshToken } = generateTokens(user._id, user.tokenVersion || 0);
 
@@ -569,6 +572,15 @@ exports.login = async (req, res, next) => {
         accessToken,
         refreshToken,
       },
+    });
+
+    setImmediate(async () => {
+      try {
+        user.updateStreak();
+        user.lastLogin = new Date();
+        if (!user.firstLoginAt) user.firstLoginAt = new Date();
+        await user.save({ validateBeforeSave: false });
+      } catch {}
     });
   } catch (error) {
     next(error);
@@ -850,7 +862,6 @@ exports.updateBadges = async (req, res, next) => {
  */
 exports.forgotPassword = async (req, res, next) => {
   try {
-    console.log(`[email] type=password-reset status=requested recipient=${maskRecipient(req.body.email)}`);
     if (isMockAuthEnabled()) {
       return res.json({
         success: true,
@@ -861,7 +872,6 @@ exports.forgotPassword = async (req, res, next) => {
     const user = await User.findOne({ email: req.body.email });
 
     if (!user) {
-      console.log(`[email] type=password-reset status=account_not_found recipient=${maskRecipient(req.body.email)}`);
       // Don't reveal if email exists (security)
       return res.json({
         success: true,
@@ -869,7 +879,6 @@ exports.forgotPassword = async (req, res, next) => {
       });
     }
 
-    console.log(`[email] type=password-reset status=account_found recipient=${maskRecipient(user.email)}`);
     const resetToken = user.generateResetToken();
     await user.save({ validateBeforeSave: false });
 

@@ -102,9 +102,7 @@ router.get('/', protect, async (req, res, next) => {
     const { Topic, Progress } = require('../models');
     let filter = { isActive: true };
     if (req.query.code) filter.code = req.query.code.toUpperCase();
-    console.log('[Subjects Route] Filter:', filter);
-    const subjects = await Subject.find(filter).sort('order');
-    console.log('[Subjects Route] Found:', subjects.length, subjects.map(s => s.code));
+    const subjects = await Subject.find(filter).sort('order').lean();
     if (req.query.hierarchy !== 'true') {
       return res.json({ success: true, count: subjects.length, data: subjects });
     }
@@ -126,7 +124,7 @@ router.get('/', protect, async (req, res, next) => {
       });
       const completed = subTopics.filter((t) => t.isCompleted).length;
       return {
-        ...sub.toObject(), topics: subTopics, topicCount: subTopics.length,
+        ...sub, topics: subTopics, topicCount: subTopics.length,
         completedTopics: completed,
         completionPct: subTopics.length ? Math.round((completed / subTopics.length) * 100) : 0,
       };

@@ -9,7 +9,7 @@ const localStore = require('../store/localDataStore');
 const { validateFields, VALID_SUBJECTS, VALID_DIFFICULTIES } = require('../middleware/validateInput');
 
 async function enrichProgressMongo(topics, userId) {
-  const progressList = await Progress.find({ user: userId, topic: { $in: topics.map((t) => t._id) } });
+  const progressList = await Progress.find({ user: userId, topic: { $in: topics.map((t) => t._id) } }).select('topic isCompleted isBookmarked revisionNeeded markedDifficult accuracy completionTasks completionPercentage').lean();
   const pmap = {};
   progressList.forEach((p) => { pmap[p.topic.toString()] = p; });
   return topics.map((t) => {
