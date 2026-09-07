@@ -1,12 +1,13 @@
 {
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
-  "services": [
-    {
-      "src": "backend",
-      "use": "@vercel/node"
+  "services": {
+    "backend": {
+      "root": "backend",
+      "runtime": "nodejs20.x",
+      "entrypoint": "server.js"
     }
-  ],
+  },
   "trailingSlash": false,
   "headers": [
     {
