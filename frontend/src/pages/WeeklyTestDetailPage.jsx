@@ -38,6 +38,7 @@ export default function WeeklyTestDetailPage() {
   const [scoreInput, setScoreInput] = useState({});
   const [submitting, setSubmitting] = useState({});
   const [loading, setLoading] = useState(true);
+  const [showDisclaimer, setShowDisclaimer] = useState(true);
 
   const meta = SUBJECT_META[subjectCode] || { icon: '📝', color: 'var(--color-primary)', name: subjectCode };
 

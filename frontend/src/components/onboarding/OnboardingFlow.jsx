@@ -115,12 +115,8 @@ export default function OnboardingFlow() {
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
     return () => {
       document.body.style.overflow = prev;
-      document.body.style.position = '';
-      document.body.style.width = '';
     };
   }, []);
 
@@ -529,7 +525,7 @@ export default function OnboardingFlow() {
             transition={{ duration: 0.4, ease: EASE_OUT }}
             className="onb-shell relative flex-1 flex items-center justify-center p-4 md:p-6 min-h-0"
           >
-            <div className="onb-grid w-full max-w-[880px] grid md:grid-cols-[1fr,260px] gap-4" style={{ maxHeight: '92dvh' }}>
+            <div className="onb-grid w-full max-w-[880px] grid md:grid-cols-[1fr,260px] gap-4" style={{ height: 'min(92dvh, calc(100dvh - 48px))', maxHeight: '92dvh' }}>
               <div
                 className="onb-panel relative rounded-[28px] border border-white/[0.08] overflow-hidden flex flex-col"
                 style={{
@@ -537,6 +533,8 @@ export default function OnboardingFlow() {
                   backdropFilter: 'blur(32px)',
                   WebkitBackdropFilter: 'blur(32px)',
                   boxShadow: '0 32px 100px rgba(0,0,0,0.5), 0 0 60px rgba(139,92,246,0.04), inset 0 1px 0 rgba(255,255,255,0.05)',
+                  height: '100%',
+                  minHeight: 0,
                 }}
               >
                 <div className="absolute inset-0 rounded-[28px] pointer-events-none" style={{
@@ -639,8 +637,8 @@ export default function OnboardingFlow() {
                   </div>
                 </div>
 
-                {/* SCROLLABLE CONTENT — flex-1 with proper scroll */}
-                <div className="onb-content flex-1 min-h-0 overflow-y-auto px-6 md:px-7 pb-3" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
+                {/* SCROLLABLE CONTENT — the only scrolling region in the panel */}
+                <div className="onb-content flex-1 px-6 md:px-7 pb-3" style={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
                   <AnimatePresence mode="wait" custom={direction}>
                     <motion.div
                       key={step}
@@ -763,6 +761,11 @@ export default function OnboardingFlow() {
       <style>{`
         .onb-content::-webkit-scrollbar { width: 4px; }
         .onb-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 999px; }
+        @media (min-width: 769px) {
+          .onb-grid { height: min(92dvh, calc(100dvh - 48px)); max-height: 92dvh; }
+          .onb-panel { height: 100%; min-height: 0; }
+          .onb-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; touch-action: pan-y; }
+        }
         @media (max-width: 768px) {
           .onb-root {
             height: 100dvh;

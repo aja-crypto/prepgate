@@ -9,12 +9,11 @@ export class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    if (this.errorCount > 2) return;
-    this.errorCount = (this.errorCount || 0) + 1;
+    const msg = error?.message || error?.toString?.() || '';
     console.error('========== [ErrorBoundary] Caught Error ==========');
     console.error('Timestamp:', new Date().toISOString());
     console.error('Current route:', window.location.href);
-    console.error('Message:', error?.message || error?.toString?.() || '(no message)');
+    console.error('Message:', msg || '(no message)');
     console.error('Error name:', error?.name);
     console.error('Stack:', error?.stack || '(no stack)');
     console.error('Component Stack:', errorInfo?.componentStack || '(no component stack)');
@@ -22,8 +21,19 @@ export class ErrorBoundary extends Component {
     console.error('Context:', this.props.name || '(unnamed boundary)');
     console.error('==================================================');
 
-    // Auto-recover from transient errors (races, momentary API failures).
-    // If the same boundary errors repeatedly, stop auto-retrying and let the user click Try Again.
+    const isChunkError = /ChunkLoadError|Loading chunk|dynamically imported module|Failed to fetch dynamically|Unable to preload CSS/i.test(msg);
+    if (isChunkError) {
+      try {
+        const key = 'gatenexa_chunk_reload';
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, String(Date.now()));
+          window.location.reload();
+          return;
+        }
+      } catch {}
+      return;
+    }
+
     const attempts = (this.state?.retried || 0);
     if (attempts < 1 && this.retryTimer === null) {
       this.retryTimer = setTimeout(() => {

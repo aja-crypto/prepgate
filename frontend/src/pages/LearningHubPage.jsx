@@ -9,6 +9,7 @@ import InsightsDashboard from '../components/gate/InsightsDashboard';
 import { useTrackLearningHub } from '../hooks/useAiMentorTracking';
 import { useVideoPlayer } from '../components/video/VideoPlayerContext';
 import { useYoutubeThumbnail } from '../hooks/useYoutubeThumbnail';
+import LazyYouTubePlayer from '../components/learning/LazyYouTubePlayer';
 import { getContinueWatching, getCompletedCount, getInProgressCount, getLessonStatus, getProgress, WATCH_EVENT, markCompleted } from '../lib/watchProgress';
 import { SUBJECT_RESOURCES } from '../data/subjectResources';
 
