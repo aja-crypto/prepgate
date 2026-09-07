@@ -57,18 +57,15 @@ export default defineConfig({
     cssMinify: 'esbuild',
     assetsInlineLimit: 4096,
     reportCompressedSize: false,
+    modulePreload: { polyfill: false },
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes('node_modules/react') || id.includes('node_modules/react-router-dom') || id.includes('node_modules/react-hot-toast') || id.includes('node_modules/axios')) return 'react-core';
           if (id.includes('node_modules/chart.js') || id.includes('node_modules/react-chartjs-2')) return 'charts';
-          if (id.includes('node_modules/three') || id.includes('node_modules/@react-three')) return 'three';
-          if (id.includes('node_modules/jspdf') || id.includes('node_modules/xlsx') || id.includes('node_modules/html2canvas')) return 'export';
           if (id.includes('node_modules/framer-motion')) return 'animation';
           if (id.includes('node_modules/lucide-react')) return 'icons';
           if (id.includes('node_modules/date-fns')) return 'dates';
-          if (id.includes('node_modules/react-pdf') || id.includes('node_modules/pdfjs-dist')) return 'pdf';
-          if (id.includes('node_modules/@react-pdf/renderer')) return 'react-pdf-renderer';
           if (id.includes('node_modules/react-markdown') || id.includes('node_modules/rehype-highlight')) return 'markdown';
           if (id.includes('node_modules/@sentry')) return 'sentry';
         },
