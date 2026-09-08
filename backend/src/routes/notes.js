@@ -14,6 +14,10 @@ const {
 
 const router = express.Router();
 
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 const UPLOAD_DIR = path.join(__dirname, '../../uploads/notes');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
@@ -119,12 +123,13 @@ router.get('/', async (req, res, next) => {
     let query = Note.find(filter).sort({ isPinned: -1, updatedAt: -1 });
 
     if (req.query.search) {
+      const safeSearch = escapeRegex(req.query.search);
       query = query.find({
         $or: [
-          { title: { $regex: req.query.search, $options: 'i' } },
-          { content: { $regex: req.query.search, $options: 'i' } },
-          { ocrText: { $regex: req.query.search, $options: 'i' } },
-          { tags: { $regex: req.query.search, $options: 'i' } },
+          { title: { $regex: safeSearch, $options: 'i' } },
+          { content: { $regex: safeSearch, $options: 'i' } },
+          { ocrText: { $regex: safeSearch, $options: 'i' } },
+          { tags: { $regex: safeSearch, $options: 'i' } },
         ],
       });
     }
