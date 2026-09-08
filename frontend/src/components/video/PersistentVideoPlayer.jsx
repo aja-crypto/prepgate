@@ -64,9 +64,7 @@ export default function PersistentVideoPlayer() {
     });
   }, [minimized]);
 
-  if (!player) return null;
-
-  const isNativeVideo = player.source === 'file' || player.source === 'mp4' || (player.rawUrl && /\.(mp4|webm|ogg)(\?.*)?$/i.test(player.rawUrl));
+  const isNativeVideo = !!player && (player.source === 'file' || player.source === 'mp4' || (player.rawUrl && /\.(mp4|webm|ogg)(\?.*)?$/i.test(player.rawUrl)));
 
   const handleTimeUpdate = () => {
     if (!videoRef.current) return;
@@ -125,6 +123,8 @@ export default function PersistentVideoPlayer() {
       window.removeEventListener('orientationchange', onResize);
     };
   }, [floatingPip, pipPosition, setInitialPipPosition, clampPosition, updatePip]);
+
+  if (!player) return null;
 
   const handlePointerDown = (event) => {
     if (!floatingPip || event.button !== 0 || event.target.closest('button')) return;
