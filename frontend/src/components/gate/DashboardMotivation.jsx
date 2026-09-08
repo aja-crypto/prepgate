@@ -9,6 +9,17 @@ const QUOTES = [
   { text: 'Don\'t count the days, make the days count.', author: 'GateNexa Team' },
 ];
 
+function normalizeMotivation(item) {
+  if (!item || typeof item !== 'object') return null;
+  const text = [item.quote, item.text, item.content, item.message]
+    .find(value => typeof value === 'string' && value.trim());
+  if (!text) return null;
+  const author = typeof item.author === 'string' && item.author.trim()
+    ? item.author.replace(/PrepGate/gi, 'GateNexa').trim()
+    : 'GateNexa Team';
+  return { text: text.trim(), author };
+}
+
 export default function DashboardMotivation() {
   const [items, setItems] = useState(QUOTES);
   const [current, setCurrent] = useState(0);
@@ -19,7 +30,8 @@ export default function DashboardMotivation() {
     api.get('/cms/motivation').then(r => {
       if (r.data?.data) {
         const data = Array.isArray(r.data.data) ? r.data.data : [r.data.data];
-        if (data.length) setItems(data);
+        const normalized = data.map(normalizeMotivation).filter(Boolean);
+        if (normalized.length) setItems(normalized);
       }
     }).catch(e => console.error('[DashboardMotivation] fetch failed', e?.message));
   }, []);
@@ -86,4 +98,3 @@ export default function DashboardMotivation() {
     </div>
   );
 }
-

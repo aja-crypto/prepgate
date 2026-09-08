@@ -84,12 +84,25 @@ router.get('/motivation', asyncHandler(async (req, res) => {
   const MotivationQuote = getModel('MotivationQuote');
   if (!MotivationQuote) return res.json({ success: true, data: FALLBACK_QUOTE });
 
-  const quotes = await MotivationQuote.find({ isActive: true, isDeleted: { $ne: true } }).lean();
+  const quotes = await MotivationQuote.find({
+    isActive: true,
+    isDeleted: { $ne: true },
+    quote: { $type: 'string', $regex: /\S/ },
+  }).lean();
   if (!quotes.length) return res.json({ success: true, data: FALLBACK_QUOTE });
 
   const today = new Date().getDate();
   const dailyQuote = quotes[today % quotes.length];
-  res.json({ success: true, data: dailyQuote });
+  res.json({
+    success: true,
+    data: {
+      ...dailyQuote,
+      quote: dailyQuote.quote.trim(),
+      author: typeof dailyQuote.author === 'string' && dailyQuote.author.trim()
+        ? dailyQuote.author.replace(/PrepGate/gi, 'GateNexa').trim()
+        : 'GateNexa Team',
+    },
+  });
 }));
 
 // ─── GET Featured Resources ─────────────────────────────────
