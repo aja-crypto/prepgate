@@ -1,13 +1,6 @@
 {
-  "services": {
-    "frontend": {
-      "root": "frontend"
-    },
-    "backend": {
-      "root": "backend",
-      "entrypoint": "server.js"
-    }
-  },
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
   "trailingSlash": false,
   "headers": [
     {
