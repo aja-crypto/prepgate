@@ -185,32 +185,66 @@ router.post('/:id/send', async (req, res, next) => {
       const eligibleUsers = await getEligibleUsers(targetAudience);
       const userIds = eligibleUsers.map((user) => user._id.toString());
 
-      const pushResult = await sendToAudience({
-        targetAudience,
-        title: doc.title,
-        body: doc.body || doc.message,
-        url: doc.actionUrl || doc.action?.href || '/dashboard',
-        data: {
-          notificationId: String(doc._id),
-          category: doc.category,
-          actionButtonText: doc.actionButtonText,
-        },
-      });
+      let inAppCreated = 0;
+      try {
+        if (eligibleUsers.length) {
+          const perUserDocs = eligibleUsers.map((u) => ({
+            user: u._id,
+            title: doc.title,
+            body: doc.body || doc.message,
+            message: doc.message,
+            category: doc.category,
+            priority: doc.priority,
+            targetAudience: doc.targetAudience,
+            status: 'sent',
+            isRead: false,
+            imageUrl: doc.imageUrl || '',
+            actionButtonText: doc.actionButtonText || 'View',
+            actionUrl: doc.actionUrl || '/dashboard',
+            action: doc.action || { label: doc.actionButtonText || 'View', href: doc.actionUrl || '/dashboard' },
+            createdBy: req.admin._id,
+            sentAt: new Date(),
+            scheduledAt: new Date(),
+            analytics: { sent: 1, delivered: 0, opened: 0, clicked: 0, dismissed: 0 },
+          }));
+          const inserted = await Notification.insertMany(perUserDocs, { ordered: false });
+          inAppCreated = inserted.length;
+        }
+      } catch (inAppErr) {
+        console.error('[adminNotifications] in-app insert failed:', inAppErr.message);
+      }
 
-      const notificationStatus = pushResult.sent > 0 ? 'sent' : pushResult.reason === 'No subscribers' ? 'failed' : 'failed';
+      let pushResult;
+      try {
+        pushResult = await sendToAudience({
+          targetAudience,
+          title: doc.title,
+          body: doc.body || doc.message,
+          url: doc.actionUrl || doc.action?.href || '/dashboard',
+          data: {
+            notificationId: String(doc._id),
+            category: doc.category,
+            actionButtonText: doc.actionButtonText,
+          },
+        });
+      } catch (pushErr) {
+        pushResult = { sent: 0, total: 0, invalid: 0, reason: pushErr.message || 'Push failed' };
+      }
 
-      doc.status = notificationStatus;
+      doc.status = 'sent';
       doc.sentAt = new Date();
       doc.analytics = doc.analytics || { sent: 0, delivered: 0, opened: 0, clicked: 0, dismissed: 0 };
-      doc.analytics.sent = userIds.length;
+      doc.analytics.sent = eligibleUsers.length;
       doc.analytics.delivered = pushResult.sent || 0;
       await doc.save();
 
       return res.json({
         success: true,
         data: doc,
+        inApp: { created: inAppCreated, targetUsers: eligibleUsers.length },
+        push: pushResult,
         result: pushResult,
-        message: pushResult.sent > 0 ? `Sent to ${pushResult.sent} subscribers` : pushResult.reason || 'No subscribers',
+        message: `In-app sent to ${inAppCreated} users. Push: ${pushResult.sent} delivered${pushResult.reason ? ` (${pushResult.reason})` : ''}`,
       });
     }
     res.json({ success: true, message: 'Sent (mock mode)' });
