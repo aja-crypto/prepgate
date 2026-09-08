@@ -9,6 +9,7 @@ const NAV_TOP = [
   { label: 'Dashboard', icon: 'dashboard', to: '/dashboard' },
   { label: 'GateNexa AI', icon: 'zap', to: '/mentor', glow: true },
   { label: 'Learning Hub', icon: 'book', to: '/learning-hub' },
+  { label: 'Nexa Intel', icon: 'analytics', to: '/insights' },
   { label: 'NEXA Predictor', icon: 'cpu', to: '/opportunity-predictor' },
 ];
 
@@ -36,7 +37,7 @@ const NAV_GROUPS = [
   },
   {
     key: 'insights',
-    label: 'Insights',
+    label: 'Analysis',
     icon: 'analytics',
     items: [
       { label: 'Analytics', icon: 'analytics', to: '/analytics' },
@@ -91,6 +92,7 @@ const PrefetchLink = React.memo(({ to, children, className, onClick }) => {
       '/mistakes': () => import('../../../pages/MistakeNotebookPage'),
       '/gate-papers': () => import('../../../pages/GatePapersPage'),
       '/learning-hub': () => import('../../../pages/LearningHubPage'),
+      '/insights': () => import('../../../pages/InsightsHub'),
       '/feedback': () => import('../../../pages/FeedbackPage'),
     };
     const loader = pageMap[to];
