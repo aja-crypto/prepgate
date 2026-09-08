@@ -43,11 +43,27 @@ export function getApiErrorMessage(error, fallback = 'Something went wrong') {
 }
 
 // ΓöÇΓöÇΓöÇ Request interceptor ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+const DEFER_PATTERNS = ['/cms/', '/gate-vault/', '/live/dashboard', '/ai/context'];
+const pendingGets = new Map();
+const _origGet = api.get.bind(api);
+api.get = (url, config) => {
+  const k = `get:${url}?${JSON.stringify(config?.params || {})}`;
+  if (pendingGets.has(k)) return pendingGets.get(k);
+  const p = _origGet(url, config).finally(() => pendingGets.delete(k));
+  pendingGets.set(k, p);
+  return p;
+};
 const NO_CACHE_PATTERNS = ['/auth/me', '/auth/refresh', '/auth/demo', '/ai/quota', '/notifications', '/progress/sync', '/admin/', '/gate-vault/progress', '/gate-vault/stats', '/notes', '/live/dashboard', '/ai/context', '/notes/pinned'];
 
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     config.metadata = { start: performance.now() };
+    if (config.method === 'get' && DEFER_PATTERNS.some(p => config.url?.includes(p))) {
+      await new Promise(r => {
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) window.requestIdleCallback(r, { timeout: 1500 });
+        else setTimeout(r, 800);
+      });
+    }
     const token = localStorage.getItem('accessToken');
     const isGuest = localStorage.getItem('isGuest') === 'true';
 
