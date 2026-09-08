@@ -1460,7 +1460,7 @@ export default function LearningHubPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
-  const [subjectResources, setSubjectResources] = useState([]);
+  const [subjectResources, setSubjectResources] = useState(SUBJECT_RESOURCES);
   const [editorPicks, setEditorPicks] = useState([]);
   const lhTracking = useTrackLearningHub();
   const prevSelected = useRef(null);
@@ -1516,18 +1516,37 @@ export default function LearningHubPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
+    setSubjectResources(SUBJECT_RESOURCES);
+
     try {
-      const videoData = await learningHubVideoService.list({ limit: 200 }).then(r => r.data?.data || []);
-      setVideos(videoData);
-      
-      const [picksRes] = await Promise.all([
-        learningHubDataService.getEditorPicks().catch(() => ({ data: { data: [] } })),
+      const [videoResult, picksResult] = await Promise.allSettled([
+        learningHubVideoService.list({ limit: 200 }),
+        learningHubDataService.getEditorPicks(),
       ]);
-      setSubjectResources(SUBJECT_RESOURCES);
-      setEditorPicks(picksRes.data?.data || []);
+
+      if (videoResult.status === 'fulfilled') {
+        setVideos(videoResult.value?.data?.data || []);
+      } else {
+        console.error('Failed to load learning hub videos:', videoResult.reason);
+        if (ENABLE_DEV_FIXTURE_DATA) {
+          setVideos(DEMO_VIDEOS);
+        } else {
+          setVideos([]);
+        }
+      }
+
+      if (picksResult.status === 'fulfilled') {
+        setEditorPicks(picksResult.value?.data?.data || []);
+      } else {
+        setEditorPicks([]);
+      }
+
+      if (videoResult.status === 'rejected' && picksResult.status === 'rejected') {
+        setLoadError('Unable to load Learning Hub. Showing the static resources while reconnecting.');
+      }
     } catch (err) {
       console.error('Failed to load learning hub videos:', err);
-      setSubjectResources(SUBJECT_RESOURCES); // static config, not API data — safe either way
+      setSubjectResources(SUBJECT_RESOURCES);
       if (ENABLE_DEV_FIXTURE_DATA) {
         setVideos(DEMO_VIDEOS);
         setEditorPicks(DEMO_EDITOR_PICKS);
@@ -1535,10 +1554,11 @@ export default function LearningHubPage() {
       } else {
         setVideos([]);
         setEditorPicks([]);
-        setLoadError('Unable to load Learning Hub. Please check your connection and try again.');
+        setLoadError('Unable to load Learning Hub. Showing the static resources while reconnecting.');
       }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);

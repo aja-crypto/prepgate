@@ -17,7 +17,6 @@ import PremiumGateDialog from './components/referral/PremiumGateDialog';
 import CelebrationAnimation from './components/referral/CelebrationAnimation';
 import BrandIntroModal from './components/common/BrandIntroModal';
 import AiIntroModal, { shouldShowAiIntro } from './components/common/AiIntroModal';
-import { SkeletonDashboard, SkeletonSubjectGrid, SkeletonTable } from './components/ui/SkeletonLoader';
 import { PlannerProvider } from './context/PlannerContext';
 
 import LandingPage from './pages/LandingPage';
@@ -238,21 +237,52 @@ function RoutePrefetcher() {
   const { user } = useAuthData();
   useEffect(() => {
     if (!user) return;
-    const prefetch = () => {
+
+    const prefetchPrimary = () => {
       import('./pages/DashboardPage');
       import('./pages/SubjectsPage');
-      import('./pages/AIMentorPage');
+      import('./pages/TopicsPage');
       import('./pages/LearningHubPage');
+      import('./pages/NotificationsPage');
     };
-    const t = setTimeout(prefetch, 100);
-    const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 2000));
-    const id = idle(() => {
+
+    const prefetchSecondary = () => {
       import('./pages/OpportunityPredictorPage');
-    }, { timeout: 4000 });
+      import('./pages/ResourcesPage');
+    };
+
+    prefetchPrimary();
+
+    const handleInteraction = (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target) return;
+
+      const isNavTarget = target.closest('a[href], button, [data-route]');
+      if (!isNavTarget) return;
+
+      const href = target.closest('a[href]')?.getAttribute('href') || '';
+      if (!href) {
+        prefetchPrimary();
+        return;
+      }
+
+      const route = href.startsWith('/') ? href : `/${href}`;
+      if (['/subjects', '/topics', '/learning-hub', '/notifications', '/updates', '/resources'].includes(route)) {
+        prefetchPrimary();
+      }
+    };
+
+    const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 50));
+    const id = idle(prefetchSecondary, { timeout: 2000 });
+
+    window.addEventListener('pointerdown', handleInteraction, { passive: true });
+    window.addEventListener('touchstart', handleInteraction, { passive: true });
+
     return () => {
-      clearTimeout(t);
       if (window.cancelIdleCallback) window.cancelIdleCallback(id);
       else clearTimeout(id);
+      window.removeEventListener('pointerdown', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
     };
   }, [user]);
   return null;
@@ -294,7 +324,31 @@ export default function App() {
     if (initialLoad) document.body.classList.add('app-loading');
   }, [initialLoad]);
 
-  const routeFallback = useMemo(() => null, []);
+  const routeFallback = useMemo(() => (
+    <div className="w-full px-4 py-6 md:px-6 md:py-8 space-y-6">
+      <div className="space-y-3">
+        <div className="h-7 w-40 bg-gradient-to-r from-bg-3 via-bg-2 to-bg-3 rounded animate-shimmer" />
+        <div className="h-4 w-72 bg-gradient-to-r from-bg-3 via-bg-2 to-bg-3 rounded animate-shimmer" />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-28 rounded-2xl border border-border bg-surface/70 animate-pulse" />
+        ))}
+      </div>
+      <div className="grid gap-4 lg:grid-cols-[1.7fr,1fr]">
+        <div className="space-y-4 rounded-2xl border border-border bg-surface/70 p-4">
+          <div className="h-5 w-32 bg-gradient-to-r from-bg-3 via-bg-2 to-bg-3 rounded animate-shimmer" />
+          <div className="h-28 rounded-xl bg-gradient-to-r from-bg-3 via-bg-2 to-bg-3 rounded animate-shimmer" />
+          <div className="h-28 rounded-xl bg-gradient-to-r from-bg-3 via-bg-2 to-bg-3 rounded animate-shimmer" />
+        </div>
+        <div className="space-y-4 rounded-2xl border border-border bg-surface/70 p-4">
+          <div className="h-5 w-24 bg-gradient-to-r from-bg-3 via-bg-2 to-bg-3 rounded animate-shimmer" />
+          <div className="h-20 rounded-xl bg-gradient-to-r from-bg-3 via-bg-2 to-bg-3 rounded animate-shimmer" />
+          <div className="h-20 rounded-xl bg-gradient-to-r from-bg-3 via-bg-2 to-bg-3 rounded animate-shimmer" />
+        </div>
+      </div>
+    </div>
+  ), []);
 
   return (
     <ErrorBoundary name="App">

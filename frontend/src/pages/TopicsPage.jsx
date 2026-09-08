@@ -1,8 +1,7 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useProgress } from '../context/ProgressContext';
 import { topicService, subjectService, getApiErrorMessage } from '../services/api';
-import { PageLoading } from '../components/common/GateLoadingScreen';
 import SmartTopicCard from '../components/gate/SmartTopicCard';
 import { useSEO } from '../hooks/useSEO';
 import { publish, EVENTS } from '../services/aiEventSystem';
@@ -56,24 +55,36 @@ export default function TopicsPage() {
   useSEO({ title: 'Topics', description: 'Study GATE topics with progress tracking and completion checklists.' });
   const { topics: localTopics, studyStats } = useProgress();
   const navigate = useNavigate();
-  const [topics, setTopics] = useState([]);
-  const [subjects, setSubjects] = useState([]);
+  const [topics, setTopics] = useState(localTopics || []);
+  const [subjects, setSubjects] = useState(studyStats?.subjects || []);
   const [filter, setFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
     try {
-      const [topRes, subRes] = await Promise.all([
+      const [topRes, subRes] = await Promise.allSettled([
         topicService.getAll({ withProgress: 'true' }),
         subjectService.getAll(),
       ]);
-      setTopics(topRes.data.data || []);
-      setSubjects(subRes.data.data || []);
+
+      const nextTopics = topRes.status === 'fulfilled' && Array.isArray(topRes.value?.data?.data)
+        ? topRes.value.data.data
+        : (localTopics || []);
+      const nextSubjects = subRes.status === 'fulfilled' && Array.isArray(subRes.value?.data?.data)
+        ? subRes.value.data.data
+        : (studyStats?.subjects || []);
+
+      setTopics(nextTopics);
+      setSubjects(nextSubjects);
+
+      if (topRes.status === 'rejected' || subRes.status === 'rejected') {
+        setLoadError('Showing local topic data while the server reconnects.');
+      }
     } catch (err) {
       setLoadError(err);
       const fallbackSubjects = studyStats?.subjects || [];
@@ -97,9 +108,9 @@ export default function TopicsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [localTopics, studyStats]);
 
-  useEffect(() => { load(); }, []); // load uses Promise.all for topics+subjects, cached via apiCache
+  useEffect(() => { load(); }, [load]);
   useEffect(() => {
     if (topics.length > 0) {
       publish('page:navigated', { page: 'topics', topicCount: topics.length, timestamp: Date.now() });
@@ -161,24 +172,20 @@ export default function TopicsPage() {
   const weakTopics = useMemo(() => getWeakTopics(topics), [topics]);
   const highValueTopics = useMemo(() => getHighWeightageNotDone(topics), [topics]);
 
-  if (loading) return <PageLoading title="Loading Topics" />;
-
-  if (loadError && topics.length === 0) {
-    return (
-      <div className="text-center py-16">
-        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.15)' }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 text-red-400"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" strokeLinecap="round" /><line x1="9" y1="9" x2="15" y2="15" strokeLinecap="round" /></svg>
-        </div>
-        <h4 className="text-base font-semibold text-text mb-1">Unable to Load Topics</h4>
-        <p className="text-sm text-text3 max-w-xs mx-auto leading-relaxed mb-5">{getApiErrorMessage(loadError, 'Could not connect to the server.')}</p>
-        <button type="button" onClick={load} className="text-xs px-5 py-2.5 rounded-lg font-semibold transition-all hover:scale-[1.02]" style={{ background: 'rgba(168,85,247,0.12)', color: '#A855F7', border: '1px solid rgba(168,85,247,0.25)' }}>Retry</button>
-      </div>
-    );
-  }
+  const displayError = loadError && topics.length === 0 ? getApiErrorMessage(loadError, 'Could not connect to the server.') : null;
 
   return (
     <div>
-      {loadError && topics.length > 0 && (
+      {displayError && (
+        <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-red-400 text-sm">⚠</span>
+            <span className="text-xs text-red-300">{displayError}</span>
+          </div>
+          <button type="button" onClick={load} className="text-[10px] px-2.5 py-1 rounded bg-red-500/10 border border-red-500/20 text-red-300 hover:bg-red-500/20">Retry</button>
+        </div>
+      )}
+      {!displayError && loadError && topics.length > 0 && (
         <div className="mb-4 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-yellow-400 text-sm">⚠</span>

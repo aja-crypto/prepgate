@@ -1,11 +1,8 @@
 // GateForge — GATE CSE 2027 syllabus with subject-wise weightage
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useProgress } from '../context/ProgressContext';
 import { subjectService, getApiErrorMessage } from '../services/api';
-import { PageLoading } from '../components/common/GateLoadingScreen';
-import toast from 'react-hot-toast';
-import { PageState, usePageState } from '../components/common/PageState';
 import { useSEO } from '../hooks/useSEO';
 
 const DIFF_DOT = { easy: 'bg-green-400', medium: 'bg-orange-400', hard: 'bg-red-400' };
@@ -27,25 +24,6 @@ const WEIGHTAGE_TABLE = [
 export default function SubjectsPage() {
   useSEO({ title: 'Subjects', description: 'Browse all GATE CSE subjects — topics, syllabus, weightage, PYQs, and progress.' });
   const { topics: localTopics, studyStats } = useProgress();
-
-  const loadData = async () => {
-    try {
-      const subRes = await subjectService.getHierarchy().catch(() => null);
-      if (subRes?.data?.data && subRes.data.data.length > 0) {
-        const subjects = subRes.data.data;
-        const totalTopics = subjects.reduce((s, sub) => s + (sub.topicCount || 0), 0);
-        const totalCompleted = subjects.reduce((s, sub) => s + (sub.completedTopics || 0), 0);
-        const analytics = { overall: { totalTopics, completedTopics: totalCompleted, topicCompletionPct: totalTopics ? Math.round((totalCompleted / totalTopics) * 100) : 0 }, subjects };
-        return { subjects, analytics, expanded: subjects.find((s) => s.isHighPriority)?._id || null };
-      }
-      const fallback = buildFallbackData();
-      return { subjects: fallback.subjects, analytics: fallback, expanded: null };
-    } catch (err) {
-      const fallback = buildFallbackData();
-      toast.error(getApiErrorMessage(err, 'Showing local syllabus fallback'));
-      return { subjects: fallback.subjects, analytics: fallback, expanded: null };
-    }
-  };
 
   const buildFallbackData = () => {
     const MARKS_RANGES = {
@@ -114,39 +92,45 @@ export default function SubjectsPage() {
     };
   };
 
-  const { state, data, error, retry } = usePageState(loadData, [], 'subjects-hierarchy');
+  const fallbackData = useMemo(() => buildFallbackData(), [localTopics, studyStats]);
+  const [loadedData, setLoadedData] = useState(fallbackData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState(null);
 
-  // Must call useState before any early return (React Hooks rule)
+  const refreshSubjects = useCallback(async () => {
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const subRes = await subjectService.getHierarchy().catch(() => null);
+      if (subRes?.data?.data && subRes.data.data.length > 0) {
+        const subjects = subRes.data.data;
+        const totalTopics = subjects.reduce((s, sub) => s + (sub.topicCount || 0), 0);
+        const totalCompleted = subjects.reduce((s, sub) => s + (sub.completedTopics || 0), 0);
+        const analytics = { overall: { totalTopics, completedTopics: totalCompleted, topicCompletionPct: totalTopics ? Math.round((totalCompleted / totalTopics) * 100) : 0 }, subjects };
+        setLoadedData({ subjects, analytics, expanded: subjects.find((s) => s.isHighPriority)?._id || null });
+        return;
+      }
+      setLoadedData(fallbackData);
+    } catch (err) {
+      setLoadError(getApiErrorMessage(err, 'Showing local syllabus fallback'));
+      setLoadedData(fallbackData);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fallbackData]);
+
+  useEffect(() => {
+    setLoadedData(fallbackData);
+    refreshSubjects();
+  }, [fallbackData, refreshSubjects]);
+
   const [expandedIds, setExpandedIds] = useState(new Set());
 
-  // Sync expanded from loaded data once it becomes available
   useEffect(() => {
-    if (data?.expanded) setExpandedIds(new Set([data.expanded]));
-  }, [data?.expanded]);
+    if (loadedData?.expanded) setExpandedIds(new Set([loadedData.expanded]));
+  }, [loadedData?.expanded]);
 
-  if (state === 'loading') return <PageLoading title="Loading Subjects" />;
-
-  if (state === 'error') {
-    return (
-      <PageState
-        state="error"
-        errorMessage={error?.message || 'Failed to load subjects. Showing fallback data.'}
-        errorAction={{ label: 'Try Again', onClick: retry }}
-      />
-    );
-  }
-
-  if (state === 'empty') {
-    return (
-      <PageState
-        state="empty"
-        emptyMessage="Your GATE syllabus hasn't been loaded yet. This will populate once you start your preparation journey."
-        emptyAction={{ label: 'Explore PYQs Instead', onClick: () => window.location.href = '/pyq' }}
-      />
-    );
-  }
-
-  const { subjects, analytics } = data || {};
+  const { subjects, analytics } = loadedData || fallbackData;
 
   return (
     <div>
@@ -156,6 +140,19 @@ export default function SubjectsPage() {
           Complete official syllabus · {analytics ? `${analytics.overall.completedTopics}/${analytics.overall.totalTopics} topics (${analytics.overall.topicCompletionPct}%)` : `${subjects.length} subjects`}
         </p>
       </div>
+
+      {isLoading && (
+        <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-[11px] text-primary">
+          Refreshing syllabus in the background…
+        </div>
+      )}
+
+      {loadError && (
+        <div className="mb-4 rounded-xl border border-yellow-500/20 bg-yellow-500/10 px-3 py-2 text-[11px] text-yellow-300 flex items-center justify-between gap-3">
+          <span>Showing local syllabus while the server reconnects.</span>
+          <button type="button" onClick={refreshSubjects} className="px-2 py-1 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-300">Retry</button>
+        </div>
+      )}
 
       {analytics && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">

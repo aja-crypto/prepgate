@@ -28,7 +28,9 @@ export function clearApiCache() {
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
-  timeout: 30000,
+  // Keep page-critical requests responsive on cold starts without affecting AI
+  // streaming calls, which use their own timeout strategy.
+  timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });
 

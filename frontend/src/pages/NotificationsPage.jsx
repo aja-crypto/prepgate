@@ -158,26 +158,26 @@ export default function NotificationsPage() {
     <div className="min-h-screen bg-black">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <button onClick={() => nav(-1)} className="p-2 rounded-xl hover:bg-white/5 text-text2 hover:text-white transition-all">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <button onClick={() => nav(-1)} className="shrink-0 p-2 rounded-xl hover:bg-white/5 text-text2 hover:text-white transition-all">
               <ArrowLeft size={20} />
             </button>
-            <div>
-              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center">
-                  <Bell size={20} className="text-purple-400" />
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-3">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center shrink-0">
+                  <Bell size={18} className="text-purple-400" />
                 </div>
-                Notifications
+                <span className="truncate">Notifications</span>
               </h1>
-              <p className="text-sm text-text2/70 mt-1">Personalized insights from your AI mentor</p>
+              <p className="text-xs sm:text-sm text-text2/70 mt-1">Personalized insights from your AI mentor</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-start sm:self-auto">
             <button onClick={() => setShowPrefs(!showPrefs)} className={`p-2 rounded-xl transition-all ${showPrefs ? 'bg-purple-500/20 text-purple-400' : 'hover:bg-white/5 text-text2 hover:text-white'}`}>
               <Settings size={18} />
             </button>
-            <button onClick={markAllRead} className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-text2 hover:text-white transition-all text-xs font-medium flex items-center gap-2">
+            <button onClick={markAllRead} className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-text2 hover:text-white transition-all text-xs font-medium flex items-center gap-2 whitespace-nowrap">
               <CheckCheck size={14} /> Mark All Read
             </button>
           </div>
@@ -230,21 +230,21 @@ export default function NotificationsPage() {
         </AnimatePresence>
 
         {/* Category tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        <div className="mb-6 flex flex-wrap gap-2 pb-1">
           {CATEGORIES.map(cat => (
             <button
               key={cat.key}
               onClick={() => setFilter(cat.key)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap border ${
+              className={`flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-[11px] font-medium transition-all sm:px-4 sm:text-xs ${
                 filter === cat.key
                   ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
                   : 'bg-white/5 text-text2 hover:text-white border-transparent hover:border-white/10'
               }`}
             >
               <span>{cat.emoji}</span>
-              {cat.label}
+              <span className="whitespace-nowrap">{cat.label}</span>
               {categoryCounts[cat.key] > 0 && (
-                <span className="opacity-50">({categoryCounts[cat.key]})</span>
+                <span className="opacity-50 whitespace-nowrap">({categoryCounts[cat.key]})</span>
               )}
             </button>
           ))}
