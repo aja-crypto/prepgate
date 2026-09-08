@@ -145,12 +145,18 @@ const Layout = memo(function Layout() {
         transition-transform duration-300 ease-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `} onTouchStart={handleSidebarTouchStart} onTouchEnd={handleSidebarTouchEnd}>
-        <div className="p-4 border-b border-white/[0.06]">
-          <div className="flex items-center gap-2.5">
-            <Icon name="logo" className="w-9 h-9" />
-            <div>
-              <div className="text-sm font-bold text-text tracking-tight">{BRAND.name}</div>
-              <div className="text-[9px] text-text3 font-medium">{BRAND.product}</div>
+        <div className="relative overflow-hidden p-4 border-b border-white/[0.06]">
+          <div className="absolute -top-10 -left-8 w-24 h-24 rounded-full bg-primary/20 blur-2xl pointer-events-none" />
+          <div className="relative flex items-center gap-3">
+            <div className="relative shrink-0">
+              <div className="absolute inset-0 rounded-2xl bg-primary/30 blur-md animate-pulse" />
+              <div className="relative flex items-center justify-center w-11 h-11 rounded-2xl border border-primary/30 bg-bg-2/90 shadow-[0_0_24px_rgba(139,92,246,0.25)]">
+                <Icon name="logo" className="w-10 h-10" />
+              </div>
+            </div>
+            <div className="min-w-0">
+              <div className="text-lg font-black text-white tracking-tight leading-none">{BRAND.name}</div>
+              <div className="mt-1 text-[9px] text-primary/80 font-bold tracking-[0.24em]">{BRAND.product}</div>
             </div>
           </div>
         </div>
@@ -211,6 +217,7 @@ const Layout = memo(function Layout() {
               <span className="mobile-top-header__n">N</span>
               <span>EXA</span>
             </span>
+            <span className="mobile-top-header__tagline">2027</span>
           </div>
           <button
             type="button"
@@ -504,4 +511,3 @@ const Layout = memo(function Layout() {
 });
 
 export default Layout;
-
