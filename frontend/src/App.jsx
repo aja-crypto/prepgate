@@ -180,7 +180,7 @@ function AppFloatingWidgets() {
   if (!user) return null;
   // Don't show on landing page, public auth pages, or focused flow pages
   const hideOn = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/feedback', '/about', '/help'];
-  const hideOnAi = path === '/mentor' || path === '/ai-coach';
+  const hideOnAi = path === '/mentor' || path === '/ai-coach' || path === '/learning-hub';
   const hideFloatingWidgets = path.startsWith('/legal/');
   const isAdminRoute = path.startsWith('/admin');
   if (hideOn.includes(path) || hideFloatingWidgets) {
