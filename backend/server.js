@@ -213,9 +213,9 @@ app.use(compression({
   },
 }));
 app.use(responseCacheMiddleware);
-app.use(mongoSanitize());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(mongoSanitize());
 // Ensure uploads directory exists on startup (Render disk or local)
 const uploadsDir = path.join(__dirname, 'uploads');
 const uploadsNotesDir = path.join(uploadsDir, 'notes');

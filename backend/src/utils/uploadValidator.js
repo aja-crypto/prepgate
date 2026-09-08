@@ -32,10 +32,10 @@ function createFileFilter(allowedTypes) {
     const mime = (file.mimetype || '').toLowerCase();
 
     const extOk = allowed.ext.includes(ext);
-    const mimeOk = allowed.mime.some(m => mime.startsWith(m)) || mime === ext.slice(1);
+    const mimeOk = allowed.mime.includes(mime);
 
-    if (!extOk) {
-      return cb(new Error(`Invalid file extension: ${ext}. Allowed: ${allowed.ext.join(', ')}`), false);
+    if (!extOk || !mimeOk) {
+      return cb(new Error(`Invalid file type: ext=${ext} mime=${mime}. Allowed: ${allowed.ext.join(', ')} / ${allowed.mime.join(', ')}`), false);
     }
 
     cb(null, true);

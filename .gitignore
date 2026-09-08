@@ -77,3 +77,7 @@ data/ccmt_extracted/
 tunnel_url.txt
 vite.err
 vite.out
+
+BACKUP_CHECKLIST.md
+frontend/.env
+GateNexa-Secrets.txt
