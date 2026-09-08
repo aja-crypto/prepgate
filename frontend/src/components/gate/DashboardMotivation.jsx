@@ -9,6 +9,16 @@ const QUOTES = [
   { text: 'Don\'t count the days, make the days count.', author: 'GateNexa Team' },
 ];
 
+function normalizeQuote(item) {
+  if (!item || typeof item !== 'object') return null;
+  const text = item.text || item.quote || item.content || item.message;
+  if (!text || typeof text !== 'string' || !text.trim()) return null;
+
+  const rawAuthor = typeof item.author === 'string' ? item.author.trim() : '';
+  const author = rawAuthor && !/prep\s*gate/i.test(rawAuthor) ? rawAuthor : 'GateNexa Team';
+  return { ...item, text: text.trim(), author };
+}
+
 export default function DashboardMotivation() {
   const [items, setItems] = useState(QUOTES);
   const [current, setCurrent] = useState(0);
@@ -17,10 +27,9 @@ export default function DashboardMotivation() {
 
   useEffect(() => {
     api.get('/cms/motivation').then(r => {
-      if (r.data?.data) {
-        const data = Array.isArray(r.data.data) ? r.data.data : [r.data.data];
-        if (data.length) setItems(data);
-      }
+      const payload = Array.isArray(r.data?.data) ? r.data.data : [r.data?.data];
+      const data = payload.map(normalizeQuote).filter(Boolean);
+      if (data.length) setItems(data);
     }).catch(e => console.error('[DashboardMotivation] fetch failed', e?.message));
   }, []);
 
@@ -86,4 +95,3 @@ export default function DashboardMotivation() {
     </div>
   );
 }
-
