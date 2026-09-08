@@ -905,16 +905,6 @@ function ResourceDetailView({ selected, setSelected, canAccessPremium, videos = 
   }, [handleAsk]);
 
   useEffect(() => {
-    if (!isVideoResource || player?.id === (selected?._id || selected?.id)) return;
-    playVideo({
-      ...selected,
-      videoId,
-      videoUrl: playableUrl,
-      source: selected.source || (videoId ? 'youtube' : 'file'),
-    });
-  }, [isVideoResource, playableUrl, videoId, selected, player?.id, playVideo]);
-
-  useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') setSelected(null); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
