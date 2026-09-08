@@ -209,25 +209,28 @@ const HomePageWrapper = () => {
 
 function RoutePrefetcher() {
   const { user } = useAuthData();
+  const location = useLocation();
   useEffect(() => {
     if (!user) return;
-    const prefetch = () => {
-      import('./pages/DashboardPage');
-      import('./pages/SubjectsPage');
-      import('./pages/AIMentorPage');
-      import('./pages/LearningHubPage');
-    };
-    const t = setTimeout(prefetch, 100);
+    const path = location.pathname;
     const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 2000));
-    const id = idle(() => {
+    const t = setTimeout(() => {
+      idle(() => {
+        if (path !== '/dashboard') import('./pages/DashboardPage');
+        if (path !== '/subjects') import('./pages/SubjectsPage');
+        if (path !== '/mentor') import('./pages/AIMentorPage');
+        if (path !== '/learning-hub') import('./pages/LearningHubPage');
+      }, { timeout: 4000 });
+    }, 2500);
+    const id2 = idle(() => {
       import('./pages/OpportunityPredictorPage');
-    }, { timeout: 4000 });
+    }, { timeout: 6000 });
     return () => {
       clearTimeout(t);
-      if (window.cancelIdleCallback) window.cancelIdleCallback(id);
-      else clearTimeout(id);
+      if (window.cancelIdleCallback) window.cancelIdleCallback(id2);
+      else clearTimeout(id2);
     };
-  }, [user]);
+  }, [user, location.pathname]);
   return null;
 }
 
@@ -267,7 +270,11 @@ export default function App() {
     if (initialLoad) document.body.classList.add('app-loading');
   }, [initialLoad]);
 
-  const routeFallback = useMemo(() => null, []);
+  const routeFallback = useMemo(() => (
+    <div className="p-4 lg:p-6">
+      <SkeletonDashboard />
+    </div>
+  ), []);
 
   return (
     <ErrorBoundary name="App">
