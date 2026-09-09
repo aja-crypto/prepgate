@@ -4,6 +4,7 @@ export class RouteErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { hasError: false }; }
   static getDerivedStateFromError() { return { hasError: true }; }
   componentDidCatch(error) { console.error('[RouteError]', error); }
+  componentDidUpdate(prevProps) { if (this.state.hasError && prevProps.children !== this.props.children) this.setState({ hasError: false }); }
   render() {
     if (this.state.hasError) {
       return (

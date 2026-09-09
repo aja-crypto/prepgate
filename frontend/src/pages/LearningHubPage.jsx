@@ -5,6 +5,7 @@ import api from '../services/api';
 const SUBJECTS = ['All','Engineering Mathematics','Digital Logic','COA','Programming & DS','Algorithms','OS','DBMS','CN','TOC','CD','Aptitude'];
 
 export default function LearningHubPage() {
+  const [inputValue, setInputValue] = useState('');
   const [query, setQuery] = useState('');
   const [subject, setSubject] = useState('All');
   const [videos, setVideos] = useState([]);
@@ -12,28 +13,50 @@ export default function LearningHubPage() {
   const [videosError, setVideosError] = useState(null);
   const [page, setPage] = useState(1);
   const pageSize = 24;
-  const mountedRef = useRef(true);
+  const abortRef = useRef(null);
   const { playVideo, enterPip } = useVideoPlayer();
 
-  const fetchVideos = useCallback(async (p) => {
+  useEffect(() => {
+    const t = setTimeout(() => setQuery(inputValue.trim()), 350);
+    return () => clearTimeout(t);
+  }, [inputValue]);
+
+  const fetchVideos = useCallback(async (p, q, subj, signal) => {
     setVideosLoading(true); setVideosError(null);
     try {
       const params = { page: p, limit: pageSize };
-      if (subject !== 'All') params.subject = subject;
-      if (query) params.search = query;
-      const res = await api.get('/learning-hub/videos', { params, timeout: 12000 }).catch(() => api.get('/resources/videos', { params }).catch(() => null));
-      if (!mountedRef.current) return;
+      if (subj !== 'All') params.subject = subj;
+      if (q) params.search = q;
+      const res = await api.get('/learning-hub/videos', { params, signal, timeout: 8000 }).catch((e) => {
+        if (e?.code === 'ERR_CANCELED' || e?.name === 'CanceledError') throw e;
+        if (e?.response?.status === 404) throw e;
+        return api.get('/resources/videos', { params, signal, timeout: 8000 });
+      });
+      if (signal?.aborted) return;
       const list = res?.data?.data || res?.data || [];
-      setVideos(Array.isArray(list) ? list : list.items || []);
+      const arr = Array.isArray(list) ? list : (list.items || list.videos || []);
+      setVideos(arr);
     } catch (e) {
-      if (!mountedRef.current) return;
-      setVideosError(e?.response?.data?.message || 'Unable to load videos');
+      if (e?.code === 'ERR_CANCELED' || e?.name === 'CanceledError' || signal?.aborted) return;
+      const msg = e?.response?.data?.message;
+      if (e?.response?.status === 404) {
+        setVideos([]);
+        setVideosError(null);
+        return;
+      }
+      setVideosError(msg || 'Unable to load videos');
     } finally {
-      if (mountedRef.current) setVideosLoading(false);
+      if (!signal?.aborted) setVideosLoading(false);
     }
-  }, [subject, query]);
+  }, []);
 
-  useEffect(() => { mountedRef.current = true; fetchVideos(page); return () => { mountedRef.current = false; }; }, [fetchVideos, page]);
+  useEffect(() => {
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    fetchVideos(page, query, subject, controller.signal);
+    return () => controller.abort();
+  }, [fetchVideos, page, query, subject]);
 
   return (
     <div>
@@ -44,7 +67,7 @@ export default function LearningHubPage() {
 
       <div className="bg-surface border border-border rounded-xl p-4 mb-5">
         <div className="flex flex-col md:flex-row gap-3">
-          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search videos, topics..." className="flex-1 bg-bg-2 border border-border rounded-lg px-3 py-2 text-sm text-text placeholder:text-text3 focus:outline-none focus:border-primary/40" />
+          <input value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="Search videos, topics..." className="flex-1 bg-bg-2 border border-border rounded-lg px-3 py-2 text-sm text-text placeholder:text-text3 focus:outline-none focus:border-primary/40" />
           <div className="flex gap-1.5 flex-wrap">
             {SUBJECTS.slice(0,8).map(s => (
               <button key={s} onClick={() => { setSubject(s); setPage(1); }} className={`text-xs px-3 py-1.5 rounded-lg border whitespace-nowrap ${subject===s?'bg-primary/15 border-primary/30 text-primary':'bg-bg-2 border-border text-text3'}`}>{s}</button>
@@ -66,7 +89,7 @@ export default function LearningHubPage() {
       {videosError && !videosLoading && (
         <div className="bg-surface border border-border rounded-xl p-6 text-center">
           <p className="text-sm text-text2 mb-3">{videosError}</p>
-          <button onClick={() => fetchVideos(page)} className="bg-primary text-white px-4 py-2 rounded-lg text-xs font-semibold">Retry</button>
+          <button onClick={() => { if (abortRef.current) abortRef.current.abort(); const c = new AbortController(); abortRef.current = c; fetchVideos(page, query, subject, c.signal); }} className="bg-primary text-white px-4 py-2 rounded-lg text-xs font-semibold">Retry</button>
         </div>
       )}
       {!videosLoading && !videosError && (
