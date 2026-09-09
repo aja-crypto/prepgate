@@ -1,8 +1,6 @@
 {
-  "installCommand": "cd frontend && npm install",
-  "buildCommand": "cd frontend && npx vite build",
+  "buildCommand": "npm run build --prefix frontend",
   "outputDirectory": "frontend/dist",
-  "rewrites": [
-    { "source": "/((?!assets/|.*\\..*).*)", "destination": "/index.html" }
-  ]
+  "installCommand": "npm install --prefix frontend",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
