@@ -34,7 +34,7 @@
     "react-hot-toast": "^2.4.1",
     "react-markdown": "^10.1.0",
     "react-pdf": "^10.4.1",
-    "react-router-dom": "^6.30.6",
+    "react-router-dom": "^7.18.3",
     "rehype-highlight": "^7.0.2",
     "stream-browserify": "^3.0.0",
     "three": "^0.184.0",
