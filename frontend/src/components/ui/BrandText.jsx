@@ -9,20 +9,10 @@ export function NexaMark({ className = '', size = 34 }) {
   return (
     <span
       className={`nexa-mark ${className}`}
-      style={{ width: size, height: size }}
+      style={{ width: size * 1.78, height: size }}
       aria-hidden="true"
     >
-      <svg viewBox="0 0 48 48" fill="none">
-        <path d="M9 34V14l15 20V14" stroke="url(#nexa-mark-gradient)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M29 14l10 10-10 10" stroke="url(#nexa-mark-gradient)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-        <defs>
-          <linearGradient id="nexa-mark-gradient" x1="8" y1="8" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#E9D5FF" />
-            <stop offset=".45" stopColor="#A78BFA" />
-            <stop offset="1" stopColor="#6366F1" />
-          </linearGradient>
-        </defs>
-      </svg>
+      <img src="/images/logo.webp" alt="GateNexa" className="nexa-mark__image" />
     </span>
   );
 }
