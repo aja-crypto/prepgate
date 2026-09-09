@@ -76,8 +76,9 @@ function RankingTable({ rankings, accent, userScore }) {
     return typeof v !== 'object' && !k.endsWith('_confidence') && k !== 'confidence';
   });
   return (
-    <div className="overflow-x-auto rounded-xl" style={{ border: '0.5px solid rgba(255,255,255,0.06)' }}>
-      <table className="w-full text-left">
+    <div className="rounded-xl" style={{ border: '0.5px solid rgba(255,255,255,0.06)' }}>
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full text-left">
         <thead>
           <tr className="text-[10px] font-bold uppercase tracking-wider text-text3/70" style={{ background: '#1A1A19' }}>
             {columns.map(col => (
@@ -113,7 +114,26 @@ function RankingTable({ rankings, accent, userScore }) {
             </motion.tr>
           ))}
         </tbody>
-      </table>
+        </table>
+      </div>
+      <div className="md:hidden divide-y divide-white/[0.06]">
+        {rankings.map((row, i) => (
+          <div key={i} className="p-3 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[11px] font-bold text-white">#{row.rank ?? i + 1}</span>
+              <span className="text-[11px] text-text3 truncate">{row.institute || row.programme || 'Result'}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+              {columns.filter(col => col !== 'rank' && col !== 'institute').map(col => (
+                <div key={col} className="min-w-0">
+                  <div className="text-[9px] uppercase tracking-wide text-text3/60 truncate">{col.replace(/_/g, ' ')}</div>
+                  <div className="text-[11px] text-text truncate">{row[col] ?? '—'}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -359,8 +379,9 @@ function DataTablesBlock({ tables, accent }) {
   return (
     <div className="space-y-3">
       {tables.map((table, ti) => (
-        <div key={ti} className="overflow-x-auto rounded-xl" style={{ border: '0.5px solid rgba(255,255,255,0.06)' }}>
-          <table className="w-full text-left">
+        <div key={ti} className="rounded-xl" style={{ border: '0.5px solid rgba(255,255,255,0.06)' }}>
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left">
             <thead>
               <tr className="text-[10px] font-bold uppercase tracking-wider text-text3/70" style={{ background: '#1A1A19' }}>
                 {table.columns.map(col => <th key={col} className="px-3 py-2 whitespace-nowrap">{col.replace(/_/g, ' ')}</th>)}
@@ -373,7 +394,20 @@ function DataTablesBlock({ tables, accent }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
+          <div className="md:hidden divide-y divide-white/[0.06]">
+            {table.rows.map((row, ri) => (
+              <div key={ri} className="p-3 grid grid-cols-2 gap-x-3 gap-y-2">
+                {table.columns.map(col => (
+                  <div key={col} className="min-w-0">
+                    <div className="text-[9px] uppercase tracking-wide text-text3/60 truncate">{col.replace(/_/g, ' ')}</div>
+                    <div className="text-[11px] text-text truncate">{row[col] ?? '—'}</div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       ))}
     </div>
