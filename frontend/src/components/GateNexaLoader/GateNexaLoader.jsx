@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { getExampleStageLabel, normalizeBootError } from './bootContract';
+import { NexaMark } from '../ui/BrandText';
 
 const TOTAL_BARS = 30;
 const NEXA_LETTERS = ['N', 'E', 'X', 'A'];
@@ -85,6 +86,9 @@ function Wordmark() {
 
   return (
     <div>
+      <div className="flex justify-center mb-3" style={{ animation: 'gxLetterIn 0.5s cubic-bezier(0.16,1,0.3,1) both' }}>
+        <NexaMark size={42} />
+      </div>
       <div
         className="gx-mono text-center"
         data-gx-static-visible

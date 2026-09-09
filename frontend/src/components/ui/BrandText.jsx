@@ -1,16 +1,38 @@
 const NEXA_GRADIENT = {
-  background: 'linear-gradient(135deg, #A78BFA 0%, #818CF8 40%, #60A5FA 100%)',
+  background: 'linear-gradient(110deg, #E9D5FF 0%, #A78BFA 36%, #8B5CF6 68%, #6366F1 100%)',
   WebkitBackgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
   backgroundClip: 'text',
 };
 
+export function NexaMark({ className = '', size = 34 }) {
+  return (
+    <span
+      className={`nexa-mark ${className}`}
+      style={{ width: size, height: size }}
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 48 48" fill="none">
+        <path d="M9 34V14l15 20V14" stroke="url(#nexa-mark-gradient)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M29 14l10 10-10 10" stroke="url(#nexa-mark-gradient)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+        <defs>
+          <linearGradient id="nexa-mark-gradient" x1="8" y1="8" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#E9D5FF" />
+            <stop offset=".45" stopColor="#A78BFA" />
+            <stop offset="1" stopColor="#6366F1" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </span>
+  );
+}
+
 export function GateText({ className = '' }) {
-  return <span className={`text-white ${className}`}>Gate</span>;
+  return <span className={`text-white/70 ${className}`}>GATE</span>;
 }
 
 export function NexaText({ className = '' }) {
-  return <span className={className} style={NEXA_GRADIENT}>Nexa</span>;
+  return <span className={className} style={NEXA_GRADIENT}>NEXA</span>;
 }
 
 export default function BrandText({ className = '' }) {
@@ -18,6 +40,18 @@ export default function BrandText({ className = '' }) {
     <span className={className}>
       <GateText />
       <NexaText />
+    </span>
+  );
+}
+
+export function BrandLockup({ className = '', compact = false, showProduct = true }) {
+  return (
+    <span className={`brand-lockup ${compact ? 'brand-lockup--compact' : ''} ${className}`}>
+      <NexaMark size={compact ? 28 : 38} />
+      <span className="brand-lockup__copy">
+        <span className="brand-lockup__wordmark"><GateText /> <NexaText /></span>
+        {showProduct && <span className="brand-lockup__product">GATE 2027</span>}
+      </span>
     </span>
   );
 }

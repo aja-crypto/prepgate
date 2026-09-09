@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BRAND } from '../../design/tokens';
 import GlobalSearch, { useGlobalSearchShortcut } from './GlobalSearch';
 import Icon from '../ui/Icon';
-import BrandText from '../ui/BrandText';
+import BrandText, { BrandLockup } from '../ui/BrandText';
 import OnboardingFlow from '../onboarding/OnboardingFlow';
 import QuickActions from '../onboarding/QuickActions';
 import VirtualCalculator from './VirtualCalculator';
@@ -146,13 +146,7 @@ const Layout = memo(function Layout() {
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `} onTouchStart={handleSidebarTouchStart} onTouchEnd={handleSidebarTouchEnd}>
         <div className="p-4 border-b border-white/[0.06]">
-          <div className="flex items-center gap-2.5">
-            <Icon name="logo" className="w-9 h-9" />
-            <div>
-              <div className="text-sm font-bold text-text tracking-tight">{BRAND.name}</div>
-              <div className="text-[9px] text-text3 font-medium">{BRAND.product}</div>
-            </div>
-          </div>
+          <BrandLockup />
         </div>
 
         <nav className="flex-1 overflow-y-auto py-3 px-3 sidebar-nav-scroll">
@@ -206,11 +200,7 @@ const Layout = memo(function Layout() {
             <span />
           </button>
           <div className="mobile-top-header__brand" aria-label="GateNexa">
-            <span className="mobile-top-header__gate">GATE</span>
-            <span className="mobile-top-header__nexa">
-              <span className="mobile-top-header__n">N</span>
-              <span>EXA</span>
-            </span>
+            <BrandLockup compact />
           </div>
           <button
             type="button"
@@ -504,4 +494,3 @@ const Layout = memo(function Layout() {
 });
 
 export default Layout;
-

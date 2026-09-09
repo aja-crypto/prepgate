@@ -5,6 +5,7 @@ import CinematicBackground from '../components/login/CinematicBackground';
 import GlassLoginCard from '../components/login/GlassLoginCard';
 import MotivationalQuote from '../components/common/MotivationalQuote';
 import LoginGiftCard from '../components/referral/LoginGiftCard';
+import { BrandLockup } from '../components/ui/BrandText';
 
 const EXAM_DATE = new Date('2027-02-07T09:00:00');
 
@@ -68,24 +69,7 @@ export default function LoginPage() {
         transition={{ delay: 0.3, duration: 0.5 }}
         className="fixed top-5 left-5 z-20 flex items-center gap-2.5"
       >
-        <div
-          className="w-8 h-8 rounded-xl flex items-center justify-center"
-          style={{
-            background: 'linear-gradient(135deg, rgba(124,58,237,0.2), rgba(6,182,212,0.1))',
-            border: '1px solid rgba(124,58,237,0.15)',
-          }}
-        >
-          <picture>
-            <source srcSet="/images/logo.webp" type="image/webp" />
-            <img src="/images/logo.png" alt="GateNexa" className="w-5 h-5" />
-          </picture>
-        </div>
-        <span
-          className="text-sm font-medium text-white/70 hidden sm:block"
-          style={{ fontFamily: "'Inter', -apple-system, sans-serif", letterSpacing: '0.02em' }}
-        >
-          GateNexa
-        </span>
+        <BrandLockup compact showProduct={false} />
       </motion.div>
 
       {/* Top-right: Countdown */}
