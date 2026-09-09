@@ -8,7 +8,6 @@ import Layout from './components/common/Layout';
 import DiagnosticsModal from './components/common/DiagnosticsModal';
 import { useDiagnostics } from './context/DiagnosticsContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
-import GateNexaLoader from './components/GateNexaLoader/GateNexaLoader';
 import FloatingAIAssistant from './components/common/FloatingAIAssistant';
 import AmbientBackground from './components/common/AmbientBackground';
 import InstallPrompt from './components/common/InstallPrompt';
@@ -116,7 +115,17 @@ const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage'));
 // Protected route wrapper
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuthData();
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center p-6">
+        <div className="w-full max-w-xl space-y-4 animate-pulse">
+          <div className="h-8 w-48 rounded-lg bg-white/[0.06]" />
+          <div className="h-32 rounded-2xl bg-white/[0.04]" />
+          <div className="h-24 rounded-2xl bg-white/[0.04]" />
+        </div>
+      </div>
+    );
+  }
   return user ? children : <Navigate to="/login" replace />;
 };
 
@@ -235,41 +244,13 @@ function RoutePrefetcher() {
 }
 
 export default function App() {
-  const [initialLoad, setInitialLoad] = useState(() => {
-    try {
-      const isHome = typeof window !== 'undefined' && window.location.pathname === '/';
-      const hasAuth = typeof window !== 'undefined' && (localStorage.getItem('token') || localStorage.getItem('gatenexa_auth') || localStorage.getItem('gatenexa_token'));
-      if (isHome && !hasAuth) return false;
-    } catch {}
-    return true;
-  });
   const location = useLocation();
   const { openDiagnostics } = useDiagnostics();
-  const { loading: authLoading } = useAuthData();
-  const bootProgress = initialLoad ? (authLoading ? 35 : 100) : 100;
-  const bootIsReady = initialLoad ? !authLoading : true;
-  const bootStatus = authLoading ? 'Restoring session' : undefined;
-
-  useEffect(() => {
-    if (!initialLoad) {
-      window.dispatchEvent(new Event('gatenexa:ready'));
-    }
-  }, [initialLoad]);
 
   useEffect(() => {
     window.__openDiagnostics = openDiagnostics;
     return () => { delete window.__openDiagnostics; };
   }, [openDiagnostics]);
-  const handleLoadComplete = useCallback(() => {
-    setInitialLoad(false);
-    document.body.classList.remove('app-loading');
-    window.dispatchEvent(new Event('gatenexa:ready'));
-  }, []);
-
-  useEffect(() => {
-    if (initialLoad) document.body.classList.add('app-loading');
-  }, [initialLoad]);
-
   const routeFallback = useMemo(() => (
     <div className="p-4 lg:p-6">
       <SkeletonDashboard />
@@ -278,14 +259,6 @@ export default function App() {
 
   return (
     <ErrorBoundary name="App">
-      {initialLoad && (
-        <GateNexaLoader
-          progress={bootProgress}
-          status={bootStatus}
-          isReady={bootIsReady}
-          onComplete={handleLoadComplete}
-        />
-      )}
       <RoutePrefetcher />
       <AppFloatingWidgets />
       <WelcomeManager>
