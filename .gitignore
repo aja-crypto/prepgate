@@ -41,3 +41,7 @@ backend/uploads/
 
 # AI capture (privacy-sensitive)
 backend/ai-captures/
+
+# Nested duplicate artifact
+gate2027/
+
