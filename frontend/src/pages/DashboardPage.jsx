@@ -205,9 +205,13 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">Overview</p>
+        <div className="flex gap-4">
+          <div className="hidden md:flex items-center justify-center w-8 h-8 rounded-full p-0 overflow-hidden border border-primary/30 shrink-0" style={{ boxShadow: '0 0 10px var(--color-glow)' }}>
+            <Icon name="logo" className="w-8 h-8 [&>svg]:w-8 [&>svg]:h-8 [&>svg]:rounded-full" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">Overview</p>
             {!mongoAvailable && (
               <span className="text-[9px] px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20 font-bold uppercase tracking-widest">
                 Local Mode
@@ -223,8 +227,9 @@ export default function DashboardPage() {
             Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name?.split(' ')[0]}
           </h1>
           <p className="text-sm text-text3 mt-1">Your preparation command center</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
           <button onClick={refreshLive} className="btn-ghost text-xs">↻ Refresh</button>
           <button
             onClick={() => setEditMode(!editMode)}
