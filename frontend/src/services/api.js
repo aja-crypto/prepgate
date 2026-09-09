@@ -1,5 +1,6 @@
 // src/services/api.js – Axios API Service with token refresh
 import axios from 'axios';
+import { emitConnectionEvent } from '../utils/connectionEvents';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
@@ -84,6 +85,7 @@ export function getApiErrorMessage(error, fallback = 'Something went wrong') {
 // ─── Request interceptor ────────────────────────────────────
 api.interceptors.request.use(
   (config) => {
+    config.__start = performance.now();
     const token = localStorage.getItem('accessToken');
     const isGuest = localStorage.getItem('isGuest') === 'true';
 
@@ -179,6 +181,41 @@ api.interceptors.response.use(
     return response;
   },
   (error) => Promise.reject(error)
+);
+
+// ─── Slow / failed request detection (non-blocking) ───────────────
+const SLOW_THRESHOLD_MS = 2000;
+
+api.interceptors.response.use(
+  (response) => {
+    const start = response.config?.__start;
+    const url = response.config?.url || '';
+    const isHealth = url.includes('/health') || url.includes('/diagnostics');
+    if (start && !isHealth) {
+      const ms = performance.now() - start;
+      if (ms > SLOW_THRESHOLD_MS) {
+        try { emitConnectionEvent({ type: 'slow_api', latency: Math.round(ms) }); } catch {}
+      }
+    }
+    return response;
+  },
+  (error) => {
+    const start = error.config?.__start;
+    const url = error.config?.url || '';
+    const isHealth = url.includes('/health') || url.includes('/diagnostics');
+    const isAbort = error.code === 'ERR_CANCELED' || error.name === 'CanceledError' || error.message?.includes('canceled');
+    const isAuthRefresh = url.includes('/auth/refresh');
+    if (!isAbort && !isAuthRefresh && !isHealth && error.config) {
+      const ms = start ? Math.round(performance.now() - start) : null;
+      const isNetwork = !error.response || error.code === 'ECONNABORTED' || error.message === 'Network Error';
+      if (isNetwork || error.response?.status >= 500) {
+        try { emitConnectionEvent({ type: 'failed_api', latency: ms }); } catch {}
+      } else if (ms && ms > SLOW_THRESHOLD_MS) {
+        try { emitConnectionEvent({ type: 'slow_api', latency: ms }); } catch {}
+      }
+    }
+    return Promise.reject(error);
+  }
 );
 
 // ─── Named service functions ────────────────────────────────

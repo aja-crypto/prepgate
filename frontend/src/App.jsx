@@ -10,14 +10,18 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 import RouteLoadingFallback from './components/common/RouteLoadingFallback';
 import { RouteErrorBoundary } from './components/common/ErrorBoundary';
 import GateNexaLoader from './components/GateNexaLoader/GateNexaLoader';
+import { emitConnectionEvent } from './utils/connectionEvents';
 
 function lazyWithRetry(importer) {
   return lazy(() => importer().then((m) => { try { sessionStorage.removeItem('gatenexa_chunk_retry'); } catch {} return m; }).catch((err) => {
     const chunkFailed = err?.message?.includes('Failed to fetch') || err?.message?.includes('Loading chunk') || err?.message?.includes('dynamically imported module');
-    if (chunkFailed && !sessionStorage.getItem('gatenexa_chunk_retry')) {
-      sessionStorage.setItem('gatenexa_chunk_retry', '1');
-      window.location.reload();
-      return new Promise(() => {});
+    if (chunkFailed) {
+      try { emitConnectionEvent({ type: 'failed_chunk' }); } catch {}
+      if (!sessionStorage.getItem('gatenexa_chunk_retry')) {
+        sessionStorage.setItem('gatenexa_chunk_retry', '1');
+        window.location.reload();
+        return new Promise(() => {});
+      }
     }
     throw err;
   }));
@@ -40,6 +44,7 @@ const RevisionPage = lazyWithRetry(() => import('./pages/RevisionPage'));
 const ProductivityPage = lazyWithRetry(() => import('./pages/ProductivityPage'));
 const AIMentorPage = lazyWithRetry(() => import('./pages/AIMentorPage'));
 const LearningHubPage = lazyWithRetry(() => import('./pages/LearningHubPage'));
+const ConnectionDiagnosticsPage = lazyWithRetry(() => import('./pages/ConnectionDiagnosticsPage'));
 
 function withSuspense(el) {
   return (
@@ -105,6 +110,7 @@ export default function App() {
         <Route path="resources" element={withSuspense(<ResourcesPage />)} />
         <Route path="revision" element={withSuspense(<RevisionPage />)} />
         <Route path="productivity" element={withSuspense(<ProductivityPage />)} />
+        <Route path="connection-diagnostics" element={withSuspense(<ConnectionDiagnosticsPage />)} />
         <Route path="settings" element={withSuspense(<SettingsPage />)} />
         <Route path="admin" element={<AdminRoute>{withSuspense(<AdminPage />)}</AdminRoute>} />
       </Route>

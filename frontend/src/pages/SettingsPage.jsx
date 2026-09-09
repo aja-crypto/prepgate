@@ -1,8 +1,10 @@
 // Settings: exports, backups, resets, theme, notifications, PWA
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useProgress } from '../context/ProgressContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useDiagnostics } from '../context/DiagnosticsContext';
 import Modal from '../components/common/Modal';
 import { exportToCsv, exportToExcel, generateProgressPdf, generateDetailedReport } from '../utils/exportUtils';
 import { requestNotificationPermission } from '../utils/reminderUtils';
@@ -32,6 +34,7 @@ function BackupIndicator({ status, lastBackupAt }) {
 export default function SettingsPage() {
   const { user, deleteAccount, setUser } = useAuth();
   const { themeMode, setThemeMode, colorPreset, setColorPreset, colorPresets, resetOnboarding } = useTheme();
+  const { openDiagnostics } = useDiagnostics();
   const {
     backupStatus, lastBackupAt, cloudBackupStatus, lastCloudBackupAt, mongoAvailable, syncToCloud,
     resetAllProgress, resetSubjectProgress, resetTopicProgress, restoreFromSnapshot,
@@ -264,6 +267,16 @@ export default function SettingsPage() {
       desc: 'Install PrepFlow on your phone or desktop for offline access.',
       action: (
         <button onClick={installPwa} className="btn-ghost text-xs">Install App</button>
+      ),
+    },
+    {
+      title: '◍ Connection & Performance',
+      desc: 'GateNexa server, internet and device health — run diagnostics to adjust quality.',
+      action: (
+        <div className="flex flex-wrap gap-2">
+          <Link to="/connection-diagnostics" className="bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg hover:opacity-90 inline-flex items-center">Open Connection Center →</Link>
+          <button onClick={openDiagnostics} className="bg-bg-2 border border-white/8 text-text2 text-xs font-semibold px-4 py-2 rounded-lg hover:border-white/15">Run Quick Test</button>
+        </div>
       ),
     },
     {

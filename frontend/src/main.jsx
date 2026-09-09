@@ -9,6 +9,9 @@ import { DashboardProvider } from './context/DashboardContext';
 import { ProgressProvider, useProgress } from './context/ProgressContext';
 import { VideoPlayerProvider } from './context/VideoPlayerContext';
 import BootGate from './components/GateNexaLoader/BootGate';
+import { DiagnosticsProvider } from './context/DiagnosticsContext';
+import DiagnosticsModal from './components/common/DiagnosticsModal';
+import ConnectionNotice from './components/common/ConnectionNotice';
 import { checkReminders } from './utils/reminderUtils';
 import { initFirebasePush, isFirebaseConfigured } from './utils/firebase';
 import './styles/globals.css';
@@ -44,9 +47,13 @@ function ProgressProviderWrapper() {
     <ProgressProvider>
       <DashboardProvider>
         <VideoPlayerProvider>
-          <PwaSetup />
-          <ReminderScheduler />
-          <BootGate><App /></BootGate>
+          <DiagnosticsProvider>
+            <PwaSetup />
+            <ReminderScheduler />
+            <BootGate><App /></BootGate>
+            <DiagnosticsModal />
+            <ConnectionNotice />
+          </DiagnosticsProvider>
         </VideoPlayerProvider>
       </DashboardProvider>
     </ProgressProvider>

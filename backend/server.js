@@ -97,6 +97,7 @@ app.use('/api/admin', require('./src/routes/adminLiveData'));
 app.use('/api/live', require('./src/routes/liveData'));
 app.use('/api/cron', require('./src/routes/cron'));
 app.use('/api/ai', require('./src/routes/ai'));
+app.use('/api', require('./src/routes/diagnostics'));
 app.use('/api/notifications', require('./src/routes/notifications'));
 
 // ─── 404 Handler ────────────────────────────────────────────
