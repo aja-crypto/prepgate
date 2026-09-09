@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }) => {
 
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 30000);
+    }, 10000);
 
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
