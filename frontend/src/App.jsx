@@ -1,5 +1,5 @@
 // src/App.jsx – Main Router
-import React, { Suspense, lazy, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { Suspense, lazy as reactLazy, useState, useCallback, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuthData, useAuthActions } from './context/AuthContext';
@@ -20,7 +20,21 @@ import { SkeletonDashboard, SkeletonSubjectGrid, SkeletonTable } from './compone
 import { PlannerProvider } from './context/PlannerContext';
 
 import LandingPage from './pages/LandingPage';
-const LoginPage = lazy(() => import('./pages/LoginPage'));
+const lazyRoute = (loader) => reactLazy(async () => {
+  try {
+    return await loader();
+  } catch (error) {
+    const key = 'gatenexa_route_chunk_retry';
+    if (typeof window !== 'undefined' && !sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, String(Date.now()));
+      window.location.reload();
+    }
+    throw error;
+  }
+});
+const lazy = lazyRoute;
+
+const LoginPage = lazyRoute(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
