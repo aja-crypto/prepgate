@@ -1,0 +1,99 @@
+// Premium auth — PrepFlow branding
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import PasswordInput from '../components/common/PasswordInput';
+import GoogleSignInButton from '../components/auth/GoogleSignInButton';
+import Icon from '../components/ui/Icon';
+import GlassCard from '../components/ui/GlassCard';
+import { BRAND } from '../design/tokens';
+import { getApiErrorMessage } from '../services/api';
+import toast from 'react-hot-toast';
+
+export default function LoginPage() {
+  const { login, googleLogin, loginAsGuest } = useAuth();
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [loading, setLoading] = useState(false);
+
+  const handleDemoMode = () => {
+    loginAsGuest();
+    navigate('/dashboard');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.email || !form.password) return toast.error('Please fill all fields');
+    setLoading(true);
+    try {
+      await login(form.email, form.password);
+      navigate('/dashboard');
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Login failed'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen login-wallpaper-bg flex items-center justify-center p-4">
+      <div className="w-full max-w-[420px] animate-slide-up relative z-10">
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <Icon name="logo" />
+          <div>
+            <h1 className="font-bold text-lg text-text tracking-tight">{BRAND.name}</h1>
+            <p className="text-[11px] text-text3">{BRAND.tagline}</p>
+          </div>
+        </div>
+
+        <GlassCard hover={false} padding="p-8">
+          <h2 className="text-xl font-bold text-text tracking-tight mb-1">Welcome back</h2>
+          <p className="text-sm text-text2 mb-6">Sign in to continue your preparation</p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-[11px] font-semibold text-text2 uppercase tracking-wider mb-2">Email</label>
+              <input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="you@example.com" className="input-field" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-text2 uppercase tracking-wider mb-2">Password</label>
+              <PasswordInput value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} autoComplete="current-password" />
+            </div>
+            <div className="flex justify-end">
+              <Link to="/forgot-password" className="text-xs text-primary hover:opacity-80">Forgot password?</Link>
+            </div>
+            <button type="submit" disabled={loading} className="btn-primary w-full">
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </form>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+            <div className="relative flex justify-center"><span className="bg-glass px-3 text-[10px] uppercase tracking-wider text-text3">or continue with</span></div>
+          </div>
+
+          <GoogleSignInButton
+            onSuccess={async (token) => { await googleLogin(token); navigate('/dashboard'); }}
+            onError={() => toast.error('Google sign-in failed')}
+          />
+
+          <button 
+            onClick={handleDemoMode}
+            className="w-full mt-3 py-2 px-4 rounded-xl border border-primary/30 text-primary text-xs font-bold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
+          >
+            <Icon name="zap" className="w-3.5 h-3.5" />
+            Explore Demo Mode (No Setup Required)
+          </button>
+
+          <p className="text-center text-sm text-text3 mt-6">
+            No account? <Link to="/register" className="text-primary font-medium hover:opacity-80">Create one</Link>
+          </p>
+        </GlassCard>
+
+        <p className="text-center text-[10px] text-text3 mt-4">
+          Demo (sample data): demo@gate2027.in / password123
+        </p>
+      </div>
+    </div>
+  );
+}
