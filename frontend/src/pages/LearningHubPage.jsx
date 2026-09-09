@@ -1487,28 +1487,31 @@ export default function LearningHubPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
-    try {
-      const videoData = await learningHubVideoService.list({ limit: 200 }).then(r => r.data?.data || []);
-      setVideos(videoData);
-      
-      const [picksRes] = await Promise.all([
-        learningHubDataService.getEditorPicks().catch(() => ({ data: { data: [] } })),
-      ]);
-      setSubjectResources(SUBJECT_RESOURCES);
-      setEditorPicks(picksRes.data?.data || []);
-    } catch (err) {
-      console.error('Failed to load learning hub videos:', err);
-      setSubjectResources(SUBJECT_RESOURCES); // static config, not API data — safe either way
-      if (ENABLE_DEV_FIXTURE_DATA) {
-        setVideos(DEMO_VIDEOS);
-        setEditorPicks(DEMO_EDITOR_PICKS);
-        setLoadError(null);
-      } else {
-        setVideos([]);
-        setEditorPicks([]);
-        setLoadError('Unable to load Learning Hub. Please check your connection and try again.');
-      }
+    setSubjectResources(SUBJECT_RESOURCES);
+    const [videosResult, picksResult] = await Promise.allSettled([
+      learningHubVideoService.list({ limit: 200 }),
+      learningHubDataService.getEditorPicks(),
+    ]);
+
+    if (videosResult.status === 'fulfilled') {
+      setVideos(videosResult.value.data?.data || []);
+    } else if (ENABLE_DEV_FIXTURE_DATA) {
+      setVideos(DEMO_VIDEOS);
+    } else {
+      console.error('Failed to load Learning Hub videos:', videosResult.reason);
+      setVideos([]);
+      setLoadError('Unable to load videos. Check your connection and retry.');
     }
+
+    if (picksResult.status === 'fulfilled') {
+      setEditorPicks(picksResult.value.data?.data || []);
+    } else if (ENABLE_DEV_FIXTURE_DATA) {
+      setEditorPicks(DEMO_EDITOR_PICKS);
+    } else {
+      console.error('Failed to load Learning Hub editor picks:', picksResult.reason);
+      setEditorPicks([]);
+    }
+
     setLoading(false);
   }, []);
 
