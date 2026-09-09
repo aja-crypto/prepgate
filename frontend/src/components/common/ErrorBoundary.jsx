@@ -34,13 +34,6 @@ export class ErrorBoundary extends Component {
       return;
     }
 
-    const attempts = (this.state?.retried || 0);
-    if (attempts < 1 && this.retryTimer === null) {
-      this.retryTimer = setTimeout(() => {
-        this.retryTimer = null;
-        this.setState(prev => ({ hasError: false, error: null, errorInfo: null, retried: (prev.retried || 0) + 1 }));
-      }, 2000);
-    }
   }
 
   componentWillUnmount() {
@@ -65,7 +58,7 @@ export class ErrorBoundary extends Component {
                 <line x1="9" y1="9" x2="15" y2="15" strokeLinecap="round" />
               </svg>
             </div>
-            <h2 className="text-lg font-bold text-text mb-2">Something went wrong</h2>
+            <h2 className="text-lg font-bold text-text mb-2">Unable to load this page</h2>
             <p className="text-sm text-text3 mb-5 max-w-xs mx-auto leading-relaxed">
               An unexpected error occurred. This is usually temporary.
             </p>
@@ -78,7 +71,13 @@ export class ErrorBoundary extends Component {
               onClick={this.handleRetry}
               className="btn-primary px-5 py-2.5 min-w-[140px]"
             >
-              Try Again
+              Retry
+            </button>
+            <button
+              onClick={() => { window.location.href = '/dashboard'; }}
+              className="ml-2 px-5 py-2.5 min-w-[140px] rounded-lg border border-border text-text2 hover:text-text transition-colors"
+            >
+              Go to Dashboard
             </button>
           </div>
         </div>

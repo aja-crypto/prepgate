@@ -8,6 +8,7 @@ import Layout from './components/common/Layout';
 import DiagnosticsModal from './components/common/DiagnosticsModal';
 import { useDiagnostics } from './context/DiagnosticsContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import RouteLoadingFallback from './components/common/RouteLoadingFallback';
 import FloatingAIAssistant from './components/common/FloatingAIAssistant';
 import AmbientBackground from './components/common/AmbientBackground';
 import InstallPrompt from './components/common/InstallPrompt';
@@ -16,7 +17,6 @@ import PremiumGateDialog from './components/referral/PremiumGateDialog';
 import CelebrationAnimation from './components/referral/CelebrationAnimation';
 import BrandIntroModal from './components/common/BrandIntroModal';
 import AiIntroModal, { shouldShowAiIntro } from './components/common/AiIntroModal';
-import { SkeletonDashboard, SkeletonSubjectGrid, SkeletonTable } from './components/ui/SkeletonLoader';
 import { PlannerProvider } from './context/PlannerContext';
 
 import LandingPage from './pages/LandingPage';
@@ -265,11 +265,10 @@ export default function App() {
     window.__openDiagnostics = openDiagnostics;
     return () => { delete window.__openDiagnostics; };
   }, [openDiagnostics]);
-  const routeFallback = useMemo(() => (
-    <div className="p-4 lg:p-6">
-      <SkeletonDashboard />
-    </div>
-  ), []);
+  const routeFallback = useMemo(() => <RouteLoadingFallback />, []);
+  const protectedRoute = (element, name) => (
+    <ErrorBoundary key={name} name={name}>{element}</ErrorBoundary>
+  );
 
   return (
     <ErrorBoundary name="App">
@@ -291,18 +290,18 @@ export default function App() {
       <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route path="dashboard" element={<ErrorBoundary key="dashboard"><DashboardPage /></ErrorBoundary>} />
         <Route path="GateNexa-ai" element={<Navigate to="/mentor" replace />} />
-        <Route path="study-hub" element={<StudyHubPage />} />
-        <Route path="subjects" element={<ErrorBoundary key="subjects"><SubjectsPage /></ErrorBoundary>} />
-        <Route path="topics" element={<ErrorBoundary key="topics"><TopicsPage /></ErrorBoundary>} />
+        <Route path="study-hub" element={protectedRoute(<StudyHubPage />, 'study-hub')} />
+        <Route path="subjects" element={protectedRoute(<SubjectsPage />, 'subjects')} />
+        <Route path="topics" element={protectedRoute(<TopicsPage />, 'topics')} />
         <Route path="learn/topic/:topicId" element={<TopicDetailPage />} />
         <Route path="pyq" element={<ErrorBoundary key="pyq"><PYQPage /></ErrorBoundary>} />
         <Route path="mocks" element={<MocksPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="air-predictor" element={<AirPredictorPage />} />
-        <Route path="mentor" element={<ErrorBoundary key="ai"><GateNexaAIPage /></ErrorBoundary>} />
-        <Route path="ai-coach" element={<AICoachPage />} />
+        <Route path="mentor" element={protectedRoute(<GateNexaAIPage />, 'ai-mentor')} />
+        <Route path="ai-coach" element={protectedRoute(<AICoachPage />, 'ai-coach')} />
         <Route path="notes" element={<ErrorBoundary key="notes"><NotesPage /></ErrorBoundary>} />
-        <Route path="planner" element={<PlannerProvider><StudyPlannerPage /></PlannerProvider>} />
+        <Route path="planner" element={protectedRoute(<PlannerProvider><StudyPlannerPage /></PlannerProvider>, 'planner')} />
         <Route path="formulas" element={<FormulaSheetPage />} />
         <Route path="revision" element={<RevisionPage />} />
         <Route path="productivity" element={<ProductivityPage />} />
@@ -340,8 +339,8 @@ export default function App() {
         <Route path="report" element={<ReportPage />} />
         <Route path="premium" element={<PremiumPage />} />
         <Route path="referral" element={<ReferralDashboardPage />} />
-        <Route path="notifications" element={<NotificationsPage />} />
-        <Route path="learning-hub" element={<LearningHubPage />} />
+        <Route path="notifications" element={protectedRoute(<NotificationsPage />, 'notifications')} />
+        <Route path="learning-hub" element={protectedRoute(<LearningHubPage />, 'learning-hub')} />
         {/* Redirects for legacy/alternate URLs */}
         <Route path="focus" element={<Navigate to="/focus-session" replace />} />
         <Route path="ai-mentor" element={<Navigate to="/mentor" replace />} />
@@ -380,7 +379,7 @@ export default function App() {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/help" element={<HelpPage />} />
       <Route path="/feedback" element={<FeedbackPage />} />
-      <Route path="/study-resources" element={<ResourcesPage />} />
+      <Route path="/study-resources" element={protectedRoute(<ResourcesPage />, 'resources')} />
       <Route path="/resources" element={<Navigate to="/study-resources" replace />} />
       {/* Standalone routes (no sidebar) */}
       <Route path="/platform" element={<PlatformPage />} />
