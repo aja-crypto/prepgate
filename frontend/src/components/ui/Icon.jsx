@@ -177,16 +177,10 @@ const icons = {
     </svg>
   ),
   logo: (
-    <picture>
-      <source srcSet="/images/logo.webp" type="image/webp" />
-      <img src="/images/logo.png" alt="GateNexa" className="w-full h-full object-contain" style={{ minWidth: '32px', minHeight: '32px' }} />
-    </picture>
+    <img src="/images/logo.png" alt="GateNexa" className="w-full h-full object-contain" style={{ minWidth: '32px', minHeight: '32px' }} />
   ),
   logoFull: (
-    <picture>
-      <source srcSet="/images/logo.webp" type="image/webp" />
-      <img src="/images/logo.png" alt="GateNexa" className="h-full object-contain" style={{ minWidth: '32px' }} />
-    </picture>
+    <img src="/images/logo.png" alt="GateNexa" className="h-full object-contain" style={{ minWidth: '32px' }} />
   ),
   feedback: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="w-[18px] h-[18px]">
@@ -320,4 +314,3 @@ export default function Icon({ name, className = '' }) {
 }
 
 export { icons };
-

@@ -104,7 +104,6 @@ export default function RegisterPage() {
           }}
         >
           <picture>
-            <source srcSet="/images/logo.webp" type="image/webp" />
             <img src="/images/logo.png" alt="GateNexa" className="w-5 h-5" />
           </picture>
         </div>
@@ -216,4 +215,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-
