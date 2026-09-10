@@ -161,15 +161,45 @@ function useIsMobile() {
 function VideoSkeleton() {
   return (
     <div className="rounded-2xl overflow-hidden animate-pulse" style={{ background: 'linear-gradient(180deg, rgba(23,29,48,0.72), rgba(15,17,25,0.94))', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(14px)', boxShadow: '0 6px 24px rgba(0,0,0,0.28)' }}>
-      <div className="aspect-video bg-white/[0.03]" />
+      <div className="aspect-video bg-white/[0.06]" />
       <div className="p-4 space-y-2.5">
-        <div className="h-3 bg-white/[0.05] rounded w-3/4" />
-        <div className="h-2 bg-white/[0.03] rounded w-1/2" />
+        <div className="h-3 bg-white/[0.08] rounded w-3/4" />
+        <div className="h-2 bg-white/[0.06] rounded w-1/2" />
         <div className="flex gap-2">
-          <div className="h-4 bg-white/[0.04] rounded-full w-16" />
-          <div className="h-4 bg-white/[0.04] rounded-full w-12" />
+          <div className="h-4 bg-white/[0.06] rounded-full w-16" />
+          <div className="h-4 bg-white/[0.06] rounded-full w-12" />
         </div>
       </div>
+    </div>
+  );
+}
+
+function SectionSkeleton({ count = 6 }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="rounded-xl p-3 animate-pulse" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="w-8 h-8 rounded-lg bg-white/[0.06] mb-2" />
+          <div className="h-2 bg-white/[0.08] rounded w-3/4 mb-1" />
+          <div className="h-2 bg-white/[0.05] rounded w-1/2" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ChannelSkeleton() {
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-1">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-2.5 shrink-0 rounded-xl px-3 py-2.5 animate-pulse" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="w-8 h-8 rounded-full bg-white/[0.06]" />
+          <div className="space-y-1">
+            <div className="h-2 bg-white/[0.08] rounded w-20" />
+            <div className="h-2 bg-white/[0.05] rounded w-14" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -1686,9 +1716,9 @@ export default function LearningHubPage() {
             subjectResources={subjectResources}
           />
         ) : (
-        <motion.div key="learning-hub-home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="space-y-6">
+        <div className="space-y-6">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="gpu-layer">
+        <div className="gpu-layer">
           <div className="flex items-center justify-between gap-4 mb-4">
             <div>
               <h1 className="text-2xl font-black text-white tracking-tight fluid-2xl">Learning Hub</h1>
@@ -1728,13 +1758,22 @@ export default function LearningHubPage() {
             </div>
           </div>
           <SearchBar value={searchQuery} onChange={setSearchQuery} />
-        </motion.div>
+        </div>
 
         {/* Main content */}
         <div id="learning-content" className="grid md:grid-cols-4 gap-6 scroll-mt-24">
           <div className="md:col-span-3 space-y-5 min-w-0">
             {/* Editor's Picks */}
-            {editorPicks.length > 0 && (
+            {loading ? (
+            <div className="rounded-2xl p-5 relative overflow-hidden animate-pulse"
+              style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(34,211,238,0.04), rgba(15,17,25,0.7))', border: '1px solid rgba(139,92,246,0.16)', backdropFilter: 'blur(12px)', boxShadow: '0 10px 34px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-sm">⭐</span>
+                <h2 className="text-sm font-bold text-white">Editor's Picks</h2>
+              </div>
+              <SectionSkeleton count={6} />
+            </div>
+            ) : editorPicks.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               className="rounded-2xl p-5 relative overflow-hidden"
               style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.12), rgba(34,211,238,0.04), rgba(15,17,25,0.7))', border: '1px solid rgba(139,92,246,0.16)', backdropFilter: 'blur(12px)', boxShadow: '0 10px 34px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
@@ -1771,7 +1810,16 @@ export default function LearningHubPage() {
             )}
 
             {/* Featured Channels */}
-            {channelData.length > 0 && (
+            {loading ? (
+              <div className="rounded-2xl p-4 relative overflow-hidden animate-pulse"
+                style={{ background: 'linear-gradient(180deg, rgba(23,29,48,0.72), rgba(15,17,25,0.94))', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(14px)', boxShadow: '0 8px 28px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm">📺</span>
+                  <h2 className="text-sm font-bold text-white">Featured Channels</h2>
+                </div>
+                <ChannelSkeleton />
+              </div>
+            ) : channelData.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                 className="rounded-2xl p-4 relative overflow-hidden"
                 style={{ background: 'linear-gradient(180deg, rgba(23,29,48,0.72), rgba(15,17,25,0.94))', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(14px)', boxShadow: '0 8px 28px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05)' }}>
@@ -1850,8 +1898,14 @@ export default function LearningHubPage() {
             <MotionConfig reducedMotion={prefersReducedMotion ? "always" : "never"}>
             <AnimatePresence mode="wait">
               {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {[1, 2, 3].map(i => <VideoSkeleton key={i} />)}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-text3/50">
+                    <div className="w-4 h-4 rounded border-2 border-primary/30 border-t-primary animate-spin" />
+                    <span className="text-xs font-medium">Loading videos...</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {[1, 2, 3, 4].map(i => <VideoSkeleton key={i} />)}
+                  </div>
                 </div>
               ) : debouncedQuery ? (
                 <motion.div
@@ -2055,7 +2109,7 @@ export default function LearningHubPage() {
             <Sidebar videos={videos} onOpenVideo={openResource} />
           </div>
         </div>
-        </motion.div>
+        </div>
         )}
       </div>
     </div>
