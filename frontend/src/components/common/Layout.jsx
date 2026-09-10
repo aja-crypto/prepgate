@@ -88,6 +88,7 @@ const Layout = memo(function Layout() {
   const dropdownRef = useRef(false);
   dropdownRef.current = profileDropdownOpen;
   const location = useLocation();
+  const isDashboard = location.pathname === '/dashboard';
 
   useGlobalSearchShortcut(setSearchOpen);
 
@@ -145,7 +146,7 @@ const Layout = memo(function Layout() {
         transition-transform duration-300 ease-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `} onTouchStart={handleSidebarTouchStart} onTouchEnd={handleSidebarTouchEnd}>
-        <div className="p-4 border-b border-white/[0.06]">
+        <div className={`p-4 border-b border-white/[0.06] ${isDashboard ? 'dashboard-brand-header' : ''}`}>
           <BrandLockup />
         </div>
 
