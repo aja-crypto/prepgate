@@ -261,6 +261,9 @@ const { requestLogger } = require('./src/middleware/requestLogger');
 app.use(correlationId);
 app.use(requestLogger);
 
+// --- Diagnostics Route (health, ai/health, diagnostics/status) ---
+app.use('/api', require('./src/routes/diagnostics'));
+
 // --- Health Check ────────────────────────────────────────---
 app.get('/api/health', (req, res) => {
   const mem = process.memoryUsage();

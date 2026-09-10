@@ -10,6 +10,7 @@ import { useDiagnostics } from './context/DiagnosticsContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import RouteLoadingFallback from './components/common/RouteLoadingFallback';
 import FloatingAIAssistant from './components/common/FloatingAIAssistant';
+import ConnectionNotice from './components/common/ConnectionNotice';
 import AmbientBackground from './components/common/AmbientBackground';
 import InstallPrompt from './components/common/InstallPrompt';
 import WelcomeManager from './components/onboarding/WelcomeManager';
@@ -122,6 +123,7 @@ const ReportPage = lazy(() => import('./pages/ReportPage'));
 const PremiumPage = lazy(() => import('./pages/PremiumPage'));
 const ReferralDashboardPage = lazy(() => import('./pages/ReferralDashboardPage'));
 const LearningHubPage = lazy(() => import('./pages/LearningHubPage'));
+const ConnectionDiagnosticsPage = lazy(() => import('./pages/ConnectionDiagnosticsPage'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage'));
@@ -273,6 +275,7 @@ export default function App() {
   return (
     <ErrorBoundary name="App">
       <RoutePrefetcher />
+      <ConnectionNotice />
       <AppFloatingWidgets />
       <WelcomeManager>
       <Suspense fallback={routeFallback}>
@@ -341,6 +344,7 @@ export default function App() {
         <Route path="referral" element={<ReferralDashboardPage />} />
         <Route path="notifications" element={protectedRoute(<NotificationsPage />, 'notifications')} />
         <Route path="learning-hub" element={protectedRoute(<LearningHubPage />, 'learning-hub')} />
+        <Route path="connection-diagnostics" element={<ConnectionDiagnosticsPage />} />
         {/* Redirects for legacy/alternate URLs */}
         <Route path="focus" element={<Navigate to="/focus-session" replace />} />
         <Route path="ai-mentor" element={<Navigate to="/mentor" replace />} />
