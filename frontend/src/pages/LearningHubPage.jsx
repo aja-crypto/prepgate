@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { ArrowLeft, Eye, Clock3, Bookmark, Share2, CheckCircle2, Info, FileText, Link2, Bot, CalendarDays, PictureInPicture } from 'lucide-react';
 import { useAuthData } from '../context/AuthContext';
@@ -1416,6 +1416,7 @@ const DEMO_EDITOR_PICKS = [
 
 export default function LearningHubPage() {
   const { user, isPremium } = useAuthData();
+  const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState('videos');
   const [roadmapFilter, setRoadmapFilter] = useState('all');
@@ -1749,7 +1750,7 @@ export default function LearningHubPage() {
                     whileHover={{ y: -2, scale: 1.02 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => {
-                      if (pick.type === 'insight') { window.open('/insights', '_self'); return; }
+                      if (pick.type === 'insight') { navigate('/insights'); return; }
                       setActiveTab(pick.type);
                       setSelectedItem(null);
                     }}

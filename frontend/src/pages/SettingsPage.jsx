@@ -9,6 +9,7 @@ import { exportToCsv, exportToExcel } from '../utils/exportUtils';
 import { requestNotificationPermission } from '../utils/reminderUtils';
 import { authService, progressService, referralService, getApiErrorMessage } from '../services/api';
 import { silentCatch } from '../utils/errorHandler';
+import { useDiagnostics } from '../context/DiagnosticsContext';
 import toast from 'react-hot-toast';
 
 const TARGET = 2;
@@ -91,6 +92,7 @@ export default function SettingsPage() {
   const [pwdForm, setPwdForm] = useState({ current: '', newPwd: '', confirm: '' });
 
   // Profile form state
+  const { openDiagnostics } = useDiagnostics();
   const [collapsedSections, setCollapsedSections] = useState({});
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(user?.name || '');
@@ -298,6 +300,7 @@ export default function SettingsPage() {
     { id: 'study', icon: '📚', label: 'Study' },
     { id: 'appearance', icon: '🎨', label: 'Appearance' },
     { id: 'ai', icon: '🤖', label: 'AI' },
+    { id: 'performance', icon: '🩺', label: 'Connection' },
     { id: 'notifications', icon: '🔔', label: 'Notifications' },
     { id: 'premium', icon: '⭐', label: 'Premium' },
     { id: 'developer', icon: '⚙️', label: 'Developer' },
@@ -306,7 +309,7 @@ export default function SettingsPage() {
     'Profile':'general','Security':'general','Quick Links':'general',
     'Daily Goal':'study','Exam Date':'study','Focus':'study','Progress':'study',
     'Appearance':'appearance','Accent':'appearance','Scroll Navigator':'appearance',
-    'AI Assistant':'ai','Notifications':'notifications',
+    'AI Assistant':'ai','Connection & Performance':'performance','Notifications':'notifications',
     'Referral Progress':'premium','Export':'developer','Install App':'developer',
   };
   const chipBtn = "text-xs px-3 py-1.5 rounded-full border transition-all";
@@ -604,6 +607,17 @@ export default function SettingsPage() {
               </div>
             </>
           )}
+        </div>
+      ),
+    },
+    {
+      title: 'Connection & Performance',
+      desc: 'Check your connection, API latency, and device readiness.',
+      content: (
+        <div className="space-y-3">
+          <button onClick={openDiagnostics} className={`${actionBtn}`}>Run Diagnostics</button>
+          <button onClick={() => navigate('/connection-diagnostics')} className={`${ghostBtn}`}>Open Connection Center</button>
+          <p className="text-[10px] text-text3">Diagnostics checks internet latency, API response, backend health, AI services, browser and device capability. No data is sent externally.</p>
         </div>
       ),
     },

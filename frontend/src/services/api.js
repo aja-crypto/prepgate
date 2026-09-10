@@ -55,6 +55,23 @@ api.get = (url, config) => {
 };
 const NO_CACHE_PATTERNS = ['/auth/me', '/auth/refresh', '/auth/demo', '/ai/quota', '/notifications', '/progress/sync', '/admin/', '/gate-vault/progress', '/gate-vault/stats', '/notes', '/live/dashboard', '/ai/context', '/notes/pinned'];
 
+let _slowApiLastEmit = 0;
+const SLOW_API_THROTTLE = 30000;
+function emitSlowApi(url, latencyMs) {
+  const now = Date.now();
+  if (now - _slowApiLastEmit < SLOW_API_THROTTLE) return;
+  _slowApiLastEmit = now;
+  window.dispatchEvent(new CustomEvent('gatenexa:slow-api', { detail: { url, latencyMs } }));
+}
+let _failedApiLastEmit = 0;
+const FAILED_API_THROTTLE = 30000;
+function emitFailedApi(url, status) {
+  const now = Date.now();
+  if (now - _failedApiLastEmit < FAILED_API_THROTTLE) return;
+  _failedApiLastEmit = now;
+  window.dispatchEvent(new CustomEvent('gatenexa:failed-api', { detail: { url, status } }));
+}
+
 api.interceptors.request.use(
   async (config) => {
     config.metadata = { start: performance.now() };
@@ -145,6 +162,9 @@ api.interceptors.response.use(
       const bytes = (() => { try { return new Blob([JSON.stringify(response.data)]).size; } catch { return 0; } })();
       if (import.meta.env.DEV) console.debug(`[api] ${response.config.method?.toUpperCase()} ${response.config.url} → ${ms}ms ${bytes}B ${response.status}`);
       response.headers['x-client-duration-ms'] = String(ms);
+      if (ms > 3000 && response.config.method !== 'head') {
+        emitSlowApi(response.config.url, ms);
+      }
     }
     if (response.config?.method === 'get' && !NO_CACHE_PATTERNS.some(p => response.config?.url?.includes(p))) {
       const cacheKey = cacheKeyFor(response.config);
@@ -164,6 +184,10 @@ api.interceptors.response.use(
 
     if (error.response?.status === 429) {
       return Promise.reject(error);
+    }
+
+    if (error.response?.status >= 500 && originalRequest.method !== 'head') {
+      emitFailedApi(originalRequest.url, error.response.status);
     }
 
     // Auto-retry on network/timeout errors (backend cold start, DB reconnect, down) — up to 2 tries

@@ -9,7 +9,7 @@ export function NexaMark({ className = '', size = 34 }) {
   return (
     <span
       className={`nexa-mark ${className}`}
-      style={{ width: size * 1.78, height: size }}
+      style={{ width: size, height: size }}
       aria-hidden="true"
     >
       <img src="/images/logo.png" alt="GateNexa" className="nexa-mark__image" />

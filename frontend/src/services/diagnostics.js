@@ -1,130 +1,258 @@
-const API_BASE = '/api';
-const TIMEOUT = 8000;
-const LATENCY_PING_URL = `${API_BASE}/health`;
-const AI_PING_URL = `${API_BASE}/ai/health`;
-const PDF_CHECK_URL = `${API_BASE}/health`;
+const API_BASE = import.meta.env?.VITE_API_URL || '/api';
+const HEALTH_URL = `${API_BASE}/health`;
+const AI_HEALTH_URL = `${API_BASE}/ai/health`;
+const READINESS_URL = `/health/readiness`;
+
+function fetchWithTimeout(url, opts = {}, timeoutMs = 8000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...opts, signal: controller.signal }).finally(() => clearTimeout(id));
+}
+
+function latencyGrade(ms) {
+  if (ms == null) return 'unknown';
+  if (ms < 80) return 'excellent';
+  if (ms < 200) return 'good';
+  if (ms < 500) return 'fair';
+  return 'poor';
+}
+
+function speedGrade(mbps) {
+  if (mbps == null) return 'unknown';
+  if (mbps >= 10) return 'excellent';
+  if (mbps >= 4) return 'good';
+  if (mbps >= 1.5) return 'fair';
+  return 'poor';
+}
 
 const TESTS = [
-  { id: 'latency', label: 'Internet Latency', icon: '📶', timeout: 5000 },
-  { id: 'api', label: 'API Response Time', icon: '⚡', timeout: 8000 },
-  { id: 'backend', label: 'Backend Health', icon: '🖥️', timeout: 6000 },
-  { id: 'ai', label: 'AI Services', icon: '🤖', timeout: 10000 },
-  { id: 'video', label: 'Video Streaming', icon: '🎬', timeout: 6000 },
-  { id: 'browser', label: 'Browser Compatibility', icon: '🌐', timeout: 3000 },
-  { id: 'device', label: 'Device Capability', icon: '📱', timeout: 3000 },
-  { id: 'pdf', label: 'PDF Generation', icon: '📄', timeout: 8000 },
+  { id: 'latency', label: 'Internet Latency', icon: '📶', timeout: 6000 },
+  { id: 'api', label: 'GateNexa API', icon: '⚡', timeout: 10000 },
+  { id: 'backend', label: 'Backend Health', icon: '🖥️', timeout: 8000 },
+  { id: 'database', label: 'Database', icon: '🗄️', timeout: 8000 },
+  { id: 'ai', label: 'AI Services', icon: '🤖', timeout: 12000 },
+  { id: 'video', label: 'Video Readiness', icon: '🎬', timeout: 5000 },
+  { id: 'browser', label: 'Browser', icon: '🌐', timeout: 3000 },
+  { id: 'device', label: 'Device', icon: '📱', timeout: 3000 },
+  { id: 'pdf', label: 'PDF / Reports', icon: '📄', timeout: 10000 },
 ];
 
-function timeout(ms) {
-  return new Promise((_, reject) => setTimeout(() => reject(new Error('Timed out')), ms));
-}
-
-async function measureLatency() {
+async function testLatency() {
   const start = performance.now();
   try {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 5000);
-    await fetch(LATENCY_PING_URL, { method: 'HEAD', signal: controller.signal, cache: 'no-store' });
-    clearTimeout(id);
+    await fetchWithTimeout(`${HEALTH_URL}?_t=${Date.now()}`, { cache: 'no-store' }, 5000);
     const ms = performance.now() - start;
-    return { value: Math.round(ms), grade: ms < 50 ? 'excellent' : ms < 150 ? 'good' : ms < 300 ? 'fair' : 'poor', status: 'passed' };
+    return {
+      id: 'latency', status: 'passed', grade: latencyGrade(ms),
+      value: `${Math.round(ms)}ms`,
+      detail: ms < 80 ? 'Excellent connection' : ms < 200 ? 'Good connection' : ms < 500 ? 'Moderate latency' : 'High latency — server may be waking',
+      latencyMs: Math.round(ms),
+    };
   } catch {
-    return { value: null, grade: 'poor', status: 'failed', detail: 'Could not reach server' };
+    return { id: 'latency', status: 'failed', grade: 'poor', value: '—', detail: 'Could not reach server', latencyMs: null };
   }
 }
 
-async function measureApiResponse() {
+async function testApi() {
   const start = performance.now();
   try {
-    await Promise.race([fetch(`${API_BASE}/health?_=${Date.now()}`, { cache: 'no-store' }), timeout(TIMEOUT)]);
+    const res = await fetchWithTimeout(`${HEALTH_URL}?_t=${Date.now()}`, { cache: 'no-store' }, 10000);
     const ms = performance.now() - start;
-    return { value: Math.round(ms), grade: ms < 200 ? 'excellent' : ms < 500 ? 'good' : ms < 1000 ? 'fair' : 'poor', status: 'passed' };
+    if (!res.ok) return { id: 'api', status: 'failed', grade: 'poor', value: `HTTP ${res.status}`, detail: `API returned ${res.status}`, latencyMs: Math.round(ms) };
+    const data = await res.json().catch(() => ({}));
+    const serverStatus = data?.status || data?.server || data?.data?.status;
+    return {
+      id: 'api', status: 'passed', grade: latencyGrade(ms),
+      value: `${Math.round(ms)}ms`,
+      detail: serverStatus === 'OK' || serverStatus === 'ok' ? 'API responsive' : `API responding (${serverStatus || 'unknown'})`,
+      latencyMs: Math.round(ms),
+    };
   } catch {
-    return { value: null, grade: 'poor', status: 'failed', detail: 'API endpoint unreachable' };
+    const ms = performance.now() - start;
+    return { id: 'api', status: 'failed', grade: 'poor', value: '—', detail: 'API endpoint unreachable', latencyMs: Math.round(ms) };
   }
 }
 
-async function checkBackendHealth() {
+async function testBackend() {
   try {
-    const res = await Promise.race([fetch(LATENCY_PING_URL), timeout(6000)]);
-    if (!res.ok) return { status: 'failed', grade: 'poor', detail: `HTTP ${res.status}` };
-    const data = res.headers.get('content-type')?.includes('json') ? await res.json().catch(() => ({})) : {};
-    return { value: data.status || 'running', grade: 'excellent', status: 'passed' };
+    const res = await fetchWithTimeout(HEALTH_URL, { cache: 'no-store' }, 8000);
+    if (!res.ok) return { id: 'backend', status: 'failed', grade: 'poor', value: `HTTP ${res.status}`, detail: `Backend returned ${res.status}` };
+    const data = await res.json().catch(() => ({}));
+    const db = data?.database || data?.data?.mongoConnected;
+    const serverOk = data?.server === 'ok' || data?.status === 'OK' || data?.data?.status === 'OK';
+    const uptime = data?.uptime || data?.data?.uptime;
+    const detail = serverOk
+      ? `Backend healthy${uptime ? ` (${Math.round(uptime)}s uptime)` : ''}`
+      : `Backend responded but status unclear`;
+    return { id: 'backend', status: 'passed', grade: serverOk ? 'excellent' : 'fair', value: serverOk ? 'Healthy' : 'Partial', detail };
   } catch {
-    return { status: 'failed', grade: 'poor', detail: 'Backend not responding' };
+    return { id: 'backend', status: 'failed', grade: 'poor', value: '—', detail: 'Backend not responding' };
   }
 }
 
-async function checkAiServices() {
+async function testDatabase() {
   try {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch(AI_PING_URL, { signal: controller.signal, cache: 'no-store' });
-    clearTimeout(id);
-    if (!res.ok) return { status: 'degraded', grade: 'fair', detail: `AI service returned ${res.status}` };
-    return { value: 'Available', grade: 'excellent', status: 'passed' };
+    const res = await fetchWithTimeout(READINESS_URL, { cache: 'no-store' }, 8000);
+    if (!res.ok) {
+      const res2 = await fetchWithTimeout(HEALTH_URL, { cache: 'no-store' }, 5000);
+      if (!res2.ok) return { id: 'database', status: 'failed', grade: 'poor', value: '—', detail: 'Cannot check database status' };
+      const d2 = await res2.json().catch(() => ({}));
+      const connected = d2?.database === 'connected' || d2?.data?.mongoConnected === true;
+      return { id: 'database', status: connected ? 'passed' : 'degraded', grade: connected ? 'excellent' : 'fair', value: connected ? 'Connected' : 'Disconnected', detail: connected ? 'MongoDB connected' : 'MongoDB not connected — data may be unavailable' };
+    }
+    const data = await res.json().catch(() => ({}));
+    const dbStatus = data?.database || data?.data?.database;
+    const connected = dbStatus === 'connected' || dbStatus === true;
+    return {
+      id: 'database', status: connected ? 'passed' : 'degraded',
+      grade: connected ? 'excellent' : 'fair',
+      value: connected ? 'Connected' : 'Disconnected',
+      detail: connected ? 'MongoDB connected' : 'MongoDB not connected — data may be unavailable',
+    };
   } catch {
-    return { status: 'degraded', grade: 'fair', detail: 'AI service unavailable (offline mode)' };
+    return { id: 'database', status: 'degraded', grade: 'fair', value: 'Unknown', detail: 'Could not verify database status' };
   }
 }
 
-async function estimateVideoQuality() {
-  const base = navigator.connection?.downlink;
-  if (!base) return { value: 'Unknown', grade: 'good', status: 'passed', detail: 'Using default quality' };
-  const speed = base;
-  let grade, label;
-  if (speed >= 8) { grade = 'excellent'; label = '4K Ready'; }
-  else if (speed >= 3) { grade = 'good'; label = '1080p Ready'; }
-  else if (speed >= 1.5) { grade = 'fair'; label = '720p Ready'; }
-  else { grade = 'poor'; label = 'Likely Buffering'; }
-  return { value: `${speed.toFixed(1)} Mbps`, grade, status: 'passed', detail: label };
+async function testAi() {
+  try {
+    const res = await fetchWithTimeout(AI_HEALTH_URL, { cache: 'no-store' }, 12000);
+    if (!res.ok) return { id: 'ai', status: 'degraded', grade: 'fair', value: `HTTP ${res.status}`, detail: 'AI health endpoint returned error' };
+    const data = await res.json().catch(() => ({}));
+    const d = data?.data || data;
+    const configured = d?.aiConfigured === true;
+    const reachable = d?.aiReachable === true;
+    const status = d?.status || (configured ? 'configured' : 'not_configured');
+    if (configured && reachable) return { id: 'ai', status: 'passed', grade: 'excellent', value: 'Available', detail: 'AI provider configured and reachable' };
+    if (configured) return { id: 'ai', status: 'degraded', grade: 'fair', value: 'Configured', detail: 'AI configured but not reachable — responses may be slow' };
+    return { id: 'ai', status: 'degraded', grade: 'fair', value: 'Not configured', detail: 'AI provider not configured — AI features unavailable' };
+  } catch {
+    return { id: 'ai', status: 'degraded', grade: 'fair', value: '—', detail: 'AI health check timed out' };
+  }
 }
 
-async function checkBrowserCompat() {
+async function testVideo() {
+  const conn = navigator.connection;
+  const downlink = conn?.downlink;
+  const effectiveType = conn?.effectiveType;
+  const saveData = conn?.saveData;
+
+  const parts = [];
+  if (downlink != null) parts.push(`~${downlink.toFixed(1)} Mbps estimated`);
+  if (effectiveType) parts.push(effectiveType.toUpperCase());
+  if (saveData) parts.push('Data Saver on');
+
+  const grade = speedGrade(downlink);
+  const label = downlink == null ? 'Unknown'
+    : downlink >= 10 ? '4K ready'
+    : downlink >= 4 ? '1080p ready'
+    : downlink >= 1.5 ? '720p ready'
+    : 'Low bandwidth';
+
+  return {
+    id: 'video', status: 'passed', grade,
+    value: downlink != null ? `~${downlink.toFixed(1)} Mbps` : 'Unknown',
+    detail: downlink != null ? `${label} (browser estimate, not measured)` : 'Browser cannot report connection speed',
+    note: 'Estimate via navigator.connection — not a real speed test',
+  };
+}
+
+async function testBrowser() {
   const checks = [];
   if ('serviceWorker' in navigator) checks.push('Service Worker');
   if ('IntersectionObserver' in window) checks.push('IntersectionObserver');
   if ('ResizeObserver' in window) checks.push('ResizeObserver');
   if (window.crypto?.subtle) checks.push('Web Crypto');
   if ('requestIdleCallback' in window) checks.push('IdleCallback');
-  if (CSS?.supports?.('backdrop-filter', 'blur(1px)')) checks.push('backdrop-filter');
+  if (CSS?.supports?.('backdrop-filter', 'blur(1px)')) checks.push('Backdrop blur');
   const count = checks.length;
   const grade = count >= 5 ? 'excellent' : count >= 3 ? 'good' : 'fair';
-  return { value: `${count}/6 checks`, grade, status: 'passed', detail: checks.join(', ') };
+  return {
+    id: 'browser', status: 'passed', grade,
+    value: `${count}/6`,
+    detail: count >= 5 ? 'Full capability' : checks.join(', ') || 'Limited features detected',
+  };
 }
 
-async function checkDeviceCapability() {
+async function testDevice() {
   const mem = navigator.deviceMemory;
   const cores = navigator.hardwareConcurrency;
   const grade = (mem >= 4 || cores >= 6) ? 'excellent' : (mem >= 2 || cores >= 4) ? 'good' : 'fair';
   const parts = [];
   if (cores) parts.push(`${cores} cores`);
   if (mem) parts.push(`${mem} GB RAM`);
-  return { value: parts.join(', ') || 'Detected', grade, status: 'passed', detail: grade === 'excellent' ? 'Smooth experience expected' : grade === 'good' ? 'Good performance' : 'May struggle with heavy animations' };
+  return {
+    id: 'device', status: 'passed', grade,
+    value: parts.join(', ') || 'Detected',
+    detail: grade === 'excellent' ? 'Smooth experience expected' : grade === 'good' ? 'Good performance' : 'Limited resources — close other tabs for best experience',
+  };
 }
 
-async function checkPdfGeneration() {
+async function testPdf() {
   try {
     const start = performance.now();
-    const pdfMod = await import('@react-pdf/renderer');
-    if (typeof pdfMod.pdf !== 'function') return { status: 'failed', grade: 'poor', detail: 'PDF library missing pdf() export' };
+    const mod = await import('@react-pdf/renderer');
     const ms = performance.now() - start;
-    return { value: `${Math.round(ms)}ms`, grade: ms < 1000 ? 'excellent' : ms < 3000 ? 'good' : 'fair', status: 'passed', detail: `@react-pdf/renderer v${pdfMod.version || 'detected'}` };
-  } catch (e) {
-    return { status: 'failed', grade: 'poor', detail: 'PDF library unavailable' };
+    const hasFn = typeof mod.pdf === 'function';
+    if (!hasFn) return { id: 'pdf', status: 'failed', grade: 'poor', value: 'Error', detail: 'PDF library loaded but pdf() not available' };
+    return {
+      id: 'pdf', status: 'passed',
+      grade: ms < 1500 ? 'excellent' : ms < 3000 ? 'good' : 'fair',
+      value: `${Math.round(ms)}ms load`,
+      detail: `@react-pdf/renderer available`,
+    };
+  } catch {
+    return { id: 'pdf', status: 'failed', grade: 'poor', value: '—', detail: 'PDF library unavailable — report generation disabled' };
   }
 }
 
 const TEST_FN = {
-  latency: measureLatency,
-  api: measureApiResponse,
-  backend: checkBackendHealth,
-  ai: checkAiServices,
-  video: estimateVideoQuality,
-  browser: checkBrowserCompat,
-  device: checkDeviceCapability,
-  pdf: checkPdfGeneration,
+  latency: testLatency,
+  api: testApi,
+  backend: testBackend,
+  database: testDatabase,
+  ai: testAi,
+  video: testVideo,
+  browser: testBrowser,
+  device: testDevice,
+  pdf: testPdf,
 };
+
+function computeScore(results) {
+  const total = results.length;
+  if (total === 0) return { score: 0, grade: 'poor' };
+  let sum = 0;
+  for (const r of results) {
+    if (r.status === 'unknown') continue;
+    if (r.grade === 'excellent') sum += 100;
+    else if (r.grade === 'good') sum += 75;
+    else if (r.grade === 'fair') sum += 50;
+    else sum += 0;
+  }
+  const score = Math.round(sum / total);
+  const grade = score >= 90 ? 'excellent' : score >= 70 ? 'good' : score >= 45 ? 'fair' : 'poor';
+  return { score, grade };
+}
+
+function buildRecommendations(results) {
+  const recs = [];
+  const failed = results.filter(r => r.status === 'failed');
+  const degraded = results.filter(r => r.status === 'degraded');
+  const poor = results.filter(r => r.grade === 'poor' && r.status !== 'failed');
+
+  if (failed.some(r => r.id === 'latency')) recs.push('Cannot reach the GateNexa server. Check your internet connection or try again later.');
+  if (failed.some(r => r.id === 'api')) recs.push('The GateNexa API is not responding. The server may be starting up — try again in a minute.');
+  if (failed.some(r => r.id === 'backend')) recs.push('The backend server is not responding. Contact support if this persists.');
+  if (degraded.some(r => r.id === 'database')) recs.push('Database is not connected. Your data may not sync until it reconnects.');
+  if (degraded.some(r => r.id === 'ai')) recs.push('AI services are currently unavailable. Core GateNexa features will work normally.');
+  if (poor.some(r => r.id === 'latency')) recs.push('High latency detected. You may experience slower page loads.');
+  if (poor.some(r => r.id === 'api')) recs.push('API response times are elevated. The server may be under load.');
+  if (results.find(r => r.id === 'pdf' && r.status === 'failed')) recs.push('PDF generation is unavailable. Report downloads will not work.');
+  if (results.find(r => r.id === 'device' && r.grade === 'fair')) recs.push('Your device has limited resources. Close other tabs for a smoother experience.');
+
+  if (recs.length === 0) recs.push('Everything looks good. Your connection and device are well-suited for GateNexa.');
+  return recs;
+}
 
 export async function runDiagnostics({ onProgress, signal } = {}) {
   const results = [];
@@ -132,43 +260,29 @@ export async function runDiagnostics({ onProgress, signal } = {}) {
   const total = TESTS.length;
 
   const tasks = TESTS.map(test => async () => {
-    if (signal?.aborted) return null;
+    if (signal?.aborted) return;
     try {
       const result = await TEST_FN[test.id]();
-      result.id = test.id;
       result.label = test.label;
       result.icon = test.icon;
-      results.push(result);
+      result.timeout = test.timeout;
+      if (!signal?.aborted) results.push(result);
     } catch (e) {
-      results.push({ id: test.id, label: test.label, icon: test.icon, status: 'failed', grade: 'poor', detail: e.message });
+      if (!signal?.aborted) {
+        results.push({ id: test.id, label: test.label, icon: test.icon, status: 'failed', grade: 'poor', detail: e.message || 'Test error' });
+      }
     }
     completed++;
     onProgress?.(completed / total);
-    return null;
   });
 
   await Promise.all(tasks.map(t => t()));
+  if (signal?.aborted) return null;
 
-  const score = results.reduce((sum, r) => {
-    if (r.grade === 'excellent') return sum + 100;
-    if (r.grade === 'good') return sum + 75;
-    if (r.grade === 'fair') return sum + 50;
-    return sum + 20;
-  }, 0) / results.length;
+  const { score, grade } = computeScore(results);
+  const recommendations = buildRecommendations(results);
 
-  const grade = score >= 90 ? 'excellent' : score >= 70 ? 'good' : score >= 45 ? 'fair' : 'poor';
-
-  const recommendations = [];
-  if (results.find(r => r.id === 'latency' && r.grade === 'poor')) recommendations.push('Your internet connection has high latency. Try switching to a wired connection or moving closer to your router.');
-  if (results.find(r => r.id === 'api' && r.grade === 'poor')) recommendations.push('API response times are slow. The server may be under load — try again later or contact support.');
-  if (results.find(r => r.id === 'backend' && r.status === 'failed')) recommendations.push('Backend server is not responding. Start the server with `cd backend && node server.js` and ensure MongoDB is running.');
-  if (results.find(r => r.id === 'ai' && r.status === 'degraded')) recommendations.push('AI services are in offline mode. Core features will work but AI chat may not respond.');
-  if (results.find(r => r.id === 'video' && r.grade === 'poor')) recommendations.push('Your connection speed may cause video buffering. Consider lowering video quality or downloading content for offline use.');
-  if (results.find(r => r.id === 'device' && r.grade === 'fair')) recommendations.push('Your device has limited resources. Close other tabs and applications for the best experience.');
-  if (results.find(r => r.id === 'pdf' && r.status === 'failed')) recommendations.push('PDF generation is not available. Report download requires @react-pdf/renderer to be properly installed.');
-  if (!recommendations.length) recommendations.push('Everything looks good! Your connection, device, and browser are well-suited for GateNexa.');
-
-  return { results, score: Math.round(score), grade, recommendations, timestamp: Date.now() };
+  return { results, score, grade, recommendations, timestamp: Date.now() };
 }
 
 export { TESTS };

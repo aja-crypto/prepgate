@@ -25,6 +25,7 @@ const lazyRoute = (loader) => reactLazy(async () => {
   try {
     return await loader();
   } catch (error) {
+    window.dispatchEvent(new CustomEvent('gatenexa:failed-chunk'));
     const key = 'gatenexa_route_chunk_retry';
     if (typeof window !== 'undefined' && !sessionStorage.getItem(key)) {
       sessionStorage.setItem(key, String(Date.now()));
