@@ -234,7 +234,14 @@ function SidebarNav({ onNavClick, onCalcClick }) {
 
       {/* Bottom links */}
       {NAV_BOTTOM.map(item => (
-        <NavLinkRow key={item.to} item={item} onNavClick={onNavClick} onCalcClick={onCalcClick} />
+        <div key={item.to}>
+          <NavLinkRow item={item} onNavClick={onNavClick} onCalcClick={onCalcClick} />
+          {item.label === 'Feedback' && (
+            <p className="md:hidden pl-3 pr-2 mt-1 mb-2 text-[10.5px] leading-snug text-purple-300/80">
+              Enjoying GateNexa? Please give us your feedback ❤️
+            </p>
+          )}
+        </div>
       ))}
 
       {/* Admin */}

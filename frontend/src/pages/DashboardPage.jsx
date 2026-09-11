@@ -181,7 +181,6 @@ export default function DashboardPage() {
   const { visibleWidgets, editMode, setEditMode } = useDashboard();
   const { visibleMobileWidgets, isMobileWidgetVisible, toggleMobileWidget } = useDashboard();
   const [customizerOpen, setCustomizerOpen] = useState(false);
-  const [mobileWidgetsOpen, setMobileWidgetsOpen] = useState(false);
 
   const openCustomizer = () => {
     setCustomizerOpen(true);
@@ -566,8 +565,8 @@ export default function DashboardPage() {
           <MobileToolbar
             onRefresh={() => refreshLive()}
             refreshing={liveLoading}
-            onCustomize={() => setCustomizerOpen(true)}
-            onWidgets={() => setMobileWidgetsOpen(true)}
+            onCustomize={openCustomizer}
+            onWidgets={openCustomizer}
           />
         </section>
 
@@ -676,13 +675,38 @@ export default function DashboardPage() {
               <ExamScheduleCard schedule={liveData?.schedule || []} examDate={liveData?.examDate} />
             </section>
           )}
+
+          {/* Resources */}
+          {isMobileWidgetVisible('resources') && (
+            <section className="mobile-card-glass p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-7 h-7 rounded-lg bg-indigo-500/15 flex items-center justify-center text-sm shrink-0">📚</span>
+                <div className="text-xs font-bold text-text">Resources</div>
+              </div>
+              <ResourcesFeed
+                studyMaterials={liveData?.studyMaterials || []}
+                placementResources={liveData?.placementResources || []}
+              />
+            </section>
+          )}
+
+          {/* GATE 2027 Timeline */}
+          {isMobileWidgetVisible('exam-timeline') && (
+            <section className="mobile-card-glass p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-7 h-7 rounded-lg bg-violet-500/15 flex items-center justify-center text-sm shrink-0">🗓️</span>
+                <div className="text-xs font-bold text-text">GATE 2027 Timeline</div>
+              </div>
+              <ExamTimeline />
+            </section>
+          )}
         </div>
         </>
         )}
       </div>
 
       {/* Mobile Widget Customizer */}
-      <MobileWidgetCustomizer open={mobileWidgetsOpen} onClose={() => setMobileWidgetsOpen(false)} />
+      <MobileWidgetCustomizer open={customizerOpen} onClose={closeCustomizer} />
 
       {/* ═══ DESKTOP DASHBOARD ═══ */}
       <div className="hidden sm:block relative" style={{ transform: 'scale(0.93)', transformOrigin: 'top center' }}>

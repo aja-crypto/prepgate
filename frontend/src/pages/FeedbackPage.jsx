@@ -127,6 +127,27 @@ export default function FeedbackPage() {
 
   const reset = () => { setStep('welcome'); setRating(0); setCategory(''); setDescription(''); setScreenshot(null); setScreenshotPreview(null); setRecommend(''); clearDraft(); };
 
+  // Share GateNexa after successful feedback (public URL only)
+  const SHARE_URL = 'https://gatenexa.vercel.app';
+  const shareText = `I'm using GateNexa for GATE 2027 preparation. Check it out! ${SHARE_URL}`;
+  const [copied, setCopied] = useState(false);
+  const copyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Could not copy link.');
+    }
+  };
+  const nativeShare = () => {
+    if (navigator.share) {
+      navigator.share({ title: 'GateNexa', text: shareText, url: SHARE_URL }).catch(() => {});
+    } else {
+      copyShareLink();
+    }
+  };
+
   const meta = RATING_META[hoverRating - 1] || RATING_META[rating - 1] || RATING_META[0];
 
   return (
@@ -315,6 +336,39 @@ export default function FeedbackPage() {
             </motion.div>
             <motion.h2 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="text-xl font-bold text-white mb-2">Thank You!</motion.h2>
             <motion.p initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-sm text-slate-400 mb-8">Your feedback has been submitted and will help improve GateNexa.</motion.p>
+
+            <motion.div initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.45 }} className="max-w-sm mx-auto mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-sm font-semibold text-white mb-1">Love GateNexa? Share it with your friends!</p>
+              <p className="text-xs text-slate-400 mb-4 leading-relaxed">I'm using GateNexa for GATE 2027 preparation. Check it out! 🚀</p>
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold"
+                  style={{ background: '#25D366', color: '#04150a' }}
+                >
+                  WhatsApp
+                </a>
+                <button
+                  onClick={copyShareLink}
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-white border border-white/10 hover:bg-white/5 transition-colors"
+                >
+                  {copied ? 'Copied!' : 'Copy Link'}
+                </button>
+                <button
+                  onClick={nativeShare}
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-white"
+                  style={{ background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)' }}
+                >
+                  Share
+                </button>
+                <button onClick={reset} className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-colors">
+                  Maybe Later
+                </button>
+              </div>
+            </motion.div>
+
             <motion.button initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}
               whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={reset}
               className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)' }}>

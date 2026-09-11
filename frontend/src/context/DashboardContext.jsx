@@ -23,6 +23,8 @@ const MOBILE_DEFAULTS = [
   { id: 'daily-content', visible: true },
   { id: 'analysis', visible: true },
   { id: 'exam-schedule', visible: true },
+  { id: 'resources', visible: false },
+  { id: 'exam-timeline', visible: false },
 ];
 
 function loadLayout(userId) {
@@ -45,7 +47,12 @@ function loadMobileLayout(userId) {
     if (raw) {
       const parsed = JSON.parse(raw);
       const known = new Set(DEFAULT_WIDGETS.map((w) => w.id));
-      return parsed.filter((w) => known.has(w.id));
+      const filtered = parsed.filter((w) => known.has(w.id));
+      // Ensure newly-registered mobile widgets (OFF by default) stay available to
+      // existing users who saved their list before these widgets existed.
+      const missing = MOBILE_DEFAULTS.filter((w) => !filtered.some((f) => f.id === w.id));
+      if (missing.length) return [...filtered, ...missing.map((w, i) => ({ id: w.id, visible: w.visible, order: filtered.length + i }))];
+      return filtered;
     }
   } catch { /* ignore */ }
   return MOBILE_DEFAULTS.map((w, i) => ({ id: w.id, visible: w.visible, order: i }));
