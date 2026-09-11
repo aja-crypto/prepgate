@@ -2457,3 +2457,13 @@
 .animate-in {
   animation: showcaseTextIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
+
+@media (hover: none) and (pointer: coarse) {
+  [class*="card"]:hover, [class*="glass-card"]:hover, [class*="elevated-card"]:hover { transform: none !important; box-shadow: none !important; }
+  .card:hover { transform: none !important; box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important; }
+}
+@media (max-width: 768px) {
+  .glass-sidebar, .glass-header, [class*="glass"] { backdrop-filter: blur(8px) saturate(1.2) !important; -webkit-backdrop-filter: blur(8px) saturate(1.2) !important; }
+  .mobile-sheet { max-height: 85dvh !important; max-height: 85vh !important; }
+  .mobile-sheet-backdrop { min-height: 100dvh; min-height: 100vh; }
+}

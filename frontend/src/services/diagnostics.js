@@ -30,6 +30,7 @@ const TESTS = [
   { id: 'api', label: 'GateNexa API', icon: '⚡', timeout: 10000 },
   { id: 'backend', label: 'Backend Health', icon: '🖥️', timeout: 8000 },
   { id: 'database', label: 'Database', icon: '🗄️', timeout: 8000 },
+  { id: 'auth', label: 'Authentication', icon: '🔐', timeout: 6000 },
   { id: 'ai', label: 'AI Services', icon: '🤖', timeout: 12000 },
   { id: 'video', label: 'Video Readiness', icon: '🎬', timeout: 5000 },
   { id: 'browser', label: 'Browser', icon: '🌐', timeout: 3000 },
@@ -111,6 +112,21 @@ async function testDatabase() {
     };
   } catch {
     return { id: 'database', status: 'degraded', grade: 'fair', value: 'Unknown', detail: 'Could not verify database status' };
+  }
+}
+
+async function testAuth() {
+  try {
+    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    const isGuest = typeof localStorage !== 'undefined' ? localStorage.getItem('isGuest') === 'true' : false;
+    if (isGuest) return { id: 'auth', status: 'passed', grade: 'excellent', value: 'Guest', detail: 'Demo session active' };
+    if (!token) return { id: 'auth', status: 'degraded', grade: 'fair', value: 'Not authenticated', detail: 'No active session — please log in' };
+    const res = await fetchWithTimeout(`${API_BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }, 5000);
+    if (res.ok) return { id: 'auth', status: 'passed', grade: 'excellent', value: 'Session valid', detail: 'Authentication active' };
+    if (res.status === 401) return { id: 'auth', status: 'degraded', grade: 'fair', value: 'Expired', detail: 'Session expired — please log in again' };
+    return { id: 'auth', status: 'degraded', grade: 'fair', value: `HTTP ${res.status}`, detail: 'Authentication check returned error' };
+  } catch {
+    return { id: 'auth', status: 'degraded', grade: 'fair', value: 'Unknown', detail: 'Could not verify authentication status' };
   }
 }
 
@@ -211,6 +227,7 @@ const TEST_FN = {
   api: testApi,
   backend: testBackend,
   database: testDatabase,
+  auth: testAuth,
   ai: testAi,
   video: testVideo,
   browser: testBrowser,

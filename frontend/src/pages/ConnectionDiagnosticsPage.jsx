@@ -103,7 +103,7 @@ export default function ConnectionDiagnosticsPage() {
               <button onClick={cancelDiagnostics} className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-white/[0.08] border border-white/[0.1]">Cancel</button>
             ) : (
               <button onClick={handleRun} className="px-6 py-2.5 rounded-xl text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, #7C3AED, #4F46E5)' }}>
-                {results ? 'Run Diagnostics' : 'Run Diagnostics'}
+                {results ? 'Run checks again' : 'Run Diagnostics'}
               </button>
             )}
             {results && (results.grade === 'poor' || results.grade === 'fair') && !running && (
@@ -175,6 +175,7 @@ const TEST_PLACEHOLDERS = [
   { icon: '⚡', label: 'GateNexa API' },
   { icon: '🖥️', label: 'Backend Health' },
   { icon: '🗄️', label: 'Database' },
+  { icon: '🔐', label: 'Authentication' },
   { icon: '🤖', label: 'AI Services' },
   { icon: '🎬', label: 'Video Readiness' },
   { icon: '🌐', label: 'Browser' },

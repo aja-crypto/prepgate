@@ -60,20 +60,24 @@ api.get = (url, config) => {
 };
 const NO_CACHE_PATTERNS = ['/auth/me', '/auth/refresh', '/auth/demo', '/ai/quota', '/notifications', '/progress/sync', '/admin/', '/gate-vault/progress', '/gate-vault/stats', '/notes', '/live/dashboard', '/ai/context', '/notes/pinned'];
 
-let _slowApiLastEmit = 0;
+const _slowApiLastEmitByUrl = new Map();
 const SLOW_API_THROTTLE = 30000;
 function emitSlowApi(url, latencyMs) {
   const now = Date.now();
-  if (now - _slowApiLastEmit < SLOW_API_THROTTLE) return;
-  _slowApiLastEmit = now;
+  const key = url ? String(url).split('?')[0] : '__unknown__';
+  const last = _slowApiLastEmitByUrl.get(key) || 0;
+  if (now - last < SLOW_API_THROTTLE) return;
+  _slowApiLastEmitByUrl.set(key, now);
   window.dispatchEvent(new CustomEvent('gatenexa:slow-api', { detail: { url, latencyMs } }));
 }
-let _failedApiLastEmit = 0;
+const _failedApiLastEmitByUrl = new Map();
 const FAILED_API_THROTTLE = 30000;
 function emitFailedApi(url, status) {
   const now = Date.now();
-  if (now - _failedApiLastEmit < FAILED_API_THROTTLE) return;
-  _failedApiLastEmit = now;
+  const key = url ? String(url).split('?')[0] : '__unknown__';
+  const last = _failedApiLastEmitByUrl.get(key) || 0;
+  if (now - last < FAILED_API_THROTTLE) return;
+  _failedApiLastEmitByUrl.set(key, now);
   window.dispatchEvent(new CustomEvent('gatenexa:failed-api', { detail: { url, status } }));
 }
 

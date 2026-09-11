@@ -37,7 +37,7 @@ export default function CinematicVideoCard({
       layout
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: (index || 0) * 0.03 }}
+      transition={{ delay: Math.min(index || 0, 5) * 0.03 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="lh-card cursor-pointer group flex flex-col shrink-0 snap-start"
