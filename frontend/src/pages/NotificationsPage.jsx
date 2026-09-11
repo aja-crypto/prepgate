@@ -158,8 +158,8 @@ export default function NotificationsPage() {
     <div className="min-h-screen bg-black">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
+          <div className="flex items-center gap-4 min-w-0">
             <button onClick={() => nav(-1)} className="p-2 rounded-xl hover:bg-white/5 text-text2 hover:text-white transition-all">
               <ArrowLeft size={20} />
             </button>
@@ -229,13 +229,13 @@ export default function NotificationsPage() {
           )}
         </AnimatePresence>
 
-        {/* Category tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        {/* Category tabs — horizontal scroll on mobile, no overlap/clipping */}
+        <div className="gn-filter-scroll flex flex-nowrap items-center gap-2 mb-6 overflow-x-auto overflow-y-hidden pb-2">
           {CATEGORIES.map(cat => (
             <button
               key={cat.key}
               onClick={() => setFilter(cat.key)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap border ${
+              className={`flex items-center gap-1.5 flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap border ${
                 filter === cat.key
                   ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
                   : 'bg-white/5 text-text2 hover:text-white border-transparent hover:border-white/10'
@@ -249,6 +249,7 @@ export default function NotificationsPage() {
             </button>
           ))}
         </div>
+        <style>{`.gn-filter-scroll{scrollbar-width:none;-ms-overflow-style:none}.gn-filter-scroll::-webkit-scrollbar{display:none}`}</style>
 
         {/* Notifications list */}
         <div className="space-y-2">

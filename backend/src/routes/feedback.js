@@ -119,58 +119,86 @@ router.post('/', protect, async (req, res, next) => {
       const userId = rawUserId && mongoose.isValidObjectId(rawUserId) ? rawUserId : null;
       const FeedbackTicket = require('../models/FeedbackTicket');
       const screenshotUrl = typeof req.body.screenshotUrl === 'string' && req.body.screenshotUrl.startsWith('https://') ? req.body.screenshotUrl.slice(0, 2000) : null;
-      const ticket = await FeedbackTicket.create({
+      const title = (req.body.title || description || 'New feedback').slice(0, 200);
+      const msg = description || (ratings?.overall ? `Rating: ${ratings.overall}/5` : 'No message provided.');
+
+      // Server-side idempotency: a duplicate form submission (double-click,
+      // network retry, brief resubmit) within a short window must not create
+      // multiple identical tickets. A genuinely new submission outside the
+      // window always creates its own ticket.
+      const dedupeWindowMs = 10 * 1000;
+      const common = await FeedbackTicket.findOne({
         user: userId,
-        userName: req.user?.name || 'Anonymous',
-        userEmail: req.user?.email || '',
         category,
-        subject: req.body.category || category,
-        title: (req.body.title || description || 'New feedback').slice(0, 200),
-        message: description || (ratings?.overall ? `Rating: ${ratings.overall}/5` : 'No message provided.'),
-        screenshotUrl,
-        priority: 'medium',
-        deviceInfo: req.body.deviceInfo || {},
-      });
-      await createFeedbackNotification({
-        userId: userId || req.user._id,
-        type: 'feedback_received',
-        title: 'Thank you for your feedback',
-        message: `Your ${req.body.category || 'general'} feedback was submitted successfully and is ready for review.`,
-        ticketId: ticket._id,
-      });
-      // Confirmation email — one per created ticket, never blocking submit.
-      {
-        const to = req.user?.email || '';
-        if (to) {
-          const emailTemplates = require('../utils/emailTemplates');
-          const t = emailTemplates.feedbackReceived({
-            title: ticket.title,
-            category,
-            rating: ratings?.overall,
-            message: ticket.message,
-            ticketId: ticket._id,
-          });
-          const { sendTransactionalEmail } = require('../services/emailDeliveryService');
-          sendTransactionalEmail({
-            type: 'feedback-received',
-            eventId: String(ticket._id),
-            to,
-            subject: t.subject,
-            html: t.html,
-            text: t.text,
-          });
-        }
+        title,
+        message: msg,
+        createdAt: { $gte: new Date(Date.now() - dedupeWindowMs) },
+      }).lean();
+
+      let ticket;
+      let isNewTicket = false;
+      if (common) {
+        ticket = common;
+      } else {
+        ticket = await FeedbackTicket.create({
+          user: userId,
+          userName: req.user?.name || 'Anonymous',
+          userEmail: req.user?.email || '',
+          category,
+          subject: req.body.category || category,
+          title,
+          message: msg,
+          screenshotUrl,
+          priority: 'medium',
+          deviceInfo: req.body.deviceInfo || {},
+        });
+        isNewTicket = true;
       }
-      const Admin = require('../models/Admin');
-      const admins = await Admin.find({ isActive: true }).select('_id').lean();
-      await Promise.all(admins.map(admin => createFeedbackNotification({
-        userId: admin._id,
-        type: 'feedback_received',
-        title: `${req.body.category || 'General'} feedback — ${ratings?.overall || 0}/5`,
-        message: `A user reported: "${description || 'No written message provided.'}"`,
-        ticketId: ticket._id,
-        actionPath: '/admin/feedback',
-      })));
+
+      // Notifications/emails/audit only for a genuinely new ticket, so a
+      // duplicate submission never spams the user or admins a second time.
+      if (isNewTicket) {
+        await createFeedbackNotification({
+          userId: userId || req.user._id,
+          type: 'feedback_received',
+          title: 'Thank you for your feedback',
+          message: `Your ${req.body.category || 'general'} feedback was submitted successfully and is ready for review.`,
+          ticketId: ticket._id,
+        });
+        // Confirmation email — one per created ticket, never blocking submit.
+        {
+          const to = req.user?.email || '';
+          if (to) {
+            const emailTemplates = require('../utils/emailTemplates');
+            const t = emailTemplates.feedbackReceived({
+              title: ticket.title,
+              category,
+              rating: ratings?.overall,
+              message: ticket.message,
+              ticketId: ticket._id,
+            });
+            const { sendTransactionalEmail } = require('../services/emailDeliveryService');
+            sendTransactionalEmail({
+              type: 'feedback-received',
+              eventId: String(ticket._id),
+              to,
+              subject: t.subject,
+              html: t.html,
+              text: t.text,
+            });
+          }
+        }
+        const Admin = require('../models/Admin');
+        const admins = await Admin.find({ isActive: true }).select('_id').lean();
+        await Promise.all(admins.map(admin => createFeedbackNotification({
+          userId: admin._id,
+          type: 'feedback_received',
+          title: `${req.body.category || 'General'} feedback — ${ratings?.overall || 0}/5`,
+          message: `A user reported: "${description || 'No written message provided.'}"`,
+          ticketId: ticket._id,
+          actionPath: '/admin/feedback',
+        })));
+      }
     }
 
     res.json({ success: true, data: feedback, message: 'Feedback submitted successfully.' });

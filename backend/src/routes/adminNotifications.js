@@ -16,11 +16,11 @@ router.get('/stats', async (req, res, next) => {
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
       const [total, todayCount, scheduled, sentDocs, allSent] = await Promise.all([
-        Notification.countDocuments(),
-        Notification.countDocuments({ createdAt: { $gte: todayStart } }),
-        Notification.countDocuments({ status: 'scheduled' }),
-        Notification.find({ status: 'sent' }).select('analytics'),
-        Notification.countDocuments({ status: 'sent' }),
+        Notification.countDocuments({ user: null }),
+        Notification.countDocuments({ user: null, createdAt: { $gte: todayStart } }),
+        Notification.countDocuments({ user: null, status: 'scheduled' }),
+        Notification.find({ user: null, status: 'sent' }).select('analytics'),
+        Notification.countDocuments({ user: null, status: 'sent' }),
       ]);
 
       const analytics = { delivered: 0, opened: 0, clicked: 0, dismissed: 0, sent: 0 };
@@ -62,7 +62,10 @@ router.get('/', async (req, res, next) => {
 
     if (isMongoConnected()) {
       const Notification = require('../models/Notification');
-      const filter = {};
+      // Admin Center shows only master campaigns (user: null). Per-user delivery
+      // records are hidden because users consume them individually, and counting
+      // them would inflate the admin's campaign list by the number of recipients.
+      const filter = { user: null };
       if (status) filter.status = status;
       if (category) filter.category = category;
       if (search) filter.$or = [{ title: { $regex: search, $options: 'i' } }, { message: { $regex: search, $options: 'i' } }];
@@ -188,27 +191,43 @@ router.post('/:id/send', async (req, res, next) => {
       let inAppCreated = 0;
       try {
         if (eligibleUsers.length) {
-          const perUserDocs = eligibleUsers.map((u) => ({
-            user: u._id,
-            title: doc.title,
-            body: doc.body || doc.message,
-            message: doc.message,
-            category: doc.category,
-            priority: doc.priority,
-            targetAudience: doc.targetAudience,
-            status: 'sent',
-            isRead: false,
-            imageUrl: doc.imageUrl || '',
-            actionButtonText: doc.actionButtonText || 'View',
-            actionUrl: doc.actionUrl || '/dashboard',
-            action: doc.action || { label: doc.actionButtonText || 'View', href: doc.actionUrl || '/dashboard' },
-            createdBy: req.admin._id,
-            sentAt: new Date(),
-            scheduledAt: new Date(),
-            analytics: { sent: 1, delivered: 0, opened: 0, clicked: 0, dismissed: 0 },
+          // Deterministic, idempotent per-user delivery. Each delivery gets a
+          // notificationKey of `admin:<masterId>:<userId>`, and the unique index
+          // { user, notificationKey } guarantees a retry of this send can never
+          // create duplicate delivery copies for the same user. $setOnInsert
+          // means an already-existing delivery is never overwritten, so read /
+          // bookmark state per user is preserved.
+          const masterId = String(doc._id);
+          const perUserOps = eligibleUsers.map((u) => ({
+            updateOne: {
+              filter: { user: u._id, notificationKey: `admin:${masterId}:${u._id.toString()}` },
+              update: {
+                $setOnInsert: {
+                  user: u._id,
+                  notificationKey: `admin:${masterId}:${u._id.toString()}`,
+                  title: doc.title,
+                  body: doc.body || doc.message,
+                  message: doc.message,
+                  category: doc.category,
+                  priority: doc.priority,
+                  targetAudience: doc.targetAudience,
+                  status: 'sent',
+                  isRead: false,
+                  imageUrl: doc.imageUrl || '',
+                  actionButtonText: doc.actionButtonText || 'View',
+                  actionUrl: doc.actionUrl || '/dashboard',
+                  action: doc.action || { label: doc.actionButtonText || 'View', href: doc.actionUrl || '/dashboard' },
+                  createdBy: req.admin._id,
+                  sentAt: new Date(),
+                  scheduledAt: new Date(),
+                  analytics: { sent: 1, delivered: 0, opened: 0, clicked: 0, dismissed: 0 },
+                },
+              },
+              upsert: true,
+            },
           }));
-          const inserted = await Notification.insertMany(perUserDocs, { ordered: false });
-          inAppCreated = inserted.length;
+          const result = await Notification.bulkWrite(perUserOps, { ordered: false });
+          inAppCreated = result.upsertedCount || 0;
         }
       } catch (inAppErr) {
         console.error('[adminNotifications] in-app insert failed:', inAppErr.message);
@@ -280,7 +299,7 @@ router.get('/analytics/overview', async (req, res, next) => {
       else if (period === 'week') startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       else startDate = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      const docs = await Notification.find({ createdAt: { $gte: startDate }, status: 'sent' }).select('analytics category createdAt').lean();
+      const docs = await Notification.find({ user: null, createdAt: { $gte: startDate }, status: 'sent' }).select('analytics category createdAt').lean();
 
       const totals = { sent: 0, delivered: 0, opened: 0, clicked: 0, dismissed: 0 };
       const byCategory = {};
