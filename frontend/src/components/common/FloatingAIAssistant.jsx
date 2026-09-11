@@ -43,7 +43,7 @@ const STATUS_PHRASES = [
 ];
 
 const badgeConf = {
-  provider: { label: 'Live AI', color: '#06d6a0', dot: '#06d6a0' },
+  provider: { label: 'Nexa AI', color: '#06d6a0', dot: '#06d6a0' },
   cache: { label: 'Cached', color: '#4f8dff', dot: '#4f8dff' },
   heuristic: { label: 'Offline AI', color: '#ff9f43', dot: '#ff9f43' },
   offline: { label: 'Offline AI', color: '#ff9f43', dot: '#ff9f43' },
@@ -51,23 +51,20 @@ const badgeConf = {
   thinking: { label: '...', color: '#a78bfa', dot: '#a78bfa' },
   aborted: { label: 'Stopped', color: '#fbbf24', dot: '#fbbf24' },
   quota: { label: 'Limit Reached', color: '#f87171', dot: '#f87171' },
-  ollama: { label: 'Ollama', color: '#38bdf8', dot: '#38bdf8' },
-  openai: { label: 'OpenAI', color: '#a78bfa', dot: '#a78bfa' },
-  openrouter: { label: 'Nexa AI', color: '#f97316', dot: '#f97316' },
-  dashscope: { label: 'DashScope', color: '#22d3ee', dot: '#22d3ee' },
-  ai: { label: 'Live AI', color: '#06d6a0', dot: '#06d6a0' },
+  ai: { label: 'Nexa AI', color: '#06d6a0', dot: '#06d6a0' },
 };
+
+// Client-side output sanitization (defense-in-depth — server is authoritative).
+const LEAK_RE = /\b(I\s+am\s+(?:a\s+)?(?:model\s+)?(?:called\s+)?(?:named\s+)?)(GPT[-‐‑]?\d[\w.]*|ChatGPT|OpenAI|Gemini|Claude|Anthropic|Llama|Qwen|DashScope|Nemotron|BERT|PaLM|Mistral)\b|\b(I\s+(?:was\s+)?(?:trained|developed|built|created)\s+(?:by|using|on)\s+)(OpenAI|Google|Anthropic|Meta|Alibaba|NVIDIA|DashScope|Aliyun)\b|\b(My\s+(?:model|underlying\s+model|AI\s+model)\s+(?:is|name\s+is|called)\s+(?:is\s+)?)(GPT[-‐‑]?\d[\w.]*|ChatGPT|Gemini|Claude|Llama|Qwen|Nemotron)\b|\b(powered\s+by|runs?\s+on|uses?)\s+(GPT[-‐‑]?\d[\w.]*|ChatGPT|Gemini|Claude|OpenAI|OpenRouter|DashScope|Aliyun|NVIDIA|Anthropic|Google|Meta)\b/gi;
+function sanitizeAssistantText(text) {
+  if (!text || typeof text !== 'string') return text;
+  return text.replace(LEAK_RE, '$1$3$5$7Nexa AI');
+}
 
 function sourceBadgeKey(source, provider) {
   if (source === 'heuristic') return 'heuristic';
   if (source === 'offline') return 'offline';
-  if (source === 'ai' || source === 'provider') {
-    if (provider === 'OpenRouter') return 'openrouter';
-    if (provider === 'OpenAI') return 'openai';
-    if (provider === 'Ollama') return 'ollama';
-    if (provider === 'DashScope') return 'dashscope';
-    return 'provider';
-  }
+  if (source === 'ai' || source === 'provider') return 'ai';
   return source || 'provider';
 }
 
@@ -154,17 +151,10 @@ function OfflineDetails({ offlineInfo, onClose }) {
       </div>
       {show && (
         <div className="mt-1.5 pt-1.5 border-t space-y-0.5" style={{ borderColor: 'rgba(255,159,67,0.15)' }}>
-          <div className="flex justify-between gap-3"><span style={{ color: 'rgba(255,255,255,0.4)' }}>Provider</span><span style={{ color: 'rgba(255,255,255,0.7)' }}>{offlineInfo.provider || '—'}</span></div>
-          <div className="flex justify-between gap-3"><span style={{ color: 'rgba(255,255,255,0.4)' }}>Model</span><span style={{ color: 'rgba(255,255,255,0.7)' }}>{offlineInfo.model || '—'}</span></div>
+          <div className="flex justify-between gap-3"><span style={{ color: 'rgba(255,255,255,0.4)' }}>Provider</span><span style={{ color: 'rgba(255,255,255,0.7)' }}>Nexa AI</span></div>
           <div className="flex justify-between gap-3"><span style={{ color: 'rgba(255,255,255,0.4)' }}>Status</span><span style={{ color: 'rgba(255,255,255,0.7)' }}>{status}{statusLabel !== '—' ? ` (${statusLabel})` : ''}</span></div>
           <div className="flex justify-between gap-3"><span style={{ color: 'rgba(255,255,255,0.4)' }}>Fallback reason</span><span style={{ color: 'rgba(255,255,255,0.7)', textAlign: 'right' }}>{reason}</span></div>
           <div className="flex justify-between gap-3"><span style={{ color: 'rgba(255,255,255,0.4)' }}>Time</span><span style={{ color: 'rgba(255,255,255,0.7)' }}>{ts}</span></div>
-          {offlineInfo.detail && (
-            <div className="mt-1 pt-1 border-t" style={{ borderColor: 'rgba(255,159,67,0.12)' }}>
-              <div style={{ color: 'rgba(255,255,255,0.4)' }}>Detail</div>
-              <div style={{ color: 'rgba(255,255,255,0.6)' }} className="break-words">{offlineInfo.detail}</div>
-            </div>
-          )}
         </div>
       )}
     </div>
@@ -209,7 +199,7 @@ function ResizeHandle({ direction, onResizeStart }) {
 function ChatMessage({ msg, isLast, streaming, partialText, responseTime, onSend, onThumbs }) {
   const isUser = msg.role === 'user';
   const isLastAssistant = msg.role === 'assistant' && isLast;
-  const displayText = isLastAssistant && streaming ? partialText || msg.text : msg.text;
+  const displayText = isLastAssistant && streaming ? sanitizeAssistantText(partialText || msg.text) : sanitizeAssistantText(msg.text);
   const source = msg.source || 'provider';
   const cached = msg.cached;
   const isOffline = source === 'heuristic' || source === 'offline';
