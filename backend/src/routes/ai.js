@@ -144,6 +144,32 @@ setInterval(() => {
   }
 }, 300000).unref();
 
+// ── Protected deterministic fast-path (no AI call, no DB context) ────────────
+// Detects identity/builder questions that must never reach the AI provider.
+// Returns 'identity' | 'builder' | null.
+const IDENTITY_RESPONSE = "I'm Nexa AI, the AI assistant built into GateNexa. I'm here to help with GATE 2027 preparation and GateNexa.";
+const BUILDER_RESPONSE = "GateNexa was built by Purru Ajay Kumar.";
+
+function detectProtectedAiIntent(message) {
+  const lower = message.toLowerCase().trim();
+  if (/\b(what|which)\b.*(you|your|ur)\b.*\b(model|provider|api|version|engine|backend|architecture|infrastructure|powered|built|underlying)\b/i.test(lower)
+    || /\b(what|which)\b.*\b(model|provider|api|version|engine|backend)\b.*\b(you|your|ur)\b/i.test(lower)
+    || /\bare you\b.*(gpt|chatgpt|claude|gemini|nemotron|qwen|llama|bert|openai|anthropic|google|meta|alibaba)/i.test(lower)
+    || /\b(you are|you're)\b.*(gpt|chatgpt|claude|gemini|nemotron|qwen|llama|bert|openai|anthropic|google|meta|alibaba)/i.test(lower)
+    || /\b(show|reveal|print|output|display|tell me)\b.*(system prompt|hidden|secret|internal|instruction|rule|config|configuration|api key|credential|environment)/i.test(lower)
+    || /\b(ignore|forget|override|bypass|disregard)\b.*(instruction|rule|prompt|previous|above|system)/i.test(lower)
+  ) {
+    return 'identity';
+  }
+  if (/\b(who|whom)\b.*\b(built|created|developed|made|founded|designed|built this|made this)\b/i.test(lower)
+    || /\b(who|whom)\b.*\b(developer|founder|creator|author|owner)\b.*\b(gatenexa|gate.?nexa|this app|this site|this platform|this website)\b/i.test(lower)
+    || /\bwho\b.*\b(built|created|developed|made)\b.*\b(gatenexa|gate.?nexa|this|the app|the site|the platform)\b/i.test(lower)
+  ) {
+    return 'builder';
+  }
+  return null;
+}
+
 // GET /api/ai/quota — returns remaining questions for current user
 router.get('/quota', protect, async (req, res) => {
   const userId = req.user?._id;
@@ -1231,10 +1257,49 @@ router.post('/chat', validateFields([
 
     message = message.trim();
     context = context || {};
+    const tProtected = Date.now();
     const classifiedIntent = classifyIntent(message);
     const lightweightRequest = classifiedIntent === 'greeting' ||
       (classifiedIntent === 'simpleFactual' && message.length <= 160);
     if (lightweightRequest) context.lightweightRequest = true;
+
+    // ── Protected deterministic fast-path (before any expensive DB work) ───
+    const protectedIntent = detectProtectedAiIntent(message);
+    if (protectedIntent) {
+      const responseText = protectedIntent === 'identity' ? IDENTITY_RESPONSE : BUILDER_RESPONSE;
+      const suggestions = ["Explain a GATE topic", "What should I study today?"];
+
+      const wantsStream = req.body.stream === true || /text\/event-stream/i.test(req.headers.accept || '');
+      if (wantsStream) {
+        res.status(200);
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache, no-transform');
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('X-Accel-Buffering', 'no');
+        if (res.flushHeaders) res.flushHeaders();
+        const send = (obj) => { if (!res.writableEnded) res.write(`data: ${JSON.stringify(obj)}\n\n`); };
+        send({ type: 'delta', content: responseText });
+        let remaining = null;
+        if (!isAdmin) {
+          const quotaCheck = await checkAiQuota(userId);
+          remaining = { remaining: quotaCheck.remaining, limit: quotaCheck.limit, isPremium: quotaCheck.isPremium };
+        }
+        aiUsage.increment(true, Date.now() - chatStart);
+        await incrementAiUsage(req.user?._id?.toString());
+        send({ type: 'done', content: responseText, suggestions, source: 'protected', provider: null, remaining, conversationId: null });
+        return res.end();
+      }
+
+      let remaining = null;
+      if (!isAdmin) {
+        const quotaCheck = await checkAiQuota(userId);
+        remaining = { remaining: quotaCheck.remaining, limit: quotaCheck.limit, isPremium: quotaCheck.isPremium };
+      }
+      aiUsage.increment(true, Date.now() - chatStart);
+      await incrementAiUsage(req.user?._id?.toString());
+      return res.json({ success: true, data: { text: responseText, suggestions, source: 'protected', provider: null, remaining, conversationId: null } });
+    }
+    // ── End protected fast-path ──
 
     // Server-side AI context: enrich every AI request with the user's REAL
     // backend data (profile, progress, roadmap, journey, recommendations,
@@ -1259,6 +1324,7 @@ router.post('/chat', validateFields([
     } catch (ctxErr) {
       console.error('[AI Coach] context builder failed:', ctxErr.message);
     }
+    const tContextDone = Date.now();
 
     let conv = null;
     const { isMockAuthEnabled } = require('../config/devMode');
@@ -1313,6 +1379,7 @@ router.post('/chat', validateFields([
 
     // Thread conversationId into context so follow-ups reference the same conversation.
     context.conversationId = conversationId || context.conversationId || null;
+    const tConvDone = Date.now();
 
     // Streaming is requested by the assistant clients (Accept: text/event-stream
     // or explicit stream flag). JSON path preserved for existing askCoach consumers.
@@ -1392,6 +1459,7 @@ router.post('/chat', validateFields([
           content: response?.offlineError || lastAiError || 'AI service is temporarily unavailable. Please try again in a moment.',
         });
       }
+      console.log(`[AI Coach] timings: protected=${tProtected - chatStart}ms context=${tContextDone - tProtected}ms conv=${tConvDone - tContextDone}ms total=${Date.now() - chatStart}ms`);
       return res.end();
     }
 

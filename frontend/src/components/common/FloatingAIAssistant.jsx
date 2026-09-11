@@ -621,7 +621,9 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     if (result?.text) {
       const source = result.source || 'provider';
       addAssistantMessage(result.text);
-      cache.setCached(userMsg, { text: result.text, suggestions: result.suggestions }, undefined, aiMode);
+      if (source !== 'protected') {
+        cache.setCached(userMsg, { text: result.text, suggestions: result.suggestions }, undefined, aiMode);
+      }
       placeholderFinalizedRef.current = true;
       setMessages(prev => prev.map(m => m.id === placeholderId
         ? { ...m, text: result.text, source, provider: result.provider, offlineInfo: result.offlineInfo, cached: false, thumbs: null }
@@ -666,7 +668,6 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
     const placeholderId = activeAssistantIdRef.current;
     if (partialText && placeholderId && !placeholderFinalizedRef.current) {
       addAssistantMessage(partialText);
-      cache.setCached(lastUserMsgRef.current, { text: partialText, suggestions: null }, undefined, aiMode);
       placeholderFinalizedRef.current = true;
       setMessages(prev => prev.map(m => m.id === placeholderId
         ? { ...m, text: partialText, source: 'aborted', cached: false, thumbs: null }
@@ -677,7 +678,6 @@ export default function FloatingAIAssistant({ open, setOpen, inline = false }) {
       addAssistantMessage(partialText);
       const aid = ++msgIdCounter.current;
       setMessages(prev => [...prev, { id: `a-${aid}`, role: 'assistant', text: partialText, source: 'aborted', thumbs: null }]);
-      cache.setCached(lastUserMsgRef.current, { text: partialText, suggestions: null }, undefined, aiMode);
     }
   }, [stopStream, partialText, conversationSessionId, cache, aiMode]);
 
