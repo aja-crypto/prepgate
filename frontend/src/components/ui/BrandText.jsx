@@ -12,7 +12,15 @@ export function NexaMark({ className = '', size = 34 }) {
       style={{ width: size, height: size }}
       aria-hidden="true"
     >
-      <img src="/images/logo.png" alt="GateNexa" className="nexa-mark__image" />
+      <img
+        src="/images/logo-96.png"
+        alt="GateNexa"
+        width={size}
+        height={size}
+        loading="eager"
+        decoding="async"
+        className="nexa-mark__image"
+      />
     </span>
   );
 }

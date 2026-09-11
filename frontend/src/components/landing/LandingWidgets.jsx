@@ -1,31 +1,59 @@
-﻿import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+﻿import { useState, useEffect, useRef } from 'react';
 import { GlassCard, AnimatedCounter, AnimatedProgressBar } from './LandingAnimations';
 import { api } from '../../services/api';
+
+// Lightweight CSS reveal for below-fold cards (desktop + mobile identical).
+// Replaces per-card framer-motion whileInView spring observers (heavy:
+// one IO observer + spring solver per card) with a single shared
+// IntersectionObserver + CSS transition. Visual timing preserved
+// (~200ms ease, 100ms stagger). Respects prefers-reduced-motion.
+function RevealCard({ children, index = 0 }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setVisible(true);
+      return;
+    }
+    const o = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setTimeout(() => setVisible(true), index * 100); o.disconnect(); } },
+      { threshold: 0.1 }
+    );
+    o.observe(el);
+    return () => o.disconnect();
+  }, [index]);
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-200 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+    >
+      {children}
+    </div>
+  );
+}
 
 export function AnimatedStatistics() {
   const [stats, setStats] = useState({ resources: 500, pyqs: 3500, mocks: 55, learners: 2500 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Use cached stats from window if available (set by LandingPage)
-    if (window.__landingStats) {
-      setStats(window.__landingStats);
-      setLoading(false);
-      return;
-    }
-    // Fallback: fetch if not cached
-    const fetchStats = async () => {
-      try {
-        const res = await api.get('/landing/stats');
-        if (res.data.success) setStats(res.data.data);
-      } catch (e) {
-        console.error('Stats error:', e);
-      } finally {
+    // Single owner is LandingPage (sets window.__landingStats).
+    // This widget never fetches on its own — it consumes the cache or the
+    // existing skeleton so /landing/stats is requested at most once.
+    let cancelled = false;
+    const apply = () => {
+      if (cancelled) return;
+      if (window.__landingStats) {
+        setStats(window.__landingStats);
         setLoading(false);
       }
     };
-    fetchStats();
+    apply();
+    const id = setInterval(apply, 500);
+    const stop = setTimeout(() => { clearInterval(id); if (!cancelled) setLoading(false); }, 8000);
+    return () => { cancelled = true; clearInterval(id); clearTimeout(stop); };
   }, []);
 
   const items = [
@@ -48,13 +76,7 @@ export function AnimatedStatistics() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {items.map((item, i) => (
-        <motion.div
-          key={item.label}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: i * 0.1, type: 'spring' }}
-        >
+        <RevealCard key={item.label} index={i}>
           <GlassCard className="p-6 text-center">
             <div className="text-3xl mb-2">{item.icon}</div>
             <div className="text-3xl md:text-4xl font-bold mb-1" style={{ color: item.color }}>
@@ -62,7 +84,7 @@ export function AnimatedStatistics() {
             </div>
             <div className="text-xs text-text3">{item.label}</div>
           </GlassCard>
-        </motion.div>
+        </RevealCard>
       ))}
     </div>
   );
@@ -166,16 +188,14 @@ export function QuestionSpotlight() {
 
       <div className="space-y-2 mb-4">
         {question?.options?.map((opt, i) => (
-          <motion.div
+          <div
             key={i}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="p-3 rounded-lg bg-bg-2/50 border border-border text-sm text-text"
+            className="p-3 rounded-lg bg-bg-2/50 border border-border text-sm text-text animate-fade-in"
+            style={{ animationDelay: `${i * 100}ms` }}
           >
             <span className="text-text3 mr-2">{String.fromCharCode(65 + i)}.</span>
             {opt}
-          </motion.div>
+          </div>
         ))}
       </div>
 
