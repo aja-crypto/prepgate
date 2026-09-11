@@ -251,7 +251,7 @@ export default function StudyPlannerPage() {
   const [activeDay, setActiveDay] = useState(todayKey);
   const activeDate = new Date(activeDay + 'T00:00:00');
   const activePlans = format(activeDate, 'yyyy-MM-dd') === todayKey
-    ? [...defaultSchedule, ...getPlans(activeDate)]
+    ? todayPlans
     : getPlans(activeDate);
 
   // Time-based current hour highlight
@@ -410,13 +410,19 @@ export default function StudyPlannerPage() {
     }
   }, [syncToCloud]);
 
-  // Scroll to current hour on mount
+  // Scroll to current hour on mount and when day changes
+  const scrolledRef = useRef(false);
   useEffect(() => {
-    if (timelineRef.current) {
-      const hourEl = timelineRef.current.querySelector('[data-hour]');
-      if (hourEl) hourEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (!timelineRef.current) return;
+    const isToday = activeDay === todayKey;
+    if (isToday) {
+      const nowEl = timelineRef.current.querySelector('[data-hour="now"]');
+      if (nowEl) {
+        nowEl.scrollIntoView({ block: 'center', behavior: scrolledRef.current ? 'smooth' : 'auto' });
+        scrolledRef.current = true;
+      }
     }
-  }, [activeDay]);
+  }, [activeDay, todayKey]);
 
   return (
     <>
@@ -583,8 +589,8 @@ export default function StudyPlannerPage() {
         </div>
 
         {/* Timeline */}
-        <div className="flex-1 overflow-y-auto relative" ref={timelineRef}>
-          <div className="relative">
+        <div className="flex-1 overflow-y-auto relative min-h-0" ref={timelineRef}>
+          <div className="relative min-h-full">
             {HOURS.map((h, idx) => {
               const hourFloat = h;
               const isCurrentHour = hourFloat <= currentHour && currentHour < hourFloat + 1;
