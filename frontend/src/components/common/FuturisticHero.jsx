@@ -106,26 +106,7 @@ export default function FuturisticHero() {
   );
   const brainLoadedRef = useRef(false);
 
-  // Load brain scene when user scrolls near the hero section or interacts
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !brainLoadedRef.current) {
-          brainLoadedRef.current = true;
-          setLoadBrain(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '200px', threshold: 0.01 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  // Load brain scene ONLY on actual user interaction (click, scroll, keydown, touch)
-// NOT on page load or intersection observer (hero is visible on load)
+  // Load the heavy brain scene only after an explicit user interaction.
   useEffect(() => {
     let loaded = false;
     const loadOnInteraction = () => {

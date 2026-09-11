@@ -44,6 +44,11 @@ export function getApiErrorMessage(error, fallback = 'Something went wrong') {
 
 // ΓöÇΓöÇΓöÇ Request interceptor ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 const DEFER_PATTERNS = ['/cms/', '/gate-vault/', '/live/dashboard', '/ai/context'];
+const DASHBOARD_SECONDARY_PATTERNS = [
+  '/notifications',
+  '/notes',
+  ...DEFER_PATTERNS,
+];
 const pendingGets = new Map();
 const _origGet = api.get.bind(api);
 api.get = (url, config) => {
@@ -75,7 +80,12 @@ function emitFailedApi(url, status) {
 api.interceptors.request.use(
   async (config) => {
     config.metadata = { start: performance.now() };
-    if (config.method === 'get' && DEFER_PATTERNS.some(p => config.url?.includes(p))) {
+    const isDashboard = typeof window !== 'undefined' && window.location.pathname === '/dashboard';
+    const isDashboardSecondary = isDashboard
+      && DASHBOARD_SECONDARY_PATTERNS.some(p => config.url?.includes(p));
+    if (config.method === 'get' && isDashboardSecondary) {
+      await new Promise(resolve => setTimeout(resolve, 1200));
+    } else if (config.method === 'get' && DEFER_PATTERNS.some(p => config.url?.includes(p))) {
       await new Promise(r => {
         if (typeof window !== 'undefined' && 'requestIdleCallback' in window) window.requestIdleCallback(r, { timeout: 1500 });
         else setTimeout(r, 800);

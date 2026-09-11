@@ -13,8 +13,6 @@ import FeatureCard from '../components/landing/FeatureCard';
 // Lazy load below-the-fold sections - hero is above the fold
 const AnimatedCounter = lazy(() => import('../components/common/AnimatedCounter'));
 const GATECountdown = lazy(() => import('../components/common/GATECountdown'));
-const StudyWorkflow = lazy(() => import('../components/common/StudyWorkflow'));
-const TestimonialsSection = lazy(() => import('../components/common/TestimonialsSection'));
 import { BrandName } from '../components/ui/BrandText';
 import { ROADMAP_PHASES, AIR_ROADMAPS } from '../data/successRoadmap';
 import { COMMUNITY_INSIGHTS } from '../data/communityInsights';
@@ -45,6 +43,46 @@ function StaggerItem({ children, index = 0 }) {
     </div>
   );
 }
+
+function DeferredImport({ loader, fallback, rootMargin = '500px', componentProps = {} }) {
+  const ref = useRef(null);
+  const [Component, setComponent] = useState(null);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return undefined;
+    let cancelled = false;
+    const load = () => {
+      loader().then((module) => {
+        if (!cancelled) setComponent(() => module.default);
+      }).catch(() => setLoadError(true));
+    };
+    if (!('IntersectionObserver' in window)) {
+      load();
+      return () => { cancelled = true; };
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      observer.disconnect();
+      load();
+    }, { rootMargin, threshold: 0.01 });
+    observer.observe(element);
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+  }, [loader, rootMargin]);
+
+  return (
+    <div ref={ref} aria-busy={!Component && !loadError}>
+      {Component ? <Component {...componentProps} /> : fallback}
+    </div>
+  );
+}
+
+const loadStudyWorkflow = () => import('../components/common/StudyWorkflow');
+const loadTestimonialsSection = () => import('../components/common/TestimonialsSection');
 
 const FEATURES = [
   { icon: '🤖', title: 'AI Mentor', desc: 'Personalized daily coaching with weak topic analysis and revision suggestions.' },
@@ -907,7 +945,10 @@ export default function LandingPage() {
         </AnimatedSection>
         <AnimatedSection>
           <div className="max-w-md mx-auto">
-            <Suspense fallback={<div className="h-64 rounded-xl bg-white/[0.02]" />}><StudyWorkflow /></Suspense>
+            <DeferredImport
+              loader={loadStudyWorkflow}
+              fallback={<div className="h-64 rounded-xl bg-white/[0.02]" aria-label="Study workflow loading" />}
+            />
           </div>
         </AnimatedSection>
       </section>
@@ -1091,7 +1132,10 @@ export default function LandingPage() {
       {/* Testimonials */}
       <section className="relative z-10 px-6 py-16 max-w-4xl mx-auto">
         <AnimatedSection>
-          <Suspense fallback={<div className="h-64 rounded-xl bg-white/[0.02]" />}><TestimonialsSection /></Suspense>
+          <DeferredImport
+            loader={loadTestimonialsSection}
+            fallback={<div className="h-64 rounded-xl bg-white/[0.02]" aria-label="Testimonials loading" />}
+          />
         </AnimatedSection>
       </section>
 
@@ -1310,4 +1354,3 @@ export default function LandingPage() {
     </div>
   );
 }
-

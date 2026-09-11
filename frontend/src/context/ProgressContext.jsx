@@ -108,19 +108,6 @@ export const ProgressProvider = ({ children }) => {
         await pushToServer(merged);
       }
 
-      if (ma ?? mongo) {
-        setTimeout(() => {
-          if (controller.signal.aborted) return;
-          pyqService.getAll({ limit: 500 }).then((pyqRes) => {
-            const apiPyqs = pyqRes.data?.data || [];
-            if (apiPyqs.length && !controller.signal.aborted) {
-              const withPyqs = { ...merged, pyqs: mergePyqLists(apiPyqs, merged.pyqs) };
-              setData(withPyqs);
-              localStorage.setItem(storageKey(userId), JSON.stringify(withPyqs));
-            }
-          }).catch(() => {});
-        }, 2000);
-      }
     })();
 
     return () => { clearTimeout(timeout); controller.abort(); };
@@ -485,4 +472,3 @@ export function useProgressData() {
   if (!data) throw new Error('useProgressData must be used within ProgressProvider');
   return data;
 }
-

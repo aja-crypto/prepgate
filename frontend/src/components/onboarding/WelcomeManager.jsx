@@ -21,15 +21,17 @@ export default function WelcomeManager({ children }) {
     if (!user || authLoading || hasShown) return;
     setHasShown(true);
 
-    // Check milestones only
-    api.get('/auth/check-milestones').then(r => {
-      const ms = r.data.data.milestones;
-      if (ms?.length > 0) {
-        setMilestones(ms);
-        setCurrentMilestone(ms[0]);
-      }
-    }).catch(() => {});
     setLoading(false);
+    const timer = setTimeout(() => {
+      api.get('/auth/check-milestones').then(r => {
+        const ms = r.data.data.milestones;
+        if (ms?.length > 0) {
+          setMilestones(ms);
+          setCurrentMilestone(ms[0]);
+        }
+      }).catch(() => {});
+    }, 1500);
+    return () => clearTimeout(timer);
   }, [user, authLoading, hasShown]);
 
   const dismissMilestone = () => {
