@@ -1,12 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { useDiagnostics } from '../../context/DiagnosticsContext';
 import { subscribeConnectionState, recordSlowApi, recordFailedApi, recordChunkEvent } from '../../services/connectionHealth';
 
 export default function ConnectionNotice() {
   const [notice, setNotice] = useState(null);
-  const { openDiagnostics } = useDiagnostics();
   const navigate = useNavigate();
   const dismissTimer = useRef(null);
 
@@ -55,19 +53,16 @@ export default function ConnectionNotice() {
 
   const handleAction = useCallback(() => {
     const s = notice?.severity;
-    const a = notice?.action;
     setNotice(null);
-    if (s === 'offline') {
+    // Offline / Retry -> attempt a reload to re-establish connectivity.
+    if (s === 'offline' || notice?.action === 'Retry') {
       window.location.reload();
       return;
     }
-    if (a === 'View Diagnostics' || a === 'Check Status' || s === 'unavailable' || s === 'degraded') {
-      openDiagnostics();
-      navigate('/connection-diagnostics');
-      return;
-    }
+    // Troubleshoot / any other action -> open the real Connection Center,
+    // which re-runs the actual diagnostics checks and shows results.
     navigate('/connection-diagnostics');
-  }, [notice, openDiagnostics, navigate]);
+  }, [notice, navigate]);
 
   const handleDismiss = useCallback(() => setNotice(null), []);
 

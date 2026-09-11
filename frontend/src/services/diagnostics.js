@@ -1,7 +1,8 @@
+import { normalizeDatabaseStatus } from './connectionHealth';
+
 const API_BASE = import.meta.env?.VITE_API_URL || '/api';
 const HEALTH_URL = `${API_BASE}/health`;
 const AI_HEALTH_URL = `${API_BASE}/ai/health`;
-const READINESS_URL = `/health/readiness`;
 
 function fetchWithTimeout(url, opts = {}, timeoutMs = 8000) {
   const controller = new AbortController();
@@ -50,7 +51,7 @@ async function testLatency() {
       latencyMs: Math.round(ms),
     };
   } catch {
-    return { id: 'latency', status: 'failed', grade: 'poor', value: '—', detail: 'Could not reach server', latencyMs: null };
+    return { id: 'latency', status: 'failed', grade: 'poor', value: '—', detail: 'Could not reach server', latencyMs: null, why: 'The reachability probe to the GateNexa backend did not respond.', impact: 'GateNexa may be temporarily unreachable from your network.', action: 'Retry' };
   }
 }
 
@@ -70,7 +71,7 @@ async function testApi() {
     };
   } catch {
     const ms = performance.now() - start;
-    return { id: 'api', status: 'failed', grade: 'poor', value: '—', detail: 'API endpoint unreachable', latencyMs: Math.round(ms) };
+    return { id: 'api', status: 'failed', grade: 'poor', value: '—', detail: 'API endpoint unreachable', latencyMs: Math.round(ms), why: 'The GateNexa API did not respond to a health request.', impact: 'Pages that rely on this API may not load right now.', action: 'Retry' };
   }
 }
 
@@ -85,33 +86,59 @@ async function testBackend() {
     const detail = serverOk
       ? `Backend healthy${uptime ? ` (${Math.round(uptime)}s uptime)` : ''}`
       : `Backend responded but status unclear`;
-    return { id: 'backend', status: 'passed', grade: serverOk ? 'excellent' : 'fair', value: serverOk ? 'Healthy' : 'Partial', detail };
+    return { id: 'backend', status: 'passed', grade: serverOk ? 'excellent' : 'fair', value: serverOk ? 'Healthy' : 'Partial', detail, why: serverOk ? undefined : 'The backend responded but did not report a clear healthy status.', action: serverOk ? undefined : 'Retry' };
   } catch {
-    return { id: 'backend', status: 'failed', grade: 'poor', value: '—', detail: 'Backend not responding' };
+    return { id: 'backend', status: 'failed', grade: 'poor', value: '—', detail: 'Backend not responding', why: 'The backend health endpoint did not respond in time.', impact: 'GateNexa services may be temporarily unavailable.', action: 'Retry' };
   }
 }
 
 async function testDatabase() {
   try {
-    const res = await fetchWithTimeout(READINESS_URL, { cache: 'no-store' }, 8000);
+    // /api/health is proxied in production and, on the backend, is served by the
+    // diagnostics router which reports the authoritative `data.mongoConnected`.
+    const res = await fetchWithTimeout(HEALTH_URL, { cache: 'no-store' }, 8000);
     if (!res.ok) {
-      const res2 = await fetchWithTimeout(HEALTH_URL, { cache: 'no-store' }, 5000);
-      if (!res2.ok) return { id: 'database', status: 'failed', grade: 'poor', value: '—', detail: 'Cannot check database status' };
-      const d2 = await res2.json().catch(() => ({}));
-      const connected = d2?.database === 'connected' || d2?.data?.mongoConnected === true;
-      return { id: 'database', status: connected ? 'passed' : 'degraded', grade: connected ? 'excellent' : 'fair', value: connected ? 'Connected' : 'Disconnected', detail: connected ? 'MongoDB connected' : 'MongoDB not connected — data may be unavailable' };
+      return {
+        id: 'database', status: 'unknown', grade: 'unknown', value: 'Unknown',
+        detail: 'Database status cannot be checked because the GateNexa backend is currently unreachable.',
+        why: 'The backend health endpoint did not respond, so the database state could not be verified.',
+        impact: 'GateNexa cannot be used until the backend is reachable again.',
+        action: 'Retry',
+      };
     }
-    const data = await res.json().catch(() => ({}));
-    const dbStatus = data?.database || data?.data?.database;
-    const connected = dbStatus === 'connected' || dbStatus === true;
+    const body = await res.json().catch(() => ({}));
+    const db = normalizeDatabaseStatus(body);
+    if (db === 'connected') {
+      return {
+        id: 'database', status: 'passed', grade: 'excellent', value: 'Connected',
+        detail: 'Database connected. Your data can be read and synchronized normally.',
+      };
+    }
+    if (db === 'disconnected') {
+      return {
+        id: 'database', status: 'failed', grade: 'poor', value: 'Disconnected',
+        detail: "GateNexa's backend is reachable, but its database connection is currently unavailable. Data that requires the database may not load or sync until the connection is restored.",
+        why: "The backend explicitly reports that its MongoDB connection is unavailable.",
+        impact: 'Features that read or save account data may temporarily fail.',
+        action: 'Retry',
+      };
+    }
+    // Backend reachable but did not confirm the database state -> UNKNOWN, not DISCONNECTED.
     return {
-      id: 'database', status: connected ? 'passed' : 'degraded',
-      grade: connected ? 'excellent' : 'fair',
-      value: connected ? 'Connected' : 'Disconnected',
-      detail: connected ? 'MongoDB connected' : 'MongoDB not connected — data may be unavailable',
+      id: 'database', status: 'unknown', grade: 'unknown', value: 'Unknown',
+      detail: "GateNexa's backend is reachable, but the database status could not be verified.",
+      why: 'The backend health response did not include a usable database status.',
+      impact: 'Database features may or may not work — the state could not be confirmed.',
+      action: 'Retry',
     };
   } catch {
-    return { id: 'database', status: 'degraded', grade: 'fair', value: 'Unknown', detail: 'Could not verify database status' };
+    return {
+      id: 'database', status: 'unknown', grade: 'unknown', value: 'Unknown',
+      detail: 'Database status cannot be checked because the GateNexa backend is currently unreachable.',
+      why: 'The backend health request failed before a database status could be read.',
+      impact: 'Database state could not be verified.',
+      action: 'Retry',
+    };
   }
 }
 
@@ -235,39 +262,102 @@ const TEST_FN = {
   pdf: testPdf,
 };
 
+// Core services determine whether GateNexa itself is usable and carry most of
+// the weight. Optional capabilities (AI, video, PDF, browser, device) must not
+// be able to make an otherwise healthy install look broken. UNKNOWN is skipped.
+const CORE_IDS = new Set(['latency', 'api', 'backend', 'database', 'auth']);
+const CORE_WEIGHT = 0.75;
+const OPTIONAL_WEIGHT = 0.25;
+
+function gradeToScore(grade) {
+  if (grade === 'excellent') return 100;
+  if (grade === 'good') return 75;
+  if (grade === 'fair') return 50;
+  return 0;
+}
+
+function scoreGroup(results) {
+  if (results.length === 0) return null;
+  let sum = 0;
+  for (const r of results) sum += gradeToScore(r.grade);
+  return Math.round(sum / results.length);
+}
+
 function computeScore(results) {
   const total = results.length;
   if (total === 0) return { score: 0, grade: 'poor' };
-  let sum = 0;
-  for (const r of results) {
-    if (r.status === 'unknown') continue;
-    if (r.grade === 'excellent') sum += 100;
-    else if (r.grade === 'good') sum += 75;
-    else if (r.grade === 'fair') sum += 50;
-    else sum += 0;
-  }
-  const score = Math.round(sum / total);
+  const core = results.filter(r => CORE_IDS.has(r.id) && r.status !== 'unknown');
+  const optional = results.filter(r => !CORE_IDS.has(r.id) && r.status !== 'unknown');
+  const coreScore = scoreGroup(core);
+  const optionalScore = scoreGroup(optional);
+  let score;
+  if (coreScore == null && optionalScore == null) return { score: 0, grade: 'unknown' };
+  if (coreScore == null) score = optionalScore;
+  else if (optionalScore == null) score = coreScore;
+  else score = Math.round(coreScore * CORE_WEIGHT + optionalScore * OPTIONAL_WEIGHT);
   const grade = score >= 90 ? 'excellent' : score >= 70 ? 'good' : score >= 45 ? 'fair' : 'poor';
   return { score, grade };
 }
 
+const TRUST_MESSAGE = '💜 GateNexa is continuously improving through your feedback. If you notice something unusual, please tell us through Feedback.';
+
 function buildRecommendations(results) {
-  const recs = [];
-  const failed = results.filter(r => r.status === 'failed');
-  const degraded = results.filter(r => r.status === 'degraded');
-  const poor = results.filter(r => r.grade === 'poor' && r.status !== 'failed');
+  const conn = typeof navigator !== 'undefined' ? navigator : null;
+  const byId = id => results.find(r => r.id === id);
+  const offline = conn?.onLine === false;
+  const failedIds = new Set(results.filter(r => r.status === 'failed').map(r => r.id));
+  const degradedIds = new Set(results.filter(r => r.status === 'degraded').map(r => r.id));
 
-  if (failed.some(r => r.id === 'latency')) recs.push('Cannot reach the GateNexa server. Check your internet connection or try again later.');
-  if (failed.some(r => r.id === 'api')) recs.push('The GateNexa API is not responding. The server may be starting up — try again in a minute.');
-  if (failed.some(r => r.id === 'backend')) recs.push('The backend server is not responding. Contact support if this persists.');
-  if (degraded.some(r => r.id === 'database')) recs.push('Database is not connected. Your data may not sync until it reconnects.');
-  if (degraded.some(r => r.id === 'ai')) recs.push('AI services are currently unavailable. Core GateNexa features will work normally.');
-  if (poor.some(r => r.id === 'latency')) recs.push('High latency detected. You may experience slower page loads.');
-  if (poor.some(r => r.id === 'api')) recs.push('API response times are elevated. The server may be under load.');
-  if (results.find(r => r.id === 'pdf' && r.status === 'failed')) recs.push('PDF generation is unavailable. Report downloads will not work.');
-  if (results.find(r => r.id === 'device' && r.grade === 'fair')) recs.push('Your device has limited resources. Close other tabs for a smoother experience.');
+  // (priority, message) — lower priority number = more severe, shown first.
+  const actionable = [];
 
-  if (recs.length === 0) recs.push('Everything looks good. Your connection and device are well-suited for GateNexa.');
+  // PRIORITY 1 — OFFLINE
+  if (offline) {
+    actionable.push({ p: 1, m: 'Your device appears to be offline. Reconnect to Wi-Fi or mobile data and try again.' });
+  }
+
+  // PRIORITY 2 — BACKEND UNAVAILABLE (API / latency / backend all unreachable)
+  if (failedIds.has('api') || failedIds.has('backend') || failedIds.has('latency')) {
+    actionable.push({
+      p: 2,
+      m: "GateNexa's backend is currently unreachable. Your internet connection may still be working normally, so this may be a temporary service-side issue.",
+    });
+  }
+
+  // PRIORITY 3 — DATABASE CONFIRMED DISCONNECTED (only when backend explicitly confirmed it)
+  const dbRes = byId('database');
+  if (dbRes && (dbRes.status === 'failed') && dbRes.value === 'Disconnected') {
+    actionable.push({
+      p: 3,
+      m: "GateNexa's backend is reachable, but its database connection is currently unavailable. Some data may not load or sync until the database reconnects.",
+    });
+  }
+
+  // PRIORITY 4 — HIGH NETWORK LATENCY (latency degraded/poor but reachable)
+  if (!failedIds.has('latency') && (degradedIds.has('latency') || byId('latency')?.grade === 'poor')) {
+    actionable.push({ p: 4, m: 'Your connection has higher-than-usual latency. Try switching to a stronger Wi-Fi or mobile-data connection.' });
+  }
+
+  // PRIORITY 5 — GATENEXA API SLOW (api degraded/poor but reachable)
+  if (!failedIds.has('api') && (byId('api')?.grade === 'poor' || byId('api')?.grade === 'fair')) {
+    actionable.push({ p: 5, m: "GateNexa's services are responding slowly. This may be temporary; try again in a moment." });
+  }
+
+  // PRIORITY 6 — AI ONLY (never claims the whole app is down)
+  if (degradedIds.has('ai') || failedIds.has('ai')) {
+    actionable.push({ p: 6, m: 'AI services are temporarily unavailable. Core GateNexa study features remain available.' });
+  }
+
+  // PRIORITY 7 — DEVICE/BROWSER only on a meaningful limitation (not a low reported value)
+  if (byId('device')?.grade === 'poor') {
+    actionable.push({ p: 7, m: 'Your device/browser has limited available resources. Closing unused tabs may improve responsiveness.' });
+  }
+
+  actionable.sort((a, b) => a.p - b.p);
+
+  // Trust/informational message always first; then at most 3 relevant actions.
+  const recs = [TRUST_MESSAGE];
+  for (const r of actionable.slice(0, 3)) recs.push(r.m);
   return recs;
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useDiagnostics } from '../context/DiagnosticsContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -27,7 +27,7 @@ function ScoreRing({ score, grade }) {
   );
 }
 
-function ServiceCard({ test }) {
+function ServiceCard({ test, onRetry }) {
   const color = GRADE_COLOR[test.grade] || GRADE_COLOR.unknown;
   return (
     <div className="rounded-xl p-4 transition-colors" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -39,6 +39,27 @@ function ServiceCard({ test }) {
       <div className="text-sm font-mono font-bold mb-1" style={{ color }}>{test.value || '—'}</div>
       <div className="text-[11px] text-white/50 leading-relaxed">{test.detail}</div>
       {test.note && <div className="text-[10px] text-white/30 mt-1 italic">{test.note}</div>}
+      {test.why && (
+        <div className="text-[11px] text-white/45 leading-relaxed mt-2">
+          <span className="text-white/40 font-semibold">Why: </span>{test.why}
+        </div>
+      )}
+      {test.impact && (
+        <div className="text-[11px] text-white/45 leading-relaxed mt-1">
+          <span className="text-white/40 font-semibold">Impact: </span>{test.impact}
+        </div>
+      )}
+      {test.action && (test.status === 'failed' || test.status === 'degraded') && (
+        <div className="mt-2 flex gap-2 items-center">
+          <button
+            type="button"
+            onClick={() => onRetry?.()}
+            className="px-3 py-1.5 rounded-lg text-[10px] font-bold text-white bg-white/[0.06] border border-white/[0.1] hover:bg-white/[0.1]"
+          >
+            {test.action}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -63,6 +84,17 @@ export default function ConnectionDiagnosticsPage() {
     retryDiagnostics();
   }, [retryDiagnostics]);
 
+  // Auto-run diagnostics when the page opens without results (e.g. arriving via
+  // the "Troubleshoot" action) so real checks run immediately. Guards against
+  // double-running when results are already visible or a run is in progress.
+  const autoRunRef = useRef(false);
+  useEffect(() => {
+    if (autoRunRef.current) return;
+    if (running || error || results) return;
+    autoRunRef.current = true;
+    startDiagnostics();
+  }, [running, error, results, startDiagnostics]);
+
   return (
     <div className="max-w-[900px] mx-auto px-4 py-6">
       {/* Header */}
@@ -85,11 +117,12 @@ export default function ConnectionDiagnosticsPage() {
             <p className="text-xs text-white/50 mt-1 max-w-lg">
               {results
                 ? results.grade === 'excellent' ? 'All systems healthy — GateNexa is ready.'
-                : results.grade === 'good' ? 'Minor issues detected — most features will work normally.'
-                : results.grade === 'fair' ? 'Some services degraded — check recommendations below.'
+                : results.grade === 'good' ? 'Healthy overall — GateNexa is ready, with minor optional checks below.'
+                : results.grade === 'fair' ? 'Some services are degraded — see the recommendations below.'
+                : results.grade === 'unknown' ? 'Core health could not be fully verified — see the details below.'
                 : 'Several checks failed — see details below.'
                 : error ? error
-                : 'Run diagnostics to measure internet, API latency, backend and device readiness.'}
+                : 'Running real checks to measure internet, API, backend and database health.'}
             </p>
             {running && (
               <div className="mt-3 space-y-1">
@@ -117,7 +150,7 @@ export default function ConnectionDiagnosticsPage() {
       {results ? (
         <>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-            {results.results.map(t => <ServiceCard key={t.id} test={t} />)}
+            {results.results.map(t => <ServiceCard key={t.id} test={t} onRetry={running ? undefined : handleRetry} />)}
           </div>
 
           {/* Recommendations */}
