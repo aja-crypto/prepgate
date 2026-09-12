@@ -41,6 +41,7 @@ frontend/dist/
 *.jpeg
 *.jpg
 !frontend/public/images/*.png
+!frontend/public/og-image.png
 !frontend/public/images/*.jpg
 !frontend/public/images/*.jpeg
 !frontend/public/showcase/*.png
