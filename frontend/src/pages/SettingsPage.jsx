@@ -611,12 +611,12 @@ export default function SettingsPage() {
       ),
     },
     {
-      title: 'Connection & Performance',
+      title: 'Connection Diagnostics',
       desc: 'Check your connection, API latency, and device readiness.',
       content: (
         <div className="space-y-3">
           <button onClick={openDiagnostics} className={`${actionBtn}`}>Run Diagnostics</button>
-          <button onClick={() => navigate('/connection-diagnostics')} className={`${ghostBtn}`}>Open Connection Center</button>
+          <button onClick={() => navigate('/connection-diagnostics')} className={`${ghostBtn}`}>Open Connection Diagnostics</button>
           <p className="text-[10px] text-text3">Diagnostics checks internet latency, API response, backend health, AI services, browser and device capability. No data is sent externally.</p>
         </div>
       ),
@@ -810,7 +810,7 @@ export default function SettingsPage() {
       </div>
 
       <Modal open={showResetModal} onClose={() => { setShowResetModal(false); setResetConfirmText(''); }} title="Reset All Progress?">
-        <p className="text-sm text-text2 mb-3 leading-relaxed">This will permanently delete all study progress. Your account remains intact.</p>
+        <p className="text-sm text-text2 mb-3 leading-relaxed">This will reset your study progress. A snapshot will be saved for 30 days in case you want to restore. Your account remains intact.</p>
         <p className="text-xs text-text3 mb-3">Type <strong className="text-red-400">DELETE MY DATA</strong> to confirm:</p>
         <input type="text" value={resetConfirmText} onChange={(e) => setResetConfirmText(e.target.value)}
           placeholder="DELETE MY DATA"

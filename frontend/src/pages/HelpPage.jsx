@@ -10,6 +10,14 @@ const FAQ = [
   { q: 'How do I report a bug or request a feature?', a: 'Go to Profile dropdown → Feedback → describe your issue or suggestion.' },
 ];
 
+const TRUST_FAQ = [
+  { q: 'Is GateNexa the official GATE website?', a: 'No. GateNexa is an independent preparation platform and is not affiliated with GATE, CCMT, COAP, or JoSAA. Always verify admission-related information using official counselling portals.' },
+  { q: 'Can I trust every AI answer?', a: 'GateNexa AI can make mistakes. Use it as a learning assistant and verify important information with official sources.' },
+  { q: 'Are college predictions guaranteed?', a: 'No. Predictions are estimates based on historical cutoff data and should not be treated as guaranteed outcomes. Admission decisions are made solely by official counselling authorities.' },
+  { q: 'What data does GateNexa store about me?', a: 'Your profile, study progress, AI conversations, and preferences. See our Privacy Policy for full details. You can export or delete your data from Settings.' },
+  { q: 'Is Connection Diagnostics a security scan?', a: 'No. It checks whether your browser can reach GateNexa services and helps identify connectivity issues. It does not scan your device.' },
+];
+
 export default function HelpPage() {
   useSEO({ title: 'Help & Support', description: 'Get help with GateNexa — FAQs, guides for tracking preparation, PYQs, mock tests and contacting support.' });
   return (
@@ -31,11 +39,21 @@ export default function HelpPage() {
           ))}
         </div>
 
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-white">Trust & Transparency</h2>
+          {TRUST_FAQ.map((item, i) => (
+            <div key={i} className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(139,92,246,0.08)' }}>
+              <h3 className="text-sm font-bold text-white mb-2">{item.q}</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">{item.a}</p>
+            </div>
+          ))}
+        </div>
+
         <div className="rounded-2xl p-6 space-y-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(139,92,246,0.08)' }}>
           <h2 className="text-lg font-semibold text-white">Contact Support</h2>
           <p className="text-sm text-slate-400">Still need help? Reach out to us:</p>
           <div className="flex flex-col sm:flex-row gap-3">
-            <a href="mailto:support@GateNexa.dev" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all" style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.25)', color: '#A78BFA' }}>
+            <a href="mailto:support@gatenexa.app" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all" style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.25)', color: '#A78BFA' }}>
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
               Email Support
             </a>

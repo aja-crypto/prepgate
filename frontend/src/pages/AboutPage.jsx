@@ -128,7 +128,7 @@ export default function AboutPage() {
             <div className="hc-stats">
               <div className="st-item"><span className="st-icon">&#128218;</span><span className="st-num">5000+</span><span className="st-label">Resources Organized</span></div>
               <div className="st-item"><span className="st-icon">&#128221;</span><span className="st-num">1000+</span><span className="st-label">PYQs Indexed</span></div>
-              <div className="st-item"><span className="st-icon">&#129302;</span><span className="st-num">24/7</span><span className="st-label">AI Assistance</span></div>
+              <div className="st-item"><span className="st-icon">&#129302;</span><span className="st-num">AI</span><span className="st-label">Powered Assistance</span></div>
               <div className="st-item"><span className="st-icon">&#127891;</span><span className="st-num">Student</span><span className="st-label">First &middot; Built for Aspirants</span></div>
             </div>
           </div>

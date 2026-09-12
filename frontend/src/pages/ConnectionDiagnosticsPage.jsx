@@ -101,9 +101,9 @@ export default function ConnectionDiagnosticsPage() {
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-1">
           <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/[0.06] transition-all text-sm">←</button>
-          <h1 className="text-xl font-bold text-white">GateNexa Connection Center</h1>
+          <h1 className="text-xl font-bold text-white">Connection Diagnostics</h1>
         </div>
-        <p className="text-sm text-white/50 ml-11">Check your connection, services and device.</p>
+        <p className="text-sm text-white/50 ml-11">Checks whether your browser can reach GateNexa services and helps identify connectivity issues.</p>
       </div>
 
       {/* Overall Status Card */}

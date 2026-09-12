@@ -398,7 +398,7 @@ function TransparencyPanel({ result }) {
               {/* Formula */}
               {formula && (
                 <div className="rounded-lg p-3" style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.1)' }}>
-                  <div className="text-[10px] text-purple-400 font-semibold mb-2">Score Formula (Official GATE)</div>
+                   <div className="text-[10px] text-purple-400 font-semibold mb-2">Score Formula (GATE Normalization)</div>
                   <div className="text-[11px] font-mono text-purple-200/80 mb-2">{formula.expression}</div>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] font-mono">
                     <div><span className="text-slate-500">Sq = </span><span className="text-slate-300">{formula.Sq}</span></div>
@@ -417,7 +417,7 @@ function TransparencyPanel({ result }) {
                 <div className="text-[10px] text-green-400 font-semibold mb-2">Data Sources</div>
                 <div className="space-y-1 text-[10px]">
                   {(result.officialData || []).map((s, i) => (
-                    <div key={i} className="flex items-center gap-1.5"><span className="text-green-400">✓</span><span className="text-slate-300">{s}</span><span className="text-[8px] px-1 py-0.5 rounded bg-green-500/10 text-green-400">Official</span></div>
+                    <div key={i} className="flex items-center gap-1.5"><span className="text-green-400">✓</span><span className="text-slate-300">{s}</span><span className="text-[8px] px-1 py-0.5 rounded bg-green-500/10 text-green-400">Sourced</span></div>
                   ))}
                   {(result.estimatedData || []).map((s, i) => (
                     <div key={i} className="flex items-center gap-1.5"><span className="text-yellow-400">⚠</span><span className="text-slate-300">{s}</span><span className="text-[8px] px-1 py-0.5 rounded bg-yellow-500/10 text-yellow-400">Estimated</span></div>
@@ -432,8 +432,8 @@ function TransparencyPanel({ result }) {
                   <div className="h-full rounded-full" style={{ width: `${result.confidenceScore}%`, background: 'linear-gradient(90deg, #EAB308, #22C55E)' }} />
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
-                  <div className="flex items-center gap-1.5"><span className="text-green-400/60">✓</span><span className="text-slate-500">Official Formula</span></div>
-                  <div className="flex items-center gap-1.5"><span className="text-green-400/60">✓</span><span className="text-slate-500">Official Qualifying Marks</span></div>
+                    <div className="flex items-center gap-1.5"><span className="text-green-400/60">✓</span><span className="text-slate-500">GATE Normalization Formula</span></div>
+                    <div className="flex items-center gap-1.5"><span className="text-green-400/60">✓</span><span className="text-slate-500">Historical Qualifying Marks</span></div>
                   <div className="flex items-center gap-1.5"><span className="text-yellow-400/60">⚠</span><span className="text-slate-500">Estimated Mt</span></div>
                   <div className="flex items-center gap-1.5"><span className="text-green-400/60">✓</span><span className="text-slate-500">Historical AIR</span></div>
                 </div>
@@ -567,9 +567,9 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
 
           {/* Trust indicators */}
           <div className="flex items-center gap-3 mt-3 text-[9px] text-slate-600 flex-wrap">
-            <span className="flex items-center gap-1">✓ Official CCMT/COAP data</span>
+            <span className="flex items-center gap-1">✓ Historical CCMT/COAP data</span>
             <span className="flex items-center gap-1">✓ GATE 2024 Formula</span>
-            <span className="flex items-center gap-1">🤖 AI Confidence Analysis</span>
+            <span className="flex items-center gap-1">📊 Data-Driven Analysis</span>
             <span className="flex items-center gap-1">⚡ Prediction Engine v2.0</span>
           </div>
         </div>
@@ -1163,7 +1163,7 @@ function ResultsView({ result, onReset, form, blurred, referralCode, referralPro
           ))}
         </div>
         <div className="flex items-center justify-center gap-3 mt-2 text-[9px] text-slate-600">
-          <span>✓ Verified data</span>
+          <span>✓ Sourced from historical records</span>
           <span>✓ No black box</span>
           <span>✓ Every recommendation explained</span>
         </div>
@@ -1340,7 +1340,7 @@ function HowItWorksSection() {
       >
         <div className="flex items-center gap-2">
           <Brain size={16} className="text-purple-400" />
-          <span className="text-sm font-semibold text-white">How GateNexa AI Predicts Your Admission Chances</span>
+          <span className="text-sm font-semibold text-white">How GateNexa Predicts Your Admission Chances</span>
         </div>
         <ChevronDown size={14} className={`text-slate-500 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
@@ -1356,11 +1356,11 @@ function HowItWorksSection() {
               {/* Steps */}
               {[
                 { num: '1', title: 'Profile Analysis', desc: 'We analyze your GATE details, including marks, paper, category, preferred specialization, and admission preferences.' },
-                { num: '2', title: 'Official Data Verification', desc: 'Your profile is compared against verified admission information collected from official counselling authorities and participating institutes.' },
-                { num: '3', title: 'Historical Admission Analysis', desc: 'Our AI evaluates historical admission patterns, institute requirements, programme competitiveness, and category-wise trends to estimate eligibility.' },
+                { num: '2', title: 'Data Verification', desc: 'Your profile is compared against historical admission information collected from publicly available counselling records and participating institutes.' },
+                { num: '3', title: 'Historical Admission Analysis', desc: 'Our engine evaluates historical admission patterns, institute requirements, programme competitiveness, and category-wise trends to estimate eligibility.' },
                 { num: '4', title: 'Smart Recommendation Engine', desc: 'Instead of recommending only the easiest colleges, GateNexa balances multiple factors to identify institutions that best match your academic profile.' },
                 { num: '5', title: 'Personalized College Ranking', desc: 'Each recommendation is ranked using multiple academic and institutional factors to help you identify Dream, Target, and Safe opportunities.' },
-                { num: '6', title: 'AI Admission Report', desc: 'You receive a detailed report containing predicted GATE Score, Estimated AIR Range, Qualification Status, College Recommendations, Admission Confidence, Overall Match Score, Institute Comparison, and Choice Filling Guidance.' },
+                { num: '6', title: 'Detailed Admission Report', desc: 'You receive a detailed report containing predicted GATE Score, Estimated AIR Range, Qualification Status, College Recommendations, Admission Confidence, Overall Match Score, Institute Comparison, and Choice Filling Guidance.' },
               ].map((step, i) => (
                 <div key={i} className="flex gap-3">
                   <div className="flex flex-col items-center">
@@ -1401,17 +1401,17 @@ function HowItWorksSection() {
 
               {/* Important note */}
               <div className="rounded-xl p-3 text-[10px] text-slate-500 leading-relaxed" style={{ background: 'rgba(234,179,8,0.05)', border: '1px solid rgba(234,179,8,0.1)' }}>
-                <strong className="text-yellow-400">Important Note:</strong> GateNexa provides AI-assisted admission predictions based on historical admission information and available institutional data. Admission decisions are ultimately determined by official counselling authorities and participating institutes. Use GateNexa alongside the latest official CCMT, COAP, and institute notifications.
+                <strong className="text-yellow-400">Important Note:</strong> GateNexa provides data-driven admission predictions based on historical admission information and available institutional data. Admission decisions are ultimately determined by official counselling authorities and participating institutes. Use GateNexa alongside the latest official CCMT, COAP, and institute notifications.
               </div>
 
               {/* Badges row */}
               <div className="flex flex-wrap gap-2">
                 {[
-                  { label: '341+ Verified Records', color: '#8B5CF6' },
+                  { label: '341+ Historical Records', color: '#8B5CF6' },
                   { label: '82+ Institutes', color: '#06B6D4' },
                   { label: 'IIT/NIT/IIIT Support', color: '#22C55E' },
                   { label: 'Category-wise Analysis', color: '#EAB308' },
-                  { label: 'AI-Powered Engine', color: '#F97316' },
+                  { label: 'Data-Driven Engine', color: '#F97316' },
                   { label: 'Updated Data', color: '#EC4899' },
                   { label: 'PDF Report', color: '#14B8A6' },
                   { label: 'Secure & Private', color: '#A855F7' },
@@ -1616,7 +1616,7 @@ export default function OpportunityPredictorPage() {
             )}
             </div>
             <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto leading-relaxed mb-4">
-              AIR, college chances, cutoff trends — based on verified GATE data.
+              AIR, college chances, cutoff trends — based on historical GATE data.
             </p>
 
             {/* Stats badges */}
