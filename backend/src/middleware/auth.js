@@ -23,9 +23,12 @@ exports.protect = async (req, res, next) => {
   }
 
   if (!token) {
-    // Demo bypass is ONLY available in non-production environments
+    // Demo bypass is ONLY available with an EXPLICIT opt-in flag (ENABLE_DEMO === 'true')
+    // AND outside production. Default-deny: the header alone must never authenticate,
+    // even if someone accidentally sets ENABLE_DEMO while NODE_ENV is production.
     const isDemoRequest = req.headers['x-demo-user'] === 'true';
-    if (isDemoRequest && process.env.NODE_ENV !== 'production') {
+    const demoAuthEnabled = process.env.ENABLE_DEMO === 'true' && process.env.NODE_ENV !== 'production';
+    if (isDemoRequest && demoAuthEnabled) {
       enableMockAuth();
       req.user = {
         _id: 'demo_user_id',

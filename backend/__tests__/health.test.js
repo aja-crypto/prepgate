@@ -67,7 +67,13 @@ describe('Auth endpoints', () => {
 describe('Protected routes (X-Demo-User)', () => {
   let app;
   beforeAll(() => {
+    // Explicit opt-in required by Batch 1A default-deny gate: header alone is 401
+    // unless ENABLE_DEMO === 'true' in a non-production environment.
+    process.env.ENABLE_DEMO = 'true';
     app = require('../server');
+  });
+  afterAll(() => {
+    delete process.env.ENABLE_DEMO;
   });
 
   test('GET /api/progress/streak returns data for demo user', async () => {
@@ -95,7 +101,12 @@ describe('Protected routes (X-Demo-User)', () => {
 describe('Referral endpoint', () => {
   let app;
   beforeAll(() => {
+    // Batch 1A default-deny gate: demo header requires explicit ENABLE_DEMO opt-in.
+    process.env.ENABLE_DEMO = 'true';
     app = require('../server');
+  });
+  afterAll(() => {
+    delete process.env.ENABLE_DEMO;
   });
 
   test('GET /api/referral/status returns data for demo user', async () => {
