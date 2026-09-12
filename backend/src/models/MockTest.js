@@ -64,29 +64,9 @@ const userMockAttemptSchema = new mongoose.Schema({
 
 userMockAttemptSchema.index({ user: 1, test: 1, attemptNumber: 1 }, { unique: true });
 
-const mistakeEntrySchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  questionText: { type: String, required: true },
-  subject: { type: String, required: true },
-  topic: { type: String, default: '' },
-  correctAnswer: { type: String, default: '' },
-  yourAnswer: { type: String, default: '' },
-  category: {
-    type: String,
-    enum: ['concept_error', 'formula_error', 'silly_mistake', 'time_pressure', 'guess'],
-    required: true,
-  },
-  notes: { type: String, default: '' },
-  sourceTest: { type: String, default: '' },
-  createdAt: { type: Date, default: Date.now },
-});
-
-mistakeEntrySchema.index({ user: 1, createdAt: -1 });
-
-let MockTestQuestion, MockTest, UserMockAttempt, MistakeEntry;
+let MockTestQuestion, MockTest, UserMockAttempt;
 try { MockTestQuestion = mongoose.model('MockTestQuestion'); } catch { MockTestQuestion = mongoose.model('MockTestQuestion', mockQuestionSchema); }
 try { MockTest = mongoose.model('PreSeededMockTest'); } catch { MockTest = mongoose.model('PreSeededMockTest', mockTestSchema); }
 try { UserMockAttempt = mongoose.model('UserMockAttempt'); } catch { UserMockAttempt = mongoose.model('UserMockAttempt', userMockAttemptSchema); }
-try { MistakeEntry = mongoose.model('MistakeEntry'); } catch { MistakeEntry = mongoose.model('MistakeEntry', mistakeEntrySchema); }
 
-module.exports = { MockTestQuestion, MockTest, UserMockAttempt, MistakeEntry };
+module.exports = { MockTestQuestion, MockTest, UserMockAttempt };
