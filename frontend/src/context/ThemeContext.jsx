@@ -1,7 +1,7 @@
 ﻿// src/context/ThemeContext.jsx — dark / light / system + custom accent colors
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { COLOR_PRESETS } from '../design/tokens';
-import { safeGet } from '../utils/storage';
+import { safeGet, safeSet, safeRemove } from '../utils/storage';
 
 const THEME_MODE_KEY = 'gatenexa_theme_mode';
 const COLOR_PRESET_KEY = 'gatenexa_color_preset';
@@ -56,14 +56,14 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     applyColorPreset(colorPreset);
-    localStorage.setItem(COLOR_PRESET_KEY, colorPreset);
+    safeSet(COLOR_PRESET_KEY, colorPreset);
   }, [colorPreset]);
 
   useEffect(() => {
     const resolved = applyThemeMode(themeMode);
     setResolvedTheme(resolved);
-    localStorage.setItem(THEME_MODE_KEY, themeMode);
-    localStorage.setItem('gatenexa_theme', resolved);
+    safeSet(THEME_MODE_KEY, themeMode);
+    safeSet('gatenexa_theme', resolved);
   }, [themeMode]);
 
   useEffect(() => {
@@ -75,12 +75,12 @@ export const ThemeProvider = ({ children }) => {
   }, [themeMode]);
 
   useEffect(() => {
-    localStorage.setItem(NOTIF_STYLE_KEY, notifStyle);
+    safeSet(NOTIF_STYLE_KEY, notifStyle);
     document.documentElement.dataset.notifStyle = notifStyle;
   }, [notifStyle]);
 
   useEffect(() => {
-    localStorage.setItem(ANIM_QUALITY_KEY, animQuality);
+    safeSet(ANIM_QUALITY_KEY, animQuality);
     document.documentElement.dataset.animQuality = animQuality;
     const root = document.documentElement;
     if (animQuality === 'reduced') root.classList.add('anim-reduced');
@@ -101,12 +101,12 @@ const setThemeMode = useCallback((mode) => setThemeModeState(mode), []);
   const completeOnboarding = useCallback((prefs = {}) => {
     if (prefs.themeMode) setThemeModeState(prefs.themeMode);
     if (prefs.colorPreset) setColorPresetState(prefs.colorPreset);
-    localStorage.setItem(ONBOARDING_KEY, 'true');
+    safeSet(ONBOARDING_KEY, 'true');
     setOnboardingDone(true);
   }, []);
 
   const resetOnboarding = useCallback(() => {
-    localStorage.removeItem(ONBOARDING_KEY);
+    safeRemove(ONBOARDING_KEY);
     setOnboardingDone(false);
   }, []);
 

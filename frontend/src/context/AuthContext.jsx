@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import api, { authService, referralService, clearApiCache } from '../services/api';
 import toast from 'react-hot-toast';
-import { safeGet, safeRemove } from '../utils/storage';
+import { safeGet, safeSet, safeRemove, safeSessionGet, safeSessionSet } from '../utils/storage';
 import { STORAGE_KEYS } from './AccountState';
 
 // Split contexts to prevent cascading re-renders
@@ -136,8 +136,8 @@ export const AuthProvider = ({ children }) => {
         if (genAtInit !== authGenRef.current) return;
         if (res.data?.success && res.data?.data) {
           const { user: userData, accessToken, refreshToken } = res.data.data;
-          localStorage.setItem('accessToken', accessToken);
-          if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+          safeSet('accessToken', accessToken);
+          if (refreshToken) safeSet('refreshToken', refreshToken);
           api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
           setUser({ ...userData, isGuest: true });
         } else {
@@ -178,9 +178,9 @@ export const AuthProvider = ({ children }) => {
 
   const storeSession = useCallback((userData, accessToken, refreshToken) => {
     console.log('[AUTH-DEBUG] STORE_SESSION: storing token length', accessToken?.length, 'user:', userData?.name);
-    localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
-    localStorage.removeItem('isGuest');
+    safeSet('accessToken', accessToken);
+    safeSet('refreshToken', refreshToken);
+    safeRemove('isGuest');
     api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
     console.log('[AUTH-DEBUG] STORE_SESSION: default auth header set:', !!api.defaults.headers.common['Authorization']);
     setUser(userData);
@@ -205,7 +205,7 @@ export const AuthProvider = ({ children }) => {
     if (refCode) payload.refCode = refCode;
     const res = await authService.register(payload);
     const { user: u, accessToken, refreshToken } = res.data.data;
-    localStorage.removeItem(progressKey(u.id || u._id));
+    safeRemove(progressKey(u.id || u._id));
     storeSession(u, accessToken, refreshToken);
     setTimeout(() => refreshReferralStatus().catch(() => {}), 0);
     toast.success('Account created! Start tracking your GATE prep from 0%. 🚀');
@@ -217,7 +217,7 @@ export const AuthProvider = ({ children }) => {
     clearApiCache();
     const res = await authService.googleAuth(idToken);
     const { user: u, accessToken, refreshToken, isNewUser } = res.data.data;
-    if (isNewUser) localStorage.removeItem(progressKey(u.id || u._id));
+    if (isNewUser) safeRemove(progressKey(u.id || u._id));
     storeSession(u, accessToken, refreshToken);
     setIsPremium(u.isPremium || false);
     setTimeout(() => refreshReferralStatus().catch(() => {}), 0);
@@ -228,20 +228,20 @@ export const AuthProvider = ({ children }) => {
   const loginAsGuest = useCallback(async () => {
     authGenRef.current += 1;
     clearApiCache();
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    safeRemove('accessToken');
+    safeRemove('refreshToken');
     delete api.defaults.headers.common['Authorization'];
     
     try {
       const res = await api.post('/auth/demo');
       if (res.data?.success && res.data?.data) {
         const { user: userData, accessToken, refreshToken } = res.data.data;
-        localStorage.setItem('accessToken', accessToken);
-        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+        safeSet('accessToken', accessToken);
+        if (refreshToken) safeSet('refreshToken', refreshToken);
         api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
         setUser({ ...userData, isGuest: true });
-        localStorage.setItem('isGuest', 'true');
-        localStorage.setItem('gatenexa_onboarding_done', 'true');
+        safeSet('isGuest', 'true');
+        safeSet('gatenexa_onboarding_done', 'true');
         toast.success('Welcome to Demo Mode! Loading sample data...');
         return;
       }
@@ -257,8 +257,8 @@ export const AuthProvider = ({ children }) => {
       isGuest: true
     };
     setUser(guestUser);
-    localStorage.setItem('isGuest', 'true');
-    localStorage.setItem('gatenexa_onboarding_done', 'true');
+    safeSet('isGuest', 'true');
+    safeSet('gatenexa_onboarding_done', 'true');
     toast.success('Welcome to Demo Mode! (Offline)');
   }, []);
 
@@ -285,7 +285,7 @@ export const AuthProvider = ({ children }) => {
   const deleteAccount = useCallback(async (password) => {
     await authService.deleteAccount(password);
     if (user?.id || user?._id) {
-      localStorage.removeItem(progressKey(user.id || user._id));
+      safeRemove(progressKey(user.id || user._id));
     }
     logout();
     toast.success('Account deleted. Data recoverable for 30 days.');

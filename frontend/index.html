@@ -52,15 +52,19 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"GateNexa","url":"https://gatenexa.vercel.app","logo":"https://gatenexa.vercel.app/images/logo.png"}</script>
   <script>
     (function(){
-      var mode=localStorage.getItem('gatenexa_theme_mode')||localStorage.getItem('gatenexa_theme')||'dark';
-      var dark=mode==='dark'||(mode==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches)||(mode!=='light'&&mode!=='system');
-      document.documentElement.classList.toggle('dark',dark);
-      var preset=localStorage.getItem('gatenexa_color_preset')||'violet';
+      try {
+        var mode = 'dark';
+        try { mode = localStorage.getItem('gatenexa_theme_mode')||localStorage.getItem('gatenexa_theme')||'dark'; } catch (e) { mode = 'dark'; }
+        var dark=mode==='dark'||(mode==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches)||(mode!=='light'&&mode!=='system');
+        document.documentElement.classList.toggle('dark',dark);
+        var preset='violet';
+        try { preset=localStorage.getItem('gatenexa_color_preset')||'violet'; } catch (e) { preset='violet'; }
       var presets={violet:{p:'#7C3AED',s:'#4F46E5',a:'#F59E0B'},rose:{p:'#E11D48',s:'#BE185D',a:'#F59E0B'},teal:{p:'#0D9488',s:'#0891B2',a:'#FBBF24'},slate:{p:'#64748B',s:'#475569',a:'#F59E0B'}};
       var c=presets[preset]||presets.violet;
       document.documentElement.style.setProperty('--color-primary',c.p);
       document.documentElement.style.setProperty('--color-secondary',c.s);
       document.documentElement.style.setProperty('--color-accent',c.a);
+      } catch (e) { /* in-app webviews may block storage — safe defaults already applied */ }
     })();
   </script>
 </head>

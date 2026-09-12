@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import { safeGet, safeSessionGet, safeSessionSet } from '../../utils/storage';
 
 export class ErrorBoundary extends Component {
   state = { hasError: false, error: null, errorInfo: null, retried: 0 };
@@ -17,7 +18,7 @@ export class ErrorBoundary extends Component {
     console.error('Error name:', error?.name);
     console.error('Stack:', error?.stack || '(no stack)');
     console.error('Component Stack:', errorInfo?.componentStack || '(no component stack)');
-    console.error('Has user token:', !!localStorage.getItem('accessToken'));
+    console.error('Has user token:', safeGet('accessToken') != null);
     console.error('Context:', this.props.name || '(unnamed boundary)');
     console.error('==================================================');
 
@@ -25,8 +26,8 @@ export class ErrorBoundary extends Component {
     if (isChunkError) {
       try {
         const key = 'gatenexa_chunk_reload';
-        if (!sessionStorage.getItem(key)) {
-          sessionStorage.setItem(key, String(Date.now()));
+        if (safeSessionGet(key) == null) {
+          safeSessionSet(key, String(Date.now()));
           window.location.reload();
           return;
         }
@@ -67,6 +68,7 @@ export class ErrorBoundary extends Component {
                 {errMsg}
               </p>
             )}
+            <div className="flex flex-wrap items-center justify-center gap-2">
             <button
               onClick={this.handleRetry}
               className="btn-primary px-5 py-2.5 min-w-[140px]"
@@ -74,11 +76,12 @@ export class ErrorBoundary extends Component {
               Retry
             </button>
             <button
-              onClick={() => { window.location.href = '/dashboard'; }}
-              className="ml-2 px-5 py-2.5 min-w-[140px] rounded-lg border border-border text-text2 hover:text-text transition-colors"
+              onClick={() => { window.location.href = '/'; }}
+              className="px-5 py-2.5 min-w-[140px] rounded-lg border border-border text-text2 hover:text-text transition-colors"
             >
-              Go to Dashboard
+              Go Home
             </button>
+            </div>
           </div>
         </div>
       );

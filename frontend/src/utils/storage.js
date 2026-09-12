@@ -8,6 +8,16 @@ export function safeSet(key, value) {
   catch { return false; }
 }
 
+export function safeSessionGet(key, fallback = null) {
+  try { return sessionStorage.getItem(key); }
+  catch { return fallback; }
+}
+
+export function safeSessionSet(key, value) {
+  try { sessionStorage.setItem(key, value); return true; }
+  catch { return false; }
+}
+
 export function safeRemove(key) {
   try { localStorage.removeItem(key); }
   catch { /* noop */ }

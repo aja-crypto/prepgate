@@ -59,6 +59,8 @@ window.addEventListener('unhandledrejection', (event) => {
 (function () {
   let fired = false;
   const marker = 'gatenexa_chunk_reload_done';
+  const storageGet = (k) => { try { return sessionStorage.getItem(k); } catch { return 'blocked'; } };
+  const storageSet = (k, v) => { try { sessionStorage.setItem(k, v); } catch {} };
   window.addEventListener('error', (event) => {
     if (fired) return;
     const msg = event.message || '';
@@ -66,8 +68,8 @@ window.addEventListener('unhandledrejection', (event) => {
         msg.indexOf('error loading dynamically imported module') !== -1 ||
         msg.indexOf('Importing a module script failed') !== -1) {
       fired = true;
-      if (!sessionStorage.getItem(marker)) {
-        sessionStorage.setItem(marker, '1');
+      if (!storageGet(marker)) {
+        storageSet(marker, '1');
         console.warn('[GLOBAL] Stale chunk detected after deploy — reloading once to fetch the latest build.');
         window.location.reload();
       }
@@ -123,10 +125,18 @@ function urlBase64ToUint8Array(base64String) {
   return output;
 }
 
+function safeStorageGet(key) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+
 async function registerWebPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-  if (!localStorage.getItem('accessToken')) return;
-  if (Notification.permission !== 'granted') return;
+  // X/Twitter in-app browsers may block storage or Notification access.
+  // Never let push setup throw during first paint — homepage must render regardless.
+  if (safeStorageGet('accessToken') == null) return;
+  try {
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  } catch { return; }
 
   try {
     const registration = await navigator.serviceWorker.register('/sw.js');
@@ -157,15 +167,19 @@ async function registerWebPush() {
 
 function PwaSetup() {
   useEffect(() => {
-    if ('serviceWorker' in navigator && import.meta.env.PROD) {
-      navigator.serviceWorker.register('/sw.js').catch(silentCatch('Service worker registration'));
-    }
-    if (Notification.permission === 'granted') {
-      registerWebPush().catch(silentCatch('Web push registration'));
-    }
+    try {
+      if ('serviceWorker' in navigator && import.meta.env.PROD) {
+        navigator.serviceWorker.register('/sw.js').catch(silentCatch('Service worker registration'));
+      }
+      let permission = 'default';
+      try { permission = (typeof Notification !== 'undefined' && Notification.permission) || 'default'; } catch { permission = 'default'; }
+      if (permission === 'granted') {
+        registerWebPush().catch(silentCatch('Web push registration'));
+      }
     if (isFirebaseConfigured()) {
       initFirebasePush().catch(silentCatch('Firebase push init'));
     }
+    } catch { /* in-app browsers may restrict SW/push APIs — homepage must still render */ }
   }, []);
   return null;
 }

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { adminAuthService } from '../services/adminApi';
+import { safeGet, safeSet, safeRemove } from '../utils/storage';
 
 const AdminAuthContext = createContext(null);
 
@@ -8,7 +9,7 @@ export function AdminAuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const loadAdmin = useCallback(async () => {
-    const token = localStorage.getItem('adminToken');
+    const token = safeGet('adminToken');
     if (!token) {
       setLoading(false);
       return Promise.resolve();
@@ -18,8 +19,8 @@ export function AdminAuthProvider({ children }) {
       setAdmin(res.data.data);
       return Promise.resolve();
     } catch (err) {
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminUser');
+      safeRemove('adminToken');
+      safeRemove('adminUser');
     } finally {
       setLoading(false);
     }
@@ -36,15 +37,15 @@ export function AdminAuthProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     const res = await adminAuthService.login(email, password);
-    localStorage.setItem('adminToken', res.data.data.token);
-    localStorage.setItem('adminUser', JSON.stringify(res.data.data.admin));
+    safeSet('adminToken', res.data.data.token);
+    try { safeSet('adminUser', JSON.stringify(res.data.data.admin)); } catch {}
     setAdmin(res.data.data.admin);
     return res.data;
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
+    safeRemove('adminToken');
+    safeRemove('adminUser');
     setAdmin(null);
   }, []);
 

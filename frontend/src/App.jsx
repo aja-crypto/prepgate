@@ -9,6 +9,7 @@ import DiagnosticsModal from './components/common/DiagnosticsModal';
 import { useDiagnostics } from './context/DiagnosticsContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import RouteLoadingFallback from './components/common/RouteLoadingFallback';
+import { safeGet, safeSessionGet, safeSessionSet } from './utils/storage';
 import FloatingAIAssistant from './components/common/FloatingAIAssistant';
 import ConnectionNotice from './components/common/ConnectionNotice';
 import AmbientBackground from './components/common/AmbientBackground';
@@ -27,8 +28,8 @@ const lazyRoute = (loader) => reactLazy(async () => {
   } catch (error) {
     window.dispatchEvent(new CustomEvent('gatenexa:failed-chunk'));
     const key = 'gatenexa_route_chunk_retry';
-    if (typeof window !== 'undefined' && !sessionStorage.getItem(key)) {
-      sessionStorage.setItem(key, String(Date.now()));
+    if (typeof window !== 'undefined' && safeSessionGet(key) == null) {
+      safeSessionSet(key, String(Date.now()));
       window.location.reload();
     }
     throw error;
@@ -218,7 +219,7 @@ function AppFloatingWidgets() {
       {aiIntroOpen && <AiIntroModal onComplete={handleAiIntroComplete} />}
       <BrandIntroModal open={brandIntroOpen} onClose={() => setBrandIntroOpen(false)} />
       {!isAdminRoute && <AmbientBackground />}
-      {localStorage.getItem('gatenexa_ai_fab') !== 'false' && !hideOnAi && (
+      {safeGet('gatenexa_ai_fab') !== 'false' && !hideOnAi && (
         <FloatingAIAssistant open={aiPanelOpen} setOpen={setAiPanelOpen} />
       )}
       {showGate && <PremiumGateDialog />}
