@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useProgress } from './ProgressContext';
 import { useAuthData } from './AuthContext';
+import { todayKey, computeWeeklyHours } from '../utils/gateUtils';
 
 const FOCUS_STORAGE_KEY = 'gatenexa_focus_session';
 const DAILY_FOCUS_KEY = 'gatenexa_daily_focus';
@@ -273,11 +274,19 @@ export function FocusProvider({ children }) {
           setSessionsCompleted(totalSessions);
 
           updateProductivity((p) => ({ ...p, pomodoroSessions: (p.pomodoroSessions || 0) + 1 }));
-          updateStudyStats((s) => ({
-            ...s,
-            todayHours: (s.todayHours || 0) + focusMins / 60,
-            weekHours: (s.weekHours || 0) + focusMins / 60,
-          }));
+          updateStudyStats((s) => {
+            const hours = focusMins / 60;
+            const today = todayKey();
+            const dailyHours = { ...(s.dailyHours || {}) };
+            dailyHours[today] = Math.round(((dailyHours[today] || 0) + hours) * 10) / 10;
+            return {
+              ...s,
+              todayHours: (s.todayHours || 0) + hours,
+              weekHours: (s.weekHours || 0) + hours,
+              dailyHours,
+              weeklyHours: computeWeeklyHours(dailyHours),
+            };
+          });
 
           sendNotification('Focus Session Complete', `Take a ${BREAK_DURATION / 60}-minute break.`);
 
@@ -405,11 +414,19 @@ export function FocusProvider({ children }) {
             const totalSessions = sessionsCompletedRef.current + 1;
             setSessionsCompleted(totalSessions);
             updateProductivity((p) => ({ ...p, pomodoroSessions: (p.pomodoroSessions || 0) + 1 }));
-            updateStudyStats((s) => ({
-              ...s,
-              todayHours: (s.todayHours || 0) + focusMins / 60,
-              weekHours: (s.weekHours || 0) + focusMins / 60,
-            }));
+            updateStudyStats((s) => {
+              const hours = focusMins / 60;
+              const today = todayKey();
+              const dailyHours = { ...(s.dailyHours || {}) };
+              dailyHours[today] = Math.round(((dailyHours[today] || 0) + hours) * 10) / 10;
+              return {
+                ...s,
+                todayHours: (s.todayHours || 0) + hours,
+                weekHours: (s.weekHours || 0) + hours,
+                dailyHours,
+                weeklyHours: computeWeeklyHours(dailyHours),
+              };
+            });
             sendNotification('Focus Session Complete', `Take a ${BREAK_DURATION / 60}-minute break.`);
 
             const today = new Date().toDateString();

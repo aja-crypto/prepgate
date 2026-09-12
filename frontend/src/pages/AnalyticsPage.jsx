@@ -15,6 +15,7 @@ import {
   getSubjectAccuracy,
   predictRankRange,
 } from '../utils/gateUtils';
+import { mistakeService } from '../services/api';
 import SubjectCompletionBars from '../components/gate/SubjectCompletionBars';
 import StreakTracker from '../components/gate/StreakTracker';
 import WeakTopicsPanel from '../components/gate/WeakTopicsPanel';
@@ -111,8 +112,18 @@ export default function AnalyticsPage() {
   const subAccuracyRef = useRef(null);
   const mockTrendRef = useRef(null);
   const charts = useRef({});
+  const [mistakeAggs, setMistakeAggs] = useState(null);
 
   const hasData = (studyStats.subjects || []).length > 0 || topics.length > 0 || pyqs.length > 0 || mocks.length > 0;
+
+  // Fetch mistake aggregates on mount
+  useEffect(() => {
+    let cancelled = false;
+    mistakeService.getAggregates()
+      .then((res) => { if (!cancelled) setMistakeAggs(res.data?.data || null); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   const subjects = useMemo(
     () => computeSubjectCompletion(studyStats.subjects, topics, pyqs),
@@ -445,6 +456,39 @@ export default function AnalyticsPage() {
         <WeakTopicsPanel limit={8} />
         <AirPredictor />
       </div>
+
+      {mistakeAggs && mistakeAggs.total > 0 && (
+        <div className="bg-surface border border-border rounded-xl p-5 mb-4">
+          <div className="text-sm font-semibold text-text mb-3">Mistake Notebook Summary</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="text-center p-3 bg-surface2 rounded-lg">
+              <div className="text-xl font-bold text-primary">{mistakeAggs.total}</div>
+              <div className="text-[10px] text-text3 uppercase">Total Mistakes</div>
+            </div>
+            <div className="text-center p-3 bg-surface2 rounded-lg">
+              <div className="text-xl font-bold text-green-400">{mistakeAggs.totalResolved}</div>
+              <div className="text-[10px] text-text3 uppercase">Resolved</div>
+            </div>
+            <div className="text-center p-3 bg-surface2 rounded-lg">
+              <div className="text-xl font-bold text-amber-400">{mistakeAggs.totalPending}</div>
+              <div className="text-[10px] text-text3 uppercase">Pending</div>
+            </div>
+            <div className="text-center p-3 bg-surface2 rounded-lg">
+              <div className="text-xl font-bold text-primary">{mistakeAggs.total > 0 ? Math.round((mistakeAggs.totalResolved / mistakeAggs.total) * 100) : 0}%</div>
+              <div className="text-[10px] text-text3 uppercase">Resolution Rate</div>
+            </div>
+          </div>
+          {Object.keys(mistakeAggs.bySubject || {}).length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {Object.entries(mistakeAggs.bySubject).sort((a, b) => b[1] - a[1]).map(([subject, count]) => (
+                <span key={subject} className="text-[10px] px-2 py-1 rounded-full bg-surface2 text-text3 border border-border">
+                  {subject}: {count}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -776,3 +776,107 @@ export function computeRevisionPriority(item, today) {
 }
 
 const SUBJECT_WEIGHT_MAP = SUBJECT_WEIGHTAGE;
+
+// ─── Analytics Array Computation ───────────────────────────────────────────────
+
+/** Compute 7-element weeklyHours array [Mon..Sun] from dailyHours { "YYYY-MM-DD": hours } */
+export function computeWeeklyHours(dailyHours = {}) {
+  const result = [0, 0, 0, 0, 0, 0, 0];
+  const now = new Date();
+  // Find Monday of this week
+  const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ...
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + mondayOffset);
+  monday.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const key = d.toISOString().slice(0, 10);
+    result[i] = Math.round((dailyHours[key] || 0) * 10) / 10;
+  }
+  return result;
+}
+
+/** Compute 6-element monthlyHours array (last 6 months) from dailyHours */
+export function computeMonthlyHours(dailyHours = {}) {
+  const result = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const year = d.getFullYear();
+    const month = d.getMonth();
+    let total = 0;
+    // Sum all days in this month
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      total += dailyHours[key] || 0;
+    }
+    result.push(Math.round(total * 10) / 10);
+  }
+  return result;
+}
+
+/** Compute 7-element weeklyAccuracy array [Mon..Sun] from pyqs solved per day.
+ *  Uses pyqs[].solvedAt or pyqs[].lastAttempt timestamps. */
+export function computeWeeklyAccuracy(pyqs = []) {
+  const result = [0, 0, 0, 0, 0, 0, 0];
+  const counts = [0, 0, 0, 0, 0, 0, 0];
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + mondayOffset);
+  monday.setHours(0, 0, 0, 0);
+  const weekEnd = new Date(monday);
+  weekEnd.setDate(monday.getDate() + 7);
+
+  pyqs.forEach((p) => {
+    if (!p.solved) return;
+    const ts = p.lastAttempt || p.solvedAt;
+    if (!ts) return;
+    const d = new Date(ts);
+    if (d >= monday && d < weekEnd) {
+      const dow = d.getDay(); // 0=Sun
+      const idx = dow === 0 ? 6 : dow - 1; // Mon=0, Sun=6
+      counts[idx]++;
+      if (p.accuracy != null) {
+        result[idx] += p.accuracy;
+      } else if (p.correct) {
+        result[idx] += 100;
+      } else {
+        result[idx] += 0;
+      }
+    }
+  });
+
+  for (let i = 0; i < 7; i++) {
+    result[i] = counts[i] > 0 ? Math.round(result[i] / counts[i]) : 0;
+  }
+  return result;
+}
+
+/** Reset todayHours if the stored date is not today */
+export function resetTodayHoursIfNeeded(studyStats, today = todayKey()) {
+  if (!studyStats || studyStats._lastStudyDate === today) return studyStats;
+  return { ...studyStats, todayHours: 0, _lastStudyDate: today };
+}
+
+/** Reset weekHours if we've crossed a week boundary (Monday) */
+export function resetWeekHoursIfNeeded(studyStats) {
+  if (!studyStats) return studyStats;
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + mondayOffset);
+  monday.setHours(0, 0, 0, 0);
+  const mondayKey = monday.toISOString().slice(0, 10);
+  if (studyStats._weekStart === mondayKey) return studyStats;
+  // New week — compute weeklyHours from dailyHours and reset
+  const weeklyHours = computeWeeklyHours(studyStats.dailyHours);
+  const totalWeekHours = weeklyHours.reduce((s, h) => s + h, 0);
+  return { ...studyStats, weekHours: Math.round(totalWeekHours * 10) / 10, weeklyHours, _weekStart: mondayKey };
+}

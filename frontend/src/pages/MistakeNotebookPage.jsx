@@ -30,7 +30,13 @@ export default function MistakeNotebookPage() {
       const data = r.data?.data || [];
       setEntries(data);
       if (data.length > 0) setDemoCards([]);
-    } catch {}
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 401) toast.error('Session expired. Please log in again.');
+      else if (status === 429) toast.error('Too many requests. Please wait a moment.');
+      else if (!err?.response) toast.error('Network error. Check your connection.');
+      else toast.error('Failed to load mistakes.');
+    }
     setLoading(false);
   }, []);
 
@@ -51,22 +57,37 @@ export default function MistakeNotebookPage() {
     return r;
   }, [entries, demoCards, search, filterSubject, filterType, sortBy]);
 
-  const handleSave = async ({ subject, topic, mistakeType, mistake, correctConcept, image }) => {
+  const handleSave = async ({ subject, topic, mistakeType, mistake, correctConcept, imageFile }) => {
+    const questionText = `${subject} — ${topic||''}`;
     const opt = {
       _id: 'temp-'+Date.now(), subject, topic, mistakeType: mistakeType || 'concept_mistake',
-      learning: mistake, reason: correctConcept, questionImage: image,
-      questionText: `${subject} — ${topic||''}`,
+      learning: mistake, reason: correctConcept,
+      questionText,
       createdAt: new Date().toISOString(), resolved: false,
     };
     setEntries(prev => [opt, ...prev]);
     if (demoCards.length > 0) { setDemoCards([]); localStorage.setItem('mistake_demo_dismissed', JSON.stringify([])); }
     try {
-      const r = await mistakeService.create({ subject, topic, mistakeType: mistakeType || 'concept_mistake', mistake, correctConcept, questionImage: image, questionText: `${subject} — ${topic||''}` });
+      let r;
+      if (imageFile) {
+        const fd = new FormData();
+        fd.append('subject', subject);
+        fd.append('topic', topic || '');
+        fd.append('mistakeType', mistakeType || 'concept_mistake');
+        fd.append('mistake', mistake);
+        fd.append('correctConcept', correctConcept || '');
+        fd.append('questionText', questionText);
+        fd.append('image', imageFile);
+        r = await mistakeService.create(fd);
+      } else {
+        r = await mistakeService.create({ subject, topic, mistakeType: mistakeType || 'concept_mistake', mistake, correctConcept, questionText });
+      }
       setEntries(prev => prev.map(e => e._id === opt._id ? (r.data?.data || r.data) : e));
       toast.success('Saved!');
-    } catch {
+    } catch (err) {
       setEntries(prev => prev.filter(e => e._id !== opt._id));
-      toast.error('Failed to save');
+      const msg = err?.response?.data?.message || 'Failed to save';
+      toast.error(msg);
     }
   };
 

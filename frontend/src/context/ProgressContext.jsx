@@ -10,7 +10,7 @@ import {
   getEmptyProgressData, mergeProgressData, isEmptyProgress, BADGE_DEFINITIONS,
 } from '../data/emptyState';
 import { getDefaultGateFeatures, getDemoProgressData } from '../data/defaults';
-import { checkNewBadges } from '../utils/gateUtils';
+import { checkNewBadges, computeWeeklyHours, computeMonthlyHours, computeWeeklyAccuracy, resetTodayHoursIfNeeded, resetWeekHoursIfNeeded, todayKey } from '../utils/gateUtils';
 import { progressService, pyqService } from '../services/api';
 import { silentCatch, warn } from '../utils/errorHandler';
 import { pullFromServer, pushToServer, checkMongoAvailable } from '../services/syncService';
@@ -101,6 +101,34 @@ export const ProgressProvider = ({ children }) => {
       if (updatedAt) setLastCloudBackupAt(updatedAt);
       setMongoAvailable(ma ?? mongo);
       localStorage.setItem(storageKey(userId), JSON.stringify(merged));
+
+      // Compute analytics arrays from daily data after login pull
+      setData((prev) => {
+        const ss = prev.studyStats || {};
+        const gf = prev.gateFeatures || {};
+        let changed = false;
+        const nextSS = { ...ss };
+        const nextGF = { ...gf };
+
+        // Reset todayHours if new day
+        const resetSS = resetTodayHoursIfNeeded(nextSS);
+        if (resetSS !== nextSS) { Object.assign(nextSS, resetSS); changed = true; }
+
+        // Compute weeklyHours array
+        const wh = computeWeeklyHours(nextSS.dailyHours);
+        if (JSON.stringify(wh) !== JSON.stringify(nextSS.weeklyHours)) { nextSS.weeklyHours = wh; changed = true; }
+
+        // Compute monthlyHours array
+        const mh = computeMonthlyHours(nextSS.dailyHours);
+        if (JSON.stringify(mh) !== JSON.stringify(nextGF.monthlyHours)) { nextGF.monthlyHours = mh; changed = true; }
+
+        // Compute weeklyAccuracy array
+        const wa = computeWeeklyAccuracy(prev.pyqs);
+        if (JSON.stringify(wa) !== JSON.stringify(nextGF.weeklyAccuracy)) { nextGF.weeklyAccuracy = wa; changed = true; }
+
+        if (!changed) return prev;
+        return { ...prev, studyStats: nextSS, gateFeatures: nextGF };
+      });
 
       if (fromCloud && ma) {
         toast.success('Progress restored from cloud', { duration: 2000 });
@@ -193,6 +221,41 @@ export const ProgressProvider = ({ children }) => {
       if (wakeSyncTimer.current) clearTimeout(wakeSyncTimer.current);
     };
   }, [user, userId, syncToCloud]);
+
+  // Day/week boundary resets + analytics array recomputation
+  const recomputedRef = useRef(null);
+  useEffect(() => {
+    if (!user || userId === 'guest') return;
+    const today = todayKey();
+    if (recomputedRef.current === today) return;
+    recomputedRef.current = today;
+
+    setData((prev) => {
+      const ss = prev.studyStats || {};
+      const gf = prev.gateFeatures || {};
+      let changed = false;
+      const nextSS = { ...ss };
+      const nextGF = { ...gf };
+
+      const resetSS = resetTodayHoursIfNeeded(nextSS);
+      if (resetSS !== nextSS) { Object.assign(nextSS, resetSS); changed = true; }
+
+      const weekReset = resetWeekHoursIfNeeded(nextSS);
+      if (weekReset !== nextSS) { Object.assign(nextSS, weekReset); changed = true; }
+
+      const wh = computeWeeklyHours(nextSS.dailyHours);
+      if (JSON.stringify(wh) !== JSON.stringify(nextSS.weeklyHours)) { nextSS.weeklyHours = wh; changed = true; }
+
+      const mh = computeMonthlyHours(nextSS.dailyHours);
+      if (JSON.stringify(mh) !== JSON.stringify(nextGF.monthlyHours)) { nextGF.monthlyHours = mh; changed = true; }
+
+      const wa = computeWeeklyAccuracy(prev.pyqs);
+      if (JSON.stringify(wa) !== JSON.stringify(nextGF.weeklyAccuracy)) { nextGF.weeklyAccuracy = wa; changed = true; }
+
+      if (!changed) return prev;
+      return { ...prev, studyStats: nextSS, gateFeatures: nextGF };
+    });
+  }, [user, userId]);
 
   const syncPyqToServer = useCallback((pyq) => {
     if (!pyq.mongoId || !mongoAvailable) return;

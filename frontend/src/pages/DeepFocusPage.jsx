@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useFocus, useFocusTimer } from '../context/FocusContext';
 import { useProgress } from '../context/ProgressContext';
 import { useAuthData } from '../context/AuthContext';
+import { todayKey, computeWeeklyHours } from '../utils/gateUtils';
 
 const BG_OPTIONS = [
   { id: 'deepfocus', label: 'Deep Focus', icon: '◈' },
@@ -781,11 +782,19 @@ export default function DeepFocusPage() {
       deepFocusSessions: (p.deepFocusSessions || 0) + 1,
       totalDeepFocusMinutes: (p.totalDeepFocusMinutes || 0) + focusMins,
     }));
-    updateStudyStats((s) => ({
-      ...s, todayHours: (s.todayHours || 0) + focusMins / 60,
-      weekHours: (s.weekHours || 0) + focusMins / 60,
-      deepFocusHours: (s.deepFocusHours || 0) + focusMins / 60,
-    }));
+    updateStudyStats((s) => {
+      const hours = focusMins / 60;
+      const today = todayKey();
+      const dailyHours = { ...(s.dailyHours || {}) };
+      dailyHours[today] = Math.round(((dailyHours[today] || 0) + hours) * 10) / 10;
+      return {
+        ...s, todayHours: (s.todayHours || 0) + hours,
+        weekHours: (s.weekHours || 0) + hours,
+        deepFocusHours: (s.deepFocusHours || 0) + hours,
+        dailyHours,
+        weeklyHours: computeWeeklyHours(dailyHours),
+      };
+    });
     syncToCloud();
   }, [selectedSubject, selectedTopic, selectedDuration, questionsSolved, notesRevised, focusSessions, updateProductivity, updateStudyStats, syncToCloud]);
 

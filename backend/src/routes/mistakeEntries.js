@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const { protect } = require('../middleware/auth');
 const { isMongoConnected, isMockAuthEnabled } = require('../config/db');
+const { isCloudinaryConfigured, uploadImage } = require('../config/cloudinary');
+const { sanitizeFilename, createFileFilter } = require('../utils/uploadValidator');
 const MistakeEntry = require('../models/MistakeEntry');
 const {
   saveLocalMistakeEntry,
@@ -9,6 +12,12 @@ const {
   deleteLocalMistakeEntry,
   getLocalMistakeAggregates,
 } = require('../store/localDataStore');
+
+const imageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: createFileFilter('image'),
+});
 
 router.get('/', protect, async (req, res, next) => {
   try {
@@ -66,7 +75,7 @@ router.get('/aggregates', protect, async (req, res, next) => {
   }
 });
 
-router.post('/', protect, async (req, res, next) => {
+router.post('/', protect, imageUpload.single('image'), async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { questionText, subject, topic, difficulty, mistakeType, correctAnswer, userAnswer, reason, learning, source, sourceTest, priority, tags, attachments, mistake, correctConcept } = req.body;
@@ -74,6 +83,19 @@ router.post('/', protect, async (req, res, next) => {
     const text = mistake || learning || questionText;
     if (!text || !subject) {
       return res.status(400).json({ success: false, message: 'Mistake description and subject are required' });
+    }
+
+    let questionImage = '';
+    if (req.file) {
+      if (!isCloudinaryConfigured()) {
+        return res.status(503).json({ success: false, message: 'Image upload is not configured.' });
+      }
+      const safeName = sanitizeFilename(req.file.originalname);
+      const result = await uploadImage(req.file.buffer, safeName, 'GateNexa/mistakes');
+      if (!result?.secure_url) {
+        return res.status(502).json({ success: false, message: 'Image upload failed.' });
+      }
+      questionImage = result.secure_url;
     }
 
     const data = {
@@ -92,6 +114,7 @@ router.post('/', protect, async (req, res, next) => {
       priority: priority || 'Medium',
       tags: tags || [],
       attachments: attachments || [],
+      questionImage,
       resolved: false,
     };
 

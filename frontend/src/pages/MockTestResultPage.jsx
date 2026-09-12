@@ -185,8 +185,8 @@ export default function MockTestResultPage() {
           await mistakeService.create({
             questionText: qText,
             correctAnswer: String(correct),
-            yourAnswer: String(chosen),
-            category: q.mistakeCategory || 'concept_error',
+            userAnswer: String(chosen),
+            mistakeType: q.mistakeCategory || 'concept_mistake',
             sourceTest: 'mock-test',
             subject: q.subject || '',
           }).catch(silentCatch('Create mistake entry', { toast: true }));

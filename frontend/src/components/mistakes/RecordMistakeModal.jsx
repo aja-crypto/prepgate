@@ -10,6 +10,7 @@ export default function RecordMistakeModal({ open, onClose, onSave }) {
   const [mistake, setMistake] = useState('');
   const [correctConcept, setCorrectConcept] = useState('');
   const [image, setImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [subjectOpen, setSubjectOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -21,13 +22,13 @@ export default function RecordMistakeModal({ open, onClose, onSave }) {
 
   const reset = useCallback(() => {
     setSubject(''); setTopic(''); setMistakeType(''); setMistake('');
-    setCorrectConcept(''); setImage(null); setSubjectOpen(false); setSaving(false); setSaved(false); setShowFullscreen(false);
+    setCorrectConcept(''); setImage(null); setImageFile(null); setSubjectOpen(false); setSaving(false); setSaved(false); setShowFullscreen(false);
   }, []);
 
   useEffect(() => { if (!open) reset(); }, [open, reset]);
 
   const handleImageUpload = (file) => {
-    if (file) setImage(URL.createObjectURL(file));
+    if (file) { setImage(URL.createObjectURL(file)); setImageFile(file); }
   };
 
   const handlePaste = async () => {
@@ -35,7 +36,7 @@ export default function RecordMistakeModal({ open, onClose, onSave }) {
       const items = await navigator.clipboard.read();
       for (const item of items) {
         const t = item.types.find(t => t.startsWith('image/'));
-        if (t) { const blob = await item.getType(t); setImage(URL.createObjectURL(blob)); return; }
+        if (t) { const blob = await item.getType(t); const f = new File([blob], 'pasted-image.png', { type: t }); setImage(URL.createObjectURL(blob)); setImageFile(f); return; }
       }
     } catch {}
   };
@@ -49,7 +50,7 @@ export default function RecordMistakeModal({ open, onClose, onSave }) {
   const handleSave = async () => {
     if (!subject || !mistake.trim()) return;
     setSaving(true);
-    await onSave({ subject, topic, mistakeType: mistakeType || 'concept_mistake', mistake, correctConcept, image });
+    await onSave({ subject, topic, mistakeType: mistakeType || 'concept_mistake', mistake, correctConcept, imageFile });
     setSaving(false);
     setSaved(true);
     setTimeout(() => { onClose(); }, 600);
@@ -109,7 +110,7 @@ export default function RecordMistakeModal({ open, onClose, onSave }) {
                         style={{ background: 'rgba(124,92,255,0.08)', color: '#7C5CFF', border: '1px solid rgba(124,92,255,0.15)' }}>
                         <Upload size={11} /> Replace
                       </button>
-                      <button onClick={() => { setImage(null); }}
+                        <button onClick={() => { setImage(null); setImageFile(null); }}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all"
                         style={{ background: 'rgba(255,107,107,0.08)', color: '#FF6B6B', border: '1px solid rgba(255,107,107,0.12)' }}>
                         <Trash2 size={11} /> Remove

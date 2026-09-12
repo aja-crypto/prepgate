@@ -533,7 +533,15 @@ export const mockTestService = {
 export const mistakeService = {
   getAll: (params) => api.get('/mistakes', { params }),
   getAggregates: () => api.get('/mistakes/aggregates'),
-  create: (data) => api.post('/mistakes', data),
+  create: (data) => {
+    if (data instanceof FormData) {
+      return api.post('/mistakes', data, {
+        headers: { 'Content-Type': undefined },
+        timeout: 60000,
+      });
+    }
+    return api.post('/mistakes', data);
+  },
   update: (id, data) => api.put(`/mistakes/${id}`, data),
   delete: (id) => api.delete(`/mistakes/${id}`),
 };
