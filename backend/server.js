@@ -598,41 +598,13 @@ connectDB().then(async () => {
       console.error('Admin MongoDB seed error:', e.message);
     }
 
-    // Seed owner in Admin model
+    // Provision owner ONLY on a fresh database. An existing owner's password/role
+    // is NEVER mutated at boot (Batch 1B — removes the boot-time owner password reset).
     try {
+      const { provisionOwner } = require('./src/services/ownerProvision');
       const Admin = require('./src/models/Admin');
       const User = require('./src/models/User');
-      const ownerEmail = 'purruajaykumar@gmail.com';
-      const existing = await Admin.findOne({ email: ownerEmail });
-      if (!existing) {
-        await Admin.create({
-          name: 'Owner', email: ownerEmail,
-          passwordHash: OWNER_PASSWORD, role: 'super_admin', isActive: true,
-        });
-        console.log('Owner created in Admin model (password from OWNER_PASSWORD env).');
-      } else if (OWNER_PASSWORD) {
-        existing.passwordHash = OWNER_PASSWORD;
-        existing.role = 'super_admin';
-        await existing.save();
-        console.log('Owner password updated in Admin model from OWNER_PASSWORD env.');
-      }
-      // Also seed owner in User model so they can login via /api/auth/login
-      let ownerUser = await User.findOne({ email: ownerEmail }).select('+password');
-      if (!ownerUser) {
-        await User.create({
-          name: 'Owner',
-          email: ownerEmail,
-          password: OWNER_PASSWORD,
-          role: 'owner',
-          isPremium: true,
-        });
-        console.log('Owner User created (password from OWNER_PASSWORD env).');
-      } else if (OWNER_PASSWORD) {
-        ownerUser.password = OWNER_PASSWORD;
-        ownerUser.role = 'owner';
-        await ownerUser.save({ validateBeforeSave: false });
-        console.log('Owner User password updated from OWNER_PASSWORD env.');
-      }
+      await provisionOwner({ Admin, User, ownerPassword: OWNER_PASSWORD });
     } catch (e) {
       console.error('Owner seed error:', e.message);
     }
