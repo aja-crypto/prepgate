@@ -533,10 +533,6 @@ export default function DashboardPage() {
 
             {/* ═══ MOBILE DASHBOARD ═══ */}
       <div className="sm:hidden px-4 pb-28">
-        {isEmptyProgress ? (
-          <EmptyDashboard userName={user?.name?.split(' ')[0]} />
-        ) : (
-        <>
         {/* ── Greeting ── */}
         <section className="pt-4 pb-2">
           <div className="flex items-center justify-between mb-2">
@@ -700,9 +696,133 @@ export default function DashboardPage() {
               <ExamTimeline />
             </section>
           )}
+
+          {/* Daily Motivation */}
+          {isMobileWidgetVisible('motivation') && widgetContent.motivation && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent.motivation}
+            </section>
+          )}
+
+          {/* Today's Plan */}
+          {isMobileWidgetVisible('today-plan') && widgetContent['today-plan'] && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent['today-plan']}
+            </section>
+          )}
+
+          {/* Key Metrics */}
+          {isMobileWidgetVisible('stats') && widgetContent.stats && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent.stats}
+            </section>
+          )}
+
+          {/* GateNexa AI */}
+          {isMobileWidgetVisible('gatenexa-ai') && widgetContent['gatenexa-ai'] && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent['gatenexa-ai']}
+            </section>
+          )}
+
+          {/* Recommendation Engine */}
+          {isMobileWidgetVisible('recommendation-engine') && widgetContent['recommendation-engine'] && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent['recommendation-engine']}
+            </section>
+          )}
+
+          {/* Focus Session Stats */}
+          {isMobileWidgetVisible('focus-stats') && widgetContent['focus-stats'] && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent['focus-stats']}
+            </section>
+          )}
+
+          {/* Daily Missions */}
+          {isMobileWidgetVisible('daily-missions') && widgetContent['daily-missions'] && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent['daily-missions']}
+            </section>
+          )}
+
+          {/* Revision Schedule */}
+          {isMobileWidgetVisible('revision-schedule') && widgetContent['revision-schedule'] && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent['revision-schedule']}
+            </section>
+          )}
+
+          {/* Subject Progress */}
+          {isMobileWidgetVisible('subjects') && widgetContent.subjects && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent.subjects}
+            </section>
+          )}
+
+          {/* Goals & Streak */}
+          {isMobileWidgetVisible('goals') && widgetContent.goals && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent.goals}
+            </section>
+          )}
+
+          {/* Weekly Hours */}
+          {isMobileWidgetVisible('weekly-hours') && widgetContent['weekly-hours'] && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent['weekly-hours']}
+            </section>
+          )}
+
+          {/* Progress Heatmap */}
+          {isMobileWidgetVisible('progress-heatmap') && widgetContent['progress-heatmap'] && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent['progress-heatmap']}
+            </section>
+          )}
+
+          {/* Recommendations */}
+          {isMobileWidgetVisible('recommendations') && widgetContent.recommendations && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent.recommendations}
+            </section>
+          )}
+
+          {/* Score Predictions */}
+          {isMobileWidgetVisible('predictions') && widgetContent.predictions && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent.predictions}
+            </section>
+          )}
+
+          {/* Notes Hub */}
+          {isMobileWidgetVisible('notes-hub') && widgetContent['notes-hub'] && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent['notes-hub']}
+            </section>
+          )}
+
+          {/* Gate Vault */}
+          {isMobileWidgetVisible('gate-vault') && widgetContent['gate-vault'] && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent['gate-vault']}
+            </section>
+          )}
+
+          {/* Pinned Notes */}
+          {isMobileWidgetVisible('pinned-notes') && widgetContent['pinned-notes'] && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent['pinned-notes']}
+            </section>
+          )}
+
+          {/* AI Mentor */}
+          {isMobileWidgetVisible('ai-mentor') && widgetContent['ai-mentor'] && (
+            <section className="mobile-card-glass p-3">
+              {widgetContent['ai-mentor']}
+            </section>
+          )}
         </div>
-        </>
-        )}
       </div>
 
       {/* Mobile Widget Customizer */}

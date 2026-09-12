@@ -13,19 +13,19 @@ function mobileStorageKey(userId) {
   return `gatenexa_dashboard_mobile_${userId || 'guest'}`;
 }
 
-// Mobile default widgets — minimal command center
-const MOBILE_DEFAULTS = [
-  { id: 'countdown', visible: true },
-  { id: 'announcements', visible: true },
-  { id: 'recruitment', visible: true },
-  { id: 'trending', visible: true },
-  { id: 'live-news', visible: true },
-  { id: 'daily-content', visible: true },
-  { id: 'analysis', visible: true },
-  { id: 'exam-schedule', visible: true },
-  { id: 'resources', visible: false },
-  { id: 'exam-timeline', visible: false },
-];
+// Mobile default widgets — derived from the full DEFAULT_WIDGETS catalog.
+// Only these widgets are ON by default; all others are OFF but available.
+const MOBILE_DEFAULT_ON = new Set([
+  'countdown', 'announcements', 'recruitment', 'trending', 'live-news', 'daily-content', 'analysis',
+]);
+
+function buildMobileDefaults() {
+  return DEFAULT_WIDGETS.map((w, i) => ({
+    id: w.id,
+    visible: MOBILE_DEFAULT_ON.has(w.id),
+    order: i,
+  }));
+}
 
 function loadLayout(userId) {
   try {
@@ -48,14 +48,13 @@ function loadMobileLayout(userId) {
       const parsed = JSON.parse(raw);
       const known = new Set(DEFAULT_WIDGETS.map((w) => w.id));
       const filtered = parsed.filter((w) => known.has(w.id));
-      // Ensure newly-registered mobile widgets (OFF by default) stay available to
-      // existing users who saved their list before these widgets existed.
-      const missing = MOBILE_DEFAULTS.filter((w) => !filtered.some((f) => f.id === w.id));
-      if (missing.length) return [...filtered, ...missing.map((w, i) => ({ id: w.id, visible: w.visible, order: filtered.length + i }))];
+      // Merge any newly-registered DEFAULT_WIDGETS that are missing from the user's saved list.
+      const missing = DEFAULT_WIDGETS.filter((w) => !filtered.some((f) => f.id === w.id));
+      if (missing.length) return [...filtered, ...missing.map((w, i) => ({ id: w.id, visible: MOBILE_DEFAULT_ON.has(w.id), order: filtered.length + i }))];
       return filtered;
     }
   } catch { /* ignore */ }
-  return MOBILE_DEFAULTS.map((w, i) => ({ id: w.id, visible: w.visible, order: i }));
+  return buildMobileDefaults();
 }
 
 export const DashboardProvider = ({ children }) => {
@@ -126,7 +125,7 @@ export const DashboardProvider = ({ children }) => {
   }, []);
 
   const resetMobileLayout = useCallback(() => {
-    setMobileWidgets(MOBILE_DEFAULTS.map((w, i) => ({ id: w.id, visible: w.visible, order: i })));
+    setMobileWidgets(buildMobileDefaults());
   }, []);
 
   const getWidgetMeta = useCallback((id) => DEFAULT_WIDGETS.find((w) => w.id === id), []);
