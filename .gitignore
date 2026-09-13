@@ -59,10 +59,6 @@ DEPLOY.md
 /resources/*
 !/resources/weekly-tests/
 !/resources/short-notes/
-!/resources/GATE_KNOWLEDGE_BASE.md
-!/resources/insights.txt
-!/resources/GATE_2027_PREPARATION_GUIDE.pdf
-!/resources/learning hud insight.txt
 
 # Test files
 backend/test-*.js
@@ -74,8 +70,6 @@ backend/src/config/test-dir.js
 *.out
 *.err
 *.txt
-!resources/insights.txt
-!resources/learning hud insight.txt
 pcheck.json
 raw_pred.json
 screenshots/
