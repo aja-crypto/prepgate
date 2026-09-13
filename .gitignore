@@ -43,6 +43,7 @@ frontend/dist/
 !frontend/public/images/*.png
 !frontend/public/og-image.png
 !frontend/public/gatenexa-og-2026.png
+!frontend/public/x-test-og.png
 !frontend/public/images/*.jpg
 !frontend/public/images/*.jpeg
 !frontend/public/showcase/*.png
