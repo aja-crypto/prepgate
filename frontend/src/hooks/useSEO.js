@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 
 const DEFAULTS = {
   title: 'GateNexa – AI Powered GATE 2027 Preparation Platform',
-  description: 'Prepare smarter for GATE with AI Mentor, Study Planner, PYQs, Mock Tests, Analytics, Revision Tracking, and Personalized Roadmaps.',
-  image: 'https://gatenexa.vercel.app/x-test-og.png',
+  description: 'GateNexa helps GATE 2027 aspirants learn, practice, plan, track progress, and prepare with AI-assisted guidance.',
+  image: 'https://gatenexa.vercel.app/gatenexa-og-2026.png',
   url: 'https://gatenexa.vercel.app/',
   type: 'website',
   siteName: 'GateNexa',
