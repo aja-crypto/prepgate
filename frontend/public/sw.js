@@ -11,6 +11,8 @@ const APP_SHELL = [
   '/favicon-16x16.png',
   '/favicon-32x32.png',
   '/images/logo.png',
+  '/og-image.png',
+  '/gatenexa-og-2026.png',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
   '/offline.html',
