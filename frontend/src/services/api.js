@@ -1,15 +1,6 @@
 // src/services/api.js – Axios API Service with token refresh
 import axios from 'axios';
-
-function safeStorageGet(key) {
-  try { return safeStorageGet(key); } catch { return null; }
-}
-function safeStorageSet(key, value) {
-  try { safeStorageSet(key, value); } catch { /* storage blocked in in-app webview */ }
-}
-function safeStorageRemove(key) {
-  try { safeStorageRemove(key); } catch { /* noop */ }
-}
+import { safeGet, safeSet, safeRemove } from '../utils/storage';
 
 const apiCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000;
@@ -105,8 +96,8 @@ api.interceptors.request.use(
         else setTimeout(r, 800);
       });
     }
-    const token = safeStorageGet('accessToken');
-    const isGuest = safeStorageGet('isGuest') === 'true';
+    const token = safeGet('accessToken');
+    const isGuest = safeGet('isGuest') === 'true';
 
     if (isGuest) {
       config.headers['X-Demo-User'] = 'true';
@@ -144,14 +135,14 @@ let sharedRefreshPromise = null;
 export const sharedRefreshAccessToken = () => {
   if (!sharedRefreshPromise) {
     sharedRefreshPromise = (async () => {
-      const refreshToken = safeStorageGet('refreshToken');
+      const refreshToken = safeGet('refreshToken');
       if (!refreshToken) {
         throw new Error('No refresh token available');
       }
       const res = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken });
       const { accessToken, refreshToken: newRefreshToken } = res.data.data;
-      safeStorageSet('accessToken', accessToken);
-      if (newRefreshToken) safeStorageSet('refreshToken', newRefreshToken);
+      safeSet('accessToken', accessToken);
+      if (newRefreshToken) safeSet('refreshToken', newRefreshToken);
       api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
       return accessToken;
     })();
@@ -168,9 +159,9 @@ export const sharedRefreshAccessToken = () => {
 // real session (a refresh token present) — guests and anonymous callers must
 // never be logged out by someone else's 401.
 const handleRefreshFailure = () => {
-  if (!safeStorageGet('refreshToken')) return;
-  safeStorageRemove('accessToken');
-  safeStorageRemove('refreshToken');
+  if (!safeGet('refreshToken')) return;
+  safeRemove('accessToken');
+  safeRemove('refreshToken');
   delete api.defaults.headers.common['Authorization'];
   if (typeof window !== 'undefined' && window.location?.pathname !== '/login') {
     window.dispatchEvent(new CustomEvent('auth:expired'));
@@ -201,7 +192,7 @@ api.interceptors.response.use(
     if (!originalRequest) return Promise.reject(error);
 
     if (error.response?.status === 401 && import.meta.env.DEV) {
-      const token = safeStorageGet('accessToken');
+      const token = safeGet('accessToken');
       const defaultAuth = api.defaults.headers.common['Authorization'];
       console.error(`[AUTH-DEBUG] 401 ON ${originalRequest.method?.toUpperCase()} ${originalRequest.url} | sent_header=${originalRequest.headers?.Authorization ? 'YES' : 'NO'} | token_in_storage=${token ? 'YES(' + token.length + ')' : 'NO'} | default_auth=${defaultAuth ? 'YES' : 'NO'} | response_msg=${error.response?.data?.message} | response_code=${error.response?.data?.code}`);
     }
@@ -228,7 +219,7 @@ api.interceptors.response.use(
 
     // Guest requests must never enter the refresh flow and must never be
     // logged out by a 401 — guests have no session to recover or clear.
-    if (error.response?.status === 401 && safeStorageGet('isGuest') === 'true') {
+    if (error.response?.status === 401 && safeGet('isGuest') === 'true') {
       return Promise.reject(error);
     }
 
@@ -336,8 +327,8 @@ export const aiService = {
   askCoach: (message, context, sessionId) => api.post('/ai/chat', { message, context, sessionId, conversationId: sessionId }),
   streamCoach: async (message, context, sessionId, signal, modePrompt) => {
     const headers = { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' };
-    const token = safeStorageGet('accessToken');
-    const isGuest = safeStorageGet('isGuest') === 'true';
+    const token = safeGet('accessToken');
+    const isGuest = safeGet('isGuest') === 'true';
 
     if (isGuest) {
       headers['X-Demo-User'] = 'true';
@@ -464,7 +455,7 @@ export const resourceService = {
   aiSearch: (query) => api.post('/resources/ai-search', { query }),
   fileUrl: (filePath) => `/api/resources/file/${filePath}`,
   openFile: async (filePath) => {
-    const token = safeStorageGet('accessToken');
+    const token = safeGet('accessToken');
     const url = `/api/resources/file/${encodeURIComponent(filePath)}`;
     const response = await fetch(url, {
       headers: token ? { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json, application/pdf, */*' } : { 'Accept': 'application/json, application/pdf, */*' },
