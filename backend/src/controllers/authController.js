@@ -562,6 +562,13 @@ exports.login = async (req, res, next) => {
       });
     }
 
+    if (user.deletedAt) {
+      return res.status(403).json({
+        success: false,
+        message: 'Account is scheduled for deletion. Contact support to restore.',
+      });
+    }
+
     const { accessToken, refreshToken } = generateTokens(user._id, user.tokenVersion || 0);
 
     res.status(200).json({

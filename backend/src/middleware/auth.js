@@ -79,6 +79,9 @@ exports.protect = async (req, res, next) => {
       if (/^[0-9a-f]{24}$/i.test(decoded.id)) {
         req.user = await User.findById(decoded.id).select('-password');
         if (req.user) {
+          if (req.user.deletedAt) {
+            return res.status(403).json({ success: false, message: 'Account is scheduled for deletion. Contact support to restore.', code: 'ACCOUNT_DELETED' });
+          }
           if (decoded.v !== undefined && decoded.v !== req.user.tokenVersion) {
             return res.status(401).json({ success: false, message: 'Session expired. Please login again.', code: 'TOKEN_VERSION_MISMATCH' });
           }
