@@ -1,0 +1,4128 @@
+GATE 2027
+
+
+Reddit :
+GUIDE for GATE CSE 2027 (and my experience)
+
+**Hello future GATE CSE aspirants!**
+
+First of all, I want to thank the amazing people of this sub for keeping me motivated during my low phases. Now it’s time for me to give back to the community.
+
+If anyone needs personal guidance, 
+https://topmate.io/wrenoswin
+
+Background:
+
+Gate 2023 - 32 marks (Final year)
+
+Gate 2025 - 52 marks (After gate 2023 paper review only (no serious prep))
+
+Gate 2026 - 75 marks (Drop year)
+
+Work experience - 1.5 yrs in front-end domain.
+
+I’ll keep this in a Q&A format for clarity. If you have more questions, feel free to comment — I’ll try my best to respond.
+
+***
+
+***Q1) “Should I take a drop for GATE CSE 2027?”***
+
+It honestly depends on your financial situation and your risk appetite. Sit down, think calmly, list the pros and cons, and then decide. Don’t take this decision emotionally.
+
+Case 1: Your family depends on you financially
+
+In that case, it’s safer to get a job and prepare alongside. Taking a full drop is a big risk.
+
+Over the last few days, I spoke to many people who prepared sincerely (at least from what I could see), but still didn’t get the score they wanted. Effort doesn’t always guarantee results. Be practical.
+
+Case 2: You’re in 3rd year or final year, no financial pressure, and scored 40+ in GATE CSE 2026
+
+Then yes, you can consider preparing for one more year with full dedication — especially if your goal is a top institute or PSU.
+
+If you’re serious, GATE should be the first thing on your mind when you wake up and the last thing before you sleep.
+
+If you’re in final year, try for placements too. Even a low CTC job is fine. Having stability while preparing is not a bad option.
+
+Case 3: You already took a drop for GATE CSE 2026
+
+This is tricky.
+
+Personally, I’d suggest either joining the best college you’re getting right now, or taking up a job and preparing alongside. A second drop needs very strong justification.
+
+***
+
+***Q2) “Which resources should I follow?”***
+
+If you’re in college, start early. Don’t wait.
+
+* **GoClasses** – They teach concepts in depth. It takes time, but it’s solid.
+* **Amit Khurana (paid lectures)** – Especially helpful for Aptitude, DSA, TOC, and Discrete Mathematics. I personally benefited from his lectures.
+* **Offline coaching** – If finances allow, a structured environment really helps.
+
+I enrolled in ACE Academy’s offline program in Hyderabad (PM3 batch) based on a friend’s recommendation.
+
+Bonus tip -
+
+If you don’t understand something from one source, switch. Don’t get stuck. Be flexible.  
+You can read selective portions from standard textbooks if needed — but it’s not compulsory.
+
+PYQs -
+
+Do PYQs along with syllabus completion. Don’t wait until the end of the subject.  
+Do at least 3 iterations of PYQs for every subject.
+
+What I followed -
+
+* ACE Academy – All subjects (offline)
+* GoClasses – Linear Algebra, Probability, Undecidability, Code Optimization
+* Amit Khurana – Aptitude, DSA, TOC, Discrete Mathematics
+
+***
+
+***Q3) “How many months are required for a good rank?”***
+
+Your rank depends on the 3 hours in the exam hall. Not on how long you prepared.
+
+If your basics are weak, it may take more than a year.  
+If your fundamentals are strong, 3–4 months of focused preparation can also work.
+
+Don’t compare your timeline with others.
+
+I had basic knowledge of most subjects before starting serious prep, and it still took me almost a year.
+
+***
+
+***Q4) “How many mocks should I give?”***
+
+If analyzed properly, 20–25 full-length mocks are enough.
+
+From what I’ve seen, GoClasses and Gate@Zeal have good quality mocks. GoClasses also provides free All India Mock Tests from December — definitely attempt those.
+
+Don’t get discouraged by low scores initially. Analyze properly and improve.
+
+If you want more practice, you can also try MadeEasy and ACE mocks.
+
+Remember: analysis matters more than the number of mocks.
+
+***
+
+***Q5) “Daily schedule? How many hours?”***
+
+I never counted hours.
+
+During offline coaching:
+
+* Classes from 7 AM to 12:30 PM
+* Lunch + short nap
+* Study hall in the evening to revise the day’s topics
+* Made compressed notes simultaneously (saved a lot of time later)
+
+After returning home, I naturally followed something like Pomodoro — focused sessions with short breaks.
+
+Once you start full-length mocks, maintain an error log. It helps you see your repeating mistakes.
+
+If GATE CSE 2027 is your priority, give it your full commitment.
+
+Also:
+
+* 30-minute walk daily
+* Portion control
+* Proper sleep
+
+Health matters more than you think.
+
+***
+
+***Q6) “How do I score XX marks?”***
+
+Don’t aim for XX.
+
+Aim for 100.
+
+Study like you need 100. If you aim high, you’ll push harder. That’s how 70–90 happens.
+
+I used to visualize my future after getting a good rank almost every day. Call it manifestation or whatever you want, it helped me stay consistent.
+
+At the end of the day, consistency beats bursts of motivation.
+
+If you’re serious, treat it seriously. That’s it.
+
+Also, learn as if you're learning the ABC of Computer Science. Assume you're starting from zero. It really helps.
+
+youtube :
+Perfect. Here's the information converted into a **GATE 2027 Tracker Format** with only actionable data.
+
+## VIDEO SUMMARY
+
+**Topic:** 15-Month Self-Preparation Roadmap for GATE CS 2027
+
+**Core Message:**
+Start preparation early, build consistency gradually, complete the syllabus by October 2026, and reserve the final 3 months exclusively for revision, mock tests, and error correction.
+
+---
+
+# GATE CS 2027 TRACKER DATA
+
+## OVERALL TIMELINE
+
+| Phase   | Duration            | Focus                                        |
+| ------- | ------------------- | -------------------------------------------- |
+| Phase 1 | Now – Dec 2025      | Engineering Mathematics                      |
+| Phase 2 | Jan – Mar 2026      | Programming + Data Structures + Algorithms   |
+| Phase 3 | Apr – May 2026      | Digital Logic + COA                          |
+| Phase 4 | Jun – Aug 2026      | CN + OS + DBMS                               |
+| Phase 5 | Sep – Oct 2026      | TOC + Compiler Design + Discrete Mathematics |
+| Phase 6 | Nov 2026 – Jan 2027 | Revision + Mock Tests + Aptitude             |
+
+---
+
+## PHASE 1
+
+### Duration
+
+Now → December 2025
+
+### Subjects
+
+* Engineering Mathematics
+
+### Daily Study Target
+
+* 3–4 hours/day
+
+### Tasks
+
+* Complete theory
+* Create formula notebook
+* Solve PYQs topic-wise
+* Build study consistency
+
+### Deliverables
+
+* Formula sheet prepared
+* PYQs completed
+* Basic revision notes started
+
+---
+
+## PHASE 2
+
+### Duration
+
+January 2026 → March 2026
+
+### Subjects
+
+* Programming
+* Data Structures
+* Algorithms
+
+### Tasks
+
+* Learn concepts
+* Implement algorithms in code
+* Strengthen problem-solving logic
+* Continue improving short notes
+
+### Deliverables
+
+* Coding implementation completed
+* Short notes updated
+* PYQs solved
+
+---
+
+## PHASE 3
+
+### Duration
+
+April 2026 → May 2026
+
+### Subjects
+
+* Digital Logic
+* Computer Organization & Architecture (COA)
+
+### Daily Study Target
+
+* 5–6 hours/day
+
+### New Strategy Introduced
+
+#### RNP Rule
+
+Every study session:
+
+1. Revision → 15 minutes
+2. New Learning → 3–5 hours
+3. Practice → 45–60 minutes
+
+### Goal
+
+Improve long-term retention.
+
+---
+
+## PHASE 4
+
+### Duration
+
+June 2026 → August 2026
+
+### Subjects
+
+* Computer Networks
+* Operating Systems
+* DBMS
+
+### Tasks
+
+* Weekly revision starts
+* Subject tests start
+* Continue RNP cycle
+
+### Deliverables
+
+* Subject-wise test analysis
+* Revision notes refined
+
+---
+
+## PHASE 5
+
+### Duration
+
+September 2026 → October 2026
+
+### Subjects
+
+* Theory of Computation (TOC)
+* Compiler Design
+* Discrete Mathematics
+
+### Tasks
+
+* Finish complete syllabus
+* Start full-length mock tests
+
+### Mock Frequency
+
+* One full mock every 2 weeks
+
+### Goal
+
+Transition from learning mode to exam mode.
+
+---
+
+## PHASE 6
+
+### Duration
+
+November 2026 → January 2027
+
+### Focus Areas
+
+* Complete Revision
+* Full-Length Mock Tests
+* General Aptitude
+
+### Tasks
+
+* Intensive mock practice
+* Error correction
+* Formula revision
+* Aptitude preparation
+
+### Deliverables
+
+* Error log finalized
+* Revision cycles completed
+* Exam readiness achieved
+
+---
+
+# IMPORTANT RULES
+
+## Rule 1: RNP Method
+
+Every day:
+
+```text
+Revision → 15 min
+
+New Topics → 3–5 hrs
+
+Practice → 45–60 min
+```
+
+Purpose:
+
+* Prevent forgetting
+* Improve retention
+* Maintain continuity
+
+---
+
+## Rule 2: Maintain Short Notes
+
+Include:
+
+* Formulas
+* Tricks
+* Important concepts
+* Frequently mistaken points
+
+Purpose:
+
+* Fast revision before exam
+
+---
+
+## Rule 3: Maintain Error Log
+
+Record:
+
+* Wrong answers
+* Conceptual mistakes
+* Silly mistakes
+* Time-management issues
+
+Review regularly.
+
+Purpose:
+
+* Avoid repeating mistakes.
+
+---
+
+## Rule 4: Weekly Revision
+
+Start from Phase 4.
+
+Schedule:
+
+* Revise all completed subjects weekly.
+
+Purpose:
+
+* Long-term memory retention.
+
+---
+
+## Rule 5: Mock Analysis
+
+Do NOT only attempt mocks.
+
+After every mock:
+
+* Analyze mistakes
+* Identify weak subjects
+* Update error log
+* Revise weak concepts
+
+---
+
+# FINAL MILESTONE CHECKPOINTS
+
+### Dec 2025
+
+✅ Engineering Mathematics Complete
+
+### Mar 2026
+
+✅ Programming + DSA Complete
+
+### May 2026
+
+✅ Digital Logic + COA Complete
+
+### Aug 2026
+
+✅ CN + OS + DBMS Complete
+
+### Oct 2026
+
+✅ Entire GATE CS Syllabus Complete
+
+### Nov 2026
+
+✅ Revision Phase Begins
+
+### Jan 2027
+
+✅ Exam Ready
+
+---
+
+# KEY TAKEAWAYS
+
+* Start early.
+* Build consistency before intensity.
+* Complete syllabus by Oct 2026.
+* Reserve Nov–Jan exclusively for revision.
+* Follow RNP daily.
+* Maintain short notes.
+* Maintain error log.
+* Take subject tests from June 2026 onward.
+* Take full mocks from September 2026 onward.
+* Analyze every mock thoroughly.
+
+This is the tracker-ready version that can be pasted directly into your GATE 2027 planning database.
+## GATE 2027 TRACKER ENTRY #2
+
+### VIDEO TYPE
+
+* Strategy + Career Guidance
+* Focus: GATE CS 2027 High-ROI Preparation
+
+---
+
+# CORE PRINCIPLE
+
+### Pareto Strategy (80/20 Rule)
+
+Claim by presenter:
+
+* Focus on ~30 high-weightage topics.
+* These topics historically contribute a large portion of GATE CS marks.
+* Target score: **60+ marks**.
+
+### Preparation Philosophy
+
+```text
+Master high-frequency topics first.
+Then expand coverage.
+Prioritize marks-per-hour efficiency.
+```
+
+---
+
+# HIGH-WEIGHTAGE TOPICS LIST
+
+## COA
+
+Priority Topics:
+
+* Instruction Pipelining
+* Cache Memory
+* IEEE 754 Floating Point Representation
+
+Importance:
+
+* Frequently repeated in GATE
+
+---
+
+## Operating Systems
+
+Priority Topics:
+
+* Memory Management
+* Synchronization
+
+Importance:
+
+* Consistent weightage
+
+---
+
+## Algorithms
+
+Priority Topics:
+
+* Sorting Complexity
+* Graph Algorithms
+
+Importance:
+
+* High probability questions
+
+---
+
+## DBMS
+
+Priority Topics:
+
+* Indexing
+* Normalization
+
+Importance:
+
+* Frequently tested concepts
+
+---
+
+## Discrete Mathematics
+
+Priority Topics:
+
+* Graph Theory
+* Sets
+* Relations
+* Logic
+
+Importance:
+
+* Foundation for multiple subjects
+
+---
+
+## Theory of Computation (TOC)
+
+Priority Topics:
+
+* Finite Automata
+* Pushdown Automata
+* Decidability
+
+Importance:
+
+* Core scoring area
+
+---
+
+## Compiler Design
+
+Priority Topics:
+
+* Parsing
+* Syntax Directed Translation (SDT)
+
+Importance:
+
+* Repeated concepts across years
+
+---
+
+## Digital Logic
+
+Priority Topics:
+
+* Number Systems
+* Boolean Algebra
+
+Importance:
+
+* Easier scoring area
+
+---
+
+## C Programming
+
+Priority Topics:
+
+* Arrays
+* Pointers
+* Functions
+* Recursion
+
+Importance:
+
+* Foundation for DSA questions
+
+---
+
+## Data Structures
+
+Priority Topics:
+
+* Trees
+* Hashing
+* Stacks
+
+Importance:
+
+* High-frequency concepts
+
+---
+
+## Computer Networks
+
+Priority Topics:
+
+* IP Addressing
+* TCP
+* Flow Control
+
+Importance:
+
+* Common examination topics
+
+---
+
+# PRACTICE TARGETS
+
+Recommended:
+
+### Questions
+
+```text
+10,000+ Practice Questions
+```
+
+### Tests
+
+```text
+1,000+ Tests
+```
+
+### High-ROI Set
+
+```text
+5,000 Questions
+500 Tests
+Focused only on top 30 topics
+```
+
+---
+
+# GATE BASICS
+
+## What is GATE?
+
+National-level examination testing undergraduate engineering knowledge.
+
+For CS students:
+
+* Computer Science fundamentals
+* Aptitude
+* Mathematics
+
+---
+
+## Score Validity
+
+```text
+GATE Score Validity = 3 Years
+```
+
+---
+
+# EXAM STRUCTURE
+
+## Duration
+
+```text
+3 Hours
+```
+
+## Total Marks
+
+```text
+100 Marks
+```
+
+## Total Questions
+
+```text
+65 Questions
+```
+
+---
+
+### Section-wise Weightage
+
+| Section                                 | Marks |
+| --------------------------------------- | ----- |
+| General Aptitude                        | 15    |
+| Engineering Mathematics + Discrete Math | 13    |
+| Core CS Subjects                        | 72    |
+
+---
+
+# COMPETITION DATA
+
+According to the video:
+
+### GATE CS 2026
+
+Approximate Aspirants:
+
+```text
+~210,000
+```
+
+### Qualification Rate
+
+```text
+15%–18%
+```
+
+Implication:
+
+* Majority do not qualify.
+* Mere qualification is not a strong differentiator.
+
+---
+
+# CAREER OPPORTUNITIES
+
+## M.Tech Admissions
+
+Target Institutes:
+
+* Indian Institutes of Technology
+* National Institutes of Technology
+* Indian Institute of Science
+* IIITs
+
+Programs:
+
+* M.Tech
+* MS
+* PhD
+
+---
+
+## PSU Recruitment
+
+Examples Mentioned:
+
+* Bhabha Atomic Research Centre
+* Indian Space Research Organisation
+* Defence Research and Development Organisation
+
+Benefits:
+
+* Job security
+* Government benefits
+* Competitive salary
+* Better work-life balance
+
+---
+
+# STREAM CHANGE OPPORTUNITY
+
+Video Claim:
+
+Students from:
+
+* Civil Engineering
+* Electrical Engineering
+* Other branches
+
+can write:
+
+```text
+GATE Computer Science
+```
+
+and potentially transition into:
+
+* CS M.Tech
+* Software roles
+* Research careers
+
+(subject to institute eligibility rules).
+
+---
+
+# DECISION FRAMEWORK
+
+## Prepare for GATE If
+
+✓ Enjoy CS theory
+
+✓ Comfortable with long-term study
+
+✓ Interested in:
+
+* IITs
+* IISc
+* Research
+* PSUs
+
+✓ Can commit 12–18 months consistently
+
+---
+
+## Avoid GATE-Focused Preparation If
+
+✓ Primary goal is immediate software job switch
+
+✓ Prefer:
+
+* DSA
+* Development
+* System Design
+* Industry skills
+
+✓ Dislike theory-heavy preparation
+
+---
+
+# IMPORTANT WARNING
+
+### Qualification ≠ Success
+
+Video's major message:
+
+```text
+Just qualifying GATE is not enough.
+Target a top rank.
+```
+
+Reason:
+
+* Top IIT admissions require strong ranks.
+* PSU recruitment generally favors top performers.
+* Better opportunities correlate with better ranks.
+
+---
+
+# TRACKER TAGS
+
+```yaml
+video_type: strategy
+target_exam: GATE CS 2027
+
+important_numbers:
+  score_validity: 3_years
+  exam_marks: 100
+  exam_questions: 65
+  exam_duration: 3_hours
+  aptitude_marks: 15
+  maths_marks: 13
+  core_cs_marks: 72
+  aspirants_2026: 210000
+  qualification_rate: 15_to_18_percent
+
+high_roi_subjects:
+  - COA
+  - OS
+  - Algorithms
+  - DBMS
+  - Discrete Mathematics
+  - TOC
+  - Compiler Design
+  - Digital Logic
+  - C Programming
+  - Data Structures
+  - Computer Networks
+
+main_message:
+  - focus_on_top_30_topics
+  - practice_heavily
+  - target_top_rank_not_just_qualification
+```
+
+This entry is suitable to append directly to your GATE 2027 tracker database.
+# GATE 2027 TRACKER ENTRY #3
+
+## VIDEO TYPE
+
+Rank Improvement Strategy
+
+**Speaker:** Bhima Sankar
+
+**Target Audience:**
+Students aiming for:
+
+* AIR < 100
+* Top IIT admissions
+* PSU recruitment
+
+---
+
+# CORE MESSAGE
+
+### Knowledge Alone Does Not Decide Rank
+
+According to the speaker:
+
+Many GATE aspirants have similar subject knowledge.
+
+The difference between:
+
+* AIR 50
+* AIR 100
+* AIR 500
+* AIR 1000
+
+often comes from:
+
+* Silly mistakes
+* Negative marking
+* Poor test-taking strategy
+* Weak revision habits
+* Lack of mock test practice
+
+---
+
+# RANK IMPACT OF SMALL MISTAKES
+
+## Major Observation
+
+A difference of:
+
+```text
+10–15 Marks
+```
+
+can change rank dramatically.
+
+Example Impact:
+
+```text
+AIR <100
+↓
+AIR 500–1000+
+```
+
+Potential consequences:
+
+* Miss top IIT seats
+* Miss PSU opportunities
+* Lower admission options
+
+---
+
+# SILLY MISTAKES ANALYSIS
+
+## Problem
+
+Students often lose marks on questions they already know.
+
+Common causes:
+
+* Calculation errors
+* Reading questions incorrectly
+* Exam pressure
+* Rushing
+* Lack of practice
+
+---
+
+## Impact of One Wrong Answer
+
+Speaker's explanation:
+
+For a 2-mark question:
+
+```text
+Expected Gain = +2 Marks
+
+Wrong Answer:
+- Lose 2 Marks
+- Negative Marking ≈ -0.67
+
+Total Effective Loss ≈ 2.67 Marks
+```
+
+Multiple silly mistakes can destroy rank.
+
+---
+
+# NEGATIVE MARKING STRATEGY
+
+## Rule 1
+
+### Avoid Guessing
+
+Do NOT:
+
+* Randomly mark answers
+* Use elimination without confidence
+* Attempt uncertain questions
+
+---
+
+## Rule 2
+
+### Prioritize Accuracy
+
+Target:
+
+```text
+100% Accuracy
+```
+
+Better:
+
+```text
+40 Questions
+95–100% Accuracy
+```
+
+Than:
+
+```text
+55 Questions
+70–75% Accuracy
+```
+
+---
+
+## Rule 3
+
+### Every Attempt Must Be Justified
+
+Before marking:
+
+Ask yourself:
+
+```text
+Am I fully confident?
+```
+
+If not:
+
+```text
+Skip and revisit later.
+```
+
+---
+
+# MOCK TEST STRATEGY
+
+## Do NOT Wait For Full Syllabus Completion
+
+Common Mistake:
+
+```text
+Finish syllabus first
+Then write tests
+```
+
+Recommended:
+
+```text
+Complete chapter
+↓
+Take chapter test
+
+Complete subject
+↓
+Take subject test
+```
+
+---
+
+# PURPOSE OF MOCK TESTS
+
+## 1. Identify Mistakes
+
+Mocks reveal:
+
+* Weak concepts
+* Forgotten formulas
+* Knowledge gaps
+
+---
+
+## 2. Improve Time Management
+
+Learn:
+
+* Which questions to solve first
+* Which questions to skip
+* Time allocation strategy
+
+---
+
+## 3. Reduce Silly Mistakes
+
+Repeated testing develops:
+
+* Accuracy
+* Discipline
+* Exam temperament
+
+---
+
+## 4. Build Mental Strength
+
+Benefits:
+
+* Handle difficult questions calmly
+* Avoid panic
+* Maintain focus under pressure
+
+---
+
+## 5. Revision Tool
+
+After every mock:
+
+```text
+Find mistakes
+↓
+Revise topic
+↓
+Retest
+```
+
+This improves retention and accuracy.
+
+---
+
+# MOCK TEST ANALYSIS FRAMEWORK
+
+After Every Test
+
+Record:
+
+### Concept Errors
+
+Questions you genuinely did not know.
+
+---
+
+### Silly Mistakes
+
+Questions you knew but answered incorrectly.
+
+---
+
+### Time Management Issues
+
+Questions left because of poor planning.
+
+---
+
+### Guessing Errors
+
+Questions attempted without confidence.
+
+---
+
+# REVISION STRATEGY
+
+## Daily Revision Required
+
+Speaker's advice:
+
+Learning new topics is not enough.
+
+You must protect previously learned knowledge.
+
+---
+
+## Suggested Revision Habit
+
+Daily:
+
+```text
+New Learning
++
+Revision
+```
+
+Not:
+
+```text
+Only New Learning
+```
+
+---
+
+# PLANNING STRATEGY
+
+## Daily Planning
+
+Benefits:
+
+* Prevents wasted time
+* Improves consistency
+* Creates accountability
+
+---
+
+### Daily Study Cycle
+
+```text
+Plan
+↓
+Study
+↓
+Practice
+↓
+Test
+↓
+Analyze
+↓
+Revise
+```
+
+Repeat daily.
+
+---
+
+# AIR <100 FRAMEWORK
+
+## Pillar 1
+
+Strong Subject Knowledge
+
+---
+
+## Pillar 2
+
+High Accuracy
+
+Target:
+
+```text
+95%+
+```
+
+---
+
+## Pillar 3
+
+Frequent Mock Tests
+
+* Chapter Tests
+* Subject Tests
+* Full-Length Tests
+
+---
+
+## Pillar 4
+
+Error Tracking
+
+Maintain:
+
+```text
+Mistake Log
+```
+
+Categories:
+
+* Conceptual
+* Calculation
+* Careless
+* Time Management
+
+---
+
+## Pillar 5
+
+Consistent Revision
+
+Daily revision is mandatory.
+
+---
+
+# ACTIONABLE RULES FOR GATE 2027
+
+### Rule A
+
+Never guess randomly.
+
+---
+
+### Rule B
+
+Take tests immediately after finishing a chapter.
+
+---
+
+### Rule C
+
+Analyze every mock.
+
+---
+
+### Rule D
+
+Maintain an error log.
+
+---
+
+### Rule E
+
+Track silly mistakes separately.
+
+---
+
+### Rule F
+
+Spend time on revision every day.
+
+---
+
+### Rule G
+
+Focus on accuracy before increasing attempts.
+
+---
+
+# TRACKER TAGS
+
+```yaml
+video_type: rank_improvement
+
+target_rank:
+  - AIR_100
+  - AIR_500
+  - AIR_1000
+
+key_message:
+  - knowledge_alone_not_enough
+  - accuracy_decides_rank
+  - mock_tests_reduce_silly_mistakes
+
+negative_marking:
+  strategy: avoid_guessing
+  priority: accuracy
+
+mock_tests:
+  chapter_tests: mandatory
+  subject_tests: mandatory
+  full_length_tests: mandatory
+  analysis_required: true
+
+revision:
+  daily_revision: true
+
+important_numbers:
+  rank_difference_factor: 10_to_15_marks
+  effective_loss_per_wrong_2_mark_question: 2.67
+
+success_formula:
+  - learn
+  - test
+  - analyze
+  - revise
+  - repeat
+```
+
+### Key One-Line Takeaway
+
+**For AIR <100, the biggest gains often come not from learning more topics, but from eliminating silly mistakes, improvingThis is an excellent **GATE CSE Resource Master List** compiled by an AIR-level aspirant and includes subject-wise resources, standard books, PYQs, tests, mocks, and notes. 
+
+## GATE 2027 TRACKER ENTRY #4
+
+### RESOURCE CATEGORY
+
+Master Resource Repository
+
+### Source Credibility
+
+Compiled using recommendations from:
+
+* Anjali Chauhan
+* Nikhil Dhama
+
+---
+
+# RECOMMENDED PREPARATION STACK
+
+For every subject follow:
+
+```text
+Concept Learning
+↓
+Standard Book Reading
+↓
+Topic-wise PYQs
+↓
+Subject Tests
+↓
+Revision Videos
+↓
+Full-Length Mocks
+```
+
+---
+
+# TIER-1 SUBJECTS (HIGHEST WEIGHTAGE)
+
+## Operating Systems (OS)
+
+Priority Level: HIGH
+
+Must Study:
+
+* Process Management
+* CPU Scheduling
+* Synchronization
+* Deadlocks
+* Memory Management
+* Virtual Memory
+* File Systems
+
+Primary Book:
+
+* Operating Systems (Galvin)
+
+---
+
+## Computer Organization & Architecture (COA)
+
+Priority Level: HIGH
+
+Must Study:
+
+* Number Systems
+* Pipelining
+* Cache Memory
+* Memory Hierarchy
+* Addressing Modes
+* Instruction Set Architecture
+
+Primary Book:
+
+* Carl Hamacher
+* Patterson & Hennessy
+
+---
+
+## DBMS
+
+Priority Level: HIGH
+
+Must Study:
+
+* ER Model
+* Functional Dependencies
+* Normalization
+* Transactions
+* Indexing
+* SQL
+
+Primary Book:
+
+* Elmasri & Navathe
+
+---
+
+## Computer Networks
+
+Priority Level: HIGH
+
+Must Study:
+
+* OSI/TCP-IP
+* IP Addressing
+* Routing
+* TCP
+* Congestion Control
+* Flow Control
+
+Primary Book:
+
+* Forouzan
+
+---
+
+## TOC
+
+Priority Level: HIGH
+
+Must Study:
+
+* DFA
+* NFA
+* PDA
+* CFG
+* Turing Machines
+* Decidability
+
+Primary Book:
+
+* Peter Linz
+
+---
+
+# TIER-2 SUBJECTS
+
+## Data Structures
+
+Priority Topics:
+
+* Trees
+* AVL
+* Heap
+* Hashing
+* Graphs
+
+Book:
+
+* Karumanchi
+
+---
+
+## Algorithms
+
+Priority Topics:
+
+* Sorting
+* Greedy
+* Dynamic Programming
+* Graph Algorithms
+* Complexity Analysis
+
+Book:
+
+* CLRS
+
+---
+
+## Compiler Design
+
+Priority Topics:
+
+* Parsing
+* Syntax Directed Translation
+* Intermediate Code
+* Code Optimization
+
+Book:
+
+* Dragon Book
+
+---
+
+## Digital Logic
+
+Priority Topics:
+
+* Boolean Algebra
+* K-Maps
+* Sequential Circuits
+* FSM
+
+Book:
+
+* Morris Mano
+
+---
+
+## C Programming
+
+Priority Topics:
+
+* Pointers
+* Arrays
+* Functions
+* Recursion
+* Storage Classes
+
+Book:
+
+* K&R C
+
+---
+
+# ENGINEERING MATHEMATICS
+
+## Discrete Mathematics
+
+Most Important:
+
+* Logic
+* Set Theory
+* Relations
+* Functions
+* Combinatorics
+* Graph Theory
+
+Book:
+
+* Kenneth Rosen
+
+---
+
+## Linear Algebra
+
+Most Important:
+
+* Matrix Operations
+* Rank
+* Eigenvalues
+* Eigenvectors
+* Linear Transformations
+
+---
+
+## Probability
+
+Most Important:
+
+* Conditional Probability
+* Bayes Theorem
+* Random Variables
+* Probability Distributions
+
+Book:
+
+* Sheldon Ross
+
+---
+
+## Calculus
+
+Most Important:
+
+* Limits
+* Differentiation
+* Integration
+* Maxima-Minima
+
+---
+
+# PYQ STRATEGY
+
+### Rule
+
+After completing every topic:
+
+```text
+Learn Topic
+↓
+Solve Topic-wise PYQs
+↓
+Revise Errors
+↓
+Retest
+```
+
+---
+
+# MOCK TEST STRATEGY
+
+## Stage 1
+
+Subject Tests
+
+After every subject.
+
+---
+
+## Stage 2
+
+Mixed Subject Tests
+
+After 3–4 subjects.
+
+---
+
+## Stage 3
+
+Full-Length Mocks
+
+After syllabus completion.
+
+---
+
+## Best Practice
+
+Use previous GATE papers as mocks.
+
+Recommended:
+
+```text
+GATE 2015–2026 Papers
+```
+
+---
+
+# REVISION SYSTEM
+
+Maintain:
+
+### Formula Notebook
+
+Contains:
+
+* Formulas
+* Tricks
+* Shortcuts
+
+---
+
+### Error Log
+
+Contains:
+
+* Concept Mistakes
+* Calculation Mistakes
+* Silly Mistakes
+
+---
+
+### Short Notes
+
+Maximum:
+
+* 20–30 pages per subject
+
+Used during final revision.
+
+---
+
+# RESOURCE PRIORITY ORDER
+
+If time is limited:
+
+### Must Do
+
+```text
+1. Complete Lectures
+2. Topic-wise PYQs
+3. Subject Tests
+4. Short Notes
+5. Full-Length Mocks
+```
+
+---
+
+### Optional
+
+```text
+Deep Standard Book Reading
+Additional Practice Sets
+Extra Courses
+```
+
+---
+
+# FINAL GATE 2027 ROADMAP
+
+### Phase 1
+
+Engineering Mathematics
+
+---
+
+### Phase 2
+
+Programming + DS + Algorithms
+
+---
+
+### Phase 3
+
+Digital Logic + COA
+
+---
+
+### Phase 4
+
+OS + DBMS + CN
+
+---
+
+### Phase 5
+
+TOC + Compiler Design
+
+---
+
+### Phase 6
+
+Revision + PYQs + Mock Tests
+
+---
+
+# GOLDEN RULES FROM ALL TRACKER ENTRIES SO FAR
+
+```yaml
+gate_2027_success_formula:
+  - consistency
+  - daily_revision
+  - short_notes
+  - error_log
+  - topicwise_pyqs
+  - subject_tests
+  - full_length_mocks
+  - accuracy_over_attempts
+  - avoid_guessing
+  - analyze_every_mock
+  - target_top_rank_not_just_qualification
+
+top_rank_focus:
+  accuracy: 95_percent_plus
+  revision: daily
+  mocks: regular
+  silly_mistakes: minimize
+```
+
+### Master Insight
+
+After combining all videos and resources you've shared, the strongest predictor of a **Top 100 rank** is:
+
+**Complete the syllabus by October 2026, solve topic-wise PYQs immediately after learning, maintain an error log, revise daily, and prioritize accuracy over attempting more questions.**
+ accuracy, and rigorously analyzing mock tests.**
+The file contains hundreds of URLs. Here are the **most important links organized by subject** from your resource sheet. 
+
+## Operating Systems
+
+**Lectures**
+
+* [https://youtube.com/playlist?list=PLG9aCp4uE-s17rFjWM8KchGlffXgOzzVP](https://youtube.com/playlist?list=PLG9aCp4uE-s17rFjWM8KchGlffXgOzzVP)
+* [https://youtube.com/playlist?list=PLyqSpQzTE6M9SYI5RqwFYtFYab94gJpWk](https://youtube.com/playlist?list=PLyqSpQzTE6M9SYI5RqwFYtFYab94gJpWk)
+
+**Revision + PYQs**
+
+* [https://youtube.com/playlist?list=PLIPZ2_p3RNHixlIaarIXGPy-eggJQMxd](https://youtube.com/playlist?list=PLIPZ2_p3RNHixlIaarIXGPy-eggJQMxd)_
+
+---
+
+## COA
+
+**Lectures**
+
+* [https://youtube.com/playlist?list=PLG9aCp4uE-s0xddCBjwMDnEVyc523WbA2](https://youtube.com/playlist?list=PLG9aCp4uE-s0xddCBjwMDnEVyc523WbA2)
+* [https://youtube.com/playlist?list=PLgHucKw979AvcnTpPNZMZyORdL5HvTr9m](https://youtube.com/playlist?list=PLgHucKw979AvcnTpPNZMZyORdL5HvTr9m)
+
+**Revision + PYQs**
+
+* [https://youtube.com/playlist?list=PLG9aCp4uE-s2qCKKu2XD3zDK-NFEvE91n](https://youtube.com/playlist?list=PLG9aCp4uE-s2qCKKu2XD3zDK-NFEvE91n)
+
+---
+
+## Computer Networks
+
+**Lectures**
+
+* [https://youtube.com/playlist?list=PLC36xJgs4dxHT-TxTy3U1slr5RaBJGaLd](https://youtube.com/playlist?list=PLC36xJgs4dxHT-TxTy3U1slr5RaBJGaLd)
+* [https://youtube.com/playlist?list=PLbRMhDVUMngf-peFloB7kyiA40EptH1up](https://youtube.com/playlist?list=PLbRMhDVUMngf-peFloB7kyiA40EptH1up)
+
+**Jim Kurose**
+
+* [https://www.youtube.com/@JimKurose/videos](https://www.youtube.com/@JimKurose/videos)
+
+**Revision + PYQs**
+
+* [https://youtube.com/playlist?list=PLIPZ2_p3RNHim3NUSNOb7ffyhaE5MSkmE](https://youtube.com/playlist?list=PLIPZ2_p3RNHim3NUSNOb7ffyhaE5MSkmE)
+
+---
+
+## Compiler Design
+
+**Lectures**
+
+* [https://youtube.com/playlist?list=PLEbnTDJUr_IcPtUXFy2b1sGRPsLFMghhS](https://youtube.com/playlist?list=PLEbnTDJUr_IcPtUXFy2b1sGRPsLFMghhS)
+* [https://youtube.com/playlist?list=PL54i8TI-dREaHgsBFNalWnz-bC9CZkOBb](https://youtube.com/playlist?list=PL54i8TI-dREaHgsBFNalWnz-bC9CZkOBb)
+
+**Revision + PYQs**
+
+* [https://youtube.com/playlist?list=PLIPZ2_p3RNHjy3eH_qRImIs5dVUTpr9ga](https://youtube.com/playlist?list=PLIPZ2_p3RNHjy3eH_qRImIs5dVUTpr9ga)
+
+---
+
+## TOC
+
+**Lectures**
+
+* [https://youtube.com/playlist?list=PLC36xJgs4dxGvebewU4z2CZYo-8nB93E7](https://youtube.com/playlist?list=PLC36xJgs4dxGvebewU4z2CZYo-8nB93E7)
+* [https://youtube.com/playlist?list=PLbRMhDVUMngcwWkzVTm_kFH6JW4JCtAUM](https://youtube.com/playlist?list=PLbRMhDVUMngcwWkzVTm_kFH6JW4JCtAUM)
+
+**Revision + PYQs**
+
+* [https://youtube.com/playlist?list=PLIPZ2_p3RNHhXeEdbXsi34ePvUjL8I-Q9](https://youtube.com/playlist?list=PLIPZ2_p3RNHhXeEdbXsi34ePvUjL8I-Q9)
+
+---
+
+## C Programming
+
+**Lectures**
+
+* [https://youtube.com/playlist?list=PLbE3-5DBkMUkATaUFgDIpBDbfnym0qvsQ](https://youtube.com/playlist?list=PLbE3-5DBkMUkATaUFgDIpBDbfnym0qvsQ)
+
+**NPTEL**
+
+* [https://youtube.com/playlist?list=PLEAYkSg4uSQ2k6GwNhpgSHodGT8wfvgwu](https://youtube.com/playlist?list=PLEAYkSg4uSQ2k6GwNhpgSHodGT8wfvgwu)
+
+---
+
+## Data Structures
+
+**Lectures**
+
+* [https://youtube.com/playlist?list=PLIC0AxWOdm5BvHpI_AtPqqjoADnSqcYgp](https://youtube.com/playlist?list=PLIC0AxWOdm5BvHpI_AtPqqjoADnSqcYgp)
+
+**Revision + PYQs**
+
+* [https://youtube.com/playlist?list=PLG9aCp4uE-s3Rs4AjzG0VcXQCggmOJJ6W](https://youtube.com/playlist?list=PLG9aCp4uE-s3Rs4AjzG0VcXQCggmOJJ6W)
+
+---
+
+## Algorithms
+
+**Lectures**
+
+* [https://youtube.com/playlist?list=PLAXnLdrLnQpRcveZTtD644gM9uzYqJCwr](https://youtube.com/playlist?list=PLAXnLdrLnQpRcveZTtD644gM9uzYqJCwr)
+
+**Revision + PYQs**
+
+* [https://youtube.com/playlist?list=PLIPZ2_p3RNHjUCHdJp-_soSSmhgmO4i0T](https://youtube.com/playlist?list=PLIPZ2_p3RNHjUCHdJp-_soSSmhgmO4i0T)
+
+---
+
+## DBMS
+
+**Lectures**
+
+* [https://youtube.com/playlist?list=PLG9aCp4uE-s0bu-I8fgDXXhVLO4qVROGy](https://youtube.com/playlist?list=PLG9aCp4uE-s0bu-I8fgDXXhVLO4qVROGy)
+
+**Revision + PYQs**
+
+* [https://youtube.com/playlist?list=PLIPZ2_p3RNHh3otU-TnAK-GkqrvvOO33C](https://youtube.com/playlist?list=PLIPZ2_p3RNHh3otU-TnAK-GkqrvvOO33C)
+
+---
+
+## Digital Logic
+
+**Lectures**
+
+* [https://youtube.com/playlist?list=PLBlnK6fEyqRjMH3mWf6kwqiTbT798eAOm](https://youtube.com/playlist?list=PLBlnK6fEyqRjMH3mWf6kwqiTbT798eAOm)
+
+**Revision + PYQs**
+
+* [https://www.youtube.com/live/h-SDoV0_pwQ](https://www.youtube.com/live/h-SDoV0_pwQ)
+
+---
+
+## Discrete Mathematics
+
+**Graph Theory**
+
+* [https://youtube.com/playlist?list=PLIPZ2_p3RNHjQoj0k-BlI9zXE0QKdl-lI](https://youtube.com/playlist?list=PLIPZ2_p3RNHjQoj0k-BlI9zXE0QKdl-lI)
+
+**Set Theory**
+
+* [https://youtube.com/playlist?list=PLIPZ2_p3RNHjHnhdkPWFAlcizVQJ8w4TX](https://youtube.com/playlist?list=PLIPZ2_p3RNHjHnhdkPWFAlcizVQJ8w4TX)
+
+**Logic**
+
+* [https://youtube.com/playlist?list=PLIPZ2_p3RNHillKxh1_iFeZhy9MftHeWW](https://youtube.com/playlist?list=PLIPZ2_p3RNHillKxh1_iFeZhy9MftHeWW)
+
+**Revision + PYQs**
+
+* [https://youtube.com/playlist?list=PL3eEXnCBViH-WZfR3PRFfYs7WjUgcBlAZ](https://youtube.com/playlist?list=PL3eEXnCBViH-WZfR3PRFfYs7WjUgcBlAZ)
+
+---
+
+## Linear Algebra
+
+**Lectures**
+
+* [https://youtube.com/playlist?list=PLIPZ2_p3RNHhGLQ1ZT37KLpBMAD90CM4](https://youtube.com/playlist?list=PLIPZ2_p3RNHhGLQ1ZT37KLpBMAD90CM4)_
+
+**3Blue1Brown Intuition**
+
+* [https://youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab](https://youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab)
+
+---
+
+## Probability
+
+**Lectures**
+
+* [https://youtube.com/playlist?list=PLhLZ_zxDsyOIKbQfKFM05BLYRhUZ7JP-M](https://youtube.com/playlist?list=PLhLZ_zxDsyOIKbQfKFM05BLYRhUZ7JP-M)
+
+**Revision**
+
+* [https://youtu.be/_nuQwy9DGmw](https://youtu.be/_nuQwy9DGmw)
+
+---
+
+## Calculus
+
+**Khan Academy**
+
+* [https://www.khanacademy.org/math/calculus-1](https://www.khanacademy.org/math/calculus-1)
+
+**Revision + PYQs**
+
+* [https://youtube.com/playlist?list=PLIPZ2_p3RNHi3R5H_NDKCB3aGvtLYlLrz](https://youtube.com/playlist?list=PLIPZ2_p3RNHi3R5H_NDKCB3aGvtLYlLrz)
+
+---
+
+## GATEOverflow PYQs
+
+**All Subject-wise PYQs**
+
+* [https://github.com/GATEOverflow/GO-PDFs/releases/tag/gatecse-2025](https://github.com/GATEOverflow/GO-PDFs/releases/tag/gatecse-2025)
+
+---
+
+## Full-Length Mock Tests
+
+* [https://gateoverflow.in/exam/70/go-17-mock-1](https://gateoverflow.in/exam/70/go-17-mock-1)
+* [https://gateoverflow.in/exam/73/go-17-mock-2](https://gateoverflow.in/exam/73/go-17-mock-2)
+* [https://gateoverflow.in/exam/74/go-17-mock-3](https://gateoverflow.in/exam/74/go-17-mock-3)
+* [https://gateoverflow.in/exam/79/go-18-mock-4](https://gateoverflow.in/exam/79/go-18-mock-4)
+
+---
+
+## Previous GATE Papers as Mocks
+
+* [https://gateoverflow.in/exam/594/gate-cse-2024-set-1-original-paper](https://gateoverflow.in/exam/594/gate-cse-2024-set-1-original-paper)
+* [https://gateoverflow.in/exam/595/gate-cse-2024-set-2-original-paper](https://gateoverflow.in/exam/595/gate-cse-2024-set-2-original-paper)
+* [https://gateoverflow.in/exam/430/gate-cse-2023-original-paper](https://gateoverflow.in/exam/430/gate-cse-2023-original-paper)
+* [https://gateoverflow.in/exam/298/gate-cse-2022](https://gateoverflow.in/exam/298/gate-cse-2022)
+* [https://gateoverflow.in/exam/263/gate-2021](https://gateoverflow.in/exam/263/gate-2021)
+* [https://gateoverflow.in/exam/218/gate-cse-2020](https://gateoverflow.in/exam/218/gate-cse-2020)
+
+---
+
+## Notes
+
+**Standard Book Notes**
+
+* [https://drive.google.com/drive/folders/1oGCYictHLqXE1skdkJ8PnaefBnLrRXwG](https://drive.google.com/drive/folders/1oGCYictHLqXE1skdkJ8PnaefBnLrRXwG)
+
+**Handwritten Notes**
+
+* [https://github.com/baquer/GATE-and-CSE-Resources-for-Students/blob/master/AnkurGuptaNotes/CompilerDesign.pdf](https://github.com/baquer/GATE-and-CSE-Resources-for-Students/blob/master/AnkurGuptaNotes/CompilerDesign.pdf)
+
+If you want, I can also create a **single GATE 2027 master sheet** with:
+
+* Subject order
+* Best playlist per subject
+* Best book per subject
+* PYQ links
+* Test links
+* Revision links
+* Estimated completion timeline (June 2025 → Feb 2027)
+
+in a clean Notion/Excel format.
+# GATE 2027 TRACKER ENTRY #5
+
+## VIDEO TYPE
+
+High-Weightage Topics Analysis
+
+**Speaker:** Anjali Chauhan
+
+**Methodology:**
+
+* Analysis of last 15–20 years of GATE papers.
+* Focus on maximum marks with minimum preparation time.
+* Weightage + Difficulty + Time Required.
+
+---
+
+# MASTER STRATEGY
+
+## Don't Skip Subjects Completely
+
+Wrong Approach:
+
+```text id="v4x2sa"
+Skip entire subject
+```
+
+Correct Approach:
+
+```text id="f3m6zn"
+Study high-weightage topics
++
+Study easy scoring topics
+```
+
+Goal:
+
+* Maximize marks.
+* Minimize preparation time.
+* Ensure coverage across all subjects.
+
+---
+
+# SUBJECT-WISE PRIORITY LIST
+
+## Programming & Data Structures
+
+### Highest Priority
+
+#### Binary Trees / BST
+
+```text id="g3k41v"
+~87 Questions Asked
+```
+
+Must Study:
+
+* Traversals
+* BST Operations
+* Tree Properties
+
+---
+
+#### Stacks & Queues
+
+Difficulty:
+
+```text id="gvr7od"
+Easy
+```
+
+Return on Investment:
+
+```text id="6d18sl"
+Very High
+```
+
+---
+
+#### Heaps
+
+Must Know:
+
+* Heap Construction
+* Heap Sort
+* Priority Queue
+
+---
+
+#### Arrays
+
+Frequently Asked:
+
+* Address Calculation
+* Complexity
+
+---
+
+# Algorithms
+
+Expected Weightage
+
+```text id="k1o2dr"
+9–10 Marks
+```
+
+---
+
+### Most Important
+
+#### Minimum Spanning Tree (MST)
+
+```text id="f9q3zm"
+~33 Questions
+```
+
+Algorithms:
+
+* Prim's
+* Kruskal's
+
+---
+
+#### Graph Search
+
+Must Master:
+
+* DFS
+* BFS
+
+---
+
+#### Sorting
+
+Important:
+
+* Time Complexity
+* Stability
+* In-place Sorting
+
+---
+
+#### Asymptotic Notation
+
+Must Know:
+
+* O
+* Ω
+* Θ
+
+---
+
+# Digital Logic
+
+## Easy Scoring Subject
+
+### Number Systems
+
+```text id="ww8v7p"
+~57 Questions
+```
+
+Must Study:
+
+* Conversions
+* Complements
+* Arithmetic
+
+---
+
+### Boolean Algebra
+
+Difficulty:
+
+```text id="n1v4eg"
+Can be finished in 1–2 days
+```
+
+High ROI topic.
+
+---
+
+### Circuits
+
+Must Know:
+
+* Combinational Circuits
+* Sequential Circuits
+
+---
+
+# Operating Systems
+
+## Most Important
+
+### Process Scheduling
+
+Difficulty:
+
+```text id="l9w8de"
+Easy + Scoring
+```
+
+Must Study:
+
+* FCFS
+* SJF
+* Priority
+* Round Robin
+
+---
+
+### Page Replacement
+
+Must Know:
+
+* FIFO
+* LRU
+* Optimal
+
+---
+
+### Deadlocks / Resource Allocation
+
+Must Study:
+
+* Banker's Algorithm
+* Resource Allocation Graph
+
+---
+
+# Theory of Computation
+
+## Most Important Topic
+
+### Regular Languages
+
+```text id="w5u4di"
+~62 Questions
+```
+
+---
+
+### Regular Expressions
+
+Must Master
+
+---
+
+### Finite Automata
+
+Must Know:
+
+* DFA
+* NFA
+* Conversion
+
+---
+
+# Compiler Design
+
+## Most Important
+
+### Grammar
+
+Must Know:
+
+* CFG
+* Ambiguity
+* Left Recursion
+
+---
+
+### Syntax Directed Translation
+
+High Frequency Topic
+
+---
+
+# COA
+
+## Most Important Topic
+
+### Cache Memory
+
+```text id="ly5mtz"
+~71 Questions
+```
+
+Highest ROI Topic
+
+Must Study:
+
+* Mapping
+* Hit Ratio
+* Miss Penalty
+
+---
+
+### Addressing Modes
+
+Frequently Asked
+
+---
+
+### Pipelining
+
+Must Know:
+
+* Hazards
+* Speedup
+
+---
+
+# Computer Networks
+
+## Most Important
+
+### IP Addressing
+
+Must Master:
+
+* Subnetting
+* CIDR
+
+---
+
+### Application Layer Protocols
+
+Must Know:
+
+* HTTP
+* SMTP
+* FTP
+* DNS
+
+---
+
+### Sliding Window Protocols
+
+Frequently Asked Numericals
+
+Must Study:
+
+* Stop & Wait
+* Go Back N
+* Selective Repeat
+
+---
+
+# DBMS
+
+## Most Important Topic
+
+### SQL Queries
+
+```text id="0rwwsp"
+~55 Questions
+```
+
+Easy + High Weightage
+
+---
+
+### Normalization
+
+Must Study:
+
+* 1NF
+* 2NF
+* 3NF
+* BCNF
+
+---
+
+# Discrete Mathematics
+
+Most Important:
+
+### Graph Theory
+
+High Weightage
+
+---
+
+### Set Theory
+
+Easy Scoring
+
+---
+
+### Relations & Functions
+
+Frequently Asked
+
+---
+
+# Engineering Mathematics
+
+## Linear Algebra
+
+Must Study:
+
+* Eigenvalues
+* Eigenvectors
+* Systems of Equations
+
+---
+
+## Probability
+
+Must Study:
+
+* Conditional Probability
+* Bayes Theorem
+
+---
+
+## Calculus
+
+Must Study:
+
+* Differentiation
+* Integration
+
+---
+
+# Aptitude
+
+Fixed Weightage:
+
+```text id="lj8h4d"
+15 Marks
+```
+
+---
+
+## Recommended Strategy
+
+Solve:
+
+```text id="xay35i"
+Last 15 Years Aptitude PYQs
+```
+
+Sources:
+
+* CSE
+* ECE
+* Civil
+* Mechanical
+* EE
+
+Reason:
+
+Aptitude patterns overlap heavily.
+
+---
+
+# COMPUTER NETWORKS ALGORITHMS TRACKER
+
+## Routing Algorithms
+
+### Dijkstra
+
+Used In:
+
+* Link State Routing
+* OSPF
+
+Importance:
+
+```text id="jlwmgi"
+Very Important
+```
+
+---
+
+### Distance Vector Routing
+
+Based On:
+
+* Bellman Ford
+
+---
+
+### Flooding
+
+Basic Routing Technique
+
+---
+
+# Congestion Control
+
+## Leaky Bucket
+
+Purpose:
+
+* Smooth Traffic Flow
+
+---
+
+## Token Bucket
+
+Purpose:
+
+* Allow Controlled Bursts
+
+---
+
+## TCP AIMD
+
+```text id="c3c22t"
+Additive Increase
+Multiplicative Decrease
+```
+
+Very Important.
+
+---
+
+## RED
+
+Random Early Detection
+
+---
+
+# Error Detection
+
+## CRC
+
+Importance:
+
+```text id="42jq8s"
+Very Important Numericals
+```
+
+Must Practice.
+
+---
+
+# Flow Control
+
+### Stop & Wait
+
+---
+
+### Go Back N
+
+---
+
+### Selective Repeat
+
+These are among the most frequently tested CN numericals.
+
+---
+
+# Security
+
+## RSA Algorithm
+
+Frequently Asked:
+
+* Encryption
+* Decryption
+* Public Key Problems
+
+---
+
+# FAST-TRACK PRIORITY LIST
+
+If short on time:
+
+### Tier 1
+
+```yaml id="vtmiv0"
+cache_memory
+sql_queries
+process_scheduling
+regular_languages
+finite_automata
+ip_addressing
+subnetting
+mst
+dfs
+bfs
+boolean_algebra
+number_systems
+graph_theory
+```
+
+---
+
+### Tier 2
+
+```yaml id="eiknsj"
+pipelining
+normalization
+deadlocks
+page_replacement
+syntax_directed_translation
+sliding_window_protocols
+crc
+rsa
+eigenvalues
+bayes_theorem
+```
+
+---
+
+# WEIGHTAGE HIGHLIGHTS
+
+```yaml id="1vjkzy"
+binary_trees: 87_questions
+cache_memory: 71_questions
+regular_languages: 62_questions
+number_systems: 57_questions
+sql_queries: 55_questions
+mst: 33_questions
+aptitude: 15_marks_fixed
+algorithms: 9_to_10_marks
+```
+
+# Final Takeaway
+
+**If you cannot cover every topic, do not skip entire subjects. Cover the high-frequency topics first: Cache Memory, SQL, Process Scheduling, Regular Languages, Finite Automata, IP Addressing, MST, DFS/BFS, Graph Theory, and Aptitude. These provide the highest marks-per-hour return for GATE CSE.**
+
+I can't access the transcript for that video because YouTube subtitle retrieval is currently blocked.
+
+For the tracker-style extraction you've been building, please provide **one of these**:
+
+* The video's transcript (YouTube → "Show transcript" → copy/paste)
+* A summary of the video
+* Key points/notes from the video
+* Screenshots of important slides
+
+Once you paste the content, I'll convert it into the same format as the previous entries:
+
+* Video Type
+* Core Message
+* Subject-wise insights
+* Important numbers/statistics
+* High-priority topics
+* Preparation strategy
+* Mock test strategy
+* Revision strategy
+* Tracker Tags (YAML)
+* One-line takeaway
+
+and I'll keep it concise and tracker-ready.
+# GATE 2027 TRACKER ENTRY #6
+
+## VIDEO TYPE
+
+GATE CS Overview + High-Yield Topics Strategy
+
+**Speaker:** Vishvadeep Gothi
+
+---
+
+# CORE MESSAGE
+
+### If Time is Limited
+
+Do NOT try to study everything randomly.
+
+Instead:
+
+```text id="x8v9m2"
+Prioritize high-yield topics first.
+```
+
+However:
+
+```text id="a7k3n5"
+Full syllabus coverage is always better.
+```
+
+Reason:
+
+* Subjects are interconnected.
+* Strong fundamentals improve advanced subjects.
+* Better rank potential.
+
+---
+
+# GATE ELIGIBILITY
+
+Eligible Candidates:
+
+* BE / BTech Students
+* BSc Students
+* BCA Students
+* Equivalent Graduation Programs
+
+Minimum Requirement:
+
+```text id="q2f4r1"
+3rd Year or Above
+```
+
+---
+
+## Restrictions
+
+### Age Limit
+
+```text id="n6d8t3"
+No Age Limit
+```
+
+### Attempt Limit
+
+```text id="w1j7p9"
+Unlimited Attempts
+```
+
+---
+
+# GATE EXAM PATTERN
+
+## Duration
+
+```text id="m4y8c2"
+3 Hours
+```
+
+---
+
+## Total Marks
+
+```text id="b7h5z6"
+100 Marks
+```
+
+---
+
+## Total Questions
+
+```text id="k9r2x4"
+65 Questions
+```
+
+---
+
+## Sections
+
+| Section               | Marks |
+| --------------------- | ----- |
+| General Aptitude      | 15    |
+| Core CS + Mathematics | 85    |
+
+---
+
+## Question Types
+
+### MCQ
+
+* Negative Marking Present
+
+---
+
+### NAT
+
+* No Negative Marking
+
+---
+
+### MSQ
+
+* No Negative Marking
+
+---
+
+# SUBJECTS INCLUDED IN GATE CSE
+
+Core Subjects:
+
+* Engineering Mathematics
+* Discrete Mathematics
+* Digital Logic
+* C Programming
+* Data Structures
+* Algorithms
+* COA
+* TOC
+* Compiler Design
+* Operating Systems
+* DBMS
+* Computer Networks
+
+---
+
+# PREPARATION HIERARCHY
+
+## LEVEL 1 (FOUNDATION)
+
+Must Finish First
+
+### General Aptitude
+
+Weightage:
+
+```text id="t5e3y8"
+15 Marks
+```
+
+---
+
+### Engineering Mathematics
+
+---
+
+### Discrete Mathematics
+
+---
+
+### Digital Logic
+
+---
+
+### C Programming
+
+Reason:
+
+These subjects build the foundation for later topics.
+
+---
+
+# LEVEL 2 (INTERMEDIATE)
+
+Study After Foundation
+
+### Data Structures
+
+---
+
+### COA
+
+---
+
+### TOC
+
+---
+
+### Algorithms
+
+Reason:
+
+Require Level 1 fundamentals.
+
+---
+
+# LEVEL 3 (ADVANCED)
+
+Study Last
+
+### Operating Systems
+
+---
+
+### DBMS
+
+---
+
+### Computer Networks
+
+---
+
+### Compiler Design
+
+Reason:
+
+Conceptually heavier and interconnected.
+
+---
+
+# HIGH-YIELD TOPICS LIST
+
+## COA
+
+### Must Do
+
+* Pipelining
+* Cache Memory
+* Floating Point Representation
+
+Priority:
+
+```text id="z7f2c8"
+Very High
+```
+
+---
+
+# Data Structures
+
+### Most Important
+
+#### Trees
+
+Priority:
+
+```text id="p6w4v9"
+Highest
+```
+
+---
+
+#### Hashing
+
+---
+
+#### Linked Lists
+
+---
+
+# C Programming
+
+### Recommendation
+
+```text id="d3m7n1"
+Complete Entire Subject
+```
+
+Reason:
+
+Acts as the base for:
+
+* Data Structures
+* Algorithms
+* Memory Concepts
+* OS
+
+---
+
+# Algorithms
+
+### Most Important
+
+#### Complexity Analysis
+
+Must Know:
+
+* Big O
+* Big Omega
+* Theta
+
+---
+
+#### Sorting Algorithms
+
+---
+
+#### Heaps
+
+---
+
+# Theory of Computation
+
+### Scoring Subject
+
+Must Master:
+
+* Finite Automata
+* Regular Expressions
+
+Priority:
+
+```text id="u8j5q2"
+High ROI
+```
+
+---
+
+# DBMS
+
+### Most Important
+
+#### SQL Queries
+
+Must Master
+
+---
+
+#### Relational Algebra
+
+Frequently Asked
+
+---
+
+#### Indexing
+
+---
+
+#### Normalization
+
+---
+
+# Operating Systems
+
+### Most Important
+
+#### Memory Management
+
+---
+
+#### Process Synchronization
+
+---
+
+#### CPU Scheduling
+
+Priority:
+
+```text id="r4k6h7"
+High Weightage
+```
+
+---
+
+# Discrete Mathematics
+
+### Must Do
+
+#### Graph Theory
+
+Priority:
+
+```text id="g2y8f1"
+Mandatory
+```
+
+---
+
+#### Sets
+
+---
+
+#### Functions
+
+---
+
+#### Relations
+
+---
+
+# Digital Logic
+
+### Most Important
+
+#### Number Systems
+
+---
+
+#### Combinational Circuits
+
+---
+
+# Engineering Mathematics
+
+## Probability
+
+Must Study:
+
+* Conditional Probability
+* Bayes Theorem
+
+---
+
+## Linear Algebra
+
+Must Study:
+
+* Matrices
+* Eigenvalues
+* Systems of Equations
+
+---
+
+# CAREER OPPORTUNITIES AFTER GATE
+
+## Higher Education
+
+Target Institutes:
+
+* Indian Institutes of Technology
+* Indian Institute of Science
+
+Programs:
+
+* M.Tech
+* MS
+* PhD
+
+---
+
+# Government Jobs / Research
+
+Organizations Mentioned:
+
+* National Informatics Centre
+* Indian Space Research Organisation
+* Defence Research and Development Organisation
+
+Benefits:
+
+* Job Security
+* Government Benefits
+* Research Opportunities
+
+---
+
+# LAST-MINUTE STRATEGY
+
+If preparation time is short:
+
+### Priority Order
+
+```yaml id="c8v4m7"
+1: aptitude
+2: engineering_mathematics
+3: digital_logic
+4: c_programming
+5: data_structures
+6: algorithms
+7: coa
+8: toc
+9: os
+10: dbms
+11: cn
+12: compiler_design
+```
+
+---
+
+# HIGH-YIELD TOPICS MASTER LIST
+
+```yaml id="j5n9r3"
+coa:
+  - cache_memory
+  - pipelining
+  - floating_point
+
+ds:
+  - trees
+  - hashing
+  - linked_lists
+
+algorithms:
+  - complexity_analysis
+  - sorting
+  - heaps
+
+toc:
+  - finite_automata
+  - regular_expressions
+
+dbms:
+  - sql
+  - relational_algebra
+  - indexing
+  - normalization
+
+os:
+  - cpu_scheduling
+  - synchronization
+  - memory_management
+
+dm:
+  - graph_theory
+  - sets
+  - relations
+  - functions
+
+digital_logic:
+  - number_systems
+  - combinational_circuits
+
+maths:
+  - probability
+  - linear_algebra
+```
+
+# Final Takeaway
+
+**For GATE 2027, build a strong foundation first (Maths, Aptitude, Digital Logic, C Programming), then move to DS/Algorithms/COA/TOC, and finally tackle OS, DBMS, CN, and Compiler Design. If short on time, focus on Cache Memory, Trees, SQL, CPU Scheduling, Finite Automata, Graph Theory, Probability, and Aptitude before anything else.**# GATE 2027 TRACKER ENTRY #7
+
+## VIDEO TYPE
+
+Last 30-Day Strategy / 55+ Marks Roadmap
+
+**Speaker:** Rahuram Chanthrakumar
+
+**Target Score:**
+
+```text
+55+ Marks
+```
+
+**Target Audience:**
+
+* Students with limited preparation time
+* Last 30–60 days revision phase
+* Aspirants aiming to maximize marks through high-ROI topics
+
+---
+
+# CORE INSIGHT
+
+### Mathematics + Aptitude = Biggest ROI
+
+According to the video:
+
+```yaml
+General Aptitude: 15 Marks
+Engineering Mathematics: 11–20 Marks
+Combined Potential: ~26–35 Marks
+```
+
+For some streams:
+
+```text
+Potential Coverage ≈ 50 Marks
+```
+
+when combined with selected high-weightage technical topics.
+
+---
+
+# 4-STEP ROADMAP
+
+## STEP 1: PICK ROI TOPICS
+
+### Priority Order
+
+```text
+Aptitude
+↓
+Mathematics
+↓
+Highest Weightage Technical Topics
+↓
+PYQs
+```
+
+### Aptitude
+
+Weightage:
+
+```text
+15 Marks
+```
+
+Suggested Time:
+
+```text
+5 Days
+```
+
+---
+
+### Mathematics
+
+Focus Areas:
+
+* Linear Algebra
+* Probability
+* Calculus
+
+Expected Weightage:
+
+```text
+11–20 Marks
+```
+
+---
+
+### Technical Subjects
+
+Select based on:
+
+* Weightage
+* Ease of learning
+* PYQ frequency
+
+---
+
+# STEP 2: DEEP WORK
+
+## Eliminate Distractions
+
+Required:
+
+```text
+Focused Study Blocks
+```
+
+Avoid:
+
+* Social Media
+* Multitasking
+* Random Resource Switching
+
+---
+
+### Recommendation
+
+Daily:
+
+```yaml
+deep_work:
+  duration: 3_to_4_hours
+  sessions: multiple
+  interruptions: zero
+```
+
+---
+
+# STEP 3: CONCEPTUAL CLARITY
+
+## Learn Concepts Properly
+
+Do NOT:
+
+```text
+Memorize solutions
+```
+
+Instead:
+
+```text
+Understand concepts
+↓
+Practice questions
+↓
+Retain permanently
+```
+
+---
+
+### Verification Method
+
+Use:
+
+```text
+PYQs
+```
+
+to test understanding.
+
+---
+
+# STEP 4: EXAM CHEAT CODES
+
+(Not shortcuts—exam strategy tactics)
+
+---
+
+## Prioritize MSQ Questions
+
+### Why?
+
+```text
+No Negative Marking
+```
+
+Potential benefit:
+
+* Higher safe attempts
+* Lower risk
+
+---
+
+## PYQ-Based Preparation
+
+Claim from video:
+
+```text
+~82% of questions follow familiar patterns
+```
+
+Meaning:
+
+* PYQs are extremely valuable.
+* Pattern recognition matters.
+
+---
+
+# PYQ STRATEGY
+
+## Mandatory
+
+Solve:
+
+```text
+Last 10–15 Years PYQs
+```
+
+Purpose:
+
+* Pattern recognition
+* Revision
+* Accuracy improvement
+
+---
+
+# TEST SERIES STRATEGY
+
+## If Underprepared
+
+Focus On:
+
+```text
+Accuracy
++
+PYQs
+```
+
+Instead of:
+
+```text
+Many Full-Length Mocks
+```
+
+---
+
+## If Well Prepared
+
+Take:
+
+```text
+2–3 Full-Length Tests
+```
+
+Purpose:
+
+* Pressure handling
+* Time management
+* Exam temperament
+
+---
+
+# RESOURCE SELECTION RULE
+
+Choose resources that:
+
+✅ Match actual GATE difficulty
+
+✅ Have quality solutions
+
+✅ Contain authentic PYQs
+
+Avoid:
+
+❌ Random easy tests
+
+❌ Inflated difficulty tests
+
+❌ Too many resources
+
+---
+
+# LAST 30-DAY PRIORITY LIST
+
+## Tier 1 (Must Do)
+
+```yaml
+aptitude:
+  marks: 15
+
+mathematics:
+  marks: 11_to_20
+
+pyqs:
+  years: 10_to_15
+
+revision:
+  mandatory: true
+```
+
+---
+
+## Tier 2 (High ROI Technical Topics)
+
+Based on previous tracker entries:
+
+```yaml
+cache_memory
+cpu_scheduling
+sql_queries
+finite_automata
+regular_expressions
+graph_theory
+ip_addressing
+subnetting
+trees
+mst
+dfs
+bfs
+boolean_algebra
+number_systems
+```
+
+---
+
+# FINAL 30-DAY FORMULA
+
+```text
+Aptitude
++
+Mathematics
++
+High ROI Topics
++
+PYQs
++
+Revision
++
+Accuracy
+=
+55+ Marks Potential
+```
+
+---
+
+# TRACKER TAGS
+
+```yaml
+video_type: last_30_day_strategy
+
+target_score: 55_plus
+
+roadmap:
+  - roi_topics
+  - deep_work
+  - conceptual_clarity
+  - pyqs
+
+important_numbers:
+  aptitude_marks: 15
+  mathematics_marks: 11_to_20
+  pyq_pattern_similarity: 82_percent
+  full_length_tests: 2_to_3
+
+exam_strategy:
+  prioritize_msq: true
+  prioritize_accuracy: true
+  pyqs_mandatory: true
+
+success_formula:
+  - aptitude
+  - mathematics
+  - roi_topics
+  - pyqs
+  - revision
+  - accuracy
+```
+
+## Key Takeaway
+
+**If your goal is to maximize marks in limited time, secure Aptitude and Mathematics first, then attack the highest-ROI technical topics, solve PYQs aggressively, and prioritize accuracy over attempting every question.**# GATE 2027 TRACKER ENTRY #8
+
+## VIDEO TYPE
+
+1-Year Self-Study Roadmap (Without Coaching)
+
+**Speaker:** Rahuram Chanthrakumar
+
+**Target Audience:**
+
+* Self-study aspirants
+* Students preparing without coaching
+* 1-year preparation timeline
+
+---
+
+# CORE MESSAGE
+
+### Coaching Is Not Mandatory
+
+Success Formula:
+
+```text id="gx72la"
+Correct Subject Order
++
+Daily Consistency
++
+PYQs
++
+Revision
++
+Mock Tests
+=
+GATE Success
+```
+
+---
+
+# MASTER TIMELINE
+
+## Preparation Start
+
+```text id="a1z9mk"
+~8 Months Before Exam
+```
+
+(Recommended minimum)
+
+---
+
+# STAGE 1: CONCEPTUAL CLARITY
+
+## Objectives
+
+* Learn concepts thoroughly
+* Build fundamentals
+* Create notes
+
+### Resources
+
+* YouTube Playlists
+* Standard Books
+* PYQs
+
+---
+
+### Requirements
+
+```yaml id="m3x8dt"
+conceptual_clarity:
+  understand_concepts: true
+  solve_pyqs: true
+  doubt_clearing: true
+```
+
+---
+
+# STAGE 2: DAILY COMMITMENT
+
+## Daily Study Target
+
+Recommended:
+
+```text id="r6v4qp"
+8+ Hours Daily
+```
+
+---
+
+### Rules
+
+* Consistency over intensity
+* Follow timetable
+* Minimize distractions
+
+---
+
+# STAGE 3: TEST SERIES
+
+## Start Early
+
+Do NOT wait until syllabus completion.
+
+Practice:
+
+```text id="h9c7nf"
+PYQs
++
+Chapter Tests
++
+Subject Tests
+```
+
+---
+
+# STAGE 4: PROACTIVITY
+
+## Continuous Improvement
+
+After every test:
+
+```text id="j2t5wy"
+Identify Weak Areas
+↓
+Revise
+↓
+Retest
+```
+
+---
+
+# STAGE 5: REVISION
+
+## Simultaneous Revision
+
+Important Rule:
+
+Do NOT postpone revision until the end.
+
+While studying:
+
+```text id="w4n8es"
+Learn
+↓
+Revise
+↓
+Continue
+```
+
+---
+
+### Forgetting Rule
+
+Whenever a topic starts fading:
+
+```text id="x7p1kh"
+Immediate Revision
+```
+
+---
+
+# STAGE 6: FULL REVISION
+
+## After Syllabus Completion
+
+Once entire syllabus is finished:
+
+```text id="k5u3mr"
+Complete Revision Cycle
+```
+
+Purpose:
+
+* Connect subjects
+* Strengthen memory
+* Improve retention
+
+---
+
+# STAGE 7: FULL-LENGTH TESTS
+
+## Recommended
+
+```text id="v2q6lg"
+25+ Full-Length Mock Tests
+```
+
+Purpose:
+
+* Exam temperament
+* Speed
+* Accuracy
+* Time Management
+
+---
+
+# STAGE 8: FINAL EXAM
+
+Goal:
+
+```text id="z8m4pt"
+Peak Performance
+```
+
+---
+
+# SUBJECT SEQUENCE STRATEGY
+
+## Highest Priority
+
+### Engineering Mathematics
+
+### Aptitude
+
+---
+
+## Why?
+
+Combined Weightage:
+
+```text id="b4y7nw"
+28 Marks
+```
+
+Breakup:
+
+```yaml id="d9r2fv"
+aptitude: 15
+mathematics: 13
+total: 28
+```
+
+---
+
+# CRITICAL INSIGHT
+
+### Mathematics + Aptitude Alone
+
+Can potentially help cross:
+
+```text id="f6k1zs"
+Qualifying Cutoff
+```
+
+for many candidates.
+
+---
+
+# DAILY 45-MINUTE RULE
+
+Every Day:
+
+### First 45 Minutes
+
+Must Be:
+
+```text id="s3w8hj"
+Engineering Mathematics
++
+Aptitude
+```
+
+---
+
+## Benefits
+
+### 1. High Scoring
+
+Largest guaranteed marks pool.
+
+---
+
+### 2. Foundational
+
+Maths supports:
+
+* Algorithms
+* Probability
+* Discrete Maths
+* COA
+* Machine Learning concepts
+
+---
+
+### 3. Consistency
+
+Avoid losing easy marks.
+
+---
+
+# SUBJECT ORDER FRAMEWORK
+
+## Foundation Layer
+
+Study First:
+
+```yaml id="n4v6ea"
+aptitude
+engineering_mathematics
+discrete_mathematics
+digital_logic
+c_programming
+```
+
+---
+
+## Intermediate Layer
+
+Study Second:
+
+```yaml id="t7k3my"
+data_structures
+algorithms
+coa
+toc
+```
+
+---
+
+## Advanced Layer
+
+Study Last:
+
+```yaml id="q8x5rb"
+operating_systems
+dbms
+computer_networks
+compiler_design
+```
+
+---
+
+# SYLLABUS DEADLINE
+
+## Target Completion
+
+```text id="l1j9dw"
+Finish Entire Syllabus By November 2026
+```
+
+---
+
+# REVISION PHASE
+
+## Dedicated Months
+
+```text id="u7p2cn"
+December 2026
+January 2027
+```
+
+Activities:
+
+* Revision
+* PYQs
+* Full-Length Mocks
+* Error Correction
+
+---
+
+# RESOURCE STRATEGY
+
+## Primary Source
+
+### YouTube Playlists
+
+Use for:
+
+* Lectures
+* Concept Building
+
+---
+
+## Three-Step Method
+
+### Step 1
+
+Download official syllabus.
+
+---
+
+### Step 2
+
+Mark completed topics.
+
+---
+
+### Step 3
+
+Use:
+
+* Search
+* AI Tools
+* Additional Videos
+
+for remaining gaps.
+
+---
+
+# HIGH-WEIGHTAGE STRATEGY
+
+Focus on:
+
+```text id="o6z4vk"
+80–90% Marks Topics First
+```
+
+before low-weightage topics.
+
+---
+
+# DAILY ROUTINE
+
+## Planning System
+
+Maintain:
+
+```text id="c5r7jh"
+Daily Study Notebook
+```
+
+Track:
+
+* Tasks
+* Hours
+* Revision
+* Mistakes
+
+---
+
+# MOCK TEST TARGET
+
+## Minimum
+
+```yaml id="y3n6qw"
+chapter_tests: yes
+subject_tests: yes
+full_length_mocks: 25_plus
+```
+
+---
+
+# TRACKER TAGS
+
+```yaml id="p8v2dm"
+video_type: one_year_roadmap
+
+preparation_mode:
+  - self_study
+  - no_coaching
+
+timeline:
+  syllabus_completion: november_2026
+  revision_phase:
+    - december_2026
+    - january_2027
+
+daily_rules:
+  aptitude_first: true
+  maths_first: true
+  daily_maths_aptitude: 45_minutes
+
+important_numbers:
+  aptitude_marks: 15
+  mathematics_marks: 13
+  total_weightage: 28
+  study_hours: 8_plus
+  full_length_mocks: 25_plus
+
+success_factors:
+  - conceptual_clarity
+  - consistency
+  - pyqs
+  - revision
+  - mock_tests
+```
+
+# Key Takeaway
+
+**Start every day with Aptitude and Engineering Mathematics, finish the entire syllabus by November 2026, reserve December–January exclusively for revision and mocks, and complete at least 25 full-length tests before GATE 2027.**
+
+
