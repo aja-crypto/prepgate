@@ -20,7 +20,7 @@ const messageSchema = new mongoose.Schema({
     model: String,
     tokens: Number,
     latency: Number,
-    source: { type: String, enum: ['ai', 'heuristic'], default: 'ai' },
+    source: { type: String, enum: ['ai', 'heuristic', 'fallback'], default: 'ai' },
   },
 }, { timestamps: true });
 

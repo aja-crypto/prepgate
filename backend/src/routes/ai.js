@@ -1473,7 +1473,9 @@ router.post('/chat', validateFields([
       remaining = { remaining: quotaCheck.remaining, limit: quotaCheck.limit, isPremium: quotaCheck.isPremium };
     }
 
-    if (userId && conv) {
+    const isError = !response.text || response.source === 'error';
+
+    if (!isError && userId && conv) {
       await Message.create({
         conversation: conv._id,
         role: 'assistant',
@@ -1487,6 +1489,20 @@ router.post('/chat', validateFields([
         conv.title = aiTitle.length > 10 ? aiTitle : 'AI Chat';
       }
       await conv.save();
+    }
+
+    if (isError) {
+      aiUsage.increment(false, Date.now() - chatStart);
+      return res.status(503).json({
+        success: false,
+        message: response.offlineError || 'AI service temporarily unavailable',
+        data: {
+          text: response.text || 'AI service is temporarily unavailable. Please try again in a moment.',
+          suggestions: response.suggestions || ["What should I study today?", "Am I on track?", "Which subject should I prioritize?"],
+          conversationId: conv?._id?.toString() || null,
+          source: 'error',
+        },
+      });
     }
 
     aiUsage.increment(true, Date.now() - chatStart);
@@ -2512,7 +2528,7 @@ COACHING RULES:
   }
   console.log('[AI Coach] External AI unavailable:', lastAiError, '— returning explicit error (no offline fallback)');
   return {
-    text: null,
+    text: 'AI service is temporarily unavailable. Please try again in a moment.',
     offlineError: lastAiError,
     suggestions: ["What should I study today?", "Am I on track?", "Which subject should I prioritize?"],
     source: 'error',

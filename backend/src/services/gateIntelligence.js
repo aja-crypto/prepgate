@@ -112,7 +112,7 @@ async function getTopicPYQStats(subjectCode, topicName) {
           twoMark: { $sum: { $cond: [{ $eq: ['$marks', 2] }, 1, 0] } },
         },
       },
-    ]).maxTimeMS(3000);
+    ]).option({ maxTimeMS: 3000 });
 
     const result = await statsQuery;
 
