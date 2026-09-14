@@ -49,6 +49,13 @@ router.get('/', protect, async (req, res, next) => {
 // Returns { screenshotUrl } which the client includes in the submit payload.
 router.post('/upload', protect, screenshotUpload.single('screenshot'), async (req, res, next) => {
   try {
+    if (req.user?.isGuest) {
+      return res.status(403).json({
+        success: false,
+        code: 'FEEDBACK_AUTH_REQUIRED',
+        message: 'Feedback is available only for registered users. Please log in to submit feedback.',
+      });
+    }
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No image file provided.' });
     }
@@ -67,6 +74,13 @@ router.post('/upload', protect, screenshotUpload.single('screenshot'), async (re
 // POST /api/feedback – Submit feedback
 router.post('/', protect, async (req, res, next) => {
   try {
+    if (req.user?.isGuest) {
+      return res.status(403).json({
+        success: false,
+        code: 'FEEDBACK_AUTH_REQUIRED',
+        message: 'Feedback is available only for registered users. Please log in to submit feedback.',
+      });
+    }
     const { anonymous, ratings, featureRequests, bugReports, preparation, recommendation, polls } = req.body;
 
     let feedback = null;

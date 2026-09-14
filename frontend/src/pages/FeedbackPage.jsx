@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, feedbackService, getApiErrorMessage, userFeedbackService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { useSEO } from '../hooks/useSEO';
 
@@ -40,6 +41,8 @@ function clearDraft() { try { localStorage.removeItem(STORAGE_KEY); } catch {} }
 
 export default function FeedbackPage() {
   useSEO({ title: 'Feedback', description: 'Share feedback about GateNexa — report bugs, suggest features and help improve the platform for GATE aspirants.' });
+  const { user } = useAuth();
+  const isDemo = user?.isGuest === true;
   const [step, setStep] = useState(() => loadDraft().step || 'welcome');
   const [rating, setRating] = useState(() => loadDraft().rating || 0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -86,6 +89,9 @@ export default function FeedbackPage() {
   const handleSubmit = async () => {
     if (submitGuard.current) return;
     if (!description.trim()) return toast.error('Please share your thoughts.');
+    if (isDemo) {
+      return toast.error('Feedback is available only for registered users. Please log in to submit feedback.', { duration: 5000 });
+    }
     submitGuard.current = true;
     setSubmitting(true);
     setSubmitPhase('Saving');
