@@ -14,7 +14,7 @@ import MistakePatternCard from '../components/gate/MistakePatternCard';
 import { SUCCESS_PRINCIPLES, STUDY_BLUEPRINT } from '../data/successBlueprint';
 import { STRATEGY_INSIGHTS } from '../data/strategyInsights';
 import { GATE_FAQ } from '../data/gateFAQ';
-import { MOST_FAQS } from '../data/mostFAQs';
+
 import { COMMUNITY_INSIGHTS, COMMUNITY_CATEGORIES } from '../data/communityInsights';
 import { DSA_CONCEPTS } from '../data/dsaRealLife';
 import { ROADMAP_PHASES, AIR_ROADMAPS, TOP_RANKER_PRINCIPLES } from '../data/successRoadmap';
@@ -42,7 +42,7 @@ export default function InsightsPage() {
   const TABS = [
     { key: 'blueprint', label: `Success Blueprint (${SUCCESS_PRINCIPLES.length})` },
     { key: 'qa', label: `Q&A (${GATE_FAQ.length})` },
-    { key: 'most-faqs', label: `Most FAQs (${MOST_FAQS.length})` },
+
     { key: 'subjects', label: `Subjects (${GATE_SUBJECTS.length})` },
     { key: 'high-roi', label: 'High ROI Topics' },
     { key: 'mistakes', label: 'Mistake Patterns' },
@@ -303,52 +303,6 @@ export default function InsightsPage() {
           )}
           {GATE_FAQ.length === 0 && (
             <div className="text-center py-12 text-sm text-text3">No Q&A available yet.</div>
-          )}
-        </div>
-      )}
-
-      {/* Tab: Most FAQs */}
-      {tab === 'most-faqs' && (
-        <div>
-          <div className="mb-3 flex flex-wrap gap-1.5">
-            {(() => {
-              const allCats = [...new Set(MOST_FAQS.flatMap(item => item.tags || []))].sort();
-              return ['All', ...allCats].map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setSearch(cat === 'All' ? '' : cat)}
-                  className={`text-[9px] px-2.5 py-1 rounded-full border transition-all ${
-                    (cat === 'All' && !search) || search === cat ? 'bg-primary/15 border-primary/30 text-primary' : 'bg-bg-2 border-border text-text3'
-                  }`}
-                >
-                  {cat === 'All' ? 'All' : cat}
-                </button>
-              ));
-            })()}
-          </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {MOST_FAQS.filter((item) => {
-              if (!search.trim()) return true;
-              const q = search.toLowerCase();
-              return (
-                item.q.toLowerCase().includes(q) ||
-                item.a.toLowerCase().includes(q) ||
-                (item.tags && item.tags.some((t) => t.toLowerCase().includes(q)))
-              );
-            }).slice(0, showAll['most-faqs'] ? undefined : INITIAL_LIMIT).map((item) => (
-              <QandACard key={item.id} item={item} />
-            ))}
-          </div>
-          {!showAll['most-faqs'] && MOST_FAQS.length > INITIAL_LIMIT && (
-            <div className="text-center mt-4">
-              <button onClick={() => toggleShowAll('most-faqs')} className="text-xs px-5 py-2 rounded-lg border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all font-medium">
-                View More FAQs ({MOST_FAQS.length - INITIAL_LIMIT} more)
-              </button>
-            </div>
-          )}
-          {MOST_FAQS.length === 0 && (
-            <div className="text-center py-12 text-sm text-text3">No FAQs available yet.</div>
           )}
         </div>
       )}
