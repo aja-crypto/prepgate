@@ -672,7 +672,7 @@ export default function InsightsPage() {
             {filteredKnowledgeGraph.map((kg) => (
               <div key={kg.id} className="bg-surface border border-border rounded-xl p-4">
                 <h3 className="text-xs font-semibold text-text mb-2">{kg.title}</h3>
-                <p className="text-[11px] text-text2 leading-relaxed">{kg.content}</p>
+                <MarkdownRenderer content={kg.content} />
                 <div className="flex flex-wrap gap-1 mt-2">
                   {kg.tags.filter(t => t !== 'knowledge-graph').map((t) => (
                     <span key={t} className="text-[8px] px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">{t}</span>

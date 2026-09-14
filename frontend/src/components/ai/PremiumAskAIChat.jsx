@@ -53,6 +53,13 @@ export default function PremiumAskAIChat() {
   const [streamingText, setStreamingText] = useState('');
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const streamIntervalRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (streamIntervalRef.current) clearInterval(streamIntervalRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
@@ -67,11 +74,12 @@ export default function PremiumAskAIChat() {
     setStreamingText('');
     const text = 'This is a simulated AI response. In production, this would stream from the backend.';
     let index = 0;
-    const interval = setInterval(() => {
+    streamIntervalRef.current = setInterval(() => {
       index++;
       setStreamingText(text.slice(0, index));
       if (index >= text.length) {
-        clearInterval(interval);
+        clearInterval(streamIntervalRef.current);
+        streamIntervalRef.current = null;
         setIsStreaming(false);
         setMessages(prev => [...prev, { role: 'assistant', content: text }]);
         setStreamingText('');

@@ -12,6 +12,7 @@ backend/.env.development
 backend/.env.production
 backend/.env.local
 frontend/.env.local
+frontend/.env.test
 frontend/.env.vercel
 *.env.local
 *.env.production
