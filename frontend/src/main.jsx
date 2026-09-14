@@ -1,6 +1,22 @@
 import React, { useEffect, useRef, lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 
+// Single canonical PWA install-event capture. Runs before React mounts
+// so beforeinstallprompt is never lost.
+if (typeof window !== 'undefined' && !window.__gatenexaBipCapture) {
+  window.__gatenexaBipCapture = true;
+  window.__deferredInstallPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window.__deferredInstallPrompt = e;
+    window.dispatchEvent(new CustomEvent('gatenexa:beforeinstallprompt'));
+  });
+  window.addEventListener('appinstalled', () => {
+    window.__deferredInstallPrompt = null;
+    try { localStorage.setItem('gatenexa_install_dismissed', 'installed'); } catch {}
+  });
+}
+
 const initSentry = () => {
   if (!import.meta.env.PROD || !import.meta.env.VITE_SENTRY_DSN) return;
   import('@sentry/react').then((Sentry) => {

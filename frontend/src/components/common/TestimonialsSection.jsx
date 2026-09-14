@@ -2,18 +2,19 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 function StarRating({ rating }) {
-  const full = Math.floor(rating);
-  const hasHalf = rating - full >= 0.3 && rating - full < 0.8;
-  const empty = 5 - full - (hasHalf ? 1 : 0);
+  const safe = Math.max(0, Math.min(5, Number(rating) || 0));
   return (
-    <span className="inline-flex gap-0.5" aria-label={`${rating} out of 5 stars`}>
-      {Array.from({ length: full }).map((_, i) => (
-        <span key={`f${i}`} className="text-yellow-400 text-lg">★</span>
-      ))}
-      {hasHalf && <span className="text-yellow-400 text-lg">★</span>}
-      {Array.from({ length: empty }).map((_, i) => (
-        <span key={`e${i}`} className="text-gray-600 text-lg">★</span>
-      ))}
+    <span className="inline-flex gap-0.5" aria-label={`${safe.toFixed(1)} out of 5 stars`}>
+      {Array.from({ length: 5 }).map((_, i) => {
+        const fill = Math.max(0, Math.min(1, safe - i));
+        return (
+          <span key={i} className="relative inline-block text-lg leading-none" style={{ width: '1.1em' }}>
+            <span className="absolute inset-0 text-gray-600">★</span>
+            <span className="absolute inset-0 overflow-hidden text-yellow-400" style={{ width: `${fill * 100}%` }}>★</span>
+            <span className="invisible">★</span>
+          </span>
+        );
+      })}
     </span>
   );
 }
@@ -26,10 +27,18 @@ export default function TestimonialsSection() {
     let cancelled = false;
     const fetchStats = async () => {
       try {
-        const res = await fetch('/api/feedback/public-stats');
+        const base = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
+        const res = await fetch(`${base}/feedback/public-stats`, { headers: { Accept: 'application/json' } });
+        if (!res.ok) throw new Error(`stats ${res.status}`);
         const data = await res.json();
-        if (!cancelled && data.success) {
-          setStats(data.data);
+        if (!cancelled && data && data.success && data.data) {
+          let avg = Number(data.data.averageRating);
+          const count = Number(data.data.ratingCount) || 0;
+          if (Number.isFinite(avg)) {
+            if (avg > 5) avg = avg / 2;
+            avg = Math.max(0, Math.min(5, avg));
+            if (count > 0) setStats({ averageRating: avg, ratingCount: count });
+          }
         }
       } catch {
         // Silently fail — keep honest empty state
@@ -41,7 +50,7 @@ export default function TestimonialsSection() {
     return () => { cancelled = true; };
   }, []);
 
-  const hasRatings = stats && stats.ratingCount > 0 && stats.averageRating !== null;
+  const hasRatings = stats && stats.ratingCount > 0 && Number.isFinite(stats.averageRating);
   const ratingDisplay = hasRatings ? stats.averageRating.toFixed(1) : null;
   const countDisplay = hasRatings
     ? stats.ratingCount >= 500

@@ -5,169 +5,194 @@ import BrandText from '../ui/BrandText';
 const LS_KEY = 'gatenexa_install_dismissed';
 
 function isStandalone() {
-  return (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    window.navigator.standalone === true
-  );
+  try {
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true
+    );
+  } catch { return false; }
 }
 
 function isIOSSafari() {
-  const ua = window.navigator.userAgent;
-  return /iPad|iPhone|iPod/.test(ua) || (ua.includes('Mac') && 'ontouchend' in window);
-}
-
-function isAndroid() {
-  return /Android/i.test(window.navigator.userAgent);
+  const ua = window.navigator.userAgent || '';
+  const iOS = /iPad|iPhone|iPod/.test(ua);
+  const macTouch = ua.includes('Mac') && 'ontouchend' in window;
+  return iOS || macTouch;
 }
 
 function isInAppBrowser() {
-  const ua = window.navigator.userAgent;
-  return /(FBAN|FBAV|Instagram|Line|WeChat|Snapchat|TikTok|Twitter|WhatsApp)/i.test(ua);
+  const ua = window.navigator.userAgent || '';
+  return /(FBAN|FBAV|FB_IAB|Instagram|Line|WeChat|Snapchat|TikTok|Twitter|WhatsApp|LinkedInApp|Pinterest|Slack|Discord|Telegram)/i.test(ua);
+}
+
+function getDismissed() {
+  try { return localStorage.getItem(LS_KEY); } catch { return null; }
+}
+
+function isSuppressed(d) {
+  if (!d) return false;
+  if (d === 'installed' || d === 'permanent') return true;
+  try {
+    const parsed = JSON.parse(d);
+    if (parsed?.until && parsed.until > Date.now()) return true;
+  } catch {}
+  return false;
 }
 
 export default function InstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [deferredPrompt, setDeferredPrompt] = useState(() => (typeof window !== 'undefined' ? window.__deferredInstallPrompt || null : null));
   const [show, setShow] = useState(false);
-  const [dismissed, setDismissed] = useState(() => {
-    try { return localStorage.getItem(LS_KEY); } catch { return null; }
-  });
-  const [isAlreadyInstalled, setIsAlreadyInstalled] = useState(false);
+  const [installed, setInstalled] = useState(() => (typeof window !== 'undefined' ? isStandalone() : false));
 
-  // Detect if already installed
   useEffect(() => {
-    if (isStandalone()) {
-      setIsAlreadyInstalled(true);
-      return;
-    }
-    // Check media query for standalone
-    const mql = window.matchMedia('(display-mode: standalone)');
-    const handler = (e) => setIsAlreadyInstalled(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
+    if (isStandalone()) { setInstalled(true); return; }
+    let mql;
+    try {
+      mql = window.matchMedia('(display-mode: standalone)');
+      const h = (e) => { if (e.matches) { setInstalled(true); setShow(false); } };
+      mql.addEventListener('change', h);
+      return () => mql.removeEventListener('change', h);
+    } catch { return undefined; }
   }, []);
 
-  // Capture beforeinstallprompt event
   useEffect(() => {
-    if (isAlreadyInstalled) return;
-
-    const handler = (e) => {
+    const onBip = () => setDeferredPrompt(window.__deferredInstallPrompt || null);
+    const onNative = (e) => {
       e.preventDefault();
+      window.__deferredInstallPrompt = e;
       setDeferredPrompt(e);
     };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, [isAlreadyInstalled]);
-
-  // Show logic: determine when to display the prompt
-  useEffect(() => {
-    if (isAlreadyInstalled) return;
-    if (isInAppBrowser()) return;
-
-    // Check dismissal state
-    if (dismissed === 'installed' || dismissed === 'permanent') return;
-
-    if (dismissed) {
-      try {
-        const parsed = JSON.parse(dismissed);
-        if (parsed?.until && parsed.until > Date.now()) return;
-      } catch { /* invalid data, treat as not dismissed */ }
-    }
-
-    // If we have a native prompt, show after short delay
-    if (deferredPrompt) {
-      const timer = setTimeout(() => setShow(true), 2500);
-      return () => clearTimeout(timer);
-    }
-
-    // If no native prompt (iOS Safari, etc.), show after longer delay with manual instructions
-    const timer = setTimeout(() => setShow(true), 4000);
-    return () => clearTimeout(timer);
-  }, [deferredPrompt, isAlreadyInstalled, dismissed]);
-
-  // Listen for appinstalled event
-  useEffect(() => {
-    const handler = () => {
-      setIsAlreadyInstalled(true);
+    window.addEventListener('gatenexa:beforeinstallprompt', onBip);
+    window.addEventListener('beforeinstallprompt', onNative);
+    window.addEventListener('appinstalled', onInstalled);
+    function onInstalled() {
+      setInstalled(true);
       setShow(false);
-      try { localStorage.setItem(LS_KEY, 'installed'); } catch {}
-      setDismissed('installed');
-    };
-    window.addEventListener('appinstalled', handler);
-    return () => window.removeEventListener('appinstalled', handler);
-  }, []);
-
-  const handleInstall = useCallback(async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const result = await deferredPrompt.userChoice;
-      if (result.outcome === 'accepted') {
-        setShow(false);
-        try { localStorage.setItem(LS_KEY, 'installed'); } catch {}
-        setDismissed('installed');
-      }
       setDeferredPrompt(null);
     }
+    if (window.__deferredInstallPrompt) setDeferredPrompt(window.__deferredInstallPrompt);
+    return () => {
+      window.removeEventListener('gatenexa:beforeinstallprompt', onBip);
+      window.removeEventListener('beforeinstallprompt', onNative);
+      window.removeEventListener('appinstalled', onInstalled);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (installed) return;
+    if (isSuppressed(getDismissed())) return;
+    const inApp = isInAppBrowser();
+    const ios = isIOSSafari();
+    let t;
+    if (deferredPrompt) {
+      t = setTimeout(() => { if (!isSuppressed(getDismissed())) setShow(true); }, 2500);
+    } else if (ios || inApp) {
+      t = setTimeout(() => { if (!isSuppressed(getDismissed())) setShow(true); }, 2000);
+    } else {
+      return undefined;
+    }
+    return () => clearTimeout(t);
+  }, [deferredPrompt, installed]);
+
+  const handleInstall = useCallback(async () => {
+    const dp = deferredPrompt || window.__deferredInstallPrompt;
+    if (!dp) return;
+    try {
+      dp.prompt();
+      const result = await dp.userChoice;
+      if (result && result.outcome === 'accepted') {
+        setShow(false);
+        try { localStorage.setItem(LS_KEY, 'installed'); } catch {}
+        setInstalled(true);
+      }
+      window.__deferredInstallPrompt = null;
+      setDeferredPrompt(null);
+    } catch {}
   }, [deferredPrompt]);
 
   const handleLater = useCallback(() => {
     setShow(false);
-    const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
-    try { localStorage.setItem(LS_KEY, JSON.stringify({ until: expiresAt })); } catch {}
-    setDismissed(JSON.stringify({ until: expiresAt }));
+    try { localStorage.setItem(LS_KEY, JSON.stringify({ until: Date.now() + 7 * 24 * 60 * 60 * 1000 })); } catch {}
   }, []);
 
   const handleDontShow = useCallback(() => {
     setShow(false);
     try { localStorage.setItem(LS_KEY, 'permanent'); } catch {}
-    setDismissed('permanent');
   }, []);
 
-  const handleClose = useCallback(() => {
+  const handleOpenInBrowser = useCallback(() => {
+    try {
+      const url = window.location.href;
+      if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
+      window.open(url, '_blank', 'noopener');
+    } catch {}
     setShow(false);
   }, []);
 
-  // Don't render if not showing or permanently dismissed or installed
-  if (!show || dismissed === 'permanent' || dismissed === 'installed' || isAlreadyInstalled) {
-    return null;
-  }
+  if (!show || installed) return null;
+  if (isSuppressed(getDismissed())) return null;
 
-  // iOS Safari: manual install guide
-  if (isIOSSafari() && !deferredPrompt) {
+  const cardStyle = { background: 'rgba(15,17,25,0.97)', border: '1px solid rgba(139,92,246,0.15)', backdropFilter: 'blur(20px)' };
+  const primaryBtn = { background: 'linear-gradient(135deg, #7C3AED, #6D28D9)' };
+
+  if (deferredPrompt) {
     return (
       <div className="fixed bottom-24 right-4 md:right-6 z-[99999] animate-slide-up">
-        <div className="rounded-2xl p-4 w-[300px] shadow-2xl" style={{ background: 'rgba(15,17,25,0.97)', border: '1px solid rgba(139,92,246,0.15)', backdropFilter: 'blur(20px)' }}>
+        <div className="rounded-2xl p-4 w-[300px] shadow-2xl" style={cardStyle}>
           <div className="flex items-start gap-3 mb-3">
             <Icon name="logo" className="w-10 h-10 shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="text-sm font-bold text-text">Install <BrandText /></div>
               <div className="text-xs text-text3 mt-0.5 leading-relaxed">
-                Add GateNexa to your Home Screen for faster access and a native app experience.
+                Install for faster access, offline support, and a native app experience.
               </div>
             </div>
           </div>
-          <div className="rounded-lg p-2.5 mb-3 text-[10px] text-text2 leading-relaxed" style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.1)' }}>
-            <div className="font-semibold text-text mb-1">How to install:</div>
-            <div>1. Tap the <span className="font-semibold">Share</span> button below</div>
-            <div>2. Tap <span className="font-semibold">Add to Home Screen</span></div>
-            <div>3. Tap <span className="font-semibold">Add</span></div>
-          </div>
           <div className="flex gap-2">
-            <button onClick={handleClose} className="flex-1 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-all" style={{ background: 'linear-gradient(135deg, #7C3AED, #6D28D9)' }}>
-              Got it
+            <button onClick={handleInstall} className="flex-1 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-all" style={primaryBtn}>
+              Install
             </button>
             <button onClick={handleLater} className="px-3 py-2 rounded-xl text-xs text-text2 hover:text-text transition-all bg-white/5 hover:bg-white/10">Later</button>
-            <button onClick={handleDontShow} className="px-3 py-2 rounded-xl text-xs text-text3 hover:text-text transition-all">Don't Show</button>
+            <button onClick={handleDontShow} className="px-3 py-2 rounded-xl text-xs text-text3 hover:text-text transition-all">Don&apos;t Show</button>
           </div>
         </div>
       </div>
     );
   }
 
-  // Android / desktop with no native prompt (in-app browser or unsupported)
-  if (!deferredPrompt && !isIOSSafari()) {
+  if (isIOSSafari()) {
     return (
       <div className="fixed bottom-24 right-4 md:right-6 z-[99999] animate-slide-up">
-        <div className="rounded-2xl p-4 w-[300px] shadow-2xl" style={{ background: 'rgba(15,17,25,0.97)', border: '1px solid rgba(139,92,246,0.15)', backdropFilter: 'blur(20px)' }}>
+        <div className="rounded-2xl p-4 w-[300px] shadow-2xl" style={cardStyle}>
+          <div className="flex items-start gap-3 mb-3">
+            <Icon name="logo" className="w-10 h-10 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold text-text">Install <BrandText /></div>
+              <div className="text-xs text-text3 mt-0.5 leading-relaxed">
+                Add GateNexa to your Home Screen.
+              </div>
+            </div>
+          </div>
+          <div className="rounded-lg p-2.5 mb-3 text-[10px] text-text2 leading-relaxed" style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.1)' }}>
+            <div>1. Tap the <span className="font-semibold">Share</span> button.</div>
+            <div>2. Choose <span className="font-semibold">Add to Home Screen</span>.</div>
+            <div>3. Tap <span className="font-semibold">Add</span>.</div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={handleLater} className="flex-1 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-all" style={primaryBtn}>
+              Got it
+            </button>
+            <button onClick={handleDontShow} className="px-3 py-2 rounded-xl text-xs text-text3 hover:text-text transition-all">Don&apos;t Show</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isInAppBrowser()) {
+    return (
+      <div className="fixed bottom-24 right-4 md:right-6 z-[99999] animate-slide-up">
+        <div className="rounded-2xl p-4 w-[300px] shadow-2xl" style={cardStyle}>
           <div className="flex items-start gap-3 mb-3">
             <Icon name="logo" className="w-10 h-10 shrink-0" />
             <div className="flex-1 min-w-0">
@@ -178,38 +203,15 @@ export default function InstallPrompt() {
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={handleClose} className="flex-1 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-all" style={{ background: 'linear-gradient(135deg, #7C3AED, #6D28D9)' }}>
-              Got it
+            <button onClick={handleOpenInBrowser} className="flex-1 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-all" style={primaryBtn}>
+              Open in Browser
             </button>
             <button onClick={handleLater} className="px-3 py-2 rounded-xl text-xs text-text2 hover:text-text transition-all bg-white/5 hover:bg-white/10">Later</button>
-            <button onClick={handleDontShow} className="px-3 py-2 rounded-xl text-xs text-text3 hover:text-text transition-all">Don't Show</button>
           </div>
         </div>
       </div>
     );
   }
 
-  // Native install prompt (Chrome, Edge, etc.)
-  return (
-    <div className="fixed bottom-24 right-4 md:right-6 z-[99999] animate-slide-up">
-      <div className="rounded-2xl p-4 w-[300px] shadow-2xl" style={{ background: 'rgba(15,17,25,0.97)', border: '1px solid rgba(139,92,246,0.15)', backdropFilter: 'blur(20px)' }}>
-        <div className="flex items-start gap-3 mb-3">
-          <Icon name="logo" className="w-10 h-10 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-bold text-text">Install <BrandText /></div>
-            <div className="text-xs text-text3 mt-0.5 leading-relaxed">
-              Install for faster access, offline support, and a native app experience.
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={handleInstall} className="flex-1 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-all" style={{ background: 'linear-gradient(135deg, #7C3AED, #6D28D9)' }}>
-            Install
-          </button>
-          <button onClick={handleLater} className="px-3 py-2 rounded-xl text-xs text-text2 hover:text-text transition-all bg-white/5 hover:bg-white/10">Maybe Later</button>
-          <button onClick={handleDontShow} className="px-3 py-2 rounded-xl text-xs text-text3 hover:text-text transition-all">Don't Show Again</button>
-        </div>
-      </div>
-    </div>
-  );
+  return null;
 }
