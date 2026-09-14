@@ -205,6 +205,31 @@ router.post('/', protect, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// GET /api/feedback/public-stats – Public aggregate rating (no auth, no private data)
+router.get('/public-stats', async (req, res, next) => {
+  try {
+    let all;
+    if (isMongoConnected()) {
+      all = await Feedback.find({}, 'ratings').lean();
+    } else {
+      all = getStore().getAllLocalFeedback();
+    }
+
+    const rated = all.filter((f) => f.ratings?.overall);
+    const avgRating = rated.length
+      ? parseFloat((rated.reduce((s, f) => s + (f.ratings.overall || 0), 0) / rated.length).toFixed(1))
+      : null;
+
+    res.json({
+      success: true,
+      data: {
+        averageRating: avgRating,
+        ratingCount: rated.length,
+      },
+    });
+  } catch (e) { next(e); }
+});
+
 // GET /api/feedback/admin/stats – Admin analytics
 router.get('/admin/stats', protect, adminOnly, async (req, res, next) => {
   try {
