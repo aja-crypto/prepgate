@@ -30,6 +30,7 @@ import {
   crossSourceIntel,
   searchKnowledgeBase,
 } from '../data/knowledgeBase';
+import MarkdownRenderer from '../components/ui/MarkdownRenderer';
 
 export default function InsightsPage() {
   const [tab, setTab] = useState('blueprint');
@@ -545,9 +546,8 @@ export default function InsightsPage() {
             {filteredDecisionFrameworks.map((fw) => (
               <div key={fw.id} className="bg-surface border border-border rounded-xl p-4">
                 <h3 className="text-xs font-semibold text-text mb-2">{fw.title}</h3>
-                <p className="text-[11px] text-text2 leading-relaxed whitespace-pre-line">{fw.content}</p>
-                {fw.structured && (
-                  <div className="mt-3 overflow-x-auto">
+                {fw.structured ? (
+                  <div className="overflow-x-auto">
                     <table className="w-full text-[10px]">
                       <thead>
                         <tr className="border-b border-border">
@@ -567,6 +567,8 @@ export default function InsightsPage() {
                       </tbody>
                     </table>
                   </div>
+                ) : (
+                  <MarkdownRenderer content={fw.content} />
                 )}
               </div>
             ))}
@@ -586,9 +588,8 @@ export default function InsightsPage() {
             {filteredRevisionMethods.map((rm) => (
               <div key={rm.id} className="bg-surface border border-border rounded-xl p-4">
                 <h3 className="text-xs font-semibold text-text mb-2">{rm.title}</h3>
-                <p className="text-[11px] text-text2 leading-relaxed whitespace-pre-line">{rm.content}</p>
-                {rm.structured && (
-                  <div className="mt-3 overflow-x-auto">
+                {rm.structured ? (
+                  <div className="overflow-x-auto">
                     <table className="w-full text-[10px]">
                       <thead>
                         <tr className="border-b border-border">
@@ -608,6 +609,8 @@ export default function InsightsPage() {
                       </tbody>
                     </table>
                   </div>
+                ) : (
+                  <MarkdownRenderer content={rm.content} />
                 )}
               </div>
             ))}
@@ -627,9 +630,8 @@ export default function InsightsPage() {
             {filteredTestingStrategies.map((ts) => (
               <div key={ts.id} className="bg-surface border border-border rounded-xl p-4">
                 <h3 className="text-xs font-semibold text-text mb-2">{ts.title}</h3>
-                <p className="text-[11px] text-text2 leading-relaxed whitespace-pre-line">{ts.content}</p>
-                {ts.structured && (
-                  <div className="mt-3 overflow-x-auto">
+                {ts.structured ? (
+                  <div className="overflow-x-auto">
                     <table className="w-full text-[10px]">
                       <thead>
                         <tr className="border-b border-border">
@@ -649,6 +651,8 @@ export default function InsightsPage() {
                       </tbody>
                     </table>
                   </div>
+                ) : (
+                  <MarkdownRenderer content={ts.content} />
                 )}
               </div>
             ))}
@@ -692,7 +696,7 @@ export default function InsightsPage() {
             {filteredTrackers.map((tr) => (
               <div key={tr.id} className="bg-surface border border-border rounded-xl p-4">
                 <h3 className="text-xs font-semibold text-text mb-2">{tr.title}</h3>
-                <p className="text-[11px] text-text2 leading-relaxed whitespace-pre-line">{tr.content}</p>
+                <MarkdownRenderer content={tr.content} />
               </div>
             ))}
           </div>
@@ -711,9 +715,8 @@ export default function InsightsPage() {
             {filteredCrossSourceIntel.map((cs) => (
               <div key={cs.id} className="bg-surface border border-border rounded-xl p-4">
                 <h3 className="text-xs font-semibold text-text mb-2">{cs.title}</h3>
-                <p className="text-[11px] text-text2 leading-relaxed whitespace-pre-line">{cs.content}</p>
-                {cs.structured && (
-                  <div className="mt-3 overflow-x-auto">
+                {cs.structured ? (
+                  <div className="overflow-x-auto">
                     <table className="w-full text-[10px]">
                       <thead>
                         <tr className="border-b border-border">
@@ -733,6 +736,8 @@ export default function InsightsPage() {
                       </tbody>
                     </table>
                   </div>
+                ) : (
+                  <MarkdownRenderer content={cs.content} />
                 )}
               </div>
             ))}
