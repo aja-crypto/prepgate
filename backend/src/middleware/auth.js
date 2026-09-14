@@ -204,3 +204,65 @@ exports.generateTokens = (userId, tokenVersion = 0) => {
 
   return { accessToken, refreshToken };
 };
+
+/**
+ * Optional authentication – attaches req.user if a valid token is present,
+ * but does NOT block the request if no token or token is invalid.
+ * Use for public endpoints that optionally benefit from user context.
+ */
+exports.optionalProtect = async (req, res, next) => {
+  let token;
+
+  if (req.headers.authorization?.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token && req.query.token) {
+    token = req.query.token;
+  }
+
+  if (!token) {
+    // No token — continue as anonymous
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+
+    if (tokenBlacklist.hasSync(token)) {
+      req.user = null;
+      return next();
+    }
+
+    const isBlacklisted = await tokenBlacklist.has(token);
+    if (isBlacklisted) {
+      req.user = null;
+      return next();
+    }
+
+    if (isMongoConnected()) {
+      if (/^[0-9a-f]{24}$/i.test(decoded.id)) {
+        req.user = await User.findById(decoded.id).select('-password');
+        if (req.user && !req.user.deletedAt) {
+          return next();
+        }
+      }
+    }
+
+    if (isMockAuthEnabled()) {
+      const user = mockStore.findById(decoded.id);
+      if (user) {
+        req.user = user;
+        return next();
+      }
+    }
+
+    // Token present but user not found — continue as anonymous
+    req.user = null;
+    return next();
+  } catch {
+    // Invalid/expired token — continue as anonymous, do not block
+    req.user = null;
+    return next();
+  }
+};

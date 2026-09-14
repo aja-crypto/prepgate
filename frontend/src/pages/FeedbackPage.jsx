@@ -89,9 +89,6 @@ export default function FeedbackPage() {
   const handleSubmit = async () => {
     if (submitGuard.current) return;
     if (!description.trim()) return toast.error('Please share your thoughts.');
-    if (isDemo) {
-      return toast.error('Feedback is available only for registered users. Please log in to submit feedback.', { duration: 5000 });
-    }
     submitGuard.current = true;
     setSubmitting(true);
     setSubmitPhase('Saving');
@@ -122,7 +119,7 @@ export default function FeedbackPage() {
       });
       clearDraft();
       go('done');
-      toast.success('Feedback submitted!');
+      toast.success(user && !isDemo ? 'Feedback submitted!' : 'Feedback submitted anonymously!');
     } catch (e) {
       toast.error(getApiErrorMessage(e, 'Failed to submit.'));
       submitGuard.current = false;
@@ -177,7 +174,17 @@ export default function FeedbackPage() {
               💜
             </motion.div>
             <h1 className="text-2xl font-bold text-white mb-3">Your Feedback Builds a Better GateNexa</h1>
-            <p className="text-sm text-slate-400 mb-8 max-w-sm mx-auto">Your suggestions directly improve the platform for thousands of GATE aspirants.</p>
+            <p className="text-sm text-slate-400 mb-4 max-w-sm mx-auto">Your suggestions directly improve the platform for thousands of GATE aspirants.</p>
+            {!user && (
+              <div className="mx-auto mb-6 max-w-sm rounded-lg px-4 py-2.5 text-[11px] leading-relaxed text-slate-300" style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.15)' }}>
+                Your feedback matters! You can submit without an account. It will be shared with the GateNexa team anonymously.
+              </div>
+            )}
+            {isDemo && (
+              <div className="mx-auto mb-6 max-w-sm rounded-lg px-4 py-2.5 text-[11px] leading-relaxed text-slate-300" style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.15)' }}>
+                You're using Demo Mode. Your feedback will be received by the GateNexa team but won't be linked to a registered account.
+              </div>
+            )}
             <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => go('rating')}
               className="px-8 py-3 rounded-xl text-sm font-semibold text-white transition-all" style={{ background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', boxShadow: '0 4px 24px rgba(139,92,246,0.35)' }}>
               Share Feedback ✨
@@ -341,7 +348,11 @@ export default function FeedbackPage() {
               <motion.span animate={{ rotate: [0, 10, 0] }} transition={{ duration: 0.5, delay: 0.3 }}>🎉</motion.span>
             </motion.div>
             <motion.h2 initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="text-xl font-bold text-white mb-2">Thank You!</motion.h2>
-            <motion.p initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-sm text-slate-400 mb-8">Your feedback has been submitted and will help improve GateNexa.</motion.p>
+            <motion.p initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="text-sm text-slate-400 mb-8">
+              {user && !isDemo
+                ? 'Your feedback has been submitted and will help improve GateNexa.'
+                : 'Your feedback has been submitted anonymously and will help improve GateNexa.'}
+            </motion.p>
 
             <motion.div initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.45 }} className="max-w-sm mx-auto mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
               <p className="text-sm font-semibold text-white mb-1">Love GateNexa? Share it with your friends!</p>

@@ -1,7 +1,7 @@
 // src/routes/feedback.js – Feedback & Suggestions API
 const router = require('express').Router();
 const multer = require('multer');
-const { protect, adminOnly } = require('../middleware/auth');
+const { protect, adminOnly, optionalProtect } = require('../middleware/auth');
 const { isMongoConnected, isMockAuthEnabled } = require('../config/db');
 const Feedback = require('../models/Feedback');
 const { createFeedbackNotification } = require('../services/notificationEngine');
@@ -47,15 +47,9 @@ router.get('/', protect, async (req, res, next) => {
 
 // POST /api/feedback/upload – Upload a feedback screenshot to Cloudinary.
 // Returns { screenshotUrl } which the client includes in the submit payload.
-router.post('/upload', protect, screenshotUpload.single('screenshot'), async (req, res, next) => {
+// Public endpoint — optional auth for user association.
+router.post('/upload', optionalProtect, screenshotUpload.single('screenshot'), async (req, res, next) => {
   try {
-    if (req.user?.isGuest) {
-      return res.status(403).json({
-        success: false,
-        code: 'FEEDBACK_AUTH_REQUIRED',
-        message: 'Feedback is available only for registered users. Please log in to submit feedback.',
-      });
-    }
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No image file provided.' });
     }
@@ -72,20 +66,17 @@ router.post('/upload', protect, screenshotUpload.single('screenshot'), async (re
 });
 
 // POST /api/feedback – Submit feedback
-router.post('/', protect, async (req, res, next) => {
+// Public endpoint — optional auth for user association.
+router.post('/', optionalProtect, async (req, res, next) => {
   try {
-    if (req.user?.isGuest) {
-      return res.status(403).json({
-        success: false,
-        code: 'FEEDBACK_AUTH_REQUIRED',
-        message: 'Feedback is available only for registered users. Please log in to submit feedback.',
-      });
-    }
     const { anonymous, ratings, featureRequests, bugReports, preparation, recommendation, polls } = req.body;
 
     let feedback = null;
+    const userId = req.user?._id || req.user?.id || null;
     if (isMongoConnected() && !isMockAuthEnabled()) {
-      feedback = await Feedback.findOne({ user: req.user._id });
+      if (userId) {
+        feedback = await Feedback.findOne({ user: userId });
+      }
       if (feedback) {
         Object.assign(feedback, {
           anonymous: anonymous ?? feedback.anonymous,
@@ -98,8 +89,8 @@ router.post('/', protect, async (req, res, next) => {
         });
       } else {
         feedback = new Feedback({
-          user: req.user._id,
-          anonymous: anonymous ?? false,
+          user: userId,
+          anonymous: userId ? (anonymous ?? false) : true,
           ratings: ratings ?? {},
           featureRequests: featureRequests ?? [],
           bugReports: bugReports ?? [],
@@ -111,8 +102,8 @@ router.post('/', protect, async (req, res, next) => {
       await feedback.save();
     } else {
       const store = getStore();
-      feedback = store.saveLocalFeedback(req.user._id, {
-        anonymous: anonymous ?? false,
+      feedback = store.saveLocalFeedback(userId || 'anonymous', {
+        anonymous: userId ? (anonymous ?? false) : true,
         ratings: ratings ?? {},
         featureRequests: featureRequests ?? [],
         bugReports: bugReports ?? [],
@@ -172,17 +163,18 @@ router.post('/', protect, async (req, res, next) => {
       // Notifications/emails/audit only for a genuinely new ticket, so a
       // duplicate submission never spams the user or admins a second time.
       if (isNewTicket) {
-        await createFeedbackNotification({
-          userId: userId || req.user._id,
-          type: 'feedback_received',
-          title: 'Thank you for your feedback',
-          message: `Your ${req.body.category || 'general'} feedback was submitted successfully and is ready for review.`,
-          ticketId: ticket._id,
-        });
-        // Confirmation email — one per created ticket, never blocking submit.
-        {
-          const to = req.user?.email || '';
-          if (to) {
+        // Notify user only if a real user is logged in (not anonymous/demo)
+        if (userId && req.user?.email) {
+          await createFeedbackNotification({
+            userId,
+            type: 'feedback_received',
+            title: 'Thank you for your feedback',
+            message: `Your ${req.body.category || 'general'} feedback was submitted successfully and is ready for review.`,
+            ticketId: ticket._id,
+          });
+          // Confirmation email — one per created ticket, never blocking submit.
+          {
+            const to = req.user.email;
             const emailTemplates = require('../utils/emailTemplates');
             const t = emailTemplates.feedbackReceived({
               title: ticket.title,
@@ -202,6 +194,7 @@ router.post('/', protect, async (req, res, next) => {
             });
           }
         }
+        // Always notify admins
         const Admin = require('../models/Admin');
         const admins = await Admin.find({ isActive: true }).select('_id').lean();
         await Promise.all(admins.map(admin => createFeedbackNotification({
