@@ -207,9 +207,10 @@ export default function SettingsPage() {
   };
 
   const installPwa = () => {
-    if (window.deferredPrompt) {
-      window.deferredPrompt.prompt();
-      window.deferredPrompt.userChoice.then(() => { window.deferredPrompt = null; });
+    const dp = window.__deferredInstallPrompt;
+    if (dp && typeof dp.prompt === 'function') {
+      dp.prompt();
+      dp.userChoice.then(() => { window.__deferredInstallPrompt = null; });
     } else {
       toast('Install via browser menu → "Add to Home Screen"', { icon: '\u{1F4F1}' });
     }
