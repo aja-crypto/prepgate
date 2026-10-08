@@ -326,6 +326,12 @@ exports.googleAuth = async (req, res, next) => {
     });
   } catch (error) {
     console.error('[Google Auth Error]', error.message || error);
+    // Safe diagnostics only — booleans only, never tokens/client IDs/auth headers.
+    console.warn(
+      '[Google Auth] stage=verify status=401 googleClientIdConfigured=' +
+        String(!!process.env.GOOGLE_CLIENT_ID) +
+        ' idTokenPresent=' + String(!!req.body?.idToken)
+    );
     const msg = error.message || '';
     if (msg.includes('audience mismatch') || msg.includes('Invalid token')) {
       return res.status(401).json({ success: false, message: 'Google authentication failed. Invalid or expired token. Please try again.' });

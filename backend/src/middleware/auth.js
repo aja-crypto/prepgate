@@ -53,18 +53,13 @@ exports.protect = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
-    // Check blacklist (sync fast path — DB fallback in async check)
+    // Check blacklist (sync fast path). The DB fallback was removed here:
+    // ONLY refresh tokens are ever persisted to the blacklist table
+    // (logout + refresh rotation), and a refresh JWT can never pass this
+    // jwt.verify(JWT_SECRET) check above — so a DB lookup on every
+    // protected request was a guaranteed-wasted MongoDB round-trip.
+    // Access-token invalidation is handled by tokenVersion below.
     if (tokenBlacklist.hasSync(token)) {
-      return res.status(401).json({
-        success: false,
-        message: 'Token has been revoked. Please login again.',
-        code: 'TOKEN_REVOKED',
-      });
-    }
-
-    // Full async blacklist check (covers DB after server restart)
-    const isBlacklisted = await tokenBlacklist.has(token);
-    if (isBlacklisted) {
       return res.status(401).json({
         success: false,
         message: 'Token has been revoked. Please login again.',
@@ -229,13 +224,10 @@ exports.optionalProtect = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
+    // Blacklist fast path — DB fallback omitted for the same reason as
+    // protect(): only refresh tokens are persisted, and they cannot pass
+    // the JWT_SECRET verification above.
     if (tokenBlacklist.hasSync(token)) {
-      req.user = null;
-      return next();
-    }
-
-    const isBlacklisted = await tokenBlacklist.has(token);
-    if (isBlacklisted) {
       req.user = null;
       return next();
     }

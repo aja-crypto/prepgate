@@ -1,7 +1,7 @@
 // src/pages/ForgotPasswordPage.jsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { authService } from '../services/api';
+import { authService, getApiErrorMessage } from '../services/api';
 import toast from 'react-hot-toast';
 
 export default function ForgotPasswordPage() {
@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
       setSent(true);
       toast.success('Reset email sent!');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to send email');
+      toast.error(getApiErrorMessage(err, 'Failed to send the reset link. Please try again.'));
     } finally { setLoading(false); }
   };
 
@@ -48,7 +48,7 @@ export default function ForgotPasswordPage() {
                 </div>
                 <button type="submit" disabled={loading}
                   className="w-full bg-gradient-to-r from-primary to-secondary text-white rounded-lg py-3 font-semibold text-sm hover:opacity-90 disabled:opacity-50">
-                  {loading ? 'Sending...' : 'Send Reset Link'}
+                  {loading ? 'Sending reset link…' : 'Send Reset Link'}
                 </button>
               </form>
               <p className="text-center text-sm text-text3 mt-6">

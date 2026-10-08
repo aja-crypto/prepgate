@@ -2,7 +2,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useAuthActions } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { reportGoogleAuthError } from './GoogleAuthError';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const IS_PLACEHOLDER = !CLIENT_ID ||
@@ -11,8 +11,9 @@ const IS_PLACEHOLDER = !CLIENT_ID ||
   CLIENT_ID === 'undefined' ||
   CLIENT_ID.includes('PLACEHOLDER');
 
-const LOADING_TIMEOUT = 15000;
+const LOADING_TIMEOUT = 10000;
 const RETRY_COOLDOWN = 5000;
+const GSI_SCRIPT_SELECTOR = 'script[src*="accounts.google.com/gsi/client"]';
 
 export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_with' }) {
   const { loginAsGuest } = useAuthActions();
@@ -37,9 +38,10 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
     try {
       await onSuccess(response.credential);
     } catch (err) {
+      reportGoogleAuthError(err, 'credential');
       onError?.(err);
       setPromptFailed(true);
-      setError(err?.message || 'Google sign-in failed');
+      setError('Google sign-in failed');
     }
   }, [onSuccess, onError]);
 
@@ -70,16 +72,18 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
         callback: (response) => handleCredentialRef.current(response),
         auto_select: false,
         error_callback: (err) => {
-          console.error('Google Sign-In error:', err);
+          // Real GIS detail stays in the developer console only.
+          // eslint-disable-next-line no-console
+          console.error('[GoogleAuth] gsi_error_callback', err?.type || '', err?.message || '');
           if (err?.type === 'popup_closed_by_user') return;
           if (err?.type === 'popup_closed') return;
           const msg = err?.message || err?.type || '';
           if (msg.includes('origin') || msg.includes('redirect_uri')) {
-            setError('Google Sign-In blocked: add http://localhost:5173 to Google Cloud Console authorized origins.');
+            setError('Google sign-in is not available from this page. Please use email and password.');
           } else if (msg.includes('network') || msg.includes('fetch')) {
-            setError('Network error. Check your connection and try again.');
+            setError("Cannot reach Google. Check your connection and try again.");
           } else {
-            setError('Google Sign-In failed: ' + (msg || 'Unknown error'));
+            setError('Google sign-in failed. Please try again or use email and password.');
           }
           setPromptFailed(true);
         },
@@ -104,6 +108,28 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
     setRetrying(false);
     startLoadingTimer();
 
+    // Reuse an existing <script> tag (e.g. after a remount/retry) rather than
+    // injecting a duplicate tag.
+    const existing = document.querySelector(GSI_SCRIPT_SELECTOR);
+    if (existing) {
+      if (window.google?.accounts?.id) {
+        setTimeout(initGoogleSignIn, 100);
+      } else {
+        existing.addEventListener('load', () => setTimeout(initGoogleSignIn, 100), { once: true });
+        existing.addEventListener(
+          'error',
+          () => {
+            console.error('Failed to load Google Sign-In script');
+            setPromptFailed(true);
+            setError('Could not reach Google. Check your connection and try again.');
+            clearTimeout_();
+          },
+          { once: true }
+        );
+      }
+      return;
+    }
+
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
@@ -114,7 +140,7 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
     script.onerror = () => {
       console.error('Failed to load Google Sign-In script');
       setPromptFailed(true);
-      setError('Failed to load Google Sign-In. Check your connection.');
+      setError('Could not reach Google. Check your connection and try again.');
       clearTimeout_();
     };
     document.body.appendChild(script);
@@ -140,7 +166,7 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
     setRetrying(true);
     scriptLoaded.current = false;
     initializedRef.current = false;
-    const old = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+    const old = document.querySelector(GSI_SCRIPT_SELECTOR);
     if (old) old.remove();
     delete window.google?.accounts;
     setTimeout(loadScript, RETRY_COOLDOWN);
@@ -149,10 +175,15 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
   useEffect(() => {
     if (!scriptReady || !btnRef.current || !window.google?.accounts?.id) return;
     try {
+      // Clamp to the real container width so the Google button never forces
+      // horizontal overflow on narrow (320–430px) viewports.
+      const measured = Math.round(btnRef.current.getBoundingClientRect().width) || 0;
+      const viewportCap = Math.max(180, (window.innerWidth || 380) - 32);
+      const width = Math.max(180, Math.min(measured || 380, viewportCap));
       window.google.accounts.id.renderButton(btnRef.current, {
         theme: 'outline',
         size: 'large',
-        width: btnRef.current.offsetWidth || 380,
+        width,
         text: text,
         shape: 'rectangular',
       });

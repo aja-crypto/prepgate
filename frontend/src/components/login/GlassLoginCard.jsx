@@ -1,9 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, Shield, Zap, Globe } from 'lucide-react';
 import GoogleSignInButton from '../auth/GoogleSignInButton';
+import GoogleAuthError, { reportGoogleAuthError } from '../auth/GoogleAuthError';
 import { useAuthActions } from '../../context/AuthContext';
+import { getApiErrorMessage } from '../../services/api';
 
 const INPUT_VARIANTS = {
   hidden: { opacity: 0, y: 12, filter: 'blur(8px)' },
@@ -15,7 +17,7 @@ const INPUT_VARIANTS = {
   }),
 };
 
-function GlowInput({ icon: Icon, type, placeholder, value, onChange, showToggle, onToggle, isVisible, index }) {
+function GlowInput({ icon: Icon, type, placeholder, value, onChange, showToggle, onToggle, isVisible, index, inputRef }) {
   const [focused, setFocused] = useState(false);
   const inputId = `input-${type}-${index}`;
 
@@ -40,10 +42,11 @@ function GlowInput({ icon: Icon, type, placeholder, value, onChange, showToggle,
           <Icon
             size={17}
             className="shrink-0 transition-colors duration-300"
-            style={{ color: focused ? '#A78BFA' : 'rgba(255,255,255,0.2)' }}
+            style={{ color: focused ? '#A78BFA' : 'rgba(255,255,255,0.38)' }}
           />
           <input
             id={inputId}
+            ref={inputRef}
             name={type}
             type={showToggle ? (isVisible ? 'text' : 'password') : type}
             placeholder={placeholder}
@@ -52,7 +55,7 @@ function GlowInput({ icon: Icon, type, placeholder, value, onChange, showToggle,
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             aria-label={placeholder}
-            className="flex-1 bg-transparent outline-none ml-3 text-sm text-white/90 placeholder:text-white/20 font-normal focus-visible:outline-none"
+            className="flex-1 min-w-0 bg-transparent outline-none ml-3 text-sm text-white/90 placeholder:text-white/45 font-normal focus-visible:outline-none"
             style={{ fontFamily: "'Inter', -apple-system, sans-serif" }}
           />
           {showToggle && (
@@ -82,10 +85,14 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [googleError, setGoogleError] = useState(false);
+  const [googleConnecting, setGoogleConnecting] = useState(false);
+  const [gsiKey, setGsiKey] = useState(0);
+  const emailRef = useRef(null);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    if (loading) return;
+    if (loading || googleConnecting) return;
     if (!email || !password) {
       setError('Please fill in all fields');
       return;
@@ -99,17 +106,18 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
       onStatusChange?.('success');
       onLoginSuccess?.();
     } catch (err) {
-      const msg = err.response?.data?.message || 'Invalid credentials';
-      setError(msg);
+      // Never surface raw axios/5xx text — network failures must NOT read
+      // "Invalid credentials" (they say nothing about the credentials).
+      setError(getApiErrorMessage(err, 'Something went wrong. Please try again.'));
       onStatusChange?.('error');
       setTimeout(() => onStatusChange?.('idle'), 2000);
     } finally {
       setLoading(false);
     }
-  }, [email, password, login, onStatusChange, onLoginSuccess, loading]);
+  }, [email, password, login, onStatusChange, onLoginSuccess, loading, googleConnecting]);
 
   const handleDemo = useCallback(async () => {
-    if (loading) return;
+    if (loading || googleConnecting) return;
     setLoading(true);
     setError('');
     onStatusChange?.('loading');
@@ -124,24 +132,42 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
     } finally {
       setLoading(false);
     }
-  }, [loginAsGuest, onStatusChange, onLoginSuccess, loading]);
+  }, [loginAsGuest, onStatusChange, onLoginSuccess, loading, googleConnecting]);
 
   const handleGoogleSuccess = useCallback(async (token) => {
-    if (loading) return;
-    setLoading(true);
+    if (loading || googleConnecting) return;
+    setGoogleConnecting(true);
     try {
       onStatusChange?.('loading');
       await googleLogin(token);
       onStatusChange?.('success');
       onLoginSuccess?.();
-    } catch {
-      setError('Google sign-in failed');
+    } catch (err) {
+      reportGoogleAuthError(err, 'login-google');
+      setGoogleError(true);
       onStatusChange?.('error');
       setTimeout(() => onStatusChange?.('idle'), 2000);
     } finally {
-      setLoading(false);
+      setGoogleConnecting(false);
     }
-  }, [googleLogin, onStatusChange, onLoginSuccess, loading]);
+  }, [googleLogin, onStatusChange, onLoginSuccess, loading, googleConnecting]);
+
+  const handleGoogleFailure = useCallback((err) => {
+    reportGoogleAuthError(err, 'login-google');
+    setGoogleError(true);
+    onStatusChange?.('error');
+    setTimeout(() => onStatusChange?.('idle'), 2000);
+  }, [onStatusChange]);
+
+  const handleGoogleRetry = useCallback(() => {
+    setGoogleError(false);
+    setError('');
+    setGsiKey((k) => k + 1);
+  }, []);
+
+  const handleUseEmail = useCallback(() => {
+    emailRef.current?.focus();
+  }, []);
 
   const rotateX = mouse.y * -2;
   const rotateY = mouse.x * 2;
@@ -211,13 +237,13 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                   className="text-[26px] font-semibold text-white/95 mb-2.5"
                   style={{ fontFamily: "'Inter', -apple-system, sans-serif", fontWeight: 600, letterSpacing: '-0.03em' }}
                 >
-                  Welcome back
+                  Welcome back 👋
                 </h1>
                 <p
-                  className="text-sm text-white/30 font-normal"
+                  className="text-sm text-white/45 font-normal"
                   style={{ fontFamily: "'Inter', -apple-system, sans-serif" }}
                 >
-                  Sign in to your account
+                  Sign in to continue your GATE preparation.
                 </p>
               </motion.div>
 
@@ -248,6 +274,7 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   index={0}
+                  inputRef={emailRef}
                 />
                 <GlowInput
                   icon={Lock}
@@ -280,7 +307,7 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                 >
                   <motion.button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || googleConnecting}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     aria-label="Sign in to your account"
@@ -312,10 +339,13 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                     />
                     <span className="relative z-10 flex items-center justify-center gap-2.5">
                       {loading ? (
-                        <Loader2 size={18} className="animate-spin" />
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          Signing in…
+                        </>
                       ) : (
                         <>
-                          Sign In
+                          Sign in
                           <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
                         </>
                       )}
@@ -332,27 +362,41 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                 animate="visible"
                 className="flex items-center gap-2 sm:gap-3 my-4 sm:my-6"
               >
-                <div className="flex-1 h-px bg-white/5" />
-                <span className="text-[11px] text-white/15 font-light uppercase tracking-wider">or</span>
-                <div className="flex-1 h-px bg-white/5" />
+                <div className="flex-1 h-px bg-white/10" />
+                <span className="text-[11px] text-white/35 font-light uppercase tracking-wider">or</span>
+                <div className="flex-1 h-px bg-white/10" />
               </motion.div>
 
-              {/* Google Sign-In */}
+              {/* Google Sign-In / friendly Google failure state */}
               <motion.div
                 custom={4}
                 variants={INPUT_VARIANTS}
                 initial="hidden"
                 animate="visible"
               >
-                <GoogleSignInButton
-                  text="signin_with"
-                  onSuccess={handleGoogleSuccess}
-                  onError={(err) => {
-                    setError(err?.message || 'Google sign-in failed');
-                    onStatusChange?.('error');
-                    setTimeout(() => onStatusChange?.('idle'), 2000);
-                  }}
-                />
+                {googleConnecting ? (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="w-full flex items-center justify-center gap-2.5 rounded-xl px-4 py-3.5 text-sm text-white/70"
+                    style={{
+                      background: 'rgba(124, 58, 237, 0.06)',
+                      border: '1px solid rgba(124, 58, 237, 0.22)',
+                    }}
+                  >
+                    <Loader2 size={16} className="animate-spin text-purple-300" />
+                    Connecting to Google…
+                  </div>
+                ) : googleError ? (
+                  <GoogleAuthError onRetry={handleGoogleRetry} onUseEmail={handleUseEmail} />
+                ) : (
+                  <GoogleSignInButton
+                    key={gsiKey}
+                    text="continue_with"
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleFailure}
+                  />
+                )}
               </motion.div>
 
               {/* Demo + Sign up */}
@@ -366,16 +410,16 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                 <button
                   type="button"
                   onClick={handleDemo}
-                  className="text-xs text-white/20 hover:text-white/40 transition-colors font-normal"
+                  className="text-xs text-white/35 hover:text-white/60 transition-colors font-medium"
                   style={{ cursor: 'pointer', fontFamily: "'Inter', -apple-system, sans-serif" }}
                 >
-                  Try Demo Mode
+                  Explore Demo — no account required
                 </button>
-                <p className="text-xs text-white/20 font-normal">
-                  Don't have an account?{' '}
-                  <a href="/register" className="text-purple-400/60 hover:text-purple-300 transition-colors">
-                    Sign up
-                  </a>
+                <p className="text-xs text-white/40 font-normal">
+                  New to GateNexa?{' '}
+                  <Link to="/register" className="inline-block -mx-1 px-1 py-1.5 text-purple-400/80 hover:text-purple-300 transition-colors font-medium">
+                    Create an account
+                  </Link>
                 </p>
               </motion.div>
             </div>
@@ -396,10 +440,10 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
           { icon: Globe, label: 'Reliable', sub: 'Always available' },
         ].map(({ icon: I, label, sub }) => (
           <div key={label} className="flex items-center gap-2">
-            <I size={13} className="text-white/12" />
+            <I size={13} className="text-white/30" />
             <div>
-              <div className="text-[10px] text-white/25 font-medium">{label}</div>
-              <div className="text-[9px] text-white/12 font-light">{sub}</div>
+              <div className="text-[10px] text-white/45 font-medium">{label}</div>
+              <div className="text-[9px] text-white/25 font-light">{sub}</div>
             </div>
           </div>
         ))}

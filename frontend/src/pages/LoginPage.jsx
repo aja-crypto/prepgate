@@ -6,6 +6,7 @@ import GlassLoginCard from '../components/login/GlassLoginCard';
 import MotivationalQuote from '../components/common/MotivationalQuote';
 import LoginGiftCard from '../components/referral/LoginGiftCard';
 import { BrandLockup } from '../components/ui/BrandText';
+import { useAuthData } from '../context/AuthContext';
 
 const EXAM_DATE = new Date('2027-02-07T09:00:00');
 
@@ -43,8 +44,16 @@ function CountdownBadge() {
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuthData();
   const [loginStatus, setLoginStatus] = useState('idle');
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
+
+  // A valid session must always end up on the dashboard — covers returning
+  // users whose auth init resolves AFTER PrivateRoute bounced them here.
+  useEffect(() => {
+    if (!authLoading && user) navigate('/dashboard', { replace: true });
+  }, [authLoading, user, navigate]);
+
   const handleLoginSuccess = useCallback(() => {
     navigate('/dashboard', { replace: true });
   }, [navigate]);

@@ -181,6 +181,23 @@ function rl(windowMs, max, skip) {
   };
 }
 
+// --- Auth timing (Phase 15 diagnostics) ─────────────────────────────────────
+// Safe metrics only: method + whitelisted path + duration + status code.
+// Never logs tokens, emails, query strings, or headers (paths with :token
+// segments are deliberately excluded from the whitelist). Registered BEFORE
+// the rate limiters so throttled (429) requests are timed too.
+const AUTH_TIMED_PATHS = new Set(['/login', '/register', '/refresh', '/google', '/me', '/demo', '/logout']);
+app.use('/api/auth', (req, res, next) => {
+  if (!AUTH_TIMED_PATHS.has(req.path)) return next();
+  const start = Date.now();
+  res.on('finish', () => {
+    // Lets us tell cold-start (no log at all / huge ms) apart from
+    // MongoDB (mid-range ms) and bcrypt (consistent ~200-500ms on login).
+    console.log(`[auth-timing] ${req.method} ${req.path} ${Date.now() - start}ms ${res.statusCode}`);
+  });
+  next();
+});
+
 app.use('/api/auth/register', rl(15 * 60 * 1000, isDev ? 20 : 5));
 app.use('/api/auth/login', rl(15 * 60 * 1000, isDev ? 30 : 10));
 app.use('/api/auth/forgot-password', rl(60 * 60 * 1000, isDev ? 10 : 3));

@@ -33,12 +33,15 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-/** User-friendly message for auth/API failures */
+/** User-friendly message for auth/API failures — never leaks raw axios/5xx internals */
 export function getApiErrorMessage(error, fallback = 'Something went wrong') {
+  const status = error.response?.status;
+  // 5xx responses may carry raw server exception text — always map to friendly copy.
+  if (status >= 500) return "We couldn't connect to GateNexa. Please try again.";
   if (error.response?.data?.message) return error.response.data.message;
   if (error.code === 'ECONNABORTED') return 'Request timed out. Check your connection and try again.';
   if (error.message === 'Network Error' || !error.response) {
-    return 'Cannot reach the server. Check your connection and try again.';
+    return "We couldn't connect to GateNexa. Please try again.";
   }
   return fallback;
 }
