@@ -78,7 +78,7 @@ export default function LoginPage() {
         transition={{ delay: 0.3, duration: 0.5 }}
         className="fixed top-5 left-5 z-20 flex items-center gap-2.5"
       >
-        <BrandLockup compact showProduct={false} />
+        <BrandLockup compact showProduct={false} className="max-[359px]:[&_[class*=wordmark]]:hidden" />
       </motion.div>
 
       {/* Top-right: Countdown */}
@@ -87,7 +87,7 @@ export default function LoginPage() {
       </div>
 
       {/* Centered content: quote + login card */}
-      <div className="relative z-10 w-full px-4 md:px-6 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-16">
+      <div className="relative z-10 w-full px-4 md:px-6 pt-14 lg:pt-0 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-16">
         {/* Quote — hidden on mobile, left on desktop */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

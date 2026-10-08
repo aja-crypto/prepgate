@@ -8,6 +8,7 @@ export default function PasswordInput({
   placeholder = '••••••••',
   autoComplete = 'current-password',
   className = '',
+  ...inputProps
 }) {
   const [visible, setVisible] = useState(false);
 
@@ -21,6 +22,7 @@ export default function PasswordInput({
         onChange={onChange}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        {...inputProps}
         className={`w-full bg-bg-2 border border-white/8 rounded-lg px-4 py-3 pr-11 text-sm text-text placeholder:text-text3 focus:outline-none focus:border-primary/60 transition-colors ${className}`}
       />
       <button

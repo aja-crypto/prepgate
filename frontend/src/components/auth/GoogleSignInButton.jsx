@@ -208,7 +208,7 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
         <p className="font-bold text-text mb-1 italic">Google Sign-In Unavailable</p>
         <p className="mb-2 opacity-70">
           {import.meta.env.PROD
-            ? 'Please sign in with email & password or Sign up.'
+            ? 'Please sign in with email & password, or create an account.'
             : 'Set VITE_GOOGLE_CLIENT_ID in .env'}
         </p>
         <div className="text-primary font-bold uppercase tracking-widest text-[10px] bg-primary/10 py-1.5 rounded-xl border border-primary/20">

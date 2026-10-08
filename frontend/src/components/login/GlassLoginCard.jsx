@@ -17,7 +17,7 @@ const INPUT_VARIANTS = {
   }),
 };
 
-function GlowInput({ icon: Icon, type, placeholder, value, onChange, showToggle, onToggle, isVisible, index, inputRef }) {
+function GlowInput({ icon: Icon, type, placeholder, value, onChange, showToggle, onToggle, isVisible, index, inputRef, required }) {
   const [focused, setFocused] = useState(false);
   const inputId = `input-${type}-${index}`;
 
@@ -55,6 +55,7 @@ function GlowInput({ icon: Icon, type, placeholder, value, onChange, showToggle,
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             aria-label={placeholder}
+            aria-required={required ? true : undefined}
             className="flex-1 min-w-0 bg-transparent outline-none ml-3 text-sm text-white/90 placeholder:text-white/45 font-normal focus-visible:outline-none"
             style={{ fontFamily: "'Inter', -apple-system, sans-serif" }}
           />
@@ -255,6 +256,7 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     className="mb-5 px-4 py-2.5 rounded-xl text-xs text-red-300/90"
+                    role="alert"
                     style={{
                       background: 'rgba(239, 68, 68, 0.06)',
                       border: '1px solid rgba(239, 68, 68, 0.12)',
@@ -275,6 +277,7 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                   onChange={(e) => setEmail(e.target.value)}
                   index={0}
                   inputRef={emailRef}
+                  required
                 />
                 <GlowInput
                   icon={Lock}
@@ -286,6 +289,7 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                   onToggle={() => setShowPassword(!showPassword)}
                   isVisible={showPassword}
                   index={1}
+                  required
                 />
 
                 <div className="flex justify-end -mt-1">
@@ -399,28 +403,45 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                 )}
               </motion.div>
 
-              {/* Demo + Sign up */}
+              {/* New user path — the sign-up decision, made obvious */}
               <motion.div
                 custom={5}
                 variants={INPUT_VARIANTS}
                 initial="hidden"
                 animate="visible"
-                className="mt-4 sm:mt-6 flex flex-col items-center gap-2.5 sm:gap-3.5"
+                className="mt-4 sm:mt-6 pt-4 sm:pt-5 border-t border-white/[0.06] text-center"
+              >
+                <p className="text-[13px] font-medium text-white/65">
+                  New to GateNexa?
+                </p>
+                <p className="text-xs text-white/40 mt-1 leading-relaxed">
+                  Create an account to start your GATE 2027 preparation.
+                </p>
+                <Link
+                  to="/register"
+                  className="group mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-purple-300/90 hover:text-purple-200 transition-colors rounded-lg px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/50"
+                >
+                  Create an account
+                  <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              </motion.div>
+
+              {/* Demo — tertiary option */}
+              <motion.div
+                custom={6}
+                variants={INPUT_VARIANTS}
+                initial="hidden"
+                animate="visible"
+                className="mt-1 sm:mt-2 text-center"
               >
                 <button
                   type="button"
                   onClick={handleDemo}
-                  className="text-xs text-white/35 hover:text-white/60 transition-colors font-medium"
+                  className="text-xs text-white/35 hover:text-white/60 transition-colors font-medium py-1.5"
                   style={{ cursor: 'pointer', fontFamily: "'Inter', -apple-system, sans-serif" }}
                 >
                   Explore Demo — no account required
                 </button>
-                <p className="text-xs text-white/40 font-normal">
-                  New to GateNexa?{' '}
-                  <Link to="/register" className="inline-block -mx-1 px-1 py-1.5 text-purple-400/80 hover:text-purple-300 transition-colors font-medium">
-                    Create an account
-                  </Link>
-                </p>
               </motion.div>
             </div>
           </div>

@@ -7,7 +7,6 @@ import PasswordInput from '../components/common/PasswordInput';
 import GoogleSignInButton from '../components/auth/GoogleSignInButton';
 import GoogleAuthError, { reportGoogleAuthError } from '../components/auth/GoogleAuthError';
 import CinematicBackground from '../components/login/CinematicBackground';
-import Icon from '../components/ui/Icon';
 import { BrandName } from '../components/ui/BrandText';
 import toast from 'react-hot-toast';
 
@@ -71,15 +70,15 @@ export default function RegisterPage() {
   };
 
   const handleDemoMode = async () => {
-    if (googleConnecting) return;
+    if (loading || googleConnecting) return;
     await loginAsGuest();
     navigate('/dashboard');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.password) return toast.error('Fill all fields');
-    if (form.password.length < 8) return toast.error('Password must be 8+ characters');
+    if (!form.name || !form.email || !form.password) return toast.error('Please fill in all fields');
+    if (form.password.length < 8) return toast.error('Password must be at least 8 characters.');
     if (loading || googleConnecting) return;
     setLoading(true);
     try {
@@ -128,7 +127,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Centered register card */}
-      <div className="relative z-10 w-full max-w-[420px] px-4 md:px-6">
+      <div className="relative z-10 w-full max-w-[420px] px-4 md:px-6 pt-14 lg:pt-0">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -152,34 +151,36 @@ export default function RegisterPage() {
           </div>
 
           <h2 className="text-xl font-bold text-white tracking-tight mb-1">Create your GateNexa account</h2>
-          <p className="text-sm text-white/55 mb-6">Start your GATE 2027 preparation in minutes.</p>
+          <p className="text-sm text-white/55 mb-2">Start your GATE 2027 preparation in minutes.</p>
+          <p className="text-[11px] text-white/40 mb-5">* Required fields</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="reg-name" className="block text-[11px] font-semibold text-white/55 uppercase tracking-wider mb-2">Full name</label>
-              <input id="reg-name" name="name" type="text" placeholder="Your name" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+              <label htmlFor="reg-name" className="block text-[11px] font-semibold text-white/55 uppercase tracking-wider mb-2">Full name <span aria-hidden="true" className="text-purple-400/90">*</span></label>
+              <input id="reg-name" name="name" type="text" placeholder="Your name" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} aria-required="true"
                 className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/5 border border-white/10 text-white placeholder-white/40 outline-none focus:border-purple-500/50 transition-colors" />
             </div>
             <div>
-              <label htmlFor="reg-email" className="block text-[11px] font-semibold text-white/55 uppercase tracking-wider mb-2">Email address</label>
-              <input id="reg-email" ref={emailRef} name="email" type="email" placeholder="you@example.com" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} autoComplete="email"
+              <label htmlFor="reg-email" className="block text-[11px] font-semibold text-white/55 uppercase tracking-wider mb-2">Email address <span aria-hidden="true" className="text-purple-400/90">*</span></label>
+              <input id="reg-email" ref={emailRef} name="email" type="email" placeholder="you@example.com" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} autoComplete="email" aria-required="true"
                 className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/5 border border-white/10 text-white placeholder-white/40 outline-none focus:border-purple-500/50 transition-colors" />
             </div>
             <div>
-              <label htmlFor="reg-password" className="block text-[11px] font-semibold text-white/55 uppercase tracking-wider mb-2">Password</label>
-              <PasswordInput id="reg-password" name="password" value={form.password} onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))} placeholder="Min 8 characters" autoComplete="new-password" />
+              <label htmlFor="reg-password" className="block text-[11px] font-semibold text-white/55 uppercase tracking-wider mb-2">Password <span aria-hidden="true" className="text-purple-400/90">*</span></label>
+              <PasswordInput id="reg-password" name="password" value={form.password} onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))} placeholder="At least 8 characters" autoComplete="new-password" aria-required="true" />
               <p className="mt-1.5 text-[11px] text-white/35">Use at least 8 characters.</p>
             </div>
 
             {/* Referral Code — optional, visually secondary */}
             <div>
               <button type="button" onClick={() => setRefOpen(!refOpen)} className="flex items-center gap-2 text-xs text-white/35 hover:text-purple-300 transition-colors">
-                <span>Have a referral code? Optional</span>
+                <span>Have a referral code? (Optional)</span>
                 <motion.svg animate={{ rotate: refOpen ? 180 : 0 }} viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></motion.svg>
               </button>
               {refOpen && (
                 <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mt-2">
                   <input value={form.refCode} onChange={(e) => { setForm(p => ({ ...p, refCode: e.target.value })); checkRef(e.target.value); }}
+                    aria-label="Referral code (optional)"
                     placeholder="Enter referral code" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/5 border border-white/10 text-white placeholder-white/40 outline-none focus:border-purple-500/50 transition-colors" />
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1">
                     {refStatus === 'checking' && <span className="text-[11px] text-white/45">Checking...</span>}
@@ -244,16 +245,18 @@ export default function RegisterPage() {
           )}
 
           <button
+            type="button"
             onClick={handleDemoMode}
-            className="w-full mt-3 py-2 px-4 rounded-xl border border-white/15 text-white/45 text-xs font-semibold hover:bg-white/5 hover:text-white/70 transition-colors flex items-center justify-center gap-2"
+            disabled={loading || googleConnecting}
+            className="w-full mt-3 py-1.5 text-xs text-white/35 hover:text-white/60 transition-colors font-medium text-center"
+            style={{ cursor: 'pointer', fontFamily: "'Inter', -apple-system, sans-serif" }}
           >
-            <Icon name="zap" className="w-3.5 h-3.5" />
-            Explore Demo Mode — no setup required
+            Explore Demo — no account required
           </button>
 
           <p className="text-center text-sm text-white/50 mt-6">
             Already have an account?{' '}
-            <Link to="/login" className="inline-block -mx-1 px-1 py-1.5 text-purple-400 font-medium">Sign in</Link>
+            <Link to="/login" className="inline-block -mx-1 px-1 py-1.5 text-purple-400 hover:text-purple-300 transition-colors font-medium">Sign in</Link>
           </p>
         </motion.div>
       </div>
