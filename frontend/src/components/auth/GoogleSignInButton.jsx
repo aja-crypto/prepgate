@@ -234,7 +234,10 @@ export default function GoogleSignInButton({ onSuccess, onError, text = 'signin_
   }
 
   return (
-    <div className="w-full relative" style={{ minHeight: '48px' }}>
+    <div
+      className="w-full relative rounded-lg transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-px hover:shadow-[0_0_0_1px_rgba(124,58,237,0.28),0_6px_18px_-10px_rgba(0,0,0,0.7)]"
+      style={{ minHeight: '48px' }}
+    >
       <div
         ref={btnRef}
         className={`w-full [&>div]:w-full [&>div>div]:w-full ${!scriptReady ? 'invisible' : ''}`}

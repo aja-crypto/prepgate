@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, MotionConfig } from 'framer-motion';
 import CinematicBackground from '../components/login/CinematicBackground';
 import GlassLoginCard from '../components/login/GlassLoginCard';
 import MotivationalQuote from '../components/common/MotivationalQuote';
@@ -24,9 +24,9 @@ function CountdownBadge() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.6, duration: 0.5 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.15, duration: 0.35, ease: 'easeOut' }}
       className="flex items-center gap-2 px-3 py-1.5 rounded-full"
       style={{
         background: 'rgba(255, 255, 255, 0.04)',
@@ -46,7 +46,6 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuthData();
   const [loginStatus, setLoginStatus] = useState('idle');
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
 
   // A valid session must always end up on the dashboard — covers returning
   // users whose auth init resolves AFTER PrivateRoute bounced them here.
@@ -58,25 +57,21 @@ export default function LoginPage() {
     navigate('/dashboard', { replace: true });
   }, [navigate]);
 
-  const handleMouseMove = useCallback((e) => {
-    const x = (e.clientX / window.innerWidth) * 2 - 1;
-    const y = -(e.clientY / window.innerHeight) * 2 + 1;
-    setMouse({ x, y });
-  }, []);
-
   return (
+    // reducedMotion="user": framer-motion transform animations are disabled for
+    // visitors with prefers-reduced-motion (opacity fades remain, per spec §3/§21).
+    <MotionConfig reducedMotion="user">
     <div
       className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-bg"
-      onMouseMove={handleMouseMove}
     >
       <CinematicBackground />
 
-      {/* Top-left: Logo */}
+      {/* Top-left: Logo — subtle fade + gentle desktop hover glow (spec §18) */}
       <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
-        className="fixed top-5 left-5 z-20 flex items-center gap-2.5"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1, duration: 0.35, ease: 'easeOut' }}
+        className="fixed top-5 left-5 z-20 flex items-center gap-2.5 transition-[filter] duration-200 hover:brightness-110"
       >
         <BrandLockup compact showProduct={false} className="max-[359px]:[&_[class*=wordmark]]:hidden" />
       </motion.div>
@@ -90,9 +85,9 @@ export default function LoginPage() {
       <div className="relative z-10 w-full px-4 md:px-6 pt-14 lg:pt-0 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-16">
         {/* Quote — hidden on mobile, left on desktop */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ delay: 0.15, duration: 0.45, ease: 'easeOut' }}
           className="hidden lg:block max-w-sm text-center lg:text-left"
           style={{
             background: 'rgba(255,255,255,0.03)',
@@ -106,12 +101,13 @@ export default function LoginPage() {
           <MotivationalQuote />
         </motion.div>
 
-        <GlassLoginCard onStatusChange={setLoginStatus} mouse={mouse} onLoginSuccess={handleLoginSuccess} />
+        <GlassLoginCard onStatusChange={setLoginStatus} onLoginSuccess={handleLoginSuccess} />
         {/* Gift Card — right side on desktop, below on mobile */}
         <div className="w-full max-w-[420px] lg:mt-4">
           <LoginGiftCard />
         </div>
       </div>
     </div>
+    </MotionConfig>
   );
 }

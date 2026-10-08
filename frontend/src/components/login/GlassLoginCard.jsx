@@ -7,13 +7,14 @@ import GoogleAuthError, { reportGoogleAuthError } from '../auth/GoogleAuthError'
 import { useAuthActions } from '../../context/AuthContext';
 import { getApiErrorMessage } from '../../services/api';
 
+// Fast, cheap stagger: opacity + transform only (no filter blur — expensive on
+// mobile GPUs). Total reveal stays well under 450ms so auth never feels slow.
 const INPUT_VARIANTS = {
-  hidden: { opacity: 0, y: 12, filter: 'blur(8px)' },
+  hidden: { opacity: 0, y: 8 },
   visible: (i) => ({
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
-    transition: { delay: 0.4 + i * 0.08, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { delay: 0.06 + i * 0.05, duration: 0.32, ease: 'easeOut' },
   }),
 };
 
@@ -35,13 +36,15 @@ function GlowInput({ icon: Icon, type, placeholder, value, onChange, showToggle,
           boxShadow: focused
             ? '0 0 24px rgba(124, 58, 237, 0.06), inset 0 1px 0 rgba(255,255,255,0.04)'
             : 'inset 0 1px 0 rgba(255,255,255,0.03)',
-          transition: 'all 0.3s ease',
+          // Animate only color/shadow properties at 180ms — never `all`,
+          // and never width/height/margin (layout must stay fixed).
+          transition: 'border-color 180ms ease-out, background-color 180ms ease-out, box-shadow 180ms ease-out',
         }}
       >
         <div className="flex items-center px-4 md:px-4 py-4 md:py-3.5">
           <Icon
             size={17}
-            className="shrink-0 transition-colors duration-300"
+            className="shrink-0 transition-colors duration-150"
             style={{ color: focused ? '#A78BFA' : 'rgba(255,255,255,0.38)' }}
           />
           <input
@@ -64,12 +67,12 @@ function GlowInput({ icon: Icon, type, placeholder, value, onChange, showToggle,
               type="button"
               onClick={onToggle}
               aria-label={isVisible ? 'Hide password' : 'Show password'}
-              className="shrink-0 p-1 rounded-lg hover:bg-white/5 transition-colors"
+              className="shrink-0 p-1.5 rounded-lg text-white/45 hover:text-white/85 hover:bg-white/5 transition-[color,background-color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/40 active:scale-95"
             >
               {isVisible ? (
-                <EyeOff size={15} className="text-white/25" />
+                <EyeOff size={15} />
               ) : (
-                <Eye size={15} className="text-white/25" />
+                <Eye size={15} />
               )}
             </button>
           )}
@@ -79,7 +82,7 @@ function GlowInput({ icon: Icon, type, placeholder, value, onChange, showToggle,
   );
 }
 
-export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 }, onLoginSuccess }) {
+export default function GlassLoginCard({ onStatusChange, onLoginSuccess }) {
   const { googleLogin, login, loginAsGuest } = useAuthActions();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -170,31 +173,18 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
     emailRef.current?.focus();
   }, []);
 
-  const rotateX = mouse.y * -2;
-  const rotateY = mouse.x * 2;
-
   return (
+    // Card entrance: subtle fade + 8px lift over 350ms (spec §3). The previous
+    // mouse-tilt + infinite bob wrappers were removed — they re-rendered the
+    // whole form on every mousemove and ran a perpetual animation loop.
     <motion.div
-      initial={{ opacity: 0, scale: 0.96, filter: 'blur(8px)' }}
-      animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-      transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
       className="w-full max-w-[420px] mx-auto px-0 md:px-0"
     >
-      <motion.div
-        animate={{ y: [0, -1, 0] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ perspective: '1000px' }}
-      >
-        <motion.div
-          style={{
-            rotateX,
-            rotateY,
-            transformStyle: 'preserve-3d',
-          }}
-          transition={{ type: 'spring', stiffness: 100, damping: 30 }}
-        >
-          <div
-            className="relative overflow-hidden"
+      <div
+        className="relative overflow-hidden"
             style={{
               borderRadius: '28px',
               background: 'rgba(10, 15, 30, 0.18)',
@@ -209,11 +199,11 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
             }}
           >
             <div className="relative z-10 px-4 sm:px-8 md:px-12 pt-5 sm:pt-10 md:pt-14 pb-5 sm:pb-8 md:pb-12">
-              {/* Logo mark */}
+              {/* Logo mark — very subtle fade, no dramatic scale (spec §18) */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.5 }}
+                initial={{ opacity: 0, scale: 0.94 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.15, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+                transition={{ delay: 0.06, duration: 0.3, ease: 'easeOut' }}
                 className="flex justify-center mb-8"
               >
                 <div
@@ -229,9 +219,9 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
 
               {/* Title */}
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
+                transition={{ delay: 0.1, duration: 0.35, ease: 'easeOut' }}
                 className="text-center mb-8 md:mb-12"
               >
                 <h1
@@ -248,13 +238,14 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                 </p>
               </motion.div>
 
-              {/* Error */}
+              {/* Error — subtle fade + 2px slide, no shake, no height animation */}
               <AnimatePresence>
                 {error && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
+                    initial={{ opacity: 0, y: -2 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -2 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
                     className="mb-5 px-4 py-2.5 rounded-xl text-xs text-red-300/90"
                     role="alert"
                     style={{
@@ -295,13 +286,14 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                 <div className="flex justify-end -mt-1">
                   <Link
                     to="/forgot-password"
-                    className="text-xs text-purple-400/70 hover:text-purple-300 transition-colors rounded-md px-1 py-1"
+                    className="text-xs text-purple-400/70 hover:text-purple-300 hover:underline underline-offset-2 decoration-purple-400/60 transition-[color,text-decoration-color] duration-150 rounded-md px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/40"
                   >
                     Forgot password?
                   </Link>
                 </div>
 
-                {/* Sign In button */}
+                {/* Sign In button — CSS-driven hover/active (no JS mouse handlers,
+                     no re-renders). Subtle brightness + glow + 1px lift per spec §4. */}
                 <motion.div
                   custom={2}
                   variants={INPUT_VARIANTS}
@@ -309,13 +301,12 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                   animate="visible"
                   className="pt-3"
                 >
-                  <motion.button
+                  <button
                     type="submit"
                     disabled={loading || googleConnecting}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
                     aria-label="Sign in to your account"
-                    className="w-full relative overflow-hidden group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                    aria-busy={loading}
+                    className="w-full relative overflow-hidden group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent transition-[transform,box-shadow,filter,opacity] duration-150 ease-out hover:-translate-y-px hover:brightness-[1.07] hover:shadow-[0_0_28px_rgba(124,58,237,0.3),0_4px_14px_rgba(0,0,0,0.35)] active:translate-y-0 active:brightness-100 active:shadow-none disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:brightness-100 disabled:hover:shadow-none"
                     style={{
                       borderRadius: '12px',
                       padding: '14px 0',
@@ -326,35 +317,28 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                       fontSize: '14px',
                       letterSpacing: '0.01em',
                       cursor: loading ? 'wait' : 'pointer',
-                      transition: 'box-shadow 0.3s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow = '0 0 30px rgba(124,58,237,0.25), 0 4px 15px rgba(0,0,0,0.3)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow = 'none';
                     }}
                   >
                   <div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                       style={{
                         background: 'linear-gradient(135deg, rgba(167,139,250,0.2), rgba(34,211,238,0.2))',
                       }}
                     />
-                    <span className="relative z-10 flex items-center justify-center gap-2.5">
+                    <span className="relative z-10 flex items-center justify-center gap-2.5 min-h-[20px]">
                       {loading ? (
                         <>
-                          <Loader2 size={18} className="animate-spin" />
+                          <Loader2 size={16} className="animate-spin" />
                           Signing in…
                         </>
                       ) : (
                         <>
                           Sign in
-                          <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
+                          <ArrowRight size={15} className="transition-transform duration-150 group-hover:translate-x-0.5" />
                         </>
                       )}
                     </span>
-                  </motion.button>
+                  </button>
                 </motion.div>
               </form>
 
@@ -378,8 +362,13 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                 initial="hidden"
                 animate="visible"
               >
+                {/* State swaps fade in gently (~180ms) instead of popping. */}
                 {googleConnecting ? (
-                  <div
+                  <motion.div
+                    key="google-connecting"
+                    initial={{ opacity: 0, y: -2 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
                     role="status"
                     aria-live="polite"
                     className="w-full flex items-center justify-center gap-2.5 rounded-xl px-4 py-3.5 text-sm text-white/70"
@@ -390,40 +379,58 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                   >
                     <Loader2 size={16} className="animate-spin text-purple-300" />
                     Connecting to Google…
-                  </div>
+                  </motion.div>
                 ) : googleError ? (
-                  <GoogleAuthError onRetry={handleGoogleRetry} onUseEmail={handleUseEmail} />
+                  <motion.div
+                    key="google-error"
+                    initial={{ opacity: 0, y: -2 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                  >
+                    <GoogleAuthError onRetry={handleGoogleRetry} onUseEmail={handleUseEmail} />
+                  </motion.div>
                 ) : (
-                  <GoogleSignInButton
-                    key={gsiKey}
-                    text="continue_with"
-                    onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleFailure}
-                  />
+                  <motion.div
+                    key={`google-ready-${gsiKey}`}
+                    initial={{ opacity: 0, y: -2 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                  >
+                    <GoogleSignInButton
+                      key={gsiKey}
+                      text="continue_with"
+                      onSuccess={handleGoogleSuccess}
+                      onError={handleGoogleFailure}
+                    />
+                  </motion.div>
                 )}
               </motion.div>
 
-              {/* New user path — the sign-up decision, made obvious */}
+              {/* New user path — the sign-up decision, made obvious.
+                  Subtle block hover per spec §11: border/text brighten, arrow
+                  nudges 3px. Sign In stays visually primary. */}
               <motion.div
                 custom={5}
                 variants={INPUT_VARIANTS}
                 initial="hidden"
                 animate="visible"
-                className="mt-4 sm:mt-6 pt-4 sm:pt-5 border-t border-white/[0.06] text-center"
+                className="group/newuser mt-4 sm:mt-6 pt-4 sm:pt-5 border-t border-white/[0.06] text-center transition-[border-color] duration-200 hover:border-t-white/[0.14]"
               >
-                <p className="text-[13px] font-medium text-white/65">
-                  New to GateNexa?
-                </p>
-                <p className="text-xs text-white/40 mt-1 leading-relaxed">
-                  Create an account to start your GATE 2027 preparation.
-                </p>
-                <Link
-                  to="/register"
-                  className="group mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-purple-300/90 hover:text-purple-200 transition-colors rounded-lg px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/50"
-                >
-                  Create an account
-                  <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-                </Link>
+                <div className="pb-2 -mb-2 rounded-xl transition-colors duration-200 group-hover/newuser:bg-white/[0.03]">
+                  <p className="text-[13px] font-medium text-white/65 transition-colors duration-200 group-hover/newuser:text-white/85">
+                    New to GateNexa?
+                  </p>
+                  <p className="text-xs text-white/40 mt-1 leading-relaxed transition-colors duration-200 group-hover/newuser:text-white/55">
+                    Create an account to start your GATE 2027 preparation.
+                  </p>
+                  <Link
+                    to="/register"
+                    className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-purple-300/90 hover:text-purple-200 transition-colors rounded-lg px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/50"
+                  >
+                    Create an account
+                    <ArrowRight size={14} className="transition-transform duration-200 group-hover/newuser:translate-x-[3px]" />
+                  </Link>
+                </div>
               </motion.div>
 
               {/* Demo — tertiary option */}
@@ -437,22 +444,21 @@ export default function GlassLoginCard({ onStatusChange, mouse = { x: 0, y: 0 },
                 <button
                   type="button"
                   onClick={handleDemo}
-                  className="text-xs text-white/35 hover:text-white/60 transition-colors font-medium py-1.5"
-                  style={{ cursor: 'pointer', fontFamily: "'Inter', -apple-system, sans-serif" }}
+                  disabled={loading || googleConnecting}
+                  className="text-xs text-white/35 hover:text-white/60 transition-[color,opacity] duration-150 font-medium py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ cursor: loading ? 'wait' : 'pointer', fontFamily: "'Inter', -apple-system, sans-serif" }}
                 >
                   Explore Demo — no account required
                 </button>
               </motion.div>
             </div>
           </div>
-        </motion.div>
-      </motion.div>
 
       {/* Bottom trust badges */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8, duration: 0.5 }}
+        transition={{ delay: 0.45, duration: 0.4, ease: 'easeOut' }}
         className="flex items-center justify-center gap-5 sm:gap-8 mt-5 sm:mt-8"
       >
         {[

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
+import { Loader2, ArrowRight } from 'lucide-react';
 import { useAuthActions } from '../context/AuthContext';
 import { referralService, getApiErrorMessage } from '../services/api';
 import PasswordInput from '../components/common/PasswordInput';
@@ -9,6 +10,11 @@ import GoogleAuthError, { reportGoogleAuthError } from '../components/auth/Googl
 import CinematicBackground from '../components/login/CinematicBackground';
 import { BrandName } from '../components/ui/BrandText';
 import toast from 'react-hot-toast';
+
+// Shared input styling: focus brightens the border + adds a subtle purple glow
+// at 180ms. Only color/shadow transition — no layout shift (spec §7).
+const INPUT_CLS =
+  'w-full px-4 py-2.5 rounded-xl text-sm bg-white/5 border border-white/10 text-white placeholder-white/40 outline-none focus:border-purple-500/60 focus:shadow-[0_0_16px_-6px_rgba(124,58,237,0.45)] transition-[border-color,box-shadow] duration-[180ms] ease-out';
 
 const EXAM_DATE = new Date('2027-02-07T09:00:00');
 
@@ -26,9 +32,9 @@ function CountdownBadge() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.6, duration: 0.5 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.15, duration: 0.35, ease: 'easeOut' }}
       className="flex items-center gap-2 px-3 py-1.5 rounded-full"
       style={{
         background: 'rgba(255, 255, 255, 0.04)',
@@ -92,15 +98,18 @@ export default function RegisterPage() {
   };
 
   return (
+    // reducedMotion="user": transform animations disabled for prefers-reduced-motion
+    // visitors; opacity fades remain (spec §3/§21).
+    <MotionConfig reducedMotion="user">
     <div className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-bg">
       <CinematicBackground />
 
-      {/* Top-left: Logo */}
+      {/* Top-left: Logo — subtle fade + gentle desktop hover glow (spec §18) */}
       <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
-        className="fixed top-5 left-5 z-20 flex items-center gap-2.5"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1, duration: 0.35, ease: 'easeOut' }}
+        className="fixed top-5 left-5 z-20 flex items-center gap-2.5 transition-[filter] duration-200 hover:brightness-110"
       >
         <div
           className="w-8 h-8 rounded-xl flex items-center justify-center"
@@ -129,9 +138,9 @@ export default function RegisterPage() {
       {/* Centered register card */}
       <div className="relative z-10 w-full max-w-[420px] px-4 md:px-6 pt-14 lg:pt-0">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
           className="w-full rounded-2xl p-4 sm:p-6 md:p-8"
           style={{
             background: 'rgba(10, 15, 30, 0.18)',
@@ -158,12 +167,12 @@ export default function RegisterPage() {
             <div>
               <label htmlFor="reg-name" className="block text-[11px] font-semibold text-white/55 uppercase tracking-wider mb-2">Full name <span aria-hidden="true" className="text-purple-400/90">*</span></label>
               <input id="reg-name" name="name" type="text" placeholder="Your name" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} aria-required="true"
-                className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/5 border border-white/10 text-white placeholder-white/40 outline-none focus:border-purple-500/50 transition-colors" />
+                className={INPUT_CLS} />
             </div>
             <div>
               <label htmlFor="reg-email" className="block text-[11px] font-semibold text-white/55 uppercase tracking-wider mb-2">Email address <span aria-hidden="true" className="text-purple-400/90">*</span></label>
               <input id="reg-email" ref={emailRef} name="email" type="email" placeholder="you@example.com" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} autoComplete="email" aria-required="true"
-                className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/5 border border-white/10 text-white placeholder-white/40 outline-none focus:border-purple-500/50 transition-colors" />
+                className={INPUT_CLS} />
             </div>
             <div>
               <label htmlFor="reg-password" className="block text-[11px] font-semibold text-white/55 uppercase tracking-wider mb-2">Password <span aria-hidden="true" className="text-purple-400/90">*</span></label>
@@ -171,29 +180,58 @@ export default function RegisterPage() {
               <p className="mt-1.5 text-[11px] text-white/35">Use at least 8 characters.</p>
             </div>
 
-            {/* Referral Code — optional, visually secondary */}
+            {/* Referral Code — optional, visually secondary.
+                Expands/collapses with a clean 220ms height+opacity transition (spec §13). */}
             <div>
-              <button type="button" onClick={() => setRefOpen(!refOpen)} className="flex items-center gap-2 text-xs text-white/35 hover:text-purple-300 transition-colors">
+              <button type="button" onClick={() => setRefOpen(!refOpen)} aria-expanded={refOpen} className="flex items-center gap-2 text-xs text-white/35 hover:text-purple-300 transition-colors duration-150 rounded-md px-1 py-1 -mx-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/40">
                 <span>Have a referral code? (Optional)</span>
-                <motion.svg animate={{ rotate: refOpen ? 180 : 0 }} viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></motion.svg>
+                <motion.svg animate={{ rotate: refOpen ? 180 : 0 }} transition={{ duration: 0.2, ease: 'easeOut' }} viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></motion.svg>
               </button>
-              {refOpen && (
-                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mt-2">
-                  <input value={form.refCode} onChange={(e) => { setForm(p => ({ ...p, refCode: e.target.value })); checkRef(e.target.value); }}
-                    aria-label="Referral code (optional)"
-                    placeholder="Enter referral code" className="w-full px-4 py-2.5 rounded-xl text-sm bg-white/5 border border-white/10 text-white placeholder-white/40 outline-none focus:border-purple-500/50 transition-colors" />
-                  <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1">
-                    {refStatus === 'checking' && <span className="text-[11px] text-white/45">Checking...</span>}
-                    {refStatus === 'valid' && <><span className="text-green-400 text-[11px]">✅ Referred by {refName}</span><span className="text-[9px] text-white/35">Rewards unlock after account creation.</span></>}
-                    {refStatus === 'invalid' && <span className="text-red-400 text-[11px]">❌ Invalid referral code.</span>}
-                  </div>
-                </motion.div>
-              )}
+              <AnimatePresence initial={false}>
+                {refOpen && (
+                  <motion.div
+                    key="referral-field"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.22, ease: 'easeOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-2">
+                      <input value={form.refCode} onChange={(e) => { setForm(p => ({ ...p, refCode: e.target.value })); checkRef(e.target.value); }}
+                        aria-label="Referral code (optional)"
+                        placeholder="Enter referral code" className={INPUT_CLS} />
+                      <motion.div
+                        key={refStatus || 'ref-idle'}
+                        initial={{ opacity: 0, y: -2 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.18, ease: 'easeOut' }}
+                        className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1"
+                      >
+                        {refStatus === 'checking' && <span className="text-[11px] text-white/45">Checking...</span>}
+                        {refStatus === 'valid' && <><span className="text-green-400 text-[11px]">✅ Referred by {refName}</span><span className="text-[9px] text-white/35">Rewards unlock after account creation.</span></>}
+                        {refStatus === 'invalid' && <span className="text-red-400 text-[11px]">❌ Invalid referral code.</span>}
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <button type="submit" disabled={loading || googleConnecting}
-              className="w-full py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 disabled:opacity-50 transition-all">
-              {loading ? 'Creating account…' : 'Create account'}
+              aria-busy={loading}
+              className="w-full group flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 disabled:opacity-50 transition-[transform,filter,box-shadow,opacity] duration-150 ease-out hover:-translate-y-px hover:brightness-[1.06] hover:shadow-[0_0_26px_rgba(124,58,237,0.3)] active:translate-y-0 active:brightness-100 active:shadow-none disabled:hover:translate-y-0 disabled:hover:brightness-100 disabled:hover:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent">
+              {loading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Creating account…
+                </>
+              ) : (
+                <>
+                  Create account
+                  <ArrowRight size={15} className="transition-transform duration-150 group-hover:translate-x-0.5" />
+                </>
+              )}
             </button>
           </form>
 
@@ -203,7 +241,11 @@ export default function RegisterPage() {
           </div>
 
           {googleConnecting ? (
-            <div
+            <motion.div
+              key="google-connecting"
+              initial={{ opacity: 0, y: -2 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
               role="status"
               aria-live="polite"
               className="w-full flex items-center justify-center gap-2.5 rounded-xl px-4 py-3.5 text-sm text-white/70"
@@ -212,15 +254,28 @@ export default function RegisterPage() {
                 border: '1px solid rgba(124, 58, 237, 0.22)',
               }}
             >
-              <span className="w-4 h-4 border-2 border-white/20 border-t-purple-300 rounded-full animate-spin" />
+              <Loader2 size={16} className="animate-spin text-purple-300" />
               Connecting to Google…
-            </div>
+            </motion.div>
           ) : googleError ? (
-            <GoogleAuthError
-              onRetry={() => { setGoogleError(false); setGsiKey((k) => k + 1); }}
-              onUseEmail={() => emailRef.current?.focus()}
-            />
+            <motion.div
+              key="google-error"
+              initial={{ opacity: 0, y: -2 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+            >
+              <GoogleAuthError
+                onRetry={() => { setGoogleError(false); setGsiKey((k) => k + 1); }}
+                onUseEmail={() => emailRef.current?.focus()}
+              />
+            </motion.div>
           ) : (
+            <motion.div
+              key={`google-ready-${gsiKey}`}
+              initial={{ opacity: 0, y: -2 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+            >
             <GoogleSignInButton
               key={gsiKey}
               text="continue_with"
@@ -242,24 +297,26 @@ export default function RegisterPage() {
                 setGoogleError(true);
               }}
             />
+            </motion.div>
           )}
 
           <button
             type="button"
             onClick={handleDemoMode}
             disabled={loading || googleConnecting}
-            className="w-full mt-3 py-1.5 text-xs text-white/35 hover:text-white/60 transition-colors font-medium text-center"
-            style={{ cursor: 'pointer', fontFamily: "'Inter', -apple-system, sans-serif" }}
+            className="w-full mt-3 py-1.5 text-xs text-white/35 hover:text-white/60 transition-[color,opacity] duration-150 font-medium text-center disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ cursor: loading ? 'wait' : 'pointer', fontFamily: "'Inter', -apple-system, sans-serif" }}
           >
             Explore Demo — no account required
           </button>
 
           <p className="text-center text-sm text-white/50 mt-6">
             Already have an account?{' '}
-            <Link to="/login" className="inline-block -mx-1 px-1 py-1.5 text-purple-400 hover:text-purple-300 transition-colors font-medium">Sign in</Link>
+            <Link to="/login" className="inline-block -mx-1 px-1 py-1.5 text-purple-400 hover:text-purple-300 transition-colors duration-150 font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/40">Sign in</Link>
           </p>
         </motion.div>
       </div>
     </div>
+    </MotionConfig>
   );
 }
