@@ -10,7 +10,8 @@ const QUICK_ACTIONS = [
   { icon: Calendar, label: 'Create Today\'s Plan', path: '/planner', color: '#EC4899' },
 ];
 
-const STORAGE_KEY = 'gatenexa_quick_actions_shown';
+export const QUICK_ACTIONS_SHOWN_KEY = 'gatenexa_quick_actions_shown';
+const STORAGE_KEY = QUICK_ACTIONS_SHOWN_KEY;
 
 export default function QuickActions() {
   const navigate = useNavigate();

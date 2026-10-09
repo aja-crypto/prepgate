@@ -11,14 +11,25 @@ import GlobalSearch, { useGlobalSearchShortcut } from './GlobalSearch';
 import Icon from '../ui/Icon';
 import BrandText, { BrandLockup } from '../ui/BrandText';
 import OnboardingFlow from '../onboarding/OnboardingFlow';
-import QuickActions from '../onboarding/QuickActions';
+import QuickActions, { QUICK_ACTIONS_SHOWN_KEY } from '../onboarding/QuickActions';
 import VirtualCalculator from './VirtualCalculator';
 import NotificationPanel from '../notifications/NotificationPanel';
 import SmartScrollNavigator from './SmartScrollNavigator';
 import NexaPersona from './NexaPersona';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 import SidebarNav from './navigation/SidebarNav';
 import MobileBottomNav from './navigation/MobileBottomNav';
+import MobileFeatureTour, { TOUR_STEPS } from './navigation/MobileFeatureTour';
 import PersistentVideoPlayer from '../video/PersistentVideoPlayer';
+
+/* First-time mobile feature-tour storage (local-only, gatenexa_* convention) */
+const TOUR_KEY = 'gatenexa_mobile_nav_tour'; // 'started' | 'completed' | 'skipped'
+const HINT_KEY = 'gatenexa_mobile_nav_hint'; // 'seen'
+const OPENED_KEY = 'gatenexa_mobile_nav_opened'; // '1' — user opened the menu manually
+const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch { /* storage unavailable */ } };
+const lsRemove = (k) => { try { localStorage.removeItem(k); } catch { /* storage unavailable */ } };
+const isMobileWidth = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
 
 function BackToTop() {
   const [show, setShow] = useState(false);
@@ -50,6 +61,16 @@ const Layout = memo(function Layout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [calcOpen, setCalcOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  /* ---------- First-time mobile feature tour (discoverability layer) ---------- */
+  const [tourStep, setTourStep] = useState(null); // index into TOUR_STEPS while the card is visible
+  const tourStepRef = useRef(null);
+  const applyTourStep = useCallback((v) => { tourStepRef.current = v; setTourStep(v); }, []);
+  const [hintPulse, setHintPulse] = useState(false); // one-shot hamburger glow
+  const tourRunRef = useRef(false); // the auto-open sequence runs at most once per mount
+  const [navTourPlanned, setNavTourPlanned] = useState(null); // null = undecided (desktop keeps QuickActions as-is)
+  const reducedMotion = useReducedMotion();
+
   useEffect(() => {
     const main = document.querySelector('main');
     if (!main) return;
@@ -125,6 +146,126 @@ const Layout = memo(function Layout() {
     if (Math.abs(dx) > 50 && Math.abs(dy) < 100 && dx < 0) setSidebarOpen(false);
   }, []);
 
+  /* ----- Feature tour: end / start / step handlers ----- */
+  const endTour = useCallback((outcome) => {
+    if (tourStepRef.current === null) return;
+    applyTourStep(null);
+    if (outcome === 'completed') {
+      lsSet(TOUR_KEY, 'completed');
+      lsSet(HINT_KEY, 'seen'); // completed → never hint again
+    } else {
+      lsSet(TOUR_KEY, 'skipped'); // skipped → never auto-open again, one quiet pulse on a future visit
+      lsRemove(HINT_KEY);
+    }
+    // the guided tour replaces the generic first-run quick-actions popup on mobile
+    lsSet(QUICK_ACTIONS_SHOWN_KEY, 'true');
+    setSidebarOpen(false);
+    // keep keyboard focus somewhere sensible once the drawer + card disappear
+    requestAnimationFrame(() => {
+      if (!isMobileWidth()) return;
+      document.querySelector('.mobile-top-header__menu')?.focus({ preventScroll: true });
+    });
+  }, [applyTourStep]);
+
+  const startTour = useCallback(() => {
+    if (!isMobileWidth()) return;
+    lsSet(TOUR_KEY, 'started');
+    setNavTourPlanned(true);
+    setSidebarOpen(true);
+    applyTourStep(0);
+  }, [applyTourStep]);
+
+  const handleTourNext = useCallback(() => {
+    const cur = tourStepRef.current;
+    if (cur === null) return;
+    if (cur >= TOUR_STEPS.length - 1) endTour('completed');
+    else applyTourStep(cur + 1);
+  }, [applyTourStep, endTour]);
+
+  const handleTourBack = useCallback(() => {
+    const cur = tourStepRef.current;
+    if (cur !== null && cur > 0) applyTourStep(cur - 1);
+  }, [applyTourStep]);
+
+  const handleTourSkip = useCallback(() => endTour('skipped'), [endTour]);
+
+  /* Any drawer close while the tour is active (backdrop, swipe, Escape, nav click,
+     hamburger) counts as a skip — never trap the user, never auto-open again. */
+  useEffect(() => {
+    if (!sidebarOpen && tourStepRef.current !== null) endTour('skipped');
+  }, [sidebarOpen, endTour]);
+
+  /* While the tour is visible, fade the floating AI button out so it never sits on
+     top of the tour card; it returns to normal the moment the tour ends. */
+  useEffect(() => {
+    if (tourStep !== null) document.body.setAttribute('data-gn-nav-tour', '1');
+    else document.body.removeAttribute('data-gn-nav-tour');
+    return () => document.body.removeAttribute('data-gn-nav-tour');
+  }, [tourStep]);
+
+  /* Escape during the tour closes the drawer (a11y for role="dialog").
+     The existing sidebarOpen effect then ends the tour as a skip — never traps the user.
+     Listener exists only while the tour is active, so non-tour behavior is unchanged. */
+  useEffect(() => {
+    if (tourStep === null) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setSidebarOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [tourStep]);
+
+  /* First-time mobile visit → one subtle hamburger hint, then auto-open the tour.
+     Runs at most once; completed/skipped/manual-open states block it forever. */
+  useEffect(() => {
+    if (location.pathname !== '/dashboard' || !onboardingDone) return undefined;
+    if (!isMobileWidth()) {
+      setNavTourPlanned((p) => (p === null ? false : p));
+      return undefined;
+    }
+    const tourState = lsGet(TOUR_KEY);
+    const opened = lsGet(OPENED_KEY);
+    if (!tourState && !opened) {
+      if (tourRunRef.current) return undefined;
+      tourRunRef.current = true;
+      setNavTourPlanned(true); // hold off the first-run QuickActions popup so both don't stack
+      let openTimer = null;
+      const hintTimer = setTimeout(() => {
+        if (lsGet(TOUR_KEY) || lsGet(OPENED_KEY) || window.location.pathname !== '/dashboard') return;
+        setHintPulse(true);
+        lsSet(HINT_KEY, 'seen');
+        openTimer = setTimeout(() => {
+          setHintPulse(false);
+          if (lsGet(TOUR_KEY) || lsGet(OPENED_KEY)) return;
+          if (window.location.pathname !== '/dashboard' || !isMobileWidth()) return;
+          lsSet(TOUR_KEY, 'started');
+          applyTourStep(0);
+          setSidebarOpen(true);
+        }, 1300);
+      }, 1200);
+      return () => {
+        clearTimeout(hintTimer);
+        if (openTimer) clearTimeout(openTimer);
+        if (tourStepRef.current === null) {
+          tourRunRef.current = false;
+          setNavTourPlanned((p) => (p === true ? false : p));
+        }
+      };
+    }
+    if (tourState === 'skipped' && !opened && !lsGet(HINT_KEY)) {
+      // user skipped earlier → at most ONE quiet pulse on a future visit, never the tour
+      const pulseTimer = setTimeout(() => {
+        setHintPulse(true);
+        lsSet(HINT_KEY, 'seen');
+        setTimeout(() => setHintPulse(false), 1300);
+      }, 2000);
+      return () => clearTimeout(pulseTimer);
+    }
+    setNavTourPlanned((p) => (p === null ? false : p));
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, onboardingDone, applyTourStep]);
+
   return (
     <div className="flex h-screen bg-bg overflow-hidden relative">
       {!onboardingDone && (
@@ -132,14 +273,24 @@ const Layout = memo(function Layout() {
           <OnboardingFlow />
         </div>
       )}
-      {onboardingDone && <QuickActions />}
+      {onboardingDone && navTourPlanned !== true && <QuickActions />}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
       <VirtualCalculator isOpen={calcOpen} onClose={() => setCalcOpen(false)} />
 
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)}
-          onTouchStart={handleSidebarTouchStart} onTouchEnd={handleSidebarTouchEnd} />
-      )}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            key="mobile-nav-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0 : 0.22, ease: 'easeOut' }}
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+            onTouchStart={handleSidebarTouchStart} onTouchEnd={handleSidebarTouchEnd}
+          />
+        )}
+      </AnimatePresence>
 
       <aside className={`
         fixed md:relative z-50 md:z-40 h-full w-[220px] max-w-[85vw] glass-sidebar flex flex-col
@@ -151,10 +302,19 @@ const Layout = memo(function Layout() {
         </div>
 
         <nav className="flex-1 overflow-y-auto py-3 px-3 sidebar-nav-scroll">
-          <SidebarNav onNavClick={handleNavClick} onCalcClick={handleCalcOpen} />
+          <SidebarNav onNavClick={handleNavClick} onCalcClick={handleCalcOpen}
+            tourHighlight={tourStep !== null ? TOUR_STEPS[tourStep].highlight : null} />
         </nav>
 
         <div className="p-3 border-t border-white/[0.06]">
+          <button
+            type="button"
+            onClick={startTour}
+            aria-label="Explore GateNexa features"
+            className="flex md:hidden w-full items-center gap-2 px-3 py-2 mb-2 rounded-xl text-[11.5px] font-semibold text-purple-300/80 hover:text-purple-100 bg-purple-500/[0.07] hover:bg-purple-500/[0.14] border border-purple-400/20 hover:border-purple-400/40 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/70"
+          >
+            <span aria-hidden="true">✨</span> Explore features
+          </button>
           <div className="flex items-center gap-2 rounded-xl bg-white/[0.03] border border-white/[0.06] p-2.5">
             <NexaPersona user={user} size={48} />
             <div className="flex-1 min-w-0">
@@ -191,8 +351,13 @@ const Layout = memo(function Layout() {
         <header className={`mobile-top-header md:hidden ${isScrolled ? 'is-scrolled' : ''}`}>
           <button
             type="button"
-            className="mobile-top-header__menu"
-            onClick={() => { window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(!sidebarOpen), 150); }}
+            className={`mobile-top-header__menu${hintPulse ? ' is-hinted' : ''}`}
+            onClick={() => {
+              if (tourStepRef.current === null && !sidebarOpen) {
+                lsSet(OPENED_KEY, '1'); // user opens the menu on their own → tour understood, never auto-open
+              }
+              window.dispatchEvent(new CustomEvent('close-ai')); setTimeout(() => setSidebarOpen(!sidebarOpen), 150);
+            }}
             aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={sidebarOpen}
           >
@@ -489,7 +654,18 @@ const Layout = memo(function Layout() {
       <BackToTop />
       <SmartScrollNavigator />
       <PersistentVideoPlayer />
-      <MobileBottomNav />
+      {/* Tour card sits above the drawer + bottom nav; dims only during the tour */}
+      {tourStep !== null && (
+        <MobileFeatureTour
+          stepIndex={tourStep}
+          onNext={handleTourNext}
+          onBack={handleTourBack}
+          onSkip={handleTourSkip}
+        />
+      )}
+      <div className={`relative z-[9000] transition-opacity duration-300 ${tourStep !== null ? 'opacity-50' : 'opacity-100'}`}>
+        <MobileBottomNav />
+      </div>
     </div>
   );
 });

@@ -69,7 +69,7 @@ function isPathActive(pathname, to) {
 }
 
 /* Prefetch NavLink — loads JS chunk on hover/touch for instant navigation */
-const PrefetchLink = React.memo(({ to, children, className, onClick }) => {
+const PrefetchLink = React.memo(({ to, children, className, onClick, highlighted }) => {
   const prefetched = useRef(false);
   const handlePrefetch = useCallback(() => {
     if (prefetched.current) return;
@@ -104,6 +104,7 @@ const PrefetchLink = React.memo(({ to, children, className, onClick }) => {
     onClick,
     onMouseEnter: handlePrefetch,
     onTouchStart: handlePrefetch,
+    'data-tourhl': highlighted ? '1' : undefined,
     children,
   });
 });
@@ -115,14 +116,15 @@ const itemClass = ({ isActive }) =>
       : 'text-text2 hover:text-white hover:bg-white/[0.045] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
   }`;
 
-function NavLinkRow({ item, onNavClick, onCalcClick }) {
+function NavLinkRow({ item, onNavClick, onCalcClick, highlighted }) {
   if (item.onClick === 'toggleCalc') {
     return (
       <button
         onClick={onCalcClick}
-        className="sidebar-item group relative flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12.5px] font-medium transition-all duration-200 my-[2px] cursor-pointer text-text2 hover:text-white hover:bg-white/[0.045] w-full"
+        data-tourhl={highlighted ? '1' : undefined}
+        className={`sidebar-item group relative flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12.5px] font-medium transition-all duration-200 my-[2px] cursor-pointer text-text2 hover:text-white hover:bg-white/[0.045] w-full${highlighted ? ' tour-hl' : ''}`}
       >
-        <span className="sidebar-item-icon flex items-center justify-center">
+        <span className={`sidebar-item-icon flex items-center justify-center${highlighted ? ' !text-purple-200' : ''}`}>
           <Icon name={item.icon} />
         </span>
         <span>{item.label}</span>
@@ -133,9 +135,10 @@ function NavLinkRow({ item, onNavClick, onCalcClick }) {
     <PrefetchLink
       to={item.to}
       onClick={onNavClick}
-      className={({ isActive }) => `${itemClass({ isActive })} ${item.to === '/mentor' ? 'sidebar-item-ai' : ''}`}
+      highlighted={highlighted}
+      className={({ isActive }) => `${itemClass({ isActive })} ${item.to === '/mentor' ? 'sidebar-item-ai' : ''}${highlighted ? ' tour-hl' : ''}`}
     >
-      <span className={`sidebar-item-icon flex items-center justify-center transition-transform duration-200 ${item.to === '/mentor' ? 'text-cyan-300' : ''}`}>
+      <span className={`sidebar-item-icon flex items-center justify-center transition-transform duration-200 ${item.to === '/mentor' ? 'text-cyan-300' : ''}${highlighted ? ' !text-purple-200' : ''}`}>
         <Icon name={item.icon} />
       </span>
       <span className="truncate">{item.label}</span>
@@ -146,7 +149,7 @@ function NavLinkRow({ item, onNavClick, onCalcClick }) {
   );
 }
 
-function SidebarNav({ onNavClick, onCalcClick }) {
+function SidebarNav({ onNavClick, onCalcClick, tourHighlight }) {
   const { user } = useAuth();
   const location = useLocation();
 
@@ -155,6 +158,9 @@ function SidebarNav({ onNavClick, onCalcClick }) {
   )?.key;
 
   const [openGroup, setOpenGroup] = useState(defaultOpen || null);
+
+  // Feature-tour highlight (mobile first-run) — keys come from MobileFeatureTour steps
+  const isTourHighlighted = (key) => !!tourHighlight && tourHighlight.includes(key);
 
   // If route changes to a different group, expand that group (one at a time)
   useEffect(() => {
@@ -169,7 +175,7 @@ function SidebarNav({ onNavClick, onCalcClick }) {
     <div className="flex flex-col gap-0.5">
       {/* Top-level — always visible */}
       {NAV_TOP.map(item => (
-        <NavLinkRow key={item.to} item={item} onNavClick={onNavClick} onCalcClick={onCalcClick} />
+        <NavLinkRow key={item.to} item={item} onNavClick={onNavClick} onCalcClick={onCalcClick} highlighted={isTourHighlighted(`item:${item.to}`)} />
       ))}
 
       {/* Divider */}
@@ -179,18 +185,20 @@ function SidebarNav({ onNavClick, onCalcClick }) {
       {NAV_GROUPS.map(group => {
         const isOpen = openGroup === group.key;
         const groupHasActive = group.items.some(i => i.to && isPathActive(location.pathname, i.to));
+        const tourHl = isTourHighlighted(`group:${group.key}`);
         return (
           <div key={group.key} className="sidebar-group">
             <button
               onClick={() => setOpenGroup(isOpen ? null : group.key)}
               aria-expanded={isOpen}
+              data-tourhl={tourHl ? '1' : undefined}
               className={`sidebar-group-btn group flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-[12.5px] font-semibold transition-all duration-200 cursor-pointer ${
                 isOpen || groupHasActive
                   ? 'text-white/90'
                   : 'text-text2 hover:text-white/90 hover:bg-white/[0.03]'
-              }`}
+              }${tourHl ? ' tour-hl' : ''}`}
             >
-              <span className={`flex items-center justify-center transition-colors duration-200 ${groupHasActive ? 'text-purple-300' : 'text-text3 group-hover:text-purple-300'}`}>
+              <span className={`flex items-center justify-center transition-colors duration-200 ${groupHasActive ? 'text-purple-300' : 'text-text3 group-hover:text-purple-300'}${tourHl ? ' !text-purple-200' : ''}`}>
                 <Icon name={group.icon} />
               </span>
               <span className="flex-1 text-left truncate">{group.label}</span>
@@ -235,7 +243,7 @@ function SidebarNav({ onNavClick, onCalcClick }) {
       {/* Bottom links */}
       {NAV_BOTTOM.map(item => (
         <div key={item.to}>
-          <NavLinkRow item={item} onNavClick={onNavClick} onCalcClick={onCalcClick} />
+          <NavLinkRow item={item} onNavClick={onNavClick} onCalcClick={onCalcClick} highlighted={isTourHighlighted(`item:${item.to}`)} />
           {item.label === 'Feedback' && (
             <p className="md:hidden pl-3 pr-2 mt-1 mb-2 text-[10.5px] leading-snug text-purple-300/80">
               Enjoying GateNexa? Please give us your feedback ❤️

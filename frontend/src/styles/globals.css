@@ -2467,3 +2467,60 @@
   .mobile-sheet { max-height: 85dvh !important; max-height: 85vh !important; }
   .mobile-sheet-backdrop { min-height: 100dvh; min-height: 100vh; }
 }
+
+/* =========================================================
+   FIRST-TIME MOBILE FEATURE TOUR — discovery hints
+   Subtle, one-shot only. Scoped to the mobile hamburger
+   + the existing drawer items while the tour is active.
+   ========================================================= */
+@keyframes nav-menu-hint {
+  0%   { transform: scale(1); border-color: rgba(167, 139, 250, 0.22); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 16px rgba(0,0,0,0.24); }
+  35%  { transform: scale(1.06); border-color: rgba(192, 132, 252, 0.8); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 20px rgba(139,92,246,0.55), 0 0 6px rgba(192,132,252,0.45); }
+  70%  { transform: scale(1.02); border-color: rgba(192, 132, 252, 0.5); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 0 14px rgba(139,92,246,0.35); }
+  100% { transform: scale(1); border-color: rgba(167, 139, 250, 0.22); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 16px rgba(0,0,0,0.24); }
+}
+.mobile-top-header__menu.is-hinted { animation: nav-menu-hint 1s ease-in-out 1; }
+
+/* Soft purple/cyan glow for nav items highlighted by the tour */
+.tour-hl {
+  color: #fff;
+  background-image: linear-gradient(to right, rgba(168, 85, 247, 0.18), rgba(34, 211, 238, 0.10));
+  box-shadow: inset 0 0 0 1px rgba(192, 132, 252, 0.45), 0 0 16px rgba(139, 92, 246, 0.35);
+  transition: background-image 250ms ease-out, box-shadow 250ms ease-out, color 250ms ease-out;
+}
+.tour-hl span { color: #f3e8ff; }
+
+/* Float the AI button aside while the tour card is on screen (returns after) */
+body[data-gn-nav-tour="1"] .ai-fab-btn { opacity: 0 !important; pointer-events: none !important; transition: opacity 200ms ease !important; }
+
+/* Tour highlight must beat the "clean sidebar" override
+   (`aside nav a, aside nav button { background: transparent !important }`).
+   Declared both unlayered and inside @layer base (higher specificity than the
+   3-element override) so the gradient wins under either cascade-layer rule. */
+aside nav a.tour-hl,
+aside nav button.tour-hl,
+aside nav a.tour-hl:hover,
+aside nav button.tour-hl:hover {
+  background-image: linear-gradient(to right, rgba(168, 85, 247, 0.18), rgba(34, 211, 238, 0.10)) !important;
+}
+@layer base {
+  aside nav a.tour-hl,
+  aside nav button.tour-hl,
+  aside nav a.tour-hl:hover,
+  aside nav button.tour-hl:hover {
+    background-image: linear-gradient(to right, rgba(168, 85, 247, 0.18), rgba(34, 211, 238, 0.10)) !important;
+  }
+}
+
+/* Give the tour card breathing room: while the tour runs, add a spacer inside the
+   sidebar nav's scroll content so highlighted items can scroll ABOVE the card (the
+   final step's Settings/Feedback sit at the very bottom of a nearly-fitting nav).
+   A content ::after (not padding) is used because nav padding is owned by other
+   rules with !important and container padding does not reliably extend scrollHeight. */
+body[data-gn-nav-tour="1"] .glass-sidebar nav::after {
+  content: "";
+  display: block;
+  height: 200px;
+  min-height: 200px;
+  flex: 0 0 auto;
+}
